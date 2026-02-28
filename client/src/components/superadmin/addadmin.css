@@ -1,0 +1,71 @@
+.overal-add-admin-container {
+  /* Keep your original container styles */
+}
+
+.overall-form-container-add-admin {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.overall-form-container-add-admin .form-label {
+  font-size: 2rem;
+  color: white;
+}
+
+.overall-form-container-add-admin input,
+.overall-form-container-add-admin select {
+  padding-block: 1.6rem;
+  outline: none;
+  margin-top: 2rem;
+}
+
+.left-side-form-container {
+  width: 50%;
+}
+
+.right-side-form-container {
+  width: 50%;
+}
+
+/* New submit button styles - simple and clean */
+.submit-btn-container {
+  margin-top: 2rem;
+  text-align: center;
+  width: 100%;
+}
+
+.submit-btn {
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: white;
+  color: black;
+}
+
+/* Responsive design - only layout changes */
+@media screen and (max-width: 768px) {
+  .overall-form-container-add-admin {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .left-side-form-container,
+  .right-side-form-container {
+    width: 100%;
+  }
+  
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+}
