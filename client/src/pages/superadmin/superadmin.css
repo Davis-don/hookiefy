@@ -7,12 +7,12 @@
   min-height: 100vh;
   display: flex;
   position: relative;
-  background: linear-gradient(145deg, #0a0507 0%, #1a0b0e 40%, #2d1219 100%);
+  background: #ffffff;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
 }
 
-/* Glitter Rain Effect - Lighter and more elegant */
+/* Glitter Rain Effect - Rose petals */
 .hookey-superadmin-glitter-rain {
   position: fixed;
   top: 0;
@@ -31,16 +31,16 @@
 }
 
 .hookey-superadmin-glitter-rain i::before {
-  content: '♡';
-  font-size: 18px;
-  color: rgba(255, 182, 193, 0.4);
-  text-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+  content: '🌹';
+  font-size: 20px;
+  color: rgba(220, 20, 60, 0.15);
+  text-shadow: 0 0 10px rgba(220, 20, 60, 0.1);
 }
 
 .hookey-superadmin-glitter-rain i::after {
-  content: '✦';
-  font-size: 12px;
-  color: rgba(255, 215, 215, 0.3);
+  content: '❤️';
+  font-size: 14px;
+  color: rgba(220, 20, 60, 0.1);
   position: absolute;
   left: 8px;
   top: 5px;
@@ -49,7 +49,7 @@
 @keyframes hookeySuperadminFallingHearts {
   0% {
     transform: translateY(-10vh) rotate(0deg);
-    opacity: 0.6;
+    opacity: 0.4;
   }
   100% {
     transform: translateY(110vh) rotate(360deg);
@@ -70,28 +70,28 @@
 
 .hookey-superadmin-rose {
   position: absolute;
-  animation: hookeySuperadminFloatRose 20s linear infinite;
+  animation: hookeySuperadminFloatRose 25s linear infinite;
 }
 
 .hookey-superadmin-rose span {
-  font-size: 24px;
-  filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.3));
-  opacity: 0.3;
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(220, 20, 60, 0.2));
+  opacity: 0.2;
 }
 
 .hookey-superadmin-rose:nth-child(1) { left: 5%; animation-delay: 0s; }
-.hookey-superadmin-rose:nth-child(2) { left: 15%; animation-delay: 3s; }
-.hookey-superadmin-rose:nth-child(3) { left: 25%; animation-delay: 6s; }
-.hookey-superadmin-rose:nth-child(4) { left: 35%; animation-delay: 9s; }
-.hookey-superadmin-rose:nth-child(5) { left: 45%; animation-delay: 12s; }
-.hookey-superadmin-rose:nth-child(6) { left: 55%; animation-delay: 15s; }
-.hookey-superadmin-rose:nth-child(7) { left: 65%; animation-delay: 18s; }
-.hookey-superadmin-rose:nth-child(8) { left: 75%; animation-delay: 21s; }
+.hookey-superadmin-rose:nth-child(2) { left: 15%; animation-delay: 4s; }
+.hookey-superadmin-rose:nth-child(3) { left: 25%; animation-delay: 8s; }
+.hookey-superadmin-rose:nth-child(4) { left: 35%; animation-delay: 12s; }
+.hookey-superadmin-rose:nth-child(5) { left: 45%; animation-delay: 16s; }
+.hookey-superadmin-rose:nth-child(6) { left: 55%; animation-delay: 20s; }
+.hookey-superadmin-rose:nth-child(7) { left: 65%; animation-delay: 24s; }
+.hookey-superadmin-rose:nth-child(8) { left: 75%; animation-delay: 28s; }
 
 @keyframes hookeySuperadminFloatRose {
   0% {
     transform: translateY(-10vh) rotate(0deg);
-    opacity: 0.3;
+    opacity: 0.2;
   }
   100% {
     transform: translateY(110vh) rotate(360deg);
@@ -106,15 +106,15 @@
   left: 280px;
   right: 0;
   height: 80px;
-  background: rgba(10, 5, 7, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+  border-bottom: 1px solid rgba(220, 20, 60, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
   z-index: 100;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .hookey-superadmin-top-bar-left {
@@ -127,21 +127,17 @@
   font-family: 'Playfair Display', serif;
   font-size: 2.2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #fff, #ffb6c1, #ff69b4);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #2d1219;
   margin: 0;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: capitalize;
-  text-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
 }
 
-/* Hamburger Menu - Redesigned */
+/* Hamburger Menu */
 .hookey-superadmin-hamburger {
   width: 45px;
   height: 45px;
-  background: linear-gradient(135deg, #ff69b4, #c41e3a);
+  background: linear-gradient(135deg, #dc143c, #b22222);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -150,7 +146,7 @@
   justify-content: center;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
   transition: all 0.3s ease;
 }
 
@@ -174,12 +170,12 @@
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* Sidebar - Enhanced */
+/* Sidebar */
 .hookey-superadmin-sidebar {
   width: 280px;
   height: 100vh;
-  background: linear-gradient(165deg, #0d0609 0%, #1f0d13 80%, #2d1219 100%);
-  border-right: 1px solid rgba(255, 105, 180, 0.2);
+  background: #ffffff;
+  border-right: 1px solid rgba(220, 20, 60, 0.1);
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
@@ -188,7 +184,7 @@
   top: 0;
   z-index: 1000;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.02);
 }
 
 .hookey-superadmin-sidebar::before {
@@ -198,7 +194,7 @@
   left: 0;
   right: 0;
   height: 150px;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 105, 180, 0.2), transparent 70%);
+  background: radial-gradient(circle at 50% 0%, rgba(220, 20, 60, 0.03), transparent 70%);
   pointer-events: none;
 }
 
@@ -213,14 +209,10 @@
   font-family: 'Playfair Display', serif;
   font-size: 4rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff 20%, #ffb6c1 50%, #ff69b4 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #2d1219;
   margin-bottom: 1rem;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   line-height: 1.2;
-  text-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
 }
 
 .hookey-superadmin-logo span {
@@ -228,12 +220,9 @@
   font-weight: 400;
   display: block;
   font-family: 'Dancing Script', cursive;
-  color: rgba(255, 255, 255, 0.8);
-  letter-spacing: 2px;
+  color: #dc143c;
+  letter-spacing: 1px;
   margin-top: 5px;
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
 }
 
 .hookey-superadmin-love-meter {
@@ -245,6 +234,7 @@
 
 .hookey-superadmin-love-meter span {
   font-size: 1.8rem;
+  color: #dc143c;
   animation: hookeySuperadminHeartPulse 1.5s ease-in-out infinite;
 }
 
@@ -258,7 +248,7 @@
   50% { transform: scale(1.2); opacity: 1; }
 }
 
-/* Navigation - Enhanced */
+/* Navigation */
 .hookey-superadmin-nav {
   flex: 1;
   display: flex;
@@ -276,7 +266,7 @@
   background: transparent;
   border: none;
   border-radius: 15px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #4a4a4a;
   font-size: 1.2rem;
   font-weight: 500;
   cursor: pointer;
@@ -294,7 +284,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 105, 180, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(220, 20, 60, 0.05), transparent);
   transition: left 0.5s ease;
 }
 
@@ -303,37 +293,37 @@
 }
 
 .hookey-superadmin-nav-item:hover {
-  background: rgba(255, 105, 180, 0.1);
-  color: white;
+  background: rgba(220, 20, 60, 0.03);
+  color: #2d1219;
   transform: translateX(5px);
 }
 
 .hookey-superadmin-nav-item-active {
-  background: linear-gradient(135deg, rgba(196, 30, 58, 0.4), rgba(255, 105, 180, 0.4));
-  color: white;
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
-  border-left: 4px solid #ff69b4;
+  background: rgba(220, 20, 60, 0.05);
+  color: #dc143c;
+  box-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
+  border-left: 3px solid #dc143c;
 }
 
 .hookey-superadmin-nav-icon {
   font-size: 1.6rem;
-  filter: drop-shadow(0 2px 5px rgba(255, 105, 180, 0.4));
+  filter: drop-shadow(0 2px 4px rgba(220, 20, 60, 0.2));
 }
 
 .hookey-superadmin-nav-label {
   font-size: 1.8rem;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .hookey-superadmin-nav-glow {
   position: absolute;
   right: 1rem;
-  width: 8px;
-  height: 8px;
-  background: #ff69b4;
+  width: 6px;
+  height: 6px;
+  background: #dc143c;
   border-radius: 50%;
-  box-shadow: 0 0 15px #ff69b4;
+  box-shadow: 0 0 10px #dc143c;
   animation: hookeySuperadminGlow 1.5s ease-in-out infinite;
 }
 
@@ -346,18 +336,18 @@
 .hookey-superadmin-sidebar-footer {
   margin-top: auto;
   padding-top: 2rem;
-  border-top: 1px solid rgba(255, 105, 180, 0.2);
+  border-top: 1px solid rgba(220, 20, 60, 0.1);
   position: relative;
   z-index: 1;
 }
 
 .hookey-superadmin-logout-btn {
-  color: rgba(255, 182, 193, 0.9);
+  color: #666;
 }
 
 .hookey-superadmin-logout-btn:hover {
-  background: rgba(196, 30, 58, 0.2);
-  color: #ffb6c1;
+  background: rgba(220, 20, 60, 0.03);
+  color: #dc143c;
 }
 
 .hookey-superadmin-sidebar-quote {
@@ -366,9 +356,9 @@
   padding: 1rem;
   font-family: 'Dancing Script', cursive;
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #999;
   font-style: italic;
-  border-top: 1px dashed rgba(255, 105, 180, 0.2);
+  border-top: 1px dashed rgba(220, 20, 60, 0.1);
   position: relative;
   z-index: 1;
 }
@@ -383,8 +373,12 @@
   position: relative;
   z-index: 5;
   min-height: calc(100vh - 80px);
+  background: #ffffff;
 }
 
+.hookey-superadmin-component-wrapper {
+  animation: hookeySuperadminFadeIn 0.5s ease;
+}
 
 @keyframes hookeySuperadminFadeIn {
   from {
@@ -404,8 +398,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
   z-index: 999;
   animation: hookeySuperadminFadeIn 0.3s ease;
 }
@@ -454,7 +448,6 @@
   .hookey-superadmin-page-title {
     font-size: 1.8rem;
   }
-  
 }
 
 @media (max-width: 480px) {
@@ -470,8 +463,6 @@
   .hookey-superadmin-page-title {
     font-size: 1.5rem;
   }
-
-  
   
   /* Reduce animations on mobile */
   .hookey-superadmin-glitter-rain i:nth-child(n+16) {
@@ -491,7 +482,7 @@
   }
   
   .hookey-superadmin-nav-item-active {
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.4), rgba(255, 105, 180, 0.4));
+    background: rgba(220, 20, 60, 0.05);
   }
 }
 
@@ -501,15 +492,15 @@
 }
 
 .hookey-superadmin-main-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(220, 20, 60, 0.03);
   border-radius: 10px;
 }
 
 .hookey-superadmin-main-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #c41e3a, #ff69b4);
+  background: linear-gradient(135deg, #dc143c, #b22222);
   border-radius: 10px;
 }
 
 .hookey-superadmin-main-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #ff69b4, #c41e3a);
+  background: linear-gradient(135deg, #b22222, #dc143c);
 }
