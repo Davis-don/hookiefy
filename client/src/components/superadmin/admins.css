@@ -1,0 +1,609 @@
+/* Admins Page Romantic Styling */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap');
+
+.hookey-superadmin-admins-overall-container {
+  width: 100%;
+  min-height: 100%;
+  padding: 2rem;
+  background: linear-gradient(145deg, rgba(20, 10, 12, 0.4), rgba(30, 15, 18, 0.6));
+  border-radius: 30px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative romantic elements */
+.hookey-superadmin-admins-overall-container::before {
+  content: '❤️';
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 3rem;
+  opacity: 0.1;
+  animation: hookeyAdminsFloat 6s ease-in-out infinite;
+}
+
+.hookey-superadmin-admins-overall-container::after {
+  content: '🌹';
+  position: absolute;
+  bottom: 20px;
+  left: 30px;
+  font-size: 4rem;
+  opacity: 0.1;
+  animation: hookeyAdminsFloat 8s ease-in-out infinite reverse;
+}
+
+@keyframes hookeyAdminsFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(10deg); }
+}
+
+.hookey-superadmin-admins-overall-container h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #ffb6c1 50%, #ff69b4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 2rem;
+  position: relative;
+  display: inline-block;
+  letter-spacing: 2px;
+  text-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
+  animation: hookeyAdminsTitleGlow 3s ease-in-out infinite;
+}
+
+@keyframes hookeyAdminsTitleGlow {
+  0%, 100% { text-shadow: 0 0 30px rgba(255, 105, 180, 0.3); }
+  50% { text-shadow: 0 0 50px rgba(255, 105, 180, 0.6), 0 0 70px rgba(196, 30, 58, 0.4); }
+}
+
+/* Navigation Section - Fixed to stay row on all screens */
+.navigation-admins-admin-section {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 3rem;
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 60px;
+  padding: 0.5rem;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+  min-width: 300px;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.navigation-admins-admin-section ul {
+  list-style: none;
+  padding: 0.3rem;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex-wrap: nowrap; /* Prevent wrapping */
+}
+
+.navigation-admins-admin-section ul li {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.6rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 1px;
+  white-space: nowrap; /* Keep text in one line */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Active tab styling */
+.navigation-admins-admin-section ul li.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(255, 105, 180, 0.2), rgba(196, 30, 58, 0.2));
+  text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+}
+
+/* Romantic underline animation */
+.navigation-admins-admin-section ul li.active::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff69b4, #c41e3a, #ff69b4);
+  border-radius: 3px;
+  animation: hookeyAdminsUnderlinePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 15px #ff69b4;
+}
+
+@keyframes hookeyAdminsUnderlinePulse {
+  0%, 100% {
+    width: 30px;
+    opacity: 0.8;
+  }
+  50% {
+    width: 45px;
+    opacity: 1;
+    box-shadow: 0 0 25px #ff69b4;
+  }
+}
+
+/* Hover effect */
+.navigation-admins-admin-section ul li:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.navigation-admins-admin-section ul li:hover::before {
+  content: '❤️';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0;
+  animation: hookeyAdminsHeartAppear 0.3s ease forwards;
+}
+
+@keyframes hookeyAdminsHeartAppear {
+  to {
+    left: -15px;
+    opacity: 1;
+  }
+}
+
+/* Add romantic glow effect for active tab */
+.navigation-admins-admin-section ul li.active::before {
+  content: '💕';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  animation: hookeyAdminsHeartBeat 1.5s ease-in-out infinite;
+}
+
+@keyframes hookeyAdminsHeartBeat {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.2); }
+}
+
+/* Content Area */
+.hookey-superadmin-admins-content {
+  padding: 2rem 0;
+  animation: hookeyAdminsContentFade 0.5s ease;
+}
+
+@keyframes hookeyAdminsContentFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add Admin Component */
+.hookey-superadmin-add-admin {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 30px;
+  padding: 3rem;
+  border: 1px solid rgba(255, 105, 180, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.hookey-superadmin-add-admin h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #fff, #ffb6c1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Form Styling */
+.hookey-superadmin-admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 600px;
+}
+
+.hookey-superadmin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.hookey-superadmin-form-group label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.2rem;
+  font-weight: 500;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 1px;
+}
+
+.hookey-superadmin-form-group input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 105, 180, 0.3);
+  border-radius: 15px;
+  padding: 1.2rem 1.5rem;
+  color: white;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.hookey-superadmin-form-group input:focus {
+  outline: none;
+  border-color: #ff69b4;
+  box-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
+  transform: translateY(-2px);
+}
+
+.hookey-superadmin-form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.hookey-superadmin-submit-btn {
+  background: linear-gradient(135deg, #ff69b4, #c41e3a);
+  border: none;
+  border-radius: 15px;
+  padding: 1.2rem 2rem;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 2px;
+}
+
+.hookey-superadmin-submit-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hookey-superadmin-submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 105, 180, 0.4);
+}
+
+.hookey-superadmin-submit-btn:hover::before {
+  opacity: 1;
+  animation: hookeyAdminsBtnShine 1.5s ease;
+}
+
+@keyframes hookeyAdminsBtnShine {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(50%, 50%) rotate(180deg); }
+}
+
+/* All Admins Component */
+.hookey-superadmin-all-admins {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 30px;
+  padding: 3rem;
+  border: 1px solid rgba(255, 105, 180, 0.2);
+}
+
+.hookey-superadmin-all-admins h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #fff, #ffb6c1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hookey-superadmin-admins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.hookey-superadmin-admin-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 105, 180, 0.05));
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 105, 180, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hookey-superadmin-admin-card::before {
+  content: '👑';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 3rem;
+  opacity: 0.1;
+  transform: rotate(15deg);
+}
+
+.hookey-superadmin-admin-card:hover {
+  transform: translateY(-5px);
+  border-color: #ff69b4;
+  box-shadow: 0 15px 30px rgba(255, 105, 180, 0.2);
+}
+
+.hookey-superadmin-admin-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #ff69b4, #c41e3a);
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: white;
+  box-shadow: 0 10px 20px rgba(255, 105, 180, 0.3);
+}
+
+.hookey-superadmin-admin-info h4 {
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+}
+
+.hookey-superadmin-admin-info p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.hookey-superadmin-admin-role {
+  display: inline-block;
+  background: rgba(255, 105, 180, 0.2);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  color: #ffb6c1;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Design - Navigation stays in row on all screens */
+@media (max-width: 1024px) {
+  .hookey-superadmin-admins-overall-container h2 {
+    font-size: 3.5rem;
+  }
+  
+  .navigation-admins-admin-section ul li {
+    font-size: 1.5rem;
+    padding: 0.7rem 1.5rem;
+  }
+  
+  .hookey-superadmin-add-admin,
+  .hookey-superadmin-all-admins {
+    padding: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hookey-superadmin-admins-overall-container {
+    padding: 1.5rem;
+  }
+  
+  .hookey-superadmin-admins-overall-container h2 {
+    font-size: 3rem;
+  }
+  
+  .navigation-admins-admin-section {
+    min-width: 250px;
+  }
+  
+  .navigation-admins-admin-section ul {
+    gap: 0.5rem;
+  }
+  
+  .navigation-admins-admin-section ul li {
+    font-size: 1.3rem;
+    padding: 0.6rem 1.2rem;
+  }
+  
+  .hookey-superadmin-add-admin,
+  .hookey-superadmin-all-admins {
+    padding: 2rem;
+  }
+  
+  .hookey-superadmin-add-admin h3,
+  .hookey-superadmin-all-admins h3 {
+    font-size: 2rem;
+  }
+  
+  .hookey-superadmin-form-group input {
+    padding: 1rem 1.2rem;
+  }
+  
+  .hookey-superadmin-submit-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .hookey-superadmin-admins-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookey-superadmin-admins-overall-container {
+    padding: 1rem;
+  }
+  
+  .hookey-superadmin-admins-overall-container h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .navigation-admins-admin-section {
+    min-width: 220px;
+    padding: 0.3rem;
+  }
+  
+  .navigation-admins-admin-section ul {
+    gap: 0.3rem;
+  }
+  
+  .navigation-admins-admin-section ul li {
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Active tab underline adjusts for smaller size */
+  .navigation-admins-admin-section ul li.active::after {
+    width: 20px;
+  }
+  
+  @keyframes hookeyAdminsUnderlinePulse {
+    0%, 100% { width: 20px; }
+    50% { width: 30px; }
+  }
+  
+  .hookey-superadmin-add-admin,
+  .hookey-superadmin-all-admins {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .hookey-superadmin-add-admin h3,
+  .hookey-superadmin-all-admins h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hookey-superadmin-admin-form {
+    gap: 1.5rem;
+  }
+  
+  .hookey-superadmin-form-group label {
+    font-size: 1rem;
+  }
+  
+  .hookey-superadmin-form-group input {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .hookey-superadmin-submit-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+  }
+  
+  .hookey-superadmin-admins-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .hookey-superadmin-admin-card {
+    padding: 1.5rem;
+  }
+  
+  .hookey-superadmin-admin-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+  
+  .hookey-superadmin-admin-info h4 {
+    font-size: 1.3rem;
+  }
+  
+  /* Adjust decorative elements */
+  .hookey-superadmin-admins-overall-container::before {
+    font-size: 2rem;
+    top: 10px;
+    right: 15px;
+  }
+  
+  .hookey-superadmin-admins-overall-container::after {
+    font-size: 2.5rem;
+    bottom: 10px;
+    left: 15px;
+  }
+}
+
+/* Extra small devices - navigation STAYS IN ROW, just smaller */
+@media (max-width: 360px) {
+  .navigation-admins-admin-section {
+    min-width: 200px;
+  }
+  
+  .navigation-admins-admin-section ul li {
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .hookey-superadmin-admins-overall-container h2 {
+    font-size: 2.2rem;
+  }
+  
+  .hookey-superadmin-admins-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .navigation-admins-admin-section ul li:hover {
+    color: rgba(255, 255, 255, 0.6);
+    transform: none;
+  }
+  
+  .navigation-admins-admin-section ul li.active {
+    color: #ffffff;
+  }
+  
+  .hookey-superadmin-submit-btn:hover {
+    transform: none;
+  }
+  
+  .hookey-superadmin-admin-card:hover {
+    transform: none;
+  }
+}
+
+/* Loading animation for content switch */
+.hookey-superadmin-content-loading {
+  animation: hookeyAdminsPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hookeyAdminsPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
