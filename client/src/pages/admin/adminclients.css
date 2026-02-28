@@ -1,0 +1,506 @@
+/* Admin Clients Page - Romantic Love Theme */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap');
+
+.hookey-admin-clients-romantic-wrapper {
+  width: 100%;
+  min-height: 100%;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 20% 30%, rgba(255, 120, 180, 0.12), transparent 45%),
+              radial-gradient(circle at 80% 70%, rgba(200, 50, 100, 0.12), transparent 45%),
+              linear-gradient(145deg, #0c0709, #1d0f14);
+  border-radius: 45px;
+  box-shadow: inset 0 0 50px rgba(255, 105, 180, 0.05);
+}
+
+/* Floating Romantic Elements */
+.hookey-clients-floating-romance {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hookey-clients-floating-romance span {
+  position: absolute;
+  font-size: 2.2rem;
+  opacity: 0.15;
+  animation: hookeyClientsLoveFloat 10s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 105, 180, 0.3));
+}
+
+.hookey-clients-floating-romance span:nth-child(1) { top: 15%; left: 8%; animation-delay: 0s; }
+.hookey-clients-floating-romance span:nth-child(2) { top: 25%; right: 12%; animation-delay: 2s; }
+.hookey-clients-floating-romance span:nth-child(3) { bottom: 35%; left: 18%; animation-delay: 4s; }
+.hookey-clients-floating-romance span:nth-child(4) { bottom: 20%; right: 22%; animation-delay: 6s; }
+.hookey-clients-floating-romance span:nth-child(5) { top: 45%; left: 45%; animation-delay: 3s; }
+.hookey-clients-floating-romance span:nth-child(6) { top: 70%; left: 70%; animation-delay: 5s; }
+
+@keyframes hookeyClientsLoveFloat {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translateY(-40px) rotate(15deg) scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 0.15;
+  }
+}
+
+/* Header Section */
+.hookey-clients-header-section {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 3.5rem;
+  text-align: center;
+}
+
+.hookey-clients-main-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.8rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.hookey-clients-title-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 6rem;
+  font-weight: 900;
+  background: linear-gradient(145deg, 
+    #ffffff 0%, 
+    #ffd9e6 25%, 
+    #ffb3c6 50%, 
+    #ff8cae 75%, 
+    #ff6b9d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 5px;
+  text-shadow: 0 0 50px rgba(255, 105, 180, 0.6);
+  animation: hookeyClientsTitleRomance 3.5s ease-in-out infinite;
+  line-height: 1.2;
+}
+
+@keyframes hookeyClientsTitleRomance {
+  0%, 100% {
+    text-shadow: 0 0 50px rgba(255, 105, 180, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 80px rgba(255, 105, 180, 0.7), 0 0 120px rgba(200, 50, 100, 0.5);
+  }
+}
+
+.hookey-clients-title-heart {
+  font-size: 5.5rem;
+  animation: hookeyClientsHeartBeat 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(255, 80, 140, 0.6));
+}
+
+@keyframes hookeyClientsHeartBeat {
+  0%, 100% { 
+    transform: scale(1) rotate(-3deg); 
+  }
+  50% { 
+    transform: scale(1.2) rotate(3deg); 
+  }
+}
+
+.hookey-clients-romantic-subtitle {
+  font-family: 'Dancing Script', cursive;
+  font-size: 2.4rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 0.8rem;
+  letter-spacing: 3px;
+  text-shadow: 0 0 25px rgba(255, 120, 170, 0.4);
+  font-weight: 400;
+}
+
+/* Modern Toggle Container for Clients */
+.hookey-clients-toggle-love-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-bottom: 3.5rem;
+  position: relative;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.hookey-clients-love-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.8rem 4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 120, 170, 0.3);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.hookey-clients-love-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 200, 220, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.hookey-clients-love-toggle:hover::before {
+  left: 100%;
+}
+
+.hookey-clients-love-toggle.active-love {
+  background: linear-gradient(135deg, #ff6b9d, #c43e6a);
+  border-color: transparent;
+  transform: scale(1.1);
+  box-shadow: 0 25px 45px rgba(255, 105, 180, 0.5), 0 0 40px rgba(255, 105, 180, 0.7);
+}
+
+.hookey-clients-love-toggle:not(.active-love):hover {
+  border-color: #ff8eb5;
+  transform: translateY(-5px);
+  background: rgba(255, 120, 170, 0.12);
+}
+
+.hookey-clients-toggle-emoji {
+  font-size: 3.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+  transition: all 0.4s ease;
+}
+
+.hookey-clients-love-toggle.active-love .hookey-clients-toggle-emoji {
+  transform: scale(1.15);
+  animation: hookeyClientsEmojiPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes hookeyClientsEmojiPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.hookey-clients-toggle-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 2.5px;
+}
+
+.hookey-clients-toggle-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 220, 240, 0.8) 0%, transparent 75%);
+  opacity: 0.35;
+  animation: hookeyClientsAuraPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 100px;
+}
+
+@keyframes hookeyClientsAuraPulse {
+  0%, 100% { 
+    opacity: 0.35; 
+    transform: translate(-50%, -50%) scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: translate(-50%, -50%) scale(1.3); 
+  }
+}
+
+/* Toggle Decorative Hearts */
+.hookey-clients-toggle-hearts {
+  display: flex;
+  gap: 1.2rem;
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hookey-clients-toggle-hearts span {
+  font-size: 1.4rem;
+  animation: hookeyClientsHeartPulse 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px #ff69b4);
+}
+
+.hookey-clients-toggle-hearts span:nth-child(2) { animation-delay: 0.3s; }
+.hookey-clients-toggle-hearts span:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes hookeyClientsHeartPulse {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.4); 
+  }
+}
+
+/* Content Box with Romantic Glass Effect */
+.hookey-clients-romantic-content-box {
+  position: relative;
+  z-index: 10;
+  border-radius: 45px;
+  overflow: hidden;
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.45);
+}
+
+.hookey-clients-content-glass {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(145deg, 
+    rgba(255, 240, 245, 0.03), 
+    rgba(255, 180, 200, 0.03));
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 120, 170, 0.18);
+  border-radius: 45px;
+}
+
+.hookey-clients-content-innermost {
+  position: relative;
+  padding: 3.5rem;
+  animation: hookeyClientsContentSlideIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.3);
+}
+
+@keyframes hookeyClientsContentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Corner Love Decorations */
+.hookey-clients-corner-love {
+  position: absolute;
+  font-size: 4.5rem;
+  opacity: 0.2;
+  z-index: 5;
+  animation: hookeyClientsCornerRomance 7s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.3));
+}
+
+.hookey-clients-corner-love.top-left-love {
+  top: 20px;
+  left: 20px;
+  animation-delay: 0s;
+}
+
+.hookey-clients-corner-love.top-right-love {
+  top: 20px;
+  right: 20px;
+  animation-delay: 1.8s;
+}
+
+.hookey-clients-corner-love.bottom-left-love {
+  bottom: 20px;
+  left: 20px;
+  animation-delay: 3.6s;
+}
+
+.hookey-clients-corner-love.bottom-right-love {
+  bottom: 20px;
+  right: 20px;
+  animation-delay: 5.4s;
+}
+
+@keyframes hookeyClientsCornerRomance {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1); 
+    opacity: 0.2;
+  }
+  50% { 
+    transform: rotate(12deg) scale(1.15); 
+    opacity: 0.35;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .hookey-clients-title-text {
+    font-size: 5rem;
+  }
+  
+  .hookey-clients-title-heart {
+    font-size: 4.8rem;
+  }
+  
+  .hookey-clients-love-toggle {
+    padding: 1.5rem 3.5rem;
+  }
+  
+  .hookey-clients-toggle-label {
+    font-size: 2rem;
+  }
+  
+  .hookey-clients-toggle-emoji {
+    font-size: 2.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hookey-admin-clients-romantic-wrapper {
+    padding: 1.8rem;
+  }
+  
+  .hookey-clients-title-text {
+    font-size: 4rem;
+  }
+  
+  .hookey-clients-title-heart {
+    font-size: 3.8rem;
+  }
+  
+  .hookey-clients-romantic-subtitle {
+    font-size: 2rem;
+  }
+  
+  .hookey-clients-toggle-love-container {
+    gap: 1.5rem;
+  }
+  
+  .hookey-clients-love-toggle {
+    padding: 1.2rem 2.5rem;
+  }
+  
+  .hookey-clients-toggle-label {
+    font-size: 1.7rem;
+  }
+  
+  .hookey-clients-toggle-emoji {
+    font-size: 2.4rem;
+  }
+  
+  .hookey-clients-content-innermost {
+    padding: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookey-admin-clients-romantic-wrapper {
+    padding: 1.2rem;
+  }
+  
+  .hookey-clients-main-title {
+    gap: 1rem;
+  }
+  
+  .hookey-clients-title-text {
+    font-size: 3rem;
+    letter-spacing: 2px;
+  }
+  
+  .hookey-clients-title-heart {
+    font-size: 2.8rem;
+  }
+  
+  .hookey-clients-romantic-subtitle {
+    font-size: 1.6rem;
+  }
+  
+  .hookey-clients-toggle-love-container {
+    flex-direction: row;
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .hookey-clients-love-toggle {
+    flex: 1;
+    padding: 1rem 1.2rem;
+    gap: 0.8rem;
+    justify-content: center;
+  }
+  
+  .hookey-clients-toggle-label {
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+  }
+  
+  .hookey-clients-toggle-emoji {
+    font-size: 1.8rem;
+  }
+  
+  .hookey-clients-content-innermost {
+    padding: 1.5rem;
+  }
+  
+  .hookey-clients-toggle-hearts span {
+    font-size: 1.2rem;
+  }
+  
+  .hookey-clients-corner-love {
+    font-size: 3rem;
+  }
+  
+  /* Reduce floating elements on mobile */
+  .hookey-clients-floating-romance span:nth-child(n+4) {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .hookey-clients-title-text {
+    font-size: 2.5rem;
+  }
+  
+  .hookey-clients-title-heart {
+    font-size: 2.2rem;
+  }
+  
+  .hookey-clients-toggle-label {
+    font-size: 1.1rem;
+  }
+  
+  .hookey-clients-toggle-emoji {
+    font-size: 1.5rem;
+  }
+  
+  .hookey-clients-romantic-subtitle {
+    font-size: 1.4rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .hookey-clients-love-toggle:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: none;
+    border-color: rgba(255, 120, 170, 0.3);
+  }
+  
+  .hookey-clients-love-toggle.active-love {
+    background: linear-gradient(135deg, #ff6b9d, #c43e6a);
+    transform: scale(1.05);
+  }
+}

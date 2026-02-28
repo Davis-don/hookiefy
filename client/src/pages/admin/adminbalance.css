@@ -1,0 +1,109 @@
+.hookey-admin-balance-badge {
+  background: linear-gradient(145deg, rgba(200, 50, 80, 0.9), rgba(255, 120, 160, 0.9));
+  backdrop-filter: blur(10px);
+  padding: 0.7rem 1.4rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 18px rgba(180, 40, 70, 0.3), 0 0 25px rgba(255, 105, 180, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.hookey-admin-balance-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hookey-admin-balance-badge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(180, 40, 70, 0.4), 0 0 35px rgba(255, 105, 180, 0.3);
+}
+
+.hookey-admin-balance-badge:hover::before {
+  opacity: 1;
+  animation: hookeyAdminBalanceGlow 1.5s ease;
+}
+
+@keyframes hookeyAdminBalanceGlow {
+  0% {
+    transform: translate(-30%, -30%) rotate(0deg);
+  }
+  100% {
+    transform: translate(30%, 30%) rotate(180deg);
+  }
+}
+
+.hookey-admin-balance-symbol {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.hookey-admin-balance-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.hookey-admin-balance-love {
+  font-size: 1.2rem;
+  margin-left: 5px;
+  animation: hookeyAdminBalanceBeat 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes hookeyAdminBalanceBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hookey-admin-balance-badge {
+    padding: 0.6rem 1.2rem;
+  }
+  
+  .hookey-admin-balance-value {
+    font-size: 1.3rem;
+  }
+  
+  .hookey-admin-balance-symbol {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookey-admin-balance-badge {
+    padding: 0.5rem 1rem;
+  }
+  
+  .hookey-admin-balance-value {
+    font-size: 1.1rem;
+  }
+  
+  .hookey-admin-balance-love {
+    font-size: 1rem;
+  }
+}
