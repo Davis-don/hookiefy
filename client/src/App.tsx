@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/common/Login'
+import Superadmin from './pages/superadmin/Superadmin';
 import './App.css'
 
 function App() {
@@ -8,7 +9,8 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Superadmin />} />
         </Routes>
       </Router>
     </div>  )
