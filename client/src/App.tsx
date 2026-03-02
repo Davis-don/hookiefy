@@ -7,6 +7,7 @@ import Unauthorized from "./pages/common/Unauthorized";
 import ProtectedRoute from "./components/protected/Protectedroute";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
+import Homepage from "./pages/common/Homepage";
 import "./App.css";
 
 function App() {
@@ -14,13 +15,15 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
+          <Route path="/" element={<Homepage />} />
           {/* Public routes */}
-          <Route path="/" element={
+          <Route path="/login" element={
             <Toastlayout>
             <Login />
             </Toastlayout>} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />
+          
 
           {/* Protected routes */}
           <Route

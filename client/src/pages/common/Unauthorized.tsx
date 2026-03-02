@@ -22,7 +22,7 @@ const Unauthorized: React.FC = () => {
           Please verify your credentials or contact your administrator.
         </p>
         <div className="error-actions">
-          <button className="error-button primary" onClick={() => navigate('/')}>
+          <button className="error-button primary" onClick={() => navigate('/login')}>
             Return to Login
           </button>
           <button className="error-button secondary" onClick={() => navigate(-1)}>

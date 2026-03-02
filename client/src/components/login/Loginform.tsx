@@ -69,7 +69,7 @@ function Loginform({ onSubmittingChange }: LoginformProps) {
       if (data.redirect_to) {
         navigate(data.redirect_to);
       } else {
-        navigate('/unauthorized');
+        navigate('/login'); // Fallback to login page if no redirect provided
       }
     },
     onError: (error: ApiError) => {

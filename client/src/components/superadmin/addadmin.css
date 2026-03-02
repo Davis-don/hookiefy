@@ -1,5 +1,8 @@
 .overal-add-admin-container {
   /* Keep your original container styles */
+  position: relative;
+  width: 100%;
+  min-height: 100%;
 }
 
 .overall-form-container-add-admin {
@@ -50,6 +53,18 @@
 .submit-btn:hover {
   background-color: white;
   color: black;
+}
+
+/* Spinner container - centered */
+.add-admin-spinner-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 /* Responsive design - only layout changes */

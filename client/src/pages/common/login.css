@@ -593,3 +593,189 @@
     min-height: 300px;
   }
 }
+
+
+
+/* Login Checking Container */
+.login-checking-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(196, 30, 58, 0.1);
+  border: 1px solid rgba(196, 30, 58, 0.2);
+  text-align: center;
+}
+
+/* Redirect Container */
+.login-redirect-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 2rem auto;
+  animation: fadeInUp 0.5s ease;
+}
+
+.redirect-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 30px;
+  padding: 3rem 2rem;
+  box-shadow: 0 20px 40px rgba(196, 30, 58, 0.15);
+  border: 1px solid rgba(196, 30, 58, 0.2);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.redirect-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #c41e3a, #ff69b4, #c41e3a);
+}
+
+.redirect-hearts {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 1.5rem;
+}
+
+.redirect-hearts span {
+  font-size: 2.5rem;
+  animation: heartBeat 1.2s ease-in-out infinite;
+}
+
+.redirect-hearts span:nth-child(2) {
+  animation-delay: 0.2s;
+  font-size: 3rem;
+}
+
+.redirect-hearts span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes heartBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.redirect-card h3 {
+  font-size: 2rem;
+  color: #2d1219;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.redirect-card p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.redirect-progress-bar {
+  width: 80%;
+  margin: 0 auto 2rem;
+  height: 6px;
+  background: rgba(196, 30, 58, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.redirect-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c41e3a, #ff69b4);
+  animation: progressFill 1.5s ease-in-out forwards;
+  width: 0%;
+}
+
+@keyframes progressFill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.redirect-user-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed rgba(196, 30, 58, 0.2);
+}
+
+.redirect-user-info p {
+  margin: 0.3rem 0;
+  font-size: 1rem;
+}
+
+.redirect-user-info .redirect-role {
+  font-size: 0.9rem;
+  color: #c41e3a;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-checking-container,
+  .redirect-card {
+    padding: 1.5rem;
+    margin: 1rem auto;
+  }
+
+  .redirect-hearts span {
+    font-size: 2rem;
+  }
+
+  .redirect-hearts span:nth-child(2) {
+    font-size: 2.5rem;
+  }
+
+  .redirect-card h3 {
+    font-size: 1.6rem;
+  }
+
+  .redirect-card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .redirect-card {
+    padding: 1.2rem;
+  }
+
+  .redirect-hearts span {
+    font-size: 1.8rem;
+  }
+
+  .redirect-hearts span:nth-child(2) {
+    font-size: 2.2rem;
+  }
+
+  .redirect-card h3 {
+    font-size: 1.4rem;
+  }
+}

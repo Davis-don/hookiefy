@@ -1,7 +1,7 @@
 # accounts/urls.py
 from django.urls import path
 from .views import (
-    signup,
+    adminSignup,
     login_view,
     check_auth,
     refresh_token_view,
@@ -12,15 +12,13 @@ from .views import (
 )
 
 urlpatterns = [
-    # Authentication
-    path('signup/', signup, name='signup'),
+    path('admin/signup/', adminSignup, name='signup'),
     path('login/', login_view, name='login'),
     path('check-auth/', check_auth, name='check-auth'),
     path('refresh-token/', refresh_token_view, name='refresh-token'),
     path('logout/', logout_view, name='logout'),
-    
-    # Profile management
-    path('profile/', fetch_user_profile, name='fetch-profile'),
-    path('profile/update/', update_user_profile, name='update-profile'),
-    path('password/update/', update_password, name='update-password'),
+
+    path('profile/', fetch_user_profile),
+    path('profile/update/', update_user_profile),
+    path('password/update/', update_password),
 ]

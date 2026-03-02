@@ -1,9 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-
-
-from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
+
 
 class User(AbstractUser):
     ROLE_TYPE = (
@@ -11,38 +8,30 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('client', 'Client'),
     )
+
     role = models.CharField(max_length=20, choices=ROLE_TYPE)
     email = models.EmailField(unique=True)
 
-    # login using email
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
-    # override related_name to avoid clashes
     groups = models.ManyToManyField(
         Group,
-        related_name='custom_user_set',  # change this to a unique name
+        related_name='custom_user_set',
         blank=True,
-        help_text='The groups this user belongs to.',
-        verbose_name='groups',
     )
+
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name='custom_user_permissions_set',  # unique name
+        related_name='custom_user_permissions_set',
         blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions',
     )
 
     def __str__(self):
         return self.email
 
-class SuperAdminProfile(models.Model):
-    """
-    Role-specific extra fields for SuperAdmin.
-    Only include fields that only SuperAdmins have.
-    """
 
+class SuperAdminProfile(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -56,27 +45,25 @@ class SuperAdminProfile(models.Model):
 
 
 class AdminProfile(models.Model):
-    """
-    Optional profile for Admin users.
-    Only include admin-specific fields if needed.
-    """
+    GENDER_CHOICES = [
+        ("male","Male"),
+        ("female","Female"),
+        ("other","Other"),
+        ("nonbinary","Non-binary"),
+        ("prefer_not_say","Prefer not to say"),
+    ]
 
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="admin_profile"
     )
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return f"Admin Profile - {self.user.email}"
 
-
 class ClientProfile(models.Model):
-    """
-    Optional profile for Client users.
-    Only include client-specific fields if needed.
-    """
-
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

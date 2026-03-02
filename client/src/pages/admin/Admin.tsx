@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './admin.css';
 
 // Import components
@@ -6,6 +7,7 @@ import AdminDashboard from '../../components/admin/AdminDashboard';
 import AdminSettings from '../../components/admin/AdminSettings';
 import AdminClients from './AdminClients';
 import AdminBalance from './AdminBalance';
+import { logoutUser } from '../../utils/logout';
 
 // Types
 type ActiveTab = 'dashboard' | 'settings' | 'clients';
@@ -42,6 +44,9 @@ const Admin: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveTab>('dashboard');
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -64,9 +69,19 @@ const Admin: React.FC = () => {
     { id: 'clients', label: 'Clients', icon: '💑' },
   ];
 
-  const handleSignOut = (): void => {
-    console.log('Signing out...');
-    // Add logout logic here
+  const handleSignOut = async (): Promise<void> => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const success = await logoutUser(apiUrl);
+    
+    if (success) {
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } else {
+      setIsLoggingOut(false);
+    }
   };
 
   const toggleSidebar = (): void => {
@@ -138,6 +153,7 @@ const Admin: React.FC = () => {
                 setActiveView(item.id);
                 if (isMobileView) setIsSidebarOpen(false);
               }}
+              disabled={isLoggingOut}
             >
               <span className="hookey-admin-nav-icon">{item.icon}</span>
               <span className="hookey-admin-nav-text">{item.label}</span>
@@ -147,9 +163,13 @@ const Admin: React.FC = () => {
         </nav>
 
         <div className="hookey-admin-side-panel-footer">
-          <button className="hookey-admin-nav-link hookey-admin-logout-btn" onClick={handleSignOut}>
-            <span className="hookey-admin-nav-icon">💔</span>
-            <span className="hookey-admin-nav-text">Logout</span>
+          <button 
+            className={`hookey-admin-nav-link hookey-admin-logout-btn ${isLoggingOut ? 'hookey-admin-logging-out' : ''}`}
+            onClick={handleSignOut}
+            disabled={isLoggingOut}
+          >
+            <span className="hookey-admin-nav-icon">{isLoggingOut ? '⏳' : '💔'}</span>
+            <span className="hookey-admin-nav-text">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
           </button>
         </div>
 

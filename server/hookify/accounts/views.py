@@ -1,5 +1,3 @@
-# accounts/views.py
-
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -13,27 +11,36 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
     UpdatePasswordSerializer,
+    AdminSignupSerializer,  # ADD THIS IMPORT
 )
 from .authentication import CookieJWTAuthentication
+from .models import AdminProfile
 
 
 # ---------------------------
-# SIGNUP VIEW
+# SIGNUP VIEW (FOR ADMINS)
 # ---------------------------
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def signup(request):
+def adminSignup(request):
     """
-    Register a new user
+    Register a new Admin user (only SuperAdmins should call this endpoint)
     """
-    serializer = UserSerializer(data=request.data)
+    # Check if current user is SuperAdmin (if authenticated)
+    if request.user.is_authenticated and request.user.role != "superadmin":
+        return Response(
+            {"error": "Only SuperAdmins can create Admin users."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = AdminSignupSerializer(data=request.data)  # Now this will work
 
     if serializer.is_valid():
         user = serializer.save()
 
         return Response(
             {
-                "message": "User created successfully",
+                "message": "Admin user created successfully",
                 "user": {
                     "id": user.id,
                     "email": user.email,
@@ -41,7 +48,6 @@ def signup(request):
                     "last_name": user.last_name,
                     "role": user.role,
                 },
-                "next": "LOGIN_REQUIRED",
             },
             status=status.HTTP_201_CREATED,
         )
@@ -55,15 +61,21 @@ def signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
+    """
+    Login a user using email and password.
+    Returns JWT tokens in HTTP-only cookies and role-based redirect info.
+    """
+    # 1️⃣ Validate input
     serializer = LoginSerializer(data=request.data)
-
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    email = serializer.validated_data['email']
+    email = serializer.validated_data['email'].strip().lower()
     password = serializer.validated_data['password']
 
-    user = authenticate(request, email=email, password=password)
+    # 2️⃣ Authenticate user
+    # ✅ Use 'username=email' because USERNAME_FIELD = 'email' in your User model
+    user = authenticate(request, username=email, password=password)
 
     if user is None:
         return Response(
@@ -71,20 +83,20 @@ def login_view(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
 
+    # 3️⃣ Create JWT tokens
     refresh = RefreshToken.for_user(user)
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
-    # Role-based redirect
+    # 4️⃣ Role-based redirect
     if user.role == "superadmin":
         redirect_to = "/superadmin/dashboard"
     elif user.role == "admin":
         redirect_to = "/admin/dashboard"
-    elif user.role == "client":
-        redirect_to = "/client/dashboard"
     else:
-        redirect_to = "/unauthorized"
+        redirect_to = "/client/dashboard"
 
+    # 5️⃣ Prepare response
     response = Response(
         {
             "message": "Logged in successfully",
@@ -93,28 +105,28 @@ def login_view(request):
         status=status.HTTP_200_OK,
     )
 
+    # 6️⃣ Set JWT cookies
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
+        secure=False,  # Change to True in production with HTTPS
         samesite="Lax",
         path="/",
-        max_age=60 * 60 * 12,
+        max_age=60 * 60 * 12,  # 12 hours
     )
 
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
+        secure=False,  # Change to True in production with HTTPS
         samesite="Lax",
         path="/",
-        max_age=60 * 60 * 24 * 30,
+        max_age=60 * 60 * 24 * 30,  # 30 days
     )
 
     return response
-
 
 # ---------------------------
 # CHECK AUTH VIEW
