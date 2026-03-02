@@ -174,6 +174,56 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 # =========================================================
+# ADMIN UPDATE SERIALIZER (for inline editing)
+# =========================================================
+class AdminUpdateSerializer(serializers.ModelSerializer):
+    gender = serializers.ChoiceField(
+        choices=[("male","Male"), ("female","Female"), ("other","Other"), ("nonbinary","Non-binary"), ("prefer_not_say","Prefer not to say")],
+        required=False,
+        allow_blank=True
+    )
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "gender",
+        ]
+
+    def validate_first_name(self, value):
+        if value and value.strip():
+            return value.strip()
+        return value
+
+    def validate_last_name(self, value):
+        if value and value.strip():
+            return value.strip()
+        return value
+
+    def update(self, instance, validated_data):
+        gender = validated_data.pop("gender", None)
+        
+        # Update user fields
+        if "first_name" in validated_data:
+            instance.first_name = validated_data["first_name"]
+        if "last_name" in validated_data:
+            instance.last_name = validated_data["last_name"]
+        
+        instance.save()
+        
+        # Update gender in profile
+        if gender is not None:
+            if hasattr(instance, "admin_profile"):
+                instance.admin_profile.gender = gender
+                instance.admin_profile.save()
+        
+        return instance
+
+
+# =========================================================
 # UPDATE PASSWORD SERIALIZER
 # =========================================================
 class UpdatePasswordSerializer(serializers.Serializer):
