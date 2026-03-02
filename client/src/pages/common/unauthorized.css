@@ -1,0 +1,236 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.unauthorized-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  padding: 20px;
+}
+
+.unauthorized-content {
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
+}
+
+/* Icon styles with minimal animation */
+.icon-wrapper {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.padlock {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  animation: gentleFloat 3s ease-in-out infinite;
+}
+
+.padlock-body {
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  width: 40px;
+  height: 35px;
+  background: #e53e3e;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(229, 62, 62, 0.2);
+}
+
+.padlock-shackle {
+  position: absolute;
+  top: 8px;
+  left: 22px;
+  width: 26px;
+  height: 20px;
+  border: 4px solid #e53e3e;
+  border-bottom: none;
+  border-radius: 15px 15px 0 0;
+  animation: gentleSway 4s ease-in-out infinite;
+}
+
+.padlock-keyhole {
+  position: absolute;
+  top: 20px;
+  left: 32px;
+  width: 6px;
+  height: 10px;
+  background: white;
+  border-radius: 2px;
+}
+
+.error-code {
+  font-size: 72px;
+  font-weight: 600;
+  color: #1a202c;
+  line-height: 1;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+.error-title {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1a202c;
+  margin-bottom: 12px;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #4a5568;
+  line-height: 1.6;
+  margin-bottom: 28px;
+  padding: 0 10px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.error-button {
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.error-button.primary {
+  background-color: #1a202c;
+  color: white;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.error-button.primary:hover {
+  background-color: #2d3748;
+  transform: translateY(-1px);
+}
+
+.error-button.secondary {
+  background-color: transparent;
+  color: #1a202c;
+  border: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.error-button.secondary:hover {
+  background-color: #f7fafc;
+  border-color: #1a202c;
+}
+
+.error-help {
+  font-size: 14px;
+  color: #718096;
+}
+
+.error-help a {
+  color: #1a202c;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.error-help a:hover {
+  border-bottom-color: #1a202c;
+}
+
+/* Minimal Animations */
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes gentleSway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(2deg);
+  }
+  75% {
+    transform: rotate(-2deg);
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* Optional: Very subtle fade-in on page load */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unauthorized-content {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .error-code {
+    font-size: 56px;
+  }
+  
+  .error-title {
+    font-size: 24px;
+  }
+  
+  .padlock {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .error-button {
+    width: 100%;
+  }
+  
+  .unauthorized-content {
+    padding: 32px 16px;
+  }
+}

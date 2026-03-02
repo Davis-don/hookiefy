@@ -504,3 +504,59 @@
 .hookey-superadmin-main-content::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #b22222, #dc143c);
 }
+
+
+
+
+
+
+/* Add to your existing superadmin.css */
+
+/* Logout button states */
+.hookey-superadmin-logout-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hookey-superadmin-logout-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 105, 180, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.hookey-superadmin-logout-btn:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.hookey-superadmin-logout-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.hookey-superadmin-logout-btn:disabled::before {
+  animation: logoutPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes logoutPulse {
+  0%, 100% {
+    background: rgba(255, 105, 180, 0.1);
+  }
+  50% {
+    background: rgba(255, 105, 180, 0.3);
+  }
+}
+
+.hookey-superadmin-logging-out {
+  background: linear-gradient(135deg, rgba(255, 105, 180, 0.2), rgba(196, 30, 58, 0.2));
+}
+
+/* Toast will be handled by the Toastcomponent */

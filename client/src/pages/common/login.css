@@ -546,3 +546,50 @@
         animation: softGlow 3s ease-in-out infinite;
     }
 }
+
+
+/* Add to your login.css */
+.login-spinner-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  animation: slideUpFade 0.5s ease;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 968px) {
+  .login-spinner-container {
+    max-width: 450px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-spinner-container {
+    max-width: 400px;
+    padding: 1.2rem;
+    min-height: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-spinner-container {
+    max-width: 320px;
+    padding: 1rem;
+    min-height: 300px;
+  }
+}

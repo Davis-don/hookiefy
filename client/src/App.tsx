@@ -1,21 +1,64 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/common/Login'
-import Superadmin from './pages/superadmin/Superadmin';
-import Admin from './pages/admin/Admin';
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./pages/common/Login";
+import Superadmin from "./pages/superadmin/Superadmin";
+import Admin from "./pages/admin/Admin";
+import Unauthorized from "./pages/common/Unauthorized";
+// import Client from "./pages/client/Client";
+import ProtectedRoute from "./components/protected/Protectedroute";
+import CenteredSpinner from "./pages/Spinnerpage";
+import Toastlayout from "./layouts/Toastlayout";
+import "./App.css";
 
 function App() {
-
   return (
     <div className="app">
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Superadmin />} />
-          <Route path="/admin" element={<Admin />} />
+          {/* Public routes */}
+          <Route path="/" element={
+            <Toastlayout>
+            <Login />
+            </Toastlayout>} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/spinner" element={<CenteredSpinner />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/superadmin/dashboard"
+            element={
+              <ProtectedRoute>
+                <Toastlayout>
+                <Superadmin />
+                </Toastlayout>
+                
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <Toastlayout>
+                <Admin />
+                </Toastlayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route
+            path="/client/dashboard"
+            element={
+              <ProtectedRoute>
+                <Client />
+              </ProtectedRoute>
+            }
+          /> */}
+          
+          {/* Catch all route - 404 */}
+          <Route path="*" element={<Unauthorized />} />
         </Routes>
       </Router>
-    </div>  )
+    </div>
+  );
 }
 
-export default App
+export default App;

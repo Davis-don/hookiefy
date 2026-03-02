@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../../utils/logout';
 import './superadmin.css';
 
 // Import components
@@ -42,6 +44,9 @@ const Superadmin: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -64,8 +69,21 @@ const Superadmin: React.FC = () => {
     { id: 'admins', label: 'Admins', icon: '👑' },
   ];
 
-  const handleLogout = (): void => {
-    console.log('Logging out...');
+  const handleLogout = async (): Promise<void> => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const success = await logoutUser(apiUrl);
+    
+    if (success) {
+      // Navigation is handled in the logout function with window.location.href
+      // But we can also use navigate if preferred
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } else {
+      setIsLoggingOut(false);
+    }
   };
 
   const toggleMenu = (): void => {
@@ -137,6 +155,7 @@ const Superadmin: React.FC = () => {
                 setActiveTab(item.id);
                 if (isMobile) setIsMenuOpen(false);
               }}
+              disabled={isLoggingOut}
             >
               <span className="hookey-superadmin-nav-icon">{item.icon}</span>
               <span className="hookey-superadmin-nav-label">{item.label}</span>
@@ -146,9 +165,17 @@ const Superadmin: React.FC = () => {
         </nav>
 
         <div className="hookey-superadmin-sidebar-footer">
-          <button className="hookey-superadmin-nav-item hookey-superadmin-logout-btn" onClick={handleLogout}>
-            <span className="hookey-superadmin-nav-icon">💕</span>
-            <span className="hookey-superadmin-nav-label">Logout</span>
+          <button 
+            className={`hookey-superadmin-nav-item hookey-superadmin-logout-btn ${isLoggingOut ? 'hookey-superadmin-logging-out' : ''}`}
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            <span className="hookey-superadmin-nav-icon">
+              {isLoggingOut ? '⏳' : '💕'}
+            </span>
+            <span className="hookey-superadmin-nav-label">
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
+            </span>
           </button>
         </div>
 
