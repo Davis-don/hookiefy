@@ -65,8 +65,8 @@ const Superadmin: React.FC = () => {
 
   const menuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '✨' },
-    { id: 'settings', label: 'Settings', icon: '⚡' },
     { id: 'admins', label: 'Admins', icon: '👑' },
+    { id: 'settings', label: 'Settings', icon: '⚡' },
   ];
 
   const handleLogout = async (): Promise<void> => {

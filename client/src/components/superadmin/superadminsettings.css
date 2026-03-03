@@ -1,0 +1,279 @@
+.overall-superadmin-settings-container {
+  width: 100%;
+  min-height: 100%;
+  background: #ffffff;
+  animation: romanticFadeIn 0.6s ease;
+  padding: 1.5rem;
+}
+
+/* Header Section */
+.superadmin-header-settings {
+  background: transparent;
+  padding: 2rem 2.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.header-intro-superadmin-settings {
+  margin-bottom: 2rem;
+}
+
+.header-intro-superadmin-settings h2 {
+  font-size: 3.2rem;
+  color: #2d1219;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  letter-spacing: 1px;
+  position: relative;
+  display: inline-block;
+}
+
+.header-intro-superadmin-settings h2::after {
+  content: '❤️';
+  position: absolute;
+  font-size: 2rem;
+  right: -3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+  animation: heartBeat 1.5s ease infinite;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+}
+
+.header-intro-superadmin-settings p {
+  font-size: 1.6rem;
+  color: #666;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+/* Navigation */
+.settings_navigations-contrainer-superadmin {
+  margin-top: 1rem;
+}
+
+.settings_navigations-contrainer-superadmin ul {
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  gap: 1rem;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.settings_navigations-contrainer-superadmin ul li {
+  cursor: pointer;
+  padding: 1rem 2rem;
+  border-radius: 40px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 1.4rem;
+  color: #4a4a4a;
+  background: rgb(239, 239, 239);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.settings_navigations-contrainer-superadmin ul li:hover {
+  color: white;
+  background: linear-gradient(135deg, #dc143c, #ff1493);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+}
+
+.settings_navigations-contrainer-superadmin ul li.active {
+  background: linear-gradient(135deg, #dc143c, #ff1493);
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+}
+
+/* Settings Body */
+.settings_body_render_superadmin {
+  background: transparent;
+  padding: 2rem 0;
+  min-height: 500px;
+  animation: romanticSlideUp 0.5s ease;
+}
+
+@keyframes romanticSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced Responsive Design */
+@media screen and (max-width: 68.75em) { /* 1100px */
+  .superadmin-header-settings {
+    padding: 1.8rem 2rem;
+  }
+  
+  .header-intro-superadmin-settings h2 {
+    font-size: 2.8rem;
+  }
+  
+  .header-intro-superadmin-settings h2::after {
+    font-size: 1.8rem;
+    right: -2.5rem;
+  }
+}
+
+@media screen and (max-width: 56.25em) { /* 900px */
+  .superadmin-header-settings {
+    padding: 1.5rem;
+  }
+  
+  .header-intro-superadmin-settings h2 {
+    font-size: 2.5rem;
+  }
+  
+  .header-intro-superadmin-settings p {
+    font-size: 1.4rem;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul {
+    justify-content: center;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.3rem;
+  }
+}
+
+@media screen and (max-width: 37.5em) { /* 600px */
+  .overall-superadmin-settings-container {
+    padding: 1rem;
+  }
+  
+  .superadmin-header-settings {
+    padding: 1.2rem;
+  }
+  
+  .header-intro-superadmin-settings {
+    text-align: center;
+  }
+  
+  .header-intro-superadmin-settings h2 {
+    font-size: 2.2rem;
+    display: block;
+    text-align: center;
+  }
+  
+  .header-intro-superadmin-settings h2::after {
+    display: none;
+  }
+  
+  .header-intro-superadmin-settings p {
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 0 auto;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul {
+    gap: 0.8rem;
+    justify-content: center;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li {
+    padding: 0.7rem 1.2rem;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    flex: 0 1 auto;
+  }
+  
+  .settings_body_render_superadmin {
+    padding: 1.5rem 0;
+  }
+}
+
+@media screen and (max-width: 28.125em) { /* 450px */
+  .header-intro-superadmin-settings h2 {
+    font-size: 2rem;
+  }
+  
+  .header-intro-superadmin-settings p {
+    font-size: 1.2rem;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li {
+    padding: 0.6rem 1rem;
+    font-size: 1.1rem;
+    flex: 1 1 auto;
+    text-align: center;
+    min-width: 100px;
+  }
+  
+  .settings_body_render_superadmin {
+    padding: 1rem 0;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .settings_navigations-contrainer-superadmin ul li {
+    padding: 1rem 1.8rem;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li:hover {
+    transform: none;
+    background: rgb(239, 239, 239);
+    color: #4a4a4a;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li:active {
+    background: linear-gradient(135deg, #dc143c, #ff1493);
+    color: white;
+    transform: scale(0.95);
+  }
+  
+  .settings_navigations-contrainer-superadmin ul li.active:active {
+    background: linear-gradient(135deg, #dc143c, #ff1493);
+    color: white;
+  }
+}
+
+/* Landscape mode optimization */
+@media screen and (max-height: 31.25em) and (orientation: landscape) { /* 500px */
+  .superadmin-header-settings {
+    padding: 1rem 1.5rem;
+  }
+  
+  .header-intro-superadmin-settings {
+    margin-bottom: 1rem;
+  }
+  
+  .header-intro-superadmin-settings h2 {
+    font-size: 2rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .header-intro-superadmin-settings p {
+    font-size: 1.2rem;
+  }
+  
+  .settings_navigations-contrainer-superadmin ul {
+    margin-top: 0.5rem;
+  }
+  
+  .settings_body_render_superadmin {
+    min-height: 300px;
+    padding: 1.5rem 0;
+  }
+}
