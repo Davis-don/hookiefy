@@ -1089,3 +1089,125 @@
     min-width: 70px;
   }
 }
+
+
+
+
+/* Add this to your existing alladmins.css file */
+
+/* Admin Clients Header - Updated for refresh button */
+.admin-clients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header-left h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  color: #2d1219;
+  margin: 0;
+}
+
+.header-left p {
+  font-size: 1rem;
+  color: #c41e3a;
+  background: rgba(196, 30, 58, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Refresh Button */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background: white;
+  border: 2px solid rgba(196, 30, 58, 0.2);
+  border-radius: 12px;
+  color: #c41e3a;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.refresh-btn svg {
+  transition: transform 0.5s ease;
+}
+
+.refresh-btn:hover {
+  background: rgba(196, 30, 58, 0.05);
+  border-color: #c41e3a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(196, 30, 58, 0.15);
+}
+
+.refresh-btn:hover svg {
+  transform: rotate(180deg);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(196, 30, 58, 0.1);
+}
+
+/* Responsive adjustments for refresh button */
+@media (max-width: 768px) {
+  .admin-clients-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .header-left h2 {
+    font-size: 1.5rem;
+  }
+  
+  .refresh-btn {
+    align-self: flex-end;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .header-left h2 {
+    font-size: 1.3rem;
+  }
+  
+  .header-left p {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .refresh-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+  }
+}

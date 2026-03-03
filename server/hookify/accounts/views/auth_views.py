@@ -1,0 +1,206 @@
+# accounts/views/auth_views.py
+
+# ---------------------------
+# DJANGO IMPORTS
+# ---------------------------
+from django.contrib.auth import authenticate
+
+# ---------------------------
+# DRF IMPORTS
+# ---------------------------
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
+# ---------------------------
+# JWT IMPORTS
+# ---------------------------
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+# ---------------------------
+# LOCAL IMPORTS
+# ---------------------------
+from ..serializers import LoginSerializer
+from ..authentication import CookieJWTAuthentication
+
+
+# =====================================================
+# LOGIN VIEW (JWT Cookie Based)
+# =====================================================
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    """
+    Login a user using email and password.
+    Returns JWT tokens in HTTP-only cookies and role-based redirect info.
+    """
+
+    # 1️⃣ Validate input
+    serializer = LoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    email = serializer.validated_data['email'].strip().lower()
+    password = serializer.validated_data['password']
+
+    # 2️⃣ Authenticate user
+    user = authenticate(request, username=email, password=password)
+
+    if user is None:
+        return Response(
+            {"error": "Invalid credentials"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    # 3️⃣ Create JWT tokens
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+
+    # 4️⃣ Role-based redirect
+    if user.role == "superadmin":
+        redirect_to = "/superadmin/dashboard"
+    elif user.role == "admin":
+        redirect_to = "/admin/dashboard"
+    else:
+        redirect_to = "/client/dashboard"
+
+    # 5️⃣ Prepare response
+    response = Response(
+        {
+            "message": "Logged in successfully",
+            "redirect_to": redirect_to,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+    # 6️⃣ Set JWT cookies
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,   # ✅ change to True in production
+        samesite="Lax",
+        path="/",
+        max_age=60 * 60 * 12,  # 12 hours
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        path="/",
+        max_age=60 * 60 * 24 * 30,  # 30 days
+    )
+
+    return response
+
+
+# =====================================================
+# CHECK AUTH VIEW
+# =====================================================
+@api_view(['GET'])
+@authentication_classes([CookieJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def check_auth(request):
+    user = request.user
+
+    if user.role == "superadmin":
+        redirect_to = "/superadmin/dashboard"
+    elif user.role == "admin":
+        redirect_to = "/admin/dashboard"
+    else:
+        redirect_to = "/client/dashboard"
+
+    return Response(
+        {
+            "authenticated": True,
+            "redirect_to": redirect_to,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": user.role,
+            },
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# =====================================================
+# REFRESH TOKEN VIEW
+# =====================================================
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token_view(request):
+    refresh_token = request.COOKIES.get("refresh_token")
+
+    if not refresh_token:
+        return Response(
+            {"error": "Refresh token not found"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    try:
+        refresh = RefreshToken(refresh_token)
+        access_token = str(refresh.access_token)
+
+        response = Response(
+            {"message": "Token refreshed successfully"},
+            status=status.HTTP_200_OK,
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+            path="/",
+            max_age=60 * 60 * 12,
+        )
+
+        return response
+
+    except TokenError:
+        return Response(
+            {"error": "Invalid or expired refresh token"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+
+# =====================================================
+# LOGOUT VIEW
+# =====================================================
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+
+    refresh_token = request.COOKIES.get("refresh_token")
+
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            pass
+
+    response = Response(
+        {"message": "Logged out successfully"},
+        status=status.HTTP_200_OK,
+    )
+
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
+
+    return response
