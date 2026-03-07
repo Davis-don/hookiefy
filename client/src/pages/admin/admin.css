@@ -406,13 +406,12 @@
   background: #ffffff;
 }
 
-/* Content Card */
+/* Content Card - NO OUTLINE, completely transparent */
 .hookey-admin-content-card {
-  background: #ffffff;
-  border-radius: 25px;
-  padding: 2.5rem;
-  border: 1px solid rgba(220, 20, 60, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
   position: relative;
   z-index: 10;
   animation: hookeyAdminContentAppear 0.5s ease;
@@ -510,7 +509,7 @@
   }
   
   .hookey-admin-content-card {
-    padding: 2rem;
+    padding: 0;
   }
   
   .hookey-admin-content-card h2 {
@@ -549,8 +548,8 @@
   }
   
   .hookey-admin-content-card {
-    padding: 1.5rem;
-    border-radius: 20px;
+    padding: 0;
+    border-radius: 0;
   }
   
   .hookey-admin-content-card h2 {
