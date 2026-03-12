@@ -65,8 +65,8 @@ const Admin: React.FC = () => {
 
   const menuLinks: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '🌟' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
     { id: 'clients', label: 'Clients', icon: '💑' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
   const handleSignOut = async (): Promise<void> => {

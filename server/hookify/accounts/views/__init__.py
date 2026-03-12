@@ -6,5 +6,8 @@ from .auth_views import *
 # SuperAdmin Views
 from .superadmin_views import *
 
+# Admin Views
+from .admin_views import *
+
 # User Views
 from .user_views import *

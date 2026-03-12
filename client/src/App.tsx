@@ -3,11 +3,11 @@ import Login from "./pages/common/Login";
 import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
 import Unauthorized from "./pages/common/Unauthorized";
-// import Client from "./pages/client/Client";
+import Clientaccount from "./pages/client/Clientaccount";
 import ProtectedRoute from "./components/protected/Protectedroute";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
-import Homepage from "./pages/common/Homepage";
+// import Homepage from "./pages/common/Homepage";
 import "./App.css";
 
 function App() {
@@ -15,7 +15,8 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          <Route path="/" element={<Homepage />} />
+          {/* <Route path="/" element={<Homepage />} /> */}
+          <Route path="/" element={<Clientaccount />} />
           {/* Public routes */}
           <Route path="/login" element={
             <Toastlayout>
@@ -47,14 +48,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/client/dashboard"
             element={
               <ProtectedRoute>
-                <Client />
+                <Clientaccount />
               </ProtectedRoute>
             }
-          /> */}
+          />
           
           {/* Catch all route - 404 */}
           <Route path="*" element={<Unauthorized />} />
