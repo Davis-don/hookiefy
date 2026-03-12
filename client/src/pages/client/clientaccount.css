@@ -276,3 +276,35 @@ body {
 }
 
 /* Rest of your existing CSS remains the same */
+
+
+
+
+
+/* Sidebar Overlay for Mobile */
+.ca-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 85;
+  animation: ca-fadeIn 0.3s ease;
+}
+
+@keyframes ca-fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Update mobile sidebar z-index to be above overlay */
+@media (max-width: 768px) {
+  .ca-sidebar {
+    z-index: 90;
+  }
+}

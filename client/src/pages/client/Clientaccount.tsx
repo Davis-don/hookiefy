@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './common/Clientheader';
 import HomeContent from './Homecontent';
 import NotificationsContent from './NotificationsContent';
@@ -9,6 +9,27 @@ import './clientaccount.css';
 function Clientaccount() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState('home');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      // On mobile, sidebar should be closed by default
+      // On desktop, sidebar should be open by default
+      if (mobile) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    // Set initial state based on screen size
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -16,7 +37,6 @@ function Clientaccount() {
 
   const handleLogout = () => {
     alert('Logout clicked - User would be logged out');
-    // Add actual logout logic here later
   };
 
   const menuItems = [
@@ -52,7 +72,13 @@ function Clientaccount() {
               <div 
                 key={item.id} 
                 className={`ca-nav-item ${activePage === item.id ? 'ca-nav-active' : ''}`}
-                onClick={() => setActivePage(item.id)}
+                onClick={() => {
+                  setActivePage(item.id);
+                  // On mobile, close sidebar after selecting a menu item
+                  if (isMobile) {
+                    setSidebarOpen(false);
+                  }
+                }}
               >
                 <span className="ca-nav-icon">{item.icon}</span>
                 <span className="ca-nav-label">{item.label}</span>
@@ -80,6 +106,11 @@ function Clientaccount() {
             </div>
           </div>
         </aside>
+
+        {/* Overlay for mobile when sidebar is open */}
+        {isMobile && sidebarOpen && (
+          <div className="ca-sidebar-overlay" onClick={toggleSidebar}></div>
+        )}
 
         <main className="ca-main-content">
           {renderContent()}
