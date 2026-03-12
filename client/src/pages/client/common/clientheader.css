@@ -43,8 +43,8 @@
   border-radius: 8px;
   transition: all 0.2s;
   line-height: 1;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .ca-hamburger-btn:hover {
@@ -136,8 +136,8 @@
   transition: all 0.2s;
   line-height: 1;
   position: relative;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .ca-notification-icon:hover {
@@ -153,8 +153,8 @@
   color: white;
   font-size: 10px;
   font-weight: 600;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  min-width: 40px;
+  min-width: 44px;
 }
 
 .ca-user-avatar:hover {
@@ -177,16 +177,16 @@
 }
 
 .ca-avatar-initials {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: #f0f0f0;
   border: 1px solid #ddd;
-  border-radius: 40px;
+  border-radius: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   color: #555;
   transition: all 0.2s;
 }
@@ -196,27 +196,106 @@
   border-color: #ccc;
 }
 
-/* Laptop Screens */
-@media (max-width: 1200px) {
-  .ca-header-container {
-    padding: 0 20px;
-    gap: 16px;
-  }
+/* Mobile Search Button */
+.ca-mobile-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #555;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 12px;
+  transition: all 0.2s;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0 auto;
+}
 
-  .ca-header-left {
-    gap: 16px;
-  }
+.ca-mobile-search-btn:hover {
+  background: #ffffff;
+  border-color: #ccc;
+  color: #333;
+}
 
-  .ca-header-search {
-    max-width: 400px;
-  }
+/* Mobile Search Overlay */
+.ca-mobile-search-overlay {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 16px;
+  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  animation: ca-slideDown 0.3s ease;
+}
 
-  .ca-brand-logo {
-    font-size: 20px;
+@keyframes ca-slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* Tablet Landscape */
+.ca-mobile-search-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ca-mobile-search-icon {
+  color: #777;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.ca-mobile-search-input {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  background: #f5f5f5;
+  padding: 12px 16px;
+  border-radius: 24px;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.ca-mobile-search-input:focus {
+  background: #ffffff;
+  border-color: #000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ca-mobile-search-close {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.ca-mobile-search-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+/* Tablet and Mobile Responsive */
 @media (max-width: 1024px) {
   .ca-header {
     height: 68px;
@@ -232,43 +311,40 @@
   }
 
   .ca-hamburger-btn {
-    font-size: 20px;
-    padding: 6px;
-    min-width: 38px;
-    min-height: 38px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-brand-logo {
     font-size: 20px;
   }
 
-  .ca-header-search {
-    max-width: 350px;
-    min-width: 180px;
-  }
-
-  .ca-search-wrapper {
-    padding: 7px 14px;
-  }
-
-  .ca-header-right {
-    gap: 12px;
-  }
-
   .ca-notification-icon {
-    font-size: 20px;
-    min-width: 38px;
-    min-height: 38px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ca-notification-badge {
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
   }
 
   .ca-avatar-initials {
-    width: 38px;
-    height: 38px;
-    font-size: 14px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .ca-mobile-search-btn {
+    font-size: 24px;
+    min-width: 48px;
+    min-height: 48px;
   }
 }
 
-/* Tablet Portrait */
 @media (max-width: 768px) {
   .ca-header {
     height: 64px;
@@ -284,65 +360,44 @@
   }
 
   .ca-hamburger-btn {
-    font-size: 20px;
-    padding: 6px;
-    min-width: 36px;
-    min-height: 36px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-brand-logo {
     font-size: 18px;
   }
 
-  .ca-header-search {
-    max-width: 300px;
-    min-width: 160px;
-  }
-
-  .ca-search-wrapper {
-    padding: 6px 12px;
-  }
-
-  .ca-search-icon {
-    font-size: 16px;
-    margin-right: 8px;
-  }
-
-  .ca-search-field {
-    font-size: 13px;
-  }
-
-  .ca-search-field::placeholder {
-    font-size: 13px;
-  }
-
-  .ca-header-right {
-    gap: 8px;
-  }
-
   .ca-notification-icon {
-    font-size: 20px;
-    min-width: 36px;
-    min-height: 36px;
-    padding: 6px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-notification-badge {
-    top: 2px;
-    right: 2px;
-    font-size: 9px;
-    min-width: 15px;
-    height: 15px;
+    min-width: 18px;
+    height: 18px;
   }
 
   .ca-avatar-initials {
-    width: 36px;
-    height: 36px;
-    font-size: 13px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .ca-mobile-search-btn {
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ca-mobile-search-overlay {
+    top: 64px;
+    padding: 14px;
   }
 }
 
-/* Large Mobile */
 @media (max-width: 640px) {
   .ca-header {
     height: 60px;
@@ -350,45 +405,36 @@
 
   .ca-header-container {
     padding: 0 14px;
-    gap: 10px;
-  }
-
-  .ca-header-left {
     gap: 8px;
   }
 
+  .ca-header-left {
+    gap: 6px;
+  }
+
   .ca-hamburger-btn {
-    font-size: 18px;
-    padding: 5px;
-    min-width: 34px;
-    min-height: 34px;
+    font-size: 24px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 8px;
   }
 
   .ca-brand-logo {
-    font-size: 17px;
+    font-size: 18px;
   }
 
   .ca-header-search {
-    max-width: 250px;
-    min-width: 140px;
+    min-width: auto;
+    display: flex;
+    justify-content: center;
   }
 
-  .ca-search-wrapper {
-    padding: 5px 10px;
-  }
-
-  .ca-search-icon {
-    font-size: 15px;
-    margin-right: 6px;
-  }
-
-  .ca-search-field {
-    font-size: 12px;
-  }
-
-  .ca-search-field::placeholder {
-    font-size: 12px;
-    content: "Search...";
+  .ca-mobile-search-btn {
+    font-size: 24px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 8px;
+    border-radius: 12px;
   }
 
   .ca-header-right {
@@ -396,228 +442,123 @@
   }
 
   .ca-notification-icon {
-    font-size: 18px;
-    min-width: 34px;
-    min-height: 34px;
-    padding: 5px;
+    font-size: 24px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 8px;
   }
 
   .ca-notification-badge {
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
-    min-width: 14px;
-    height: 14px;
-    border-width: 1.5px;
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
+    top: 4px;
+    right: 4px;
+    border-width: 2px;
+  }
+
+  .ca-user-avatar {
+    min-width: 48px;
   }
 
   .ca-avatar-initials {
-    width: 34px;
-    height: 34px;
-    font-size: 12px;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    border-width: 2px;
+  }
+
+  .ca-mobile-search-overlay {
+    top: 60px;
+    padding: 12px;
+  }
+
+  .ca-mobile-search-input {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .ca-mobile-search-close {
+    font-size: 15px;
+    padding: 8px 12px;
   }
 }
 
-/* Medium Mobile */
 @media (max-width: 480px) {
   .ca-header {
     height: 56px;
   }
 
-  .ca-header-container {
-    padding: 0 12px;
-    gap: 8px;
-  }
-
-  .ca-header-left {
-    gap: 6px;
-  }
-
   .ca-hamburger-btn {
-    font-size: 18px;
-    padding: 4px;
-    min-width: 32px;
-    min-height: 32px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-brand-logo {
     font-size: 16px;
   }
 
-  .ca-header-search {
-    max-width: 200px;
-    min-width: 120px;
-  }
-
-  .ca-search-wrapper {
-    padding: 5px 8px;
-  }
-
-  .ca-search-icon {
-    font-size: 14px;
-    margin-right: 5px;
-  }
-
-  .ca-search-field {
-    font-size: 11px;
-  }
-
-  .ca-search-field::placeholder {
-    font-size: 11px;
-  }
-
-  .ca-header-right {
-    gap: 4px;
+  .ca-mobile-search-btn {
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-notification-icon {
-    font-size: 18px;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 4px;
+    font-size: 22px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ca-notification-badge {
-    top: 1px;
-    right: 1px;
-    font-size: 8px;
-    min-width: 13px;
-    height: 13px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
   }
 
   .ca-avatar-initials {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .ca-mobile-search-overlay {
+    top: 56px;
+    padding: 10px;
   }
 }
 
-/* Small Mobile */
 @media (max-width: 380px) {
   .ca-header {
     height: 52px;
   }
 
-  .ca-header-container {
-    padding: 0 8px;
-    gap: 6px;
-  }
-
-  .ca-header-left {
-    gap: 4px;
-  }
-
   .ca-hamburger-btn {
-    font-size: 16px;
-    padding: 4px;
-    min-width: 30px;
-    min-height: 30px;
+    font-size: 22px;
+    min-width: 42px;
+    min-height: 42px;
   }
 
   .ca-brand-logo {
-    font-size: 14px;
-  }
-
-  .ca-header-search {
-    max-width: 150px;
-    min-width: 100px;
-  }
-
-  .ca-search-wrapper {
-    padding: 4px 6px;
-  }
-
-  .ca-search-icon {
-    font-size: 12px;
-    margin-right: 4px;
-  }
-
-  .ca-search-field {
-    font-size: 10px;
-  }
-
-  .ca-search-field::placeholder {
-    font-size: 10px;
-  }
-
-  .ca-header-right {
-    gap: 2px;
-  }
-
-  .ca-notification-icon {
-    font-size: 16px;
-    min-width: 28px;
-    min-height: 28px;
-    padding: 3px;
-  }
-
-  .ca-notification-badge {
-    font-size: 7px;
-    min-width: 12px;
-    height: 12px;
-  }
-
-  .ca-avatar-initials {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
-  }
-}
-
-/* Extra Small Mobile */
-@media (max-width: 320px) {
-  .ca-header {
-    height: 48px;
-  }
-
-  .ca-header-container {
-    padding: 0 6px;
-    gap: 4px;
-  }
-
-  .ca-hamburger-btn {
     font-size: 15px;
-    min-width: 26px;
-    min-height: 26px;
-    padding: 3px;
   }
 
-  .ca-brand-logo {
-    font-size: 12px;
-  }
-
-  .ca-header-search {
-    max-width: 110px;
-    min-width: 80px;
-  }
-
-  .ca-search-wrapper {
-    padding: 3px 5px;
-  }
-
-  .ca-search-icon {
-    font-size: 10px;
-    margin-right: 3px;
-  }
-
-  .ca-search-field {
-    font-size: 9px;
-  }
-
-  .ca-search-field::placeholder {
-    font-size: 9px;
+  .ca-mobile-search-btn {
+    font-size: 22px;
+    min-width: 42px;
+    min-height: 42px;
   }
 
   .ca-notification-icon {
-    font-size: 14px;
-    min-width: 24px;
-    min-height: 24px;
-    padding: 2px;
+    font-size: 22px;
+    min-width: 42px;
+    min-height: 42px;
   }
 
   .ca-avatar-initials {
-    width: 24px;
-    height: 24px;
-    font-size: 9px;
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
   }
 }
