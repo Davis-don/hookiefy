@@ -42,8 +42,8 @@ const Uploadclientimg: React.FC = () => {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [hasExistingImage, setHasExistingImage] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +136,7 @@ const Uploadclientimg: React.FC = () => {
     },
   });
 
-  // Delete image mutation (for remove photo)
+  // Delete image mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`${apiUrl}/client-img/client-image/delete/`, {
@@ -154,11 +154,14 @@ const Uploadclientimg: React.FC = () => {
 
       return response.json();
     },
+    onMutate: () => {
+      setIsDeleting(true);
+    },
     onSuccess: () => {
+      setIsDeleting(false);
       setSelectedImage(null);
       setOriginalFile(null);
       setHasExistingImage(false);
-      setShowDeleteConfirm(false);
       setShowRemoveConfirm(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       
@@ -170,7 +173,7 @@ const Uploadclientimg: React.FC = () => {
       refetchBio();
     },
     onError: (error: Error) => {
-      setShowDeleteConfirm(false);
+      setIsDeleting(false);
       setShowRemoveConfirm(false);
       toast.error(error.message || 'Failed to remove photo', {
         duration: 6000,
@@ -312,20 +315,7 @@ const Uploadclientimg: React.FC = () => {
     }
   };
 
-  // Handle delete with confirmation (for delete button)
-  const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = () => {
-    deleteMutation.mutate();
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-  };
-
-  // Handle remove with confirmation (for remove photo button)
+  // Handle remove with confirmation
   const handleRemove = () => {
     setShowRemoveConfirm(true);
   };
@@ -355,6 +345,8 @@ const Uploadclientimg: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  const showProcessing = isUploading || isDeleting;
+
   if (bioLoading) {
     return (
       <div className="uci-loading-container">
@@ -371,7 +363,7 @@ const Uploadclientimg: React.FC = () => {
           Profile Photo
         </h3>
         <span className="uci-subtitle">
-          {hasExistingImage ? '✨ Update your photo' : '✨ Upload your best full-body photo'}
+          {hasExistingImage ? 'Update your photo' : 'Upload your best full-body photo'}
         </span>
       </div>
 
@@ -380,21 +372,29 @@ const Uploadclientimg: React.FC = () => {
         {showCropper ? (
           <div className="uci-cropper-container">
             <div className="uci-cropper-header">
-              <span className="uci-cropper-title">✂️ Crop Your Full Body Image</span>
-              <span className="uci-cropper-hint">Drag to adjust · Pinch to zoom · Show your full body</span>
+              <span className="uci-cropper-title">Crop Your Full Body Image</span>
+              <span className="uci-cropper-hint">Drag to adjust · Pinch to zoom</span>
             </div>
             <div className="uci-cropper-wrapper uci-fullbody-cropper">
               <Cropper
                 image={selectedImage || ''}
                 crop={crop}
                 zoom={zoom}
-                aspect={2/3} // Portrait aspect ratio for full body
+                aspect={2/3}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
                 cropShape="rect"
                 showGrid={true}
               />
+              {showProcessing && (
+                <div className="uci-cropper-processing-overlay">
+                  <Spinner size="large" color="#c41e3a" />
+                  <span className="uci-processing-text">
+                    {isUploading ? 'Uploading...' : 'Removing...'}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="uci-cropper-controls">
               <div className="uci-zoom-control">
@@ -408,6 +408,7 @@ const Uploadclientimg: React.FC = () => {
                   aria-labelledby="Zoom"
                   onChange={(e) => setZoom(Number(e.target.value))}
                   className="uci-zoom-slider"
+                  disabled={showProcessing}
                 />
                 <span className="uci-zoom-value">{Math.round(zoom * 100)}%</span>
               </div>
@@ -419,41 +420,10 @@ const Uploadclientimg: React.FC = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            onClick={() => !selectedImage && !hasExistingImage && fileInputRef.current?.click()}
+            onClick={() => !selectedImage && !hasExistingImage && !showProcessing && fileInputRef.current?.click()}
           >
             {selectedImage ? (
-              <>
-                <img src={selectedImage} alt="Preview" className="uci-preview uci-fullbody-preview" />
-                <div className="uci-image-badges">
-                  {hasExistingImage && <span className="uci-current-badge">Current</span>}
-                </div>
-                {!showCropper && (
-                  <div className="uci-image-actions-overlay">
-                    <button 
-                      className="uci-action-btn uci-change-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleChangeImage();
-                      }}
-                    >
-                      <span className="uci-btn-icon">📸</span>
-                      Change
-                    </button>
-                    {hasExistingImage && (
-                      <button 
-                        className="uci-action-btn uci-delete-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete();
-                        }}
-                      >
-                        <span className="uci-btn-icon">🗑️</span>
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
+              <img src={selectedImage} alt="Preview" className="uci-preview uci-fullbody-preview" />
             ) : (
               <div className="uci-placeholder">
                 <div className="uci-upload-icon">📸</div>
@@ -464,6 +434,32 @@ const Uploadclientimg: React.FC = () => {
                 <div className="uci-format-badge">
                   <span className="uci-format-text">PNG, JPG · Max 10MB</span>
                 </div>
+              </div>
+            )}
+
+            {/* Processing Overlay - Always visible when processing */}
+            {showProcessing && (
+              <div className="uci-processing-overlay">
+                <Spinner size="large" color="#c41e3a" />
+                <span className="uci-processing-text">
+                  {isUploading ? 'Uploading...' : 'Removing...'}
+                </span>
+              </div>
+            )}
+
+            {/* Change Button Overlay - Only show when not processing and image exists */}
+            {!showProcessing && selectedImage && !showCropper && (
+              <div className="uci-image-actions-overlay">
+                <button 
+                  className="uci-action-btn uci-change-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChangeImage();
+                  }}
+                >
+                  <span className="uci-btn-icon">📸</span>
+                  Change
+                </button>
               </div>
             )}
             
@@ -477,36 +473,7 @@ const Uploadclientimg: React.FC = () => {
           </div>
         )}
 
-        {/* Delete Confirmation (for delete button in overlay) */}
-        {showDeleteConfirm && (
-          <div className="uci-confirm-overlay">
-            <div className="uci-confirm-dialog">
-              <div className="uci-confirm-icon">🗑️</div>
-              <h4 className="uci-confirm-title">Delete This Photo?</h4>
-              <p className="uci-confirm-message">
-                This will remove this specific photo. You can upload a new one anytime.
-              </p>
-              <div className="uci-confirm-actions">
-                <button 
-                  className="uci-confirm-btn uci-confirm-cancel"
-                  onClick={cancelDelete}
-                  disabled={deleteMutation.isPending}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="uci-confirm-btn uci-confirm-delete"
-                  onClick={confirmDelete}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Remove Photo Confirmation (for remove photo button) */}
+        {/* Remove Photo Confirmation */}
         {showRemoveConfirm && (
           <div className="uci-confirm-overlay">
             <div className="uci-confirm-dialog">
@@ -519,16 +486,16 @@ const Uploadclientimg: React.FC = () => {
                 <button 
                   className="uci-confirm-btn uci-confirm-cancel"
                   onClick={cancelRemove}
-                  disabled={deleteMutation.isPending}
+                  disabled={isDeleting}
                 >
                   Cancel
                 </button>
                 <button 
                   className="uci-confirm-btn uci-confirm-remove"
                   onClick={confirmRemove}
-                  disabled={deleteMutation.isPending}
+                  disabled={isDeleting}
                 >
-                  {deleteMutation.isPending ? 'Removing...' : 'Yes, Remove'}
+                  {isDeleting ? 'Removing...' : 'Yes, Remove'}
                 </button>
               </div>
             </div>
@@ -537,33 +504,29 @@ const Uploadclientimg: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="uci-actions">
-          {isUploading || deleteMutation.isPending ? (
-            <div className="uci-loading-wrapper">
-              <Spinner size="small" color="#c41e3a" message="Processing..." />
+          {showCropper ? (
+            <div className="uci-crop-actions">
+              <button 
+                className="uci-crop-save-btn"
+                onClick={handleSave}
+                disabled={isUploading}
+              >
+                <span className="uci-btn-icon">✓</span>
+                {isUploading ? 'Uploading...' : 'Apply Crop & Save'}
+              </button>
+              <button 
+                className="uci-crop-cancel-btn"
+                onClick={handleCancelCrop}
+                disabled={isUploading}
+              >
+                <span className="uci-btn-icon">↩</span>
+                Cancel
+              </button>
             </div>
           ) : (
-            <>
-              {showCropper ? (
-                <div className="uci-crop-actions">
-                  <button 
-                    className="uci-crop-save-btn"
-                    onClick={handleSave}
-                    disabled={isUploading}
-                  >
-                    <span className="uci-btn-icon">✓</span>
-                    Apply Crop & Save
-                  </button>
-                  <button 
-                    className="uci-crop-cancel-btn"
-                    onClick={handleCancelCrop}
-                    disabled={isUploading}
-                  >
-                    <span className="uci-btn-icon">↩</span>
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="uci-main-actions">
+            <div className="uci-main-actions">
+              {!showProcessing && (
+                <>
                   {selectedImage && !hasExistingImage && (
                     <button 
                       className="uci-save-btn uci-active"
@@ -575,25 +538,24 @@ const Uploadclientimg: React.FC = () => {
                     </button>
                   )}
                   
-                  {/* Remove Photo Button - Always visible when there's an existing image */}
-                  {hasExistingImage && !showCropper && (
+                  {hasExistingImage && (
                     <button 
                       className="uci-remove-btn"
                       onClick={handleRemove}
-                      disabled={deleteMutation.isPending}
+                      disabled={isDeleting}
                     >
                       <span className="uci-btn-icon">📸</span>
                       Remove Photo
                     </button>
                   )}
-                </div>
+                </>
               )}
-            </>
+            </div>
           )}
         </div>
 
         {/* Hint Text */}
-        {!selectedImage && !showCropper && (
+        {!selectedImage && !showCropper && !showProcessing && (
           <div className="uci-hint">
             <span className="uci-hint-icon">💡</span>
             <span className="uci-hint-text">

@@ -52,7 +52,9 @@ function App() {
             path="/client/dashboard"
             element={
               <ProtectedRoute>
+                <Toastlayout>
                 <Clientaccount />
+                </Toastlayout>
               </ProtectedRoute>
             }
           />
