@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'accounts',
     'superconfig',
+    'clientbio'
 ]
 
 # -------------------------------
@@ -160,3 +161,10 @@ COOKIE_SECURE = config("COOKIE_SECURE", default=False, cast=bool)
 COOKIE_HTTPONLY = True
 COOKIE_SAMESITE = 'Lax'
 COOKIE_PATH = '/'
+
+# -------------------------------
+# Cloudinary - Direct variables
+# -------------------------------
+CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")

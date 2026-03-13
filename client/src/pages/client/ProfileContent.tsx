@@ -1,8 +1,12 @@
-
+import Uploadclientimg from "./Uploadclientimg"
+import Clientbioupload from "./Clientbioupload"
 
 function ProfileContent() {
   return (
-    <div>ProfileContent</div>
+    <div className="overall-profile-container-client">
+      <Uploadclientimg/>
+      <Clientbioupload/>
+    </div>
   )
 }
 

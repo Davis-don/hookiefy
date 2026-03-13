@@ -7,7 +7,7 @@ import Clientaccount from "./pages/client/Clientaccount";
 import ProtectedRoute from "./components/protected/Protectedroute";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
-// import Homepage from "./pages/common/Homepage";
+import Homepage from "./pages/common/Homepage";
 import "./App.css";
 
 function App() {
@@ -15,8 +15,8 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          {/* <Route path="/" element={<Homepage />} /> */}
-          <Route path="/" element={<Clientaccount />} />
+          <Route path="/" element={<Homepage />} />
+          {/* <Route path="/" element={<Clientaccount />} /> */}
           {/* Public routes */}
           <Route path="/login" element={
             <Toastlayout>
