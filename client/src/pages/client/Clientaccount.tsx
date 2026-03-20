@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../../utils/logout'; // Import the logout utility
 import Header from './common/Clientheader';
 import HomeContent from './Homecontent';
 import NotificationsContent from './NotificationsContent';
 import ProfileContent from './ProfileContent';
 import BillingContent from './BillingContent';
+import Uploadclientimg from './Uploadclientimg';
+import Clientbioupload from './Clientbioupload';
 import './clientaccount.css';
 
 function Clientaccount() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState('home');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,15 +42,30 @@ function Clientaccount() {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const handleLogout = () => {
-    alert('Logout clicked - User would be logged out');
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const success = await logoutUser(apiUrl);
+    
+    if (success) {
+      // Navigation is handled in the logout function with window.location.href
+      // But we can also use navigate if preferred
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } else {
+      setIsLoggingOut(false);
+    }
   };
 
   const menuItems = [
     { id: 'home', icon: '🏠', label: 'Home' },
     { id: 'notifications', icon: '🔔', label: 'Notifications', count: 5 },
     { id: 'profile', icon: '👤', label: 'Profile' },
-    { id: 'billing', icon: '💰', label: 'Billing & Transfers' }
+    { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
+    { id: 'profilephoto', icon: '📸', label: 'Profile Photo' },
+    { id: 'profilebio', icon: '✏️', label: 'Profile Bio' }
   ];
 
   const renderContent = () => {
@@ -56,6 +78,10 @@ function Clientaccount() {
         return <ProfileContent />;
       case 'billing':
         return <BillingContent />;
+      case 'profilephoto':
+        return <Uploadclientimg />;
+      case 'profilebio':
+        return <Clientbioupload />;
       default:
         return <HomeContent />;
     }
@@ -90,11 +116,11 @@ function Clientaccount() {
             
             {/* Logout button as separate item */}
             <div 
-              className="ca-nav-item ca-nav-logout"
+              className={`ca-nav-item ca-nav-logout ${isLoggingOut ? 'ca-nav-logging-out' : ''}`}
               onClick={handleLogout}
             >
-              <span className="ca-nav-icon">🚪</span>
-              <span className="ca-nav-label">Logout</span>
+              <span className="ca-nav-icon">{isLoggingOut ? '⏳' : '🚪'}</span>
+              <span className="ca-nav-label">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
             </div>
           </nav>
 
