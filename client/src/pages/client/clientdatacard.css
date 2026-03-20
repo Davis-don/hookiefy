@@ -1,44 +1,125 @@
-/* ===== CARD COMPONENT ===== */
+/* Client Data Card - Clean White Design with Fixed Button */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 .cd-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  border: 1px solid #eaeef2;
-  transition: all 0.2s ease;
-  max-width: 420px;
-  margin: 0 auto;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  height: 580px; /* Fixed height for consistent card size */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .cd-card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-  border-color: #d0d7dd;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: #dee2e6;
 }
 
-/* ===== IMAGE SECTION ===== */
+/* Completion Badge */
+.cd-card__completion-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 6px 12px;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.cd-card__completion-icon {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+.cd-card__completion-percent {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.cd-card__completion-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+/* Image Section */
 .cd-card__image-wrapper {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 200px;
   overflow: hidden;
   cursor: pointer;
-  background: #f5f7fa;
+  background: #f8f9fa;
+  flex-shrink: 0;
 }
 
 .cd-card__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cd-card__image-wrapper:hover .cd-card__image {
-  transform: scale(1.03);
+  transform: scale(1.05);
+}
+
+/* Default Image */
+.cd-card__default-image {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.cd-card__default-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cd-card__default-icon {
+  font-size: 48px;
+  color: #adb5bd;
+}
+
+.cd-card__default-text {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.cd-card__default-initials {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
 .cd-card__image-overlay {
@@ -46,13 +127,12 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  padding: 16px;
   transform: translateY(100%);
   transition: transform 0.3s ease;
+  display: flex;
+  justify-content: center;
 }
 
 .cd-card__image-wrapper:hover .cd-card__image-overlay {
@@ -60,110 +140,300 @@
 }
 
 .cd-card__expand-icon {
-  font-size: 18px;
-  color: white;
+  font-size: 14px;
+  margin-right: 6px;
 }
 
 .cd-card__expand-text {
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.3px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 30px;
+  backdrop-filter: blur(4px);
 }
 
-/* ===== CONTENT SECTION ===== */
-.cd-card__content {
-  padding: 24px;
-  background: #ffffff;
-}
-
-/* Row Layout */
-.cd-card__row {
-  display: flex;
-  align-items: baseline;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f3f7;
-}
-
-.cd-card__row:last-of-type {
-  border-bottom: none;
-}
-
-/* Labels */
-.cd-card__label {
-  min-width: 80px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7a88;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-}
-
-.cd-card__label--info {
-  display: block;
-  margin-bottom: 10px;
-  min-width: auto;
-}
-
-/* Values */
-.cd-card__value {
-  font-size: 16px;
-  color: #1e2a32;
-  font-weight: 400;
+/* Scrollable Content Area */
+.cd-card__scrollable-content {
   flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f1f3f5;
 }
 
-.cd-card__value--name {
-  font-size: 20px;
+.cd-card__scrollable-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cd-card__scrollable-content::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 10px;
+}
+
+.cd-card__scrollable-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.cd-card__scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Content Section */
+.cd-card__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Name Section */
+.cd-card__name-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f3f5;
+}
+
+.cd-card__name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #212529;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #212529 0%, #495057 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cd-card__verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cd-card__verified-badge svg {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+/* Info Grid */
+.cd-card__info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.cd-card__info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.cd-card__info-item--full {
+  grid-column: span 2;
+}
+
+.cd-card__info-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cd-card__info-icon {
+  font-size: 16px;
+  color: #c41e3a;
+}
+
+.cd-card__info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cd-card__info-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cd-card__info-value {
+  font-size: 13px;
   font-weight: 600;
-  color: #0f1820;
+  color: #212529;
+  word-break: break-word;
+  display: block;
+  line-height: 1.4;
 }
 
-.cd-card__value--capitalize {
+.cd-card__info-value--capitalize {
   text-transform: capitalize;
 }
 
-/* Info Section */
-.cd-card__info {
-  margin: 16px 0 20px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border-left: 3px solid #9aa8b5;
+/* Bio Section */
+.cd-card__bio-section {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
 }
 
-.cd-card__info-text {
-  margin: 0;
+.cd-card__bio-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cd-card__bio-icon {
   font-size: 14px;
-  line-height: 1.7;
-  color: #2a3845;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: #c41e3a;
 }
 
-/* Connect Button */
+.cd-card__bio-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.cd-card__bio-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #495057;
+  margin: 0 0 8px 0;
+  font-weight: 400;
+}
+
+.cd-card__incomplete-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff3e0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* Fixed Button Wrapper */
+.cd-card__button-wrapper {
+  position: relative;
+  padding: 16px 20px 20px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* Connect Button - Fixed at Bottom */
 .cd-card__connect-btn {
   width: 100%;
-  background: #1e2a32;
+  background: linear-gradient(135deg, #c41e3a 0%, #a01832 100%);
   color: white;
   border: none;
-  padding: 14px 24px;
-  border-radius: 40px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cd-card__connect-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.cd-card__connect-btn:hover::before {
+  left: 100%;
 }
 
 .cd-card__connect-btn:hover {
-  background: #0f1820;
+  background: linear-gradient(135deg, #a01832 0%, #8b142b 100%);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(30, 42, 50, 0.2);
+  box-shadow: 0 6px 16px rgba(196, 30, 58, 0.3);
 }
 
-/* ===== MODAL COMPONENT ===== */
+.cd-card__connect-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cd-card__btn-icon {
+  font-size: 18px;
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.cd-card__btn-spinner {
+  width: 18px;
+  height: 18px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modal Styles */
 .cd-modal {
   position: fixed;
   top: 0;
@@ -171,32 +441,32 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 10000;
   cursor: pointer;
   padding: 20px;
 }
 
 .cd-modal__close {
   position: absolute;
-  top: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
+  top: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 36px;
+  font-size: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10000;
+  transition: all 0.3s ease;
+  z-index: 10001;
   line-height: 1;
 }
 
@@ -206,8 +476,7 @@
 }
 
 .cd-modal__container {
-  max-width: 1200px;
-  width: 100%;
+  max-width: 90vw;
   max-height: 90vh;
   cursor: default;
   display: flex;
@@ -216,120 +485,140 @@
 }
 
 .cd-modal__image-wrapper {
-  width: 100%;
-  max-height: 75vh;
+  max-width: 100%;
+  max-height: 70vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
 }
 
 .cd-modal__image {
   max-width: 100%;
-  max-height: 75vh;
+  max-height: 70vh;
   width: auto;
   height: auto;
   object-fit: contain;
   display: block;
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .cd-modal__caption {
   margin-top: 24px;
   text-align: center;
   color: white;
-  padding: 16px 24px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 40px;
-  backdrop-filter: blur(4px);
+  padding: 16px 28px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 60px;
+  backdrop-filter: blur(8px);
 }
 
 .cd-modal__name {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: white;
-  letter-spacing: -0.3px;
+  font-family: 'Inter', sans-serif;
 }
 
 .cd-modal__details {
   margin: 8px 0 0;
-  font-size: 16px;
-  color: #e0e0e0;
-  opacity: 0.9;
+  font-size: 0.9rem;
+  color: #e9ecef;
 }
 
 .cd-modal__location {
   margin: 4px 0 0;
-  font-size: 15px;
-  color: #c0c0c0;
+  font-size: 0.85rem;
+  color: #ced4da;
   font-style: italic;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (min-width: 768px) {
-  .cd-card {
-    max-width: 450px;
-  }
-  
-  .cd-card__image-wrapper {
-    height: 300px;
-  }
-  
-  .cd-card__content {
-    padding: 28px;
-  }
-  
-  .cd-card__value--name {
-    font-size: 22px;
-  }
+.cd-modal__note {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #fbb6ce;
 }
 
-@media (max-width: 480px) {
+/* Scroll Indicator */
+.cd-card__scrollable-content::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(to top, white, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cd-card__scrollable-content.is-scrollable::after {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .cd-card {
-    max-width: 100%;
-    border-radius: 20px;
+    height: 540px;
   }
   
   .cd-card__image-wrapper {
-    height: 240px;
+    height: 180px;
   }
   
   .cd-card__content {
-    padding: 20px;
+    padding: 16px;
+    gap: 14px;
   }
   
-  .cd-card__row {
-    padding: 6px 0;
+  .cd-card__name {
+    font-size: 1.1rem;
   }
   
-  .cd-card__label {
-    min-width: 70px;
-    font-size: 11px;
+  .cd-card__info-grid {
+    gap: 10px;
   }
   
-  .cd-card__value {
-    font-size: 15px;
+  .cd-card__info-item {
+    padding: 6px;
   }
   
-  .cd-card__value--name {
-    font-size: 18px;
+  .cd-card__info-icon-wrapper {
+    width: 28px;
+    height: 28px;
   }
   
-  .cd-card__info {
-    padding: 14px;
-    margin: 12px 0 16px;
+  .cd-card__info-icon {
+    font-size: 14px;
   }
   
-  /* Modal mobile */
+  .cd-card__info-label {
+    font-size: 9px;
+  }
+  
+  .cd-card__info-value {
+    font-size: 12px;
+  }
+  
+  .cd-card__button-wrapper {
+    padding: 12px 16px 16px;
+  }
+  
+  .cd-card__connect-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
   .cd-modal__close {
-    top: 20px;
-    right: 20px;
+    top: 16px;
+    right: 16px;
     width: 40px;
     height: 40px;
-    font-size: 30px;
+    font-size: 28px;
   }
   
   .cd-modal__caption {
@@ -337,26 +626,45 @@
   }
   
   .cd-modal__name {
-    font-size: 22px;
-  }
-  
-  .cd-modal__details {
-    font-size: 14px;
+    font-size: 1.2rem;
   }
 }
 
-/* Landscape mode */
-@media (max-height: 600px) and (orientation: landscape) {
-  .cd-modal__image-wrapper {
-    max-height: 60vh;
+@media (max-width: 480px) {
+  .cd-card {
+    height: 520px;
   }
   
-  .cd-modal__image {
-    max-height: 60vh;
+  .cd-card__image-wrapper {
+    height: 160px;
   }
   
-  .cd-modal__caption {
-    margin-top: 12px;
-    padding: 8px 16px;
+  .cd-card__content {
+    padding: 14px;
+  }
+  
+  .cd-card__info-grid {
+    gap: 8px;
+  }
+  
+  .cd-card__info-item {
+    padding: 5px;
+  }
+}
+
+/* Custom scrollbar styling for better visibility */
+.cd-card__scrollable-content {
+  scroll-behavior: smooth;
+}
+
+/* Add a subtle gradient to indicate scrollable content */
+.cd-card__scrollable-content {
+  position: relative;
+}
+
+/* Optional: Add a scroll indicator text for mobile */
+@media (max-width: 768px) {
+  .cd-card__scrollable-content {
+    scrollbar-width: thin;
   }
 }

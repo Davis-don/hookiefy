@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../store/Toaststore';
 import Spinner from '../../components/protected/protectedspinner/Spinner';
 import ToastConfirmation from '../../components/confirmationamodal/Confirmationmodal';
@@ -56,7 +56,7 @@ const AllClients: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(100);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortField, setSortField] = useState<SortField>('date_joined');
@@ -66,7 +66,11 @@ const AllClients: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [bulkActionLoading, setBulkActionLoading] = useState<boolean>(false);
 
-  const [editingCell, setEditingCell] = useState<EditState>({ id: null, field: null, value: '' });
+  const [editingCell, setEditingCell] = useState<EditState>({
+    id: null,
+    field: null,
+    value: '',
+  });
   const [editLoading, setEditLoading] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -147,7 +151,9 @@ const AllClients: React.FC = () => {
       return ids;
     },
     onSuccess: (ids) => {
-      toast.success(`${ids.length} client${ids.length > 1 ? 's' : ''} deleted successfully!`, { duration: 5000 });
+      toast.success(`${ids.length} client${ids.length > 1 ? 's' : ''} deleted successfully!`, {
+        duration: 5000,
+      });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       setSelectedClients([]);
       refetch();
@@ -186,9 +192,13 @@ const AllClients: React.FC = () => {
       else if (error.last_name) toast.error(Array.isArray(error.last_name) ? error.last_name[0] : error.last_name);
       else if (error.email) toast.error(Array.isArray(error.email) ? error.email[0] : error.email);
       else if (error.gender) toast.error(Array.isArray(error.gender) ? error.gender[0] : error.gender);
-      else if (error.non_field_errors) toast.error(Array.isArray(error.non_field_errors) ? error.non_field_errors[0] : error.non_field_errors);
-      else if (error.error) toast.error(error.error);
-      else toast.error('Failed to update client');
+      else if (error.non_field_errors) {
+        toast.error(Array.isArray(error.non_field_errors) ? error.non_field_errors[0] : error.non_field_errors);
+      } else if (error.error) {
+        toast.error(error.error);
+      } else {
+        toast.error('Failed to update client');
+      }
     },
   });
 
@@ -333,13 +343,15 @@ const AllClients: React.FC = () => {
     setToastState({
       isOpen: true,
       type: 'bulkDelete',
-      title: 'Delete Multiple Clients',
+      title: 'Delete Selected Clients',
       message: `Delete ${selectedClients.length} selected client${selectedClients.length > 1 ? 's' : ''}?`,
       clientIds: selectedClients,
     });
   };
 
-  const closeToast = () => setToastState((prev) => ({ ...prev, isOpen: false }));
+  const closeToast = () => {
+    setToastState((prev) => ({ ...prev, isOpen: false }));
+  };
 
   const handleToastConfirm = async () => {
     const { type, clientId, clientIds } = toastState;
@@ -365,6 +377,14 @@ const AllClients: React.FC = () => {
   const handleRefresh = () => {
     toast.info('Refreshing clients...', { duration: 2000 });
     refetch();
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setFilterGender('all');
+    setSortField('date_joined');
+    setSortOrder('desc');
+    setCurrentPage(1);
   };
 
   const formatDate = (dateString: string) =>
@@ -412,43 +432,56 @@ const AllClients: React.FC = () => {
           autoClose={false}
         />
 
-        <div className="acl-top-banner">
-          <div>
-            <p className="acl-kicker">Client management dashboard</p>
-            <h1>👥 Client Management</h1>
-            <p className="acl-subtitle">
-              Manage your clients, search quickly, edit inline, and scroll through every record without rows being hidden.
+        <div className="acl-hero-card">
+          <div className="acl-hero-left">
+            <span className="acl-hero-chip">Client Directory</span>
+            <h1 className="acl-hero-title">All Clients</h1>
+            <p className="acl-hero-subtitle">
+              Review records, update details inline, filter faster, and manage your client list from one clean workspace.
             </p>
           </div>
-          <button className="acl-refresh-btn" onClick={handleRefresh}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-            Refresh
-          </button>
-        </div>
 
-        <div className="acl-summary-cards">
-          <div className="acl-summary-card">
-            <span className="acl-summary-label">Total Clients</span>
-            <strong>{data?.total_clients || 0}</strong>
-          </div>
-          <div className="acl-summary-card">
-            <span className="acl-summary-label">Filtered Results</span>
-            <strong>{totalItems}</strong>
-          </div>
-          <div className="acl-summary-card">
-            <span className="acl-summary-label">Selected</span>
-            <strong>{selectedClients.length}</strong>
+          <div className="acl-hero-stats">
+            <div className="acl-summary-card">
+              <span className="acl-summary-label">Total Clients</span>
+              <strong>{data?.total_clients || 0}</strong>
+            </div>
+            <div className="acl-summary-card">
+              <span className="acl-summary-label">Filtered Results</span>
+              <strong>{totalItems}</strong>
+            </div>
+            <div className="acl-summary-card">
+              <span className="acl-summary-label">Selected</span>
+              <strong>{selectedClients.length}</strong>
+            </div>
           </div>
         </div>
 
         <div className="acl-toolbar-card">
+          <div className="acl-toolbar-top">
+            <div className="acl-toolbar-heading">
+              <h2>Client Records</h2>
+              <p>Search, sort, filter, and refresh from here.</p>
+            </div>
+
+            <div className="acl-toolbar-actions">
+              <button className="acl-refresh-btn" onClick={handleRefresh}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M23 4v6h-6" />
+                  <path d="M1 20v-6h6" />
+                  <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10" />
+                  <path d="M1 14l5.36 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
           <div className="acl-filters-grid">
             <div className="acl-search-wrapper">
               <input
                 type="text"
-                placeholder="🔍 Search by name or email..."
+                placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -457,7 +490,7 @@ const AllClients: React.FC = () => {
                 className="acl-search-input"
               />
               {searchTerm && (
-                <button className="acl-clear-search" onClick={() => setSearchTerm('')}>
+                <button className="acl-clear-search" onClick={() => setSearchTerm('')} type="button">
                   ✕
                 </button>
               )}
@@ -490,8 +523,8 @@ const AllClients: React.FC = () => {
             >
               <option value="date_joined-desc">Newest First</option>
               <option value="date_joined-asc">Oldest First</option>
-              <option value="first_name-asc">Name A-Z</option>
-              <option value="first_name-desc">Name Z-A</option>
+              <option value="first_name-asc">First Name A-Z</option>
+              <option value="first_name-desc">First Name Z-A</option>
               <option value="last_name-asc">Last Name A-Z</option>
               <option value="last_name-desc">Last Name Z-A</option>
               <option value="email-asc">Email A-Z</option>
@@ -503,21 +536,29 @@ const AllClients: React.FC = () => {
 
           {(filterGender !== 'all' || searchTerm) && (
             <div className="acl-active-filters">
-              <span className="acl-active-filters-label">Active Filters:</span>
+              <span className="acl-active-filters-label">Active Filters</span>
 
               {filterGender !== 'all' && (
                 <span className="acl-filter-tag">
                   Gender: {filterGender}
-                  <button onClick={() => setFilterGender('all')}>✕</button>
+                  <button onClick={() => setFilterGender('all')} type="button">
+                    ✕
+                  </button>
                 </span>
               )}
 
               {searchTerm && (
                 <span className="acl-filter-tag">
                   Search: "{searchTerm}"
-                  <button onClick={() => setSearchTerm('')}>✕</button>
+                  <button onClick={() => setSearchTerm('')} type="button">
+                    ✕
+                  </button>
                 </span>
               )}
+
+              <button className="acl-clear-inline-btn" onClick={clearAllFilters} type="button">
+                Clear all
+              </button>
             </div>
           )}
 
@@ -529,7 +570,7 @@ const AllClients: React.FC = () => {
             </div>
 
             <div className="acl-items-per-page">
-              <label htmlFor="acl-items-select">Show:</label>
+              <label htmlFor="acl-items-select">Show</label>
               <select id="acl-items-select" value={itemsPerPage} onChange={handleItemsPerPageChange}>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -571,16 +612,7 @@ const AllClients: React.FC = () => {
                       <div className="acl-no-results-content">
                         <span className="acl-no-results-icon">👤</span>
                         <p>No clients found matching your criteria</p>
-                        <button
-                          className="acl-clear-filters-btn"
-                          onClick={() => {
-                            setSearchTerm('');
-                            setFilterGender('all');
-                            setSortField('date_joined');
-                            setSortOrder('desc');
-                            setCurrentPage(1);
-                          }}
-                        >
+                        <button className="acl-clear-filters-btn" onClick={clearAllFilters}>
                           Clear Filters
                         </button>
                       </div>
