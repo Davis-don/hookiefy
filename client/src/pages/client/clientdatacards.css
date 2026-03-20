@@ -682,3 +682,179 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+
+/* Add these styles to your existing clientdatacards.css */
+
+/* Search and Sort Section */
+.cds-search-section {
+  padding: 24px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f3f5;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cds-search-wrapper {
+  flex: 2;
+  min-width: 250px;
+  position: relative;
+}
+
+.cds-sort-wrapper {
+  flex: 1;
+  min-width: 180px;
+}
+
+.cds-sort-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: #495057;
+}
+
+.cds-sort-select:focus {
+  outline: none;
+  border-color: #c41e3a;
+  box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+}
+
+.cds-sort-select:hover {
+  border-color: #dee2e6;
+  background: #f8f9fa;
+}
+
+/* Results Stats with Sort Info */
+.cds-results-stats {
+  padding: 20px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f3f5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cds-results-count {
+  font-size: 0.95rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.cds-results-count strong {
+  font-size: 1.2rem;
+  color: #c41e3a;
+  font-weight: 800;
+}
+
+.cds-results-filtered {
+  margin-left: 0;
+  font-size: 0.85rem;
+  color: #adb5bd;
+}
+
+.cds-results-sort {
+  font-size: 0.85rem;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cds-search-section {
+    padding: 20px;
+    flex-direction: column;
+  }
+  
+  .cds-search-wrapper,
+  .cds-sort-wrapper {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .cds-results-stats {
+    padding: 16px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .cds-results-sort {
+    font-size: 0.75rem;
+  }
+}
+
+/* Active filter tag for sort */
+.cds-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #212529;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.cds-filter-tag button {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.2s;
+}
+
+.cds-filter-tag button:hover {
+  color: #c41e3a;
+}
+
+
+/* Add to your existing CSS */
+
+/* Results Badge */
+.cds-results-badge {
+  font-size: 0.85rem;
+  color: #10b981;
+  background: #d1fae5;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+/* Update sort dropdown default option */
+.cds-sort-select option[value="default"] {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cds-results-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+  }
+}

@@ -48,6 +48,7 @@ interface ApiResponse {
 }
 
 type FilterGender = 'all' | 'male' | 'female' | 'other' | 'nonbinary' | 'prefer_not_say';
+type SortOption = 'default' | 'name_asc' | 'name_desc' | 'age_asc' | 'age_desc' | 'completion_asc' | 'completion_desc';
 
 const Clientdatacards: React.FC = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -61,6 +62,7 @@ const Clientdatacards: React.FC = () => {
   const [showOnlyWithBio, setShowOnlyWithBio] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [ageRange, setAgeRange] = useState<{ min: number; max: number }>({ min: 18, max: 100 });
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
   // Fetch profiles data
   const { data, isLoading, error, refetch, isFetching } = useQuery<ApiResponse>({
@@ -111,10 +113,11 @@ const Clientdatacards: React.FC = () => {
     };
   }, [data?.results]);
 
-  // Filter profiles
-  const filteredProfiles = useMemo(() => {
+  // Filter and sort profiles - WITH BIO PROFILES PRIORITIZED
+  const filteredAndSortedProfiles = useMemo(() => {
     if (!data?.results) return [];
 
+    // First, filter profiles
     let filtered = [...data.results];
 
     // Search by name
@@ -163,8 +166,44 @@ const Clientdatacards: React.FC = () => {
       filtered = filtered.filter(profile => profile.has_bio);
     }
 
+    // Apply sorting based on user selection
+    if (sortBy !== 'default') {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'name_asc':
+            return a.full_name.localeCompare(b.full_name);
+          case 'name_desc':
+            return b.full_name.localeCompare(a.full_name);
+          case 'age_asc':
+            return (a.bio?.age || 0) - (b.bio?.age || 0);
+          case 'age_desc':
+            return (b.bio?.age || 0) - (a.bio?.age || 0);
+          case 'completion_asc':
+            return a.profile_completion_percentage - b.profile_completion_percentage;
+          case 'completion_desc':
+            return b.profile_completion_percentage - a.profile_completion_percentage;
+          default:
+            return 0;
+        }
+      });
+    } else {
+      // DEFAULT ORDER: Profiles with bios (completed) first, then incomplete profiles
+      // Within each group, maintain the original backend order
+      filtered.sort((a, b) => {
+        // Prioritize profiles with bios (has_bio = true)
+        if (a.has_bio && !b.has_bio) return -1;
+        if (!a.has_bio && b.has_bio) return 1;
+        
+        // If both have bio or both don't have bio, maintain original order
+        // by comparing their original indices in the data.results array
+        const indexA = data.results.findIndex(p => p.id === a.id);
+        const indexB = data.results.findIndex(p => p.id === b.id);
+        return indexA - indexB;
+      });
+    }
+
     return filtered;
-  }, [data?.results, searchTerm, filterGender, filterCountry, filterCounty, showOnlyWithImages, showOnlyWithBio, ageRange]);
+  }, [data?.results, searchTerm, filterGender, filterCountry, filterCounty, showOnlyWithImages, showOnlyWithBio, ageRange, sortBy]);
 
   // Count active filters
   const activeFiltersCount = useMemo(() => {
@@ -176,8 +215,9 @@ const Clientdatacards: React.FC = () => {
     if (showOnlyWithImages) count++;
     if (showOnlyWithBio) count++;
     if (ageRange.min !== 18 || ageRange.max !== 100) count++;
+    if (sortBy !== 'default') count++;
     return count;
-  }, [searchTerm, filterGender, filterCountry, filterCounty, showOnlyWithImages, showOnlyWithBio, ageRange]);
+  }, [searchTerm, filterGender, filterCountry, filterCounty, showOnlyWithImages, showOnlyWithBio, ageRange, sortBy]);
 
   // Clear all filters
   const clearFilters = useCallback(() => {
@@ -188,12 +228,18 @@ const Clientdatacards: React.FC = () => {
     setShowOnlyWithImages(false);
     setShowOnlyWithBio(false);
     setAgeRange({ min: 18, max: 100 });
+    setSortBy('default');
   }, []);
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  // Count profiles with bios for display
+  const profilesWithBio = useMemo(() => {
+    return filteredAndSortedProfiles.filter(p => p.has_bio).length;
+  }, [filteredAndSortedProfiles]);
 
   // Loading skeleton
   if (isLoading) {
@@ -265,7 +311,7 @@ const Clientdatacards: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search and Sort Bar */}
       <div className="cds-search-section">
         <div className="cds-search-wrapper">
           <FaSearch className="cds-search-icon" />
@@ -281,6 +327,23 @@ const Clientdatacards: React.FC = () => {
               <FaTimes />
             </button>
           )}
+        </div>
+        
+        {/* Sort Dropdown */}
+        <div className="cds-sort-wrapper">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="cds-sort-select"
+          >
+            <option value="default">Default (Completed First)</option>
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+            <option value="age_asc">Age (Youngest First)</option>
+            <option value="age_desc">Age (Oldest First)</option>
+            <option value="completion_asc">Completion (Low to High)</option>
+            <option value="completion_desc">Completion (High to Low)</option>
+          </select>
         </div>
       </div>
 
@@ -314,7 +377,10 @@ const Clientdatacards: React.FC = () => {
               </label>
               <select
                 value={filterCountry}
-                onChange={(e) => setFilterCountry(e.target.value)}
+                onChange={(e) => {
+                  setFilterCountry(e.target.value);
+                  setFilterCounty('all');
+                }}
                 className="cds-filter-select"
               >
                 <option value="all">All Countries</option>
@@ -343,7 +409,7 @@ const Clientdatacards: React.FC = () => {
             </div>
 
             {/* Age Range Filter */}
-            <div className="cds-filter-group cds-filter-group--full">
+            <div className="cds-filter-group">
               <label className="cds-filter-label">
                 🎂 Age Range
               </label>
@@ -446,6 +512,12 @@ const Clientdatacards: React.FC = () => {
               <button onClick={() => setSearchTerm('')}>×</button>
             </span>
           )}
+          {sortBy !== 'default' && (
+            <span className="cds-filter-tag">
+              Sort: {sortBy.replace('_', ' ')}
+              <button onClick={() => setSortBy('default')}>×</button>
+            </span>
+          )}
           <button className="cds-clear-all" onClick={clearFilters}>
             Clear all
           </button>
@@ -455,17 +527,27 @@ const Clientdatacards: React.FC = () => {
       {/* Results Stats */}
       <div className="cds-results-stats">
         <span className="cds-results-count">
-          <strong>{filteredProfiles.length}</strong> {filteredProfiles.length === 1 ? 'profile' : 'profiles'} found
+          <strong>{filteredAndSortedProfiles.length}</strong> {filteredAndSortedProfiles.length === 1 ? 'profile' : 'profiles'} found
         </span>
-        {filteredProfiles.length !== data?.count && (
+        {filteredAndSortedProfiles.length !== data?.count && (
           <span className="cds-results-filtered">
             (filtered from {data?.count} total)
+          </span>
+        )}
+        {profilesWithBio > 0 && sortBy === 'default' && (
+          <span className="cds-results-badge">
+            ✨ {profilesWithBio} completed {profilesWithBio === 1 ? 'profile' : 'profiles'} shown first
+          </span>
+        )}
+        {sortBy !== 'default' && (
+          <span className="cds-results-sort">
+            • Sorted by {sortBy.replace('_', ' ')}
           </span>
         )}
       </div>
 
       {/* Cards Grid */}
-      {filteredProfiles.length === 0 ? (
+      {filteredAndSortedProfiles.length === 0 ? (
         <div className="cds-empty-state">
           <div className="cds-empty-content">
             <span className="cds-empty-icon">🔍</span>
@@ -478,7 +560,7 @@ const Clientdatacards: React.FC = () => {
         </div>
       ) : (
         <div className="cds-grid">
-          {filteredProfiles.map((profile) => (
+          {filteredAndSortedProfiles.map((profile) => (
             <Clientdatacard
               key={profile.id}
               id={profile.id.toString()}
@@ -490,8 +572,6 @@ const Clientdatacards: React.FC = () => {
               location={profile.bio?.location_desc || null}
               occupation={profile.bio?.occupation || null}
               interests={profile.bio?.interests || null}
-              phone={profile.bio?.phone_number || null}
-              email={profile.user.email}
               image={profile.bio?.uploaded_img || null}
               info={profile.bio?.info || null}
               hasImage={profile.has_image}
