@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('superconfig/', include('superconfig.urls')),
-    path('client-img/',include('clientbio.urls'))
+    path('client-img/',include('clientbio.urls')),
+    path('profiles/', include('profiles.urls')),
 ]
