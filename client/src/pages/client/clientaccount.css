@@ -17,6 +17,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 /* Header is fixed - handled in clientheader.css */
@@ -26,12 +27,12 @@ body {
   flex: 1;
   position: relative;
   background: #ffffff;
-  height: calc(100vh - 70px); /* Adjust based on header height */
-  margin-top: 70px; /* Same as header height */
+  height: calc(100vh - 70px);
+  margin-top: 70px;
   overflow: hidden;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles - HIGH Z-INDEX */
 .ca-sidebar {
   width: 280px;
   background: #ffffff;
@@ -43,6 +44,9 @@ body {
   height: 100%;
   overflow-y: auto;
   flex-shrink: 0;
+  position: relative;
+  z-index: 200; /* High z-index to stay on top */
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
 .ca-sidebar-closed {
@@ -57,6 +61,7 @@ body {
 
 .ca-sidebar-nav {
   padding: 24px 0;
+  flex: 1;
 }
 
 .ca-nav-item {
@@ -105,9 +110,52 @@ body {
   text-align: center;
 }
 
+/* Logout Button Styles */
+.ca-nav-logout {
+  margin-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0;
+  color: #dc2626;
+  transition: all 0.3s ease;
+}
+
+.ca-nav-logout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ca-nav-logout:hover .ca-nav-icon {
+  color: #b91c1c;
+}
+
+.ca-nav-logging-out {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.ca-nav-logging-out:hover {
+  background: rgba(220, 38, 38, 0.05);
+  color: #dc2626;
+}
+
+.ca-nav-logging-out .ca-nav-icon {
+  animation: caSpin 1s linear infinite;
+}
+
+@keyframes caSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .ca-sidebar-footer {
   padding: 24px;
   border-top: 1px solid #e0e0e0;
+  background: #ffffff;
 }
 
 .ca-premium-card {
@@ -154,9 +202,11 @@ body {
   height: 100%;
   padding: 0;
   background: #fafafa;
+  position: relative;
+  z-index: 1;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* Scrollbar Styling */
 .ca-main-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -172,6 +222,27 @@ body {
 
 .ca-main-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Sidebar Overlay for Mobile */
+.ca-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 150; /* Below sidebar but above content */
+  animation: ca-fadeIn 0.3s ease;
+}
+
+@keyframes ca-fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Tablet Responsive */
@@ -192,17 +263,18 @@ body {
     left: 0;
     top: 64px;
     height: calc(100vh - 64px);
-    z-index: 90;
+    z-index: 200;
     width: 260px;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .ca-sidebar-closed {
     transform: translateX(-100%);
   }
 
   .ca-sidebar-open {
     transform: translateX(0);
+  }
+
+  .ca-sidebar-closed {
+    transform: translateX(-100%);
   }
 }
 
@@ -251,142 +323,7 @@ body {
   }
 }
 
-
-
-/* Add these styles to your existing clientaccount.css */
-
-.ca-nav-logout {
-  margin-top: 20px;
-  border-top: 1px solid #e0e0e0;
-  border-radius: 0;
-  color: #dc2626;
-}
-
-.ca-nav-logout:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.ca-nav-logout .ca-nav-icon {
-  color: #dc2626;
-}
-
-.ca-nav-logout:hover .ca-nav-icon {
-  color: #b91c1c;
-}
-
-/* Rest of your existing CSS remains the same */
-
-
-
-
-
-/* Sidebar Overlay for Mobile */
-.ca-sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 85;
-  animation: ca-fadeIn 0.3s ease;
-}
-
-@keyframes ca-fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Update mobile sidebar z-index to be above overlay */
-@media (max-width: 768px) {
-  .ca-sidebar {
-    z-index: 90;
-  }
-}
-
-
-/* Add these styles to your existing clientaccount.css */
-
-.ca-nav-logout {
-  margin-top: 20px;
-  border-top: 1px solid #e0e0e0;
-  border-radius: 0;
-  color: #dc2626;
-  transition: all 0.3s ease;
-}
-
-.ca-nav-logout:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.ca-nav-logout:hover .ca-nav-icon {
-  color: #b91c1c;
-}
-
-/* Logging out state */
-.ca-nav-logging-out {
-  opacity: 0.7;
-  cursor: not-allowed;
-  background: rgba(220, 38, 38, 0.05);
-}
-
-.ca-nav-logging-out:hover {
-  background: rgba(220, 38, 38, 0.05);
-  color: #dc2626;
-}
-
-.ca-nav-logging-out .ca-nav-icon {
-  animation: caSpin 1s linear infinite;
-}
-
-@keyframes caSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Rest of your existing CSS remains the same */
-
-
-/* Add these styles to the end of your clientaccount.css */
-
-/* Additional styles for the new menu items - keeps consistency */
-.ca-nav-item[data-id="profilephoto"],
-.ca-nav-item[data-id="profilebio"] {
-  /* Inherit all styles from ca-nav-item */
-}
-
-/* Optional: Add subtle hover effect specific to these items */
-.ca-nav-item:has(.ca-nav-icon:contains("📸")):hover,
-.ca-nav-item:has(.ca-nav-icon:contains("✏️")):hover {
-  background: #f5f5f5;
-}
-
-/* Ensure the main content area properly displays the new components */
-.ca-main-content {
-  flex: 1;
-  overflow-y: auto;
-  height: 100%;
-  padding: 0;
-  background: #fafafa;
-}
-
-/* Style for the Uploadclientimg and Clientbioupload components when rendered */
-.ca-main-content > div {
-  width: 100%;
-  min-height: 100%;
-}
-
-/* Optional: Add some padding to the content area for better spacing */
+/* Content padding for better spacing */
 @media (min-width: 769px) {
   .ca-main-content {
     padding: 2rem;

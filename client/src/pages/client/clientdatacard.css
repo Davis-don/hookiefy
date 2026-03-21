@@ -668,3 +668,104 @@
     scrollbar-width: thin;
   }
 }
+
+/* Disabled Card Styles */
+.cd-card--disabled {
+  position: relative;
+  filter: grayscale(0.3);
+  cursor: not-allowed;
+  overflow: hidden;
+}
+
+.cd-card__lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.cd-card__lock-content {
+  text-align: center;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.cd-card__lock-icon {
+  font-size: 20px;
+  color: #c41e3a;
+}
+
+.cd-card__lock-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.cd-card__image-wrapper--disabled {
+  cursor: not-allowed;
+  filter: brightness(0.9);
+}
+
+.cd-card__connect-btn--disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cd-card__connect-btn--disabled:hover {
+  background: #adb5bd;
+  transform: none;
+  box-shadow: none;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Ensure disabled cards don't show hover effects */
+.cd-card--disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cd-card--disabled .cd-card__image-wrapper:hover .cd-card__image-overlay {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Responsive adjustments for disabled state */
+@media (max-width: 768px) {
+  .cd-card__lock-content {
+    padding: 12px 20px;
+  }
+  
+  .cd-card__lock-icon {
+    font-size: 16px;
+  }
+  
+  .cd-card__lock-text {
+    font-size: 12px;
+  }
+}

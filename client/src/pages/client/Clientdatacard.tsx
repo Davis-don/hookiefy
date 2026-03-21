@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaHeart, FaMapMarkerAlt, FaCalendarAlt, FaVenusMars, FaUser, FaBriefcase, FaStar } from 'react-icons/fa';
+import { FaHeart, FaMapMarkerAlt, FaCalendarAlt, FaVenusMars, FaUser, FaBriefcase, FaStar, FaLock } from 'react-icons/fa';
 import './clientdatacard.css';
 
 export interface ClientdatacardProps {
@@ -17,6 +17,7 @@ export interface ClientdatacardProps {
   completionPercentage?: number;
   hasImage?: boolean;
   hasBio?: boolean;
+  isClickable?: boolean;
 }
 
 const Clientdatacard: React.FC<ClientdatacardProps> = ({
@@ -33,16 +34,30 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
   completionPercentage = 0,
   hasImage = false,
   hasBio = false,
+  isClickable = true,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = () => {
+    if (!isClickable) {
+      // Don't allow connection if not clickable
+      return;
+    }
+    
     setIsConnecting(true);
     setTimeout(() => {
       alert(`✨ Connection request sent to ${name}! ✨`);
       setIsConnecting(false);
     }, 500);
+  };
+
+  const handleImageClick = () => {
+    if (!isClickable) {
+      // Don't allow modal if not clickable
+      return;
+    }
+    setShowModal(true);
   };
 
   // Get initials for default avatar
@@ -59,7 +74,17 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
 
   return (
     <>
-      <article className="cd-card">
+      <article className={`cd-card ${!isClickable ? 'cd-card--disabled' : ''}`}>
+        {/* Lock Overlay for Disabled Cards */}
+        {!isClickable && (
+          <div className="cd-card__lock-overlay">
+            <div className="cd-card__lock-content">
+              <FaLock className="cd-card__lock-icon" />
+              <span className="cd-card__lock-text">Complete profile to unlock</span>
+            </div>
+          </div>
+        )}
+
         {/* Completion Badge */}
         {completionPercentage > 0 && (
           <div className="cd-card__completion-badge">
@@ -73,7 +98,10 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
         )}
 
         {/* Image Section */}
-        <div className="cd-card__image-wrapper" onClick={() => setShowModal(true)}>
+        <div 
+          className={`cd-card__image-wrapper ${!isClickable ? 'cd-card__image-wrapper--disabled' : ''}`} 
+          onClick={handleImageClick}
+        >
           {hasImage && image ? (
             <img 
               src={image} 
@@ -100,10 +128,12 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
               </div>
             </div>
           )}
-          <div className="cd-card__image-overlay">
-            <span className="cd-card__expand-icon">🔍</span>
-            <span className="cd-card__expand-text">View Full Image</span>
-          </div>
+          {isClickable && (
+            <div className="cd-card__image-overlay">
+              <span className="cd-card__expand-icon">🔍</span>
+              <span className="cd-card__expand-text">View Full Image</span>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Content Area */}
@@ -219,9 +249,9 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
         {/* Fixed Button Section */}
         <div className="cd-card__button-wrapper">
           <button 
-            className="cd-card__connect-btn" 
+            className={`cd-card__connect-btn ${!isClickable ? 'cd-card__connect-btn--disabled' : ''}`} 
             onClick={handleConnect}
-            disabled={isConnecting}
+            disabled={!isClickable || isConnecting}
           >
             {isConnecting ? (
               <>
@@ -241,8 +271,8 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
         </div>
       </article>
 
-      {/* Full Screen Modal */}
-      {showModal && (
+      {/* Full Screen Modal - Only show if clickable */}
+      {isClickable && showModal && (
         <div className="cd-modal" onClick={() => setShowModal(false)}>
           <button className="cd-modal__close" onClick={() => setShowModal(false)}>×</button>
           

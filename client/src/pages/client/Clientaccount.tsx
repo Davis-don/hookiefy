@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../../utils/logout'; // Import the logout utility
+import { logoutUser } from '../../utils/logout';
 import Header from './common/Clientheader';
 import HomeContent from './Homecontent';
 import NotificationsContent from './NotificationsContent';
@@ -12,7 +12,7 @@ import './clientaccount.css';
 
 function Clientaccount() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState('discover');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ function Clientaccount() {
   };
 
   const menuItems = [
-    { id: 'home', icon: '🏠', label: 'Home' },
+    { id: 'discover', icon: '🔍', label: 'Discover' },
     { id: 'notifications', icon: '🔔', label: 'Notifications', count: 5 },
     { id: 'profile', icon: '👤', label: 'Profile' },
     { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
@@ -68,10 +68,19 @@ function Clientaccount() {
     { id: 'profilebio', icon: '✏️', label: 'Profile Bio' }
   ];
 
+  // Handle navigation from child components
+  const handleNavigate = (page: string) => {
+    setActivePage(page);
+    // On mobile, close sidebar after navigation
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   const renderContent = () => {
     switch(activePage) {
-      case 'home':
-        return <HomeContent />;
+      case 'discover':
+        return <HomeContent onNavigate={handleNavigate} />;
       case 'notifications':
         return <NotificationsContent />;
       case 'profile':
@@ -83,7 +92,7 @@ function Clientaccount() {
       case 'profilebio':
         return <Clientbioupload />;
       default:
-        return <HomeContent />;
+        return <HomeContent onNavigate={handleNavigate} />;
     }
   };
 

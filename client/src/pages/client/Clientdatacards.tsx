@@ -50,7 +50,15 @@ interface ApiResponse {
 type FilterGender = 'all' | 'male' | 'female' | 'other' | 'nonbinary' | 'prefer_not_say';
 type SortOption = 'default' | 'name_asc' | 'name_desc' | 'age_asc' | 'age_desc' | 'completion_asc' | 'completion_desc';
 
-const Clientdatacards: React.FC = () => {
+interface ClientdatacardsProps {
+  isBlurred?: boolean;
+  isClickable?: boolean;
+}
+
+const Clientdatacards: React.FC<ClientdatacardsProps> = ({ 
+  isBlurred = false, 
+  isClickable = true 
+}) => {
   const apiUrl = import.meta.env.VITE_API_URL;
   
   // Filter states
@@ -244,7 +252,7 @@ const Clientdatacards: React.FC = () => {
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="cds-modern-loading">
+      <div className={`cds-modern-container ${isBlurred ? 'cds-blurred' : ''}`}>
         <div className="cds-loading-skeleton">
           <div className="cds-skeleton-header"></div>
           <div className="cds-skeleton-filters"></div>
@@ -264,21 +272,23 @@ const Clientdatacards: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <div className="cds-modern-error">
-        <div className="cds-modern-error-card">
-          <span className="cds-modern-error-icon">💔</span>
-          <h3>Unable to Load Profiles</h3>
-          <p>There was an error loading profiles. Please try again.</p>
-          <button className="cds-modern-retry-btn" onClick={handleRefresh}>
-            Try Again
-          </button>
+      <div className={`cds-modern-container ${isBlurred ? 'cds-blurred' : ''}`}>
+        <div className="cds-modern-error">
+          <div className="cds-modern-error-card">
+            <span className="cds-modern-error-icon">💔</span>
+            <h3>Unable to Load Profiles</h3>
+            <p>There was an error loading profiles. Please try again.</p>
+            <button className="cds-modern-retry-btn" onClick={handleRefresh}>
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="cds-modern-container">
+    <div className={`cds-modern-container ${isBlurred ? 'cds-blurred' : ''}`}>
       {/* Hero Header Section */}
       <div className="cds-hero-section">
         <div className="cds-hero-content">
@@ -296,6 +306,7 @@ const Clientdatacards: React.FC = () => {
           <button 
             className={`cds-filter-toggle ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
+            disabled={isBlurred}
           >
             <FaFilter />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -304,7 +315,7 @@ const Clientdatacards: React.FC = () => {
             )}
           </button>
           
-          <button className="cds-refresh-btn" onClick={handleRefresh} disabled={isFetching}>
+          <button className="cds-refresh-btn" onClick={handleRefresh} disabled={isFetching || isBlurred}>
             {isFetching ? <FaSpinner className="cds-spin" /> : '⟳'}
             <span>Refresh</span>
           </button>
@@ -321,8 +332,9 @@ const Clientdatacards: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="cds-search-input"
+            disabled={isBlurred}
           />
-          {searchTerm && (
+          {searchTerm && !isBlurred && (
             <button className="cds-clear-search" onClick={() => setSearchTerm('')}>
               <FaTimes />
             </button>
@@ -335,6 +347,7 @@ const Clientdatacards: React.FC = () => {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
             className="cds-sort-select"
+            disabled={isBlurred}
           >
             <option value="default">Default (Completed First)</option>
             <option value="name_asc">Name (A-Z)</option>
@@ -360,6 +373,7 @@ const Clientdatacards: React.FC = () => {
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value as FilterGender)}
                 className="cds-filter-select"
+                disabled={isBlurred}
               >
                 <option value="all">All Genders</option>
                 <option value="male">Male</option>
@@ -382,6 +396,7 @@ const Clientdatacards: React.FC = () => {
                   setFilterCounty('all');
                 }}
                 className="cds-filter-select"
+                disabled={isBlurred}
               >
                 <option value="all">All Countries</option>
                 {countries.map(country => (
@@ -399,7 +414,7 @@ const Clientdatacards: React.FC = () => {
                 value={filterCounty}
                 onChange={(e) => setFilterCounty(e.target.value)}
                 className="cds-filter-select"
-                disabled={filterCountry === 'all'}
+                disabled={filterCountry === 'all' || isBlurred}
               >
                 <option value="all">All Counties</option>
                 {counties.map(county => (
@@ -421,6 +436,7 @@ const Clientdatacards: React.FC = () => {
                   min={18}
                   max={100}
                   className="cds-age-input"
+                  disabled={isBlurred}
                 />
                 <span>to</span>
                 <input
@@ -430,6 +446,7 @@ const Clientdatacards: React.FC = () => {
                   min={ageRange.min}
                   max={100}
                   className="cds-age-input"
+                  disabled={isBlurred}
                 />
               </div>
             </div>
@@ -441,6 +458,7 @@ const Clientdatacards: React.FC = () => {
                   type="checkbox"
                   checked={showOnlyWithImages}
                   onChange={(e) => setShowOnlyWithImages(e.target.checked)}
+                  disabled={isBlurred}
                 />
                 <FaUserCheck /> With Photos
               </label>
@@ -449,6 +467,7 @@ const Clientdatacards: React.FC = () => {
                   type="checkbox"
                   checked={showOnlyWithBio}
                   onChange={(e) => setShowOnlyWithBio(e.target.checked)}
+                  disabled={isBlurred}
                 />
                 <FaUserPlus /> With Bio
               </label>
@@ -456,7 +475,7 @@ const Clientdatacards: React.FC = () => {
           </div>
 
           {/* Filter Actions */}
-          {activeFiltersCount > 0 && (
+          {activeFiltersCount > 0 && !isBlurred && (
             <div className="cds-filters-actions">
               <button className="cds-clear-filters-btn" onClick={clearFilters}>
                 Clear All Filters ({activeFiltersCount})
@@ -467,7 +486,7 @@ const Clientdatacards: React.FC = () => {
       )}
 
       {/* Active Filters Tags */}
-      {activeFiltersCount > 0 && (
+      {activeFiltersCount > 0 && !isBlurred && (
         <div className="cds-active-filters">
           <span className="cds-active-label">Active filters:</span>
           {filterGender !== 'all' && (
@@ -534,53 +553,72 @@ const Clientdatacards: React.FC = () => {
             (filtered from {data?.count} total)
           </span>
         )}
-        {profilesWithBio > 0 && sortBy === 'default' && (
+        {profilesWithBio > 0 && sortBy === 'default' && !isBlurred && (
           <span className="cds-results-badge">
             ✨ {profilesWithBio} completed {profilesWithBio === 1 ? 'profile' : 'profiles'} shown first
           </span>
         )}
-        {sortBy !== 'default' && (
+        {sortBy !== 'default' && !isBlurred && (
           <span className="cds-results-sort">
             • Sorted by {sortBy.replace('_', ' ')}
           </span>
         )}
+        {isBlurred && (
+          <span className="cds-results-badge cds-locked-badge">
+            🔒 Complete your profile to unlock
+          </span>
+        )}
       </div>
 
-      {/* Cards Grid */}
-      {filteredAndSortedProfiles.length === 0 ? (
-        <div className="cds-empty-state">
-          <div className="cds-empty-content">
-            <span className="cds-empty-icon">🔍</span>
-            <h3>No matches found</h3>
-            <p>We couldn't find any profiles matching your criteria</p>
-            <button className="cds-empty-btn" onClick={clearFilters}>
-              Clear All Filters
-            </button>
+      {/* Cards Grid with blur overlay message */}
+      <div className="cds-grid-wrapper">
+        {isBlurred && (
+          <div className="cds-blur-overlay">
+            <div className="cds-blur-message">
+              <span className="cds-blur-icon">🔒</span>
+              <h3>Complete Your Profile First</h3>
+              <p>Please complete your bio information to view and interact with other profiles</p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="cds-grid">
-          {filteredAndSortedProfiles.map((profile) => (
-            <Clientdatacard
-              key={profile.id}
-              id={profile.id.toString()}
-              name={profile.full_name}
-              age={profile.bio?.age || null}
-              gender={profile.bio?.gender || null}
-              country={profile.bio?.country || null}
-              county={profile.bio?.county || null}
-              location={profile.bio?.location_desc || null}
-              occupation={profile.bio?.occupation || null}
-              interests={profile.bio?.interests || null}
-              image={profile.bio?.uploaded_img || null}
-              info={profile.bio?.info || null}
-              hasImage={profile.has_image}
-              hasBio={profile.has_bio}
-              completionPercentage={profile.profile_completion_percentage}
-            />
-          ))}
-        </div>
-      )}
+        )}
+        {filteredAndSortedProfiles.length === 0 ? (
+          <div className="cds-empty-state">
+            <div className="cds-empty-content">
+              <span className="cds-empty-icon">🔍</span>
+              <h3>No matches found</h3>
+              <p>We couldn't find any profiles matching your criteria</p>
+              {!isBlurred && (
+                <button className="cds-empty-btn" onClick={clearFilters}>
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className={`cds-grid ${isBlurred ? 'cds-grid-blurred' : ''}`}>
+            {filteredAndSortedProfiles.map((profile) => (
+              <Clientdatacard
+                key={profile.id}
+                id={profile.id.toString()}
+                name={profile.full_name}
+                age={profile.bio?.age || null}
+                gender={profile.bio?.gender || null}
+                country={profile.bio?.country || null}
+                county={profile.bio?.county || null}
+                location={profile.bio?.location_desc || null}
+                occupation={profile.bio?.occupation || null}
+                interests={profile.bio?.interests || null}
+                image={profile.bio?.uploaded_img || null}
+                info={profile.bio?.info || null}
+                hasImage={profile.has_image}
+                hasBio={profile.has_bio}
+                completionPercentage={profile.profile_completion_percentage}
+                isClickable={isClickable}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

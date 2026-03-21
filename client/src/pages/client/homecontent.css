@@ -1,0 +1,83 @@
+.overall-homecontent-container-client {
+  padding: 20px;
+  position: relative;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.error-card {
+  text-align: center;
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.error-card h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.error-card p {
+  margin: 0 0 20px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background: #c41e3a;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background: #a01830;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .overall-homecontent-container-client {
+    padding: 12px;
+  }
+  
+  .loading-container,
+  .error-container {
+    min-height: 300px;
+    padding: 20px;
+  }
+  
+  .error-card {
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overall-homecontent-container-client {
+    padding: 8px;
+  }
+}

@@ -304,3 +304,74 @@ def client_delete_image(request):
             {"error": "No bio found for this client"},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def client_check_bio_complete(request):
+    """
+    Check if the authenticated client has completed their bio.
+    Required fields: phone_number, age, gender, country, info
+    """
+    user = request.user
+
+    # Only allow clients
+    if not hasattr(user, "client_profile"):
+        return Response(
+            {"error": "Only clients can access this endpoint"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        bio = Bio.objects.get(client_profile=user.client_profile)
+
+        missing_fields = []
+
+        # Check required fields
+        if not bio.phone_number or not bio.phone_number.strip():
+            missing_fields.append("phone_number")
+        if not bio.age or bio.age == 0:
+            missing_fields.append("age")
+        if not bio.gender or bio.gender == "prefer_not_say":
+            missing_fields.append("gender")
+        if not bio.country or not bio.country.strip():
+            missing_fields.append("country")
+        if not bio.info or not bio.info.strip():
+            missing_fields.append("info")
+
+        is_complete = len(missing_fields) == 0
+        
+        # Calculate completion percentage
+        total_fields = 5
+        completed_fields = total_fields - len(missing_fields)
+        completion_percentage = int((completed_fields / total_fields) * 100)
+
+        # Field labels for frontend display
+        field_labels = {
+            "phone_number": "Phone Number",
+            "age": "Age",
+            "gender": "Gender",
+            "country": "Country",
+            "info": "Bio/About Info"
+        }
+        
+        missing_fields_labels = [field_labels.get(field, field) for field in missing_fields]
+
+        return Response({
+            "success": True,
+            "is_complete": is_complete,
+            "missing_fields": missing_fields,
+            "missing_fields_labels": missing_fields_labels,
+            "completion_percentage": completion_percentage,
+            "message": "Bio is complete" if is_complete else f"Bio is incomplete. Missing: {', '.join(missing_fields_labels)}"
+        })
+
+    except Bio.DoesNotExist:
+        return Response({
+            "success": True,
+            "is_complete": False,
+            "missing_fields": ["phone_number", "age", "gender", "country", "info"],
+            "missing_fields_labels": ["Phone Number", "Age", "Gender", "Country", "Bio/About Info"],
+            "completion_percentage": 0,
+            "message": "No bio found. Please complete your bio."
+        })
