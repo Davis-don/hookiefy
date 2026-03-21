@@ -1,5 +1,3 @@
-# accounts/views/__init__.py
-
 # Authentication Views
 from .auth_views import *
 
@@ -11,3 +9,6 @@ from .admin_views import *
 
 # User Views
 from .user_views import *
+
+# Client Views ✅ NEW
+from .client_views import *

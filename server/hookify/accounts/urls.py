@@ -1,16 +1,29 @@
 # accounts/urls.py
 from django.urls import path
+
+# ================== AUTH ==================
 from accounts.views.auth_views import (
     login_view,
     logout_view,
     check_auth,
     refresh_token_view,
 )
+
+# ================== USER ==================
 from accounts.views.user_views import (
     fetch_user_profile,
     update_user_profile,
-    update_password,
+    update_password,  # existing user password update
 )
+
+# ================== CLIENT SELF-SERVICE ==================
+from accounts.views.client_views import (
+    update_my_profile,
+    fetch_my_profile,
+    update_password as client_update_password,  # جلوگیری conflict
+)
+
+# ================== SUPERADMIN ==================
 from accounts.views.superadmin_views import (
     adminSignup,
     fetch_all_admins,
@@ -20,6 +33,8 @@ from accounts.views.superadmin_views import (
     bulk_deactivate_admins,
     bulk_delete_admins,
 )
+
+# ================== ADMIN (CLIENT MANAGEMENT) ==================
 from accounts.views.admin_views import (
     create_client,
     fetch_all_clients,
@@ -44,6 +59,11 @@ urlpatterns = [
     path("profile/", fetch_user_profile, name="fetch_user_profile"),
     path("profile/update/", update_user_profile, name="update_user_profile"),
     path("password/update/", update_password, name="update_password"),
+
+    # ================== CLIENT SELF-SERVICE ==================
+    path("client/me/update/", update_my_profile, name="update_my_profile"),
+    path("client/me/password/", client_update_password, name="client_update_password"),
+    path("client/me/fetch_data/",fetch_my_profile,name="my_profile_fetch"),
 
     # ================== SUPERADMIN ==================
     path("admin/signup/", adminSignup, name="admin_signup"),
