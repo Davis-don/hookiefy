@@ -2,7 +2,7 @@
 
 function NotificationsContent() {
   return (
-    <div>NotificationsContent</div>
+    <div>NotificationsContent here I am</div>
   )
 }
 

@@ -35,7 +35,9 @@ INSTALLED_APPS = [
     'accounts',
     'superconfig',
     'clientbio',
-    'profiles'
+    'profiles',
+    'notifications',
+    'hookup',
 ]
 
 # -------------------------------

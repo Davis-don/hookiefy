@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { FaHeart, FaMapMarkerAlt, FaCalendarAlt, FaVenusMars, FaUser, FaBriefcase, FaStar, FaLock } from 'react-icons/fa';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from '../../store/Toaststore';
 import './clientdatacard.css';
 
 export interface ClientdatacardProps {
@@ -20,7 +22,19 @@ export interface ClientdatacardProps {
   isClickable?: boolean;
 }
 
+interface HookupResponse {
+  message: string;
+  hookup_id: number;
+}
+
+interface HookupError {
+  error?: string;
+  message?: string;
+  non_field_errors?: string[];
+}
+
 const Clientdatacard: React.FC<ClientdatacardProps> = ({
+  id,
   name,
   age,
   gender,
@@ -37,24 +51,111 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
   isClickable = true,
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Create hookup mutation
+  const createHookupMutation = useMutation<HookupResponse, HookupError, { receiver_id: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch(`${apiUrl}/hookup/create-hookup/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw responseData;
+      }
+
+      return responseData;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || `Hookup request sent to ${name}!`, {
+        title: '✓ Hookup Request Sent',
+        icon: '💚',
+        duration: 5000,
+      });
+    },
+    onError: (error: HookupError) => {
+      if (error.error === 'You cannot hookup with yourself') {
+        toast.warning(`You can't send a hookup request to yourself, ${name}!`, {
+          title: '⚠️ Invalid Request',
+          icon: '⚠️',
+          duration: 4000,
+        });
+      } 
+      else if (error.message === 'You already requested this hookup') {
+        toast.info(`You've already sent a hookup request to ${name}!`, {
+          title: 'ℹ️ Request Already Sent',
+          icon: '🔄',
+          duration: 5000,
+        });
+      }
+      else if (error.error === 'Receiver not found') {
+        toast.error(`${name} seems to be unavailable right now.`, {
+          title: '❌ Not Found',
+          icon: '🔍',
+          duration: 4000,
+        });
+      }
+      else if (error.error === 'receiver_id is required') {
+        toast.error('Something went wrong. Please try again!', {
+          title: '❌ Error',
+          icon: '⚠️',
+          duration: 4000,
+        });
+      }
+      else if (error.error) {
+        toast.error(error.error, {
+          title: '❌ Hookup Request Failed',
+          icon: '💔',
+          duration: 5000,
+        });
+      }
+      else if (error.non_field_errors && error.non_field_errors.length > 0) {
+        toast.error(error.non_field_errors[0], {
+          title: '❌ Request Failed',
+          icon: '⚠️',
+          duration: 5000,
+        });
+      }
+      else {
+        toast.error('Something went wrong. Please try again!', {
+          title: '❌ Connection Failed',
+          icon: '🔌',
+          duration: 5000,
+        });
+      }
+    },
+  });
 
   const handleConnect = () => {
     if (!isClickable) {
-      // Don't allow connection if not clickable
+      toast.warning('Complete your profile to unlock hookup requests!', {
+        title: '🔒 Profile Incomplete',
+        icon: '🔒',
+        duration: 4000,
+      });
       return;
     }
     
-    setIsConnecting(true);
-    setTimeout(() => {
-      alert(`✨ Connection request sent to ${name}! ✨`);
-      setIsConnecting(false);
-    }, 500);
+    // Send the receiver_id (client profile ID)
+    createHookupMutation.mutate({ receiver_id: id });
   };
 
   const handleImageClick = () => {
     if (!isClickable) {
-      // Don't allow modal if not clickable
+      toast.info('Complete your profile to view full images!', {
+        title: 'ℹ️ Unlock Features',
+        icon: '🔓',
+        duration: 3000,
+      });
       return;
     }
     setShowModal(true);
@@ -251,9 +352,9 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
           <button 
             className={`cd-card__connect-btn ${!isClickable ? 'cd-card__connect-btn--disabled' : ''}`} 
             onClick={handleConnect}
-            disabled={!isClickable || isConnecting}
+            disabled={!isClickable || createHookupMutation.isPending}
           >
-            {isConnecting ? (
+            {createHookupMutation.isPending ? (
               <>
                 <svg className="cd-card__btn-spinner" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="31.4 31.4" />
