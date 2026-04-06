@@ -1,0 +1,109 @@
+.myrequestview-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: white;
+  min-height: 100vh;
+}
+
+.myrequestview-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #8B6914;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-button:hover {
+  color: #6d4f0f;
+}
+
+.myrequestview-header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #2c3e2f;
+}
+
+.myrequestview-content {
+  padding: 1.5rem;
+}
+
+.request-info {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.request-info h2 {
+  margin: 0 0 1rem 0;
+  color: #2c3e2f;
+}
+
+.request-info p {
+  margin: 0.5rem 0;
+  color: #495057;
+}
+
+.cancel-request-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cancel-request-button:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.cancel-request-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.myrequestview-loading,
+.myrequestview-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #8B6914;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  font-size: 3rem;
+}

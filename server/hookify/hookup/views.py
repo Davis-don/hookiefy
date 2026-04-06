@@ -58,7 +58,16 @@ def my_sent_hookups(request):
     
     sent = Hookup.objects.filter(sender=client, is_deleted=False)
     
+    # Serialize data
     serializer_data = HookupResponseSerializer(sent, many=True, context={"request": request}).data
+    
+    # Add profile image for each receiver from their Bio
+    for idx, hookup in enumerate(sent):
+        try:
+            bio = hookup.receiver.bio
+            serializer_data[idx]['receiver_profile_img'] = bio.uploaded_img if bio.uploaded_img else None
+        except:
+            serializer_data[idx]['receiver_profile_img'] = None
     
     return Response({
         "sent": serializer_data,
@@ -108,8 +117,9 @@ def get_hookup_detail(request, hookup_id):
     if hookup.sender != client and hookup.receiver != client:
         return Response({"error": "Not allowed"}, status=403)
     
-    # Get profile image from Bio
+    # Get profile images from Bio
     sender_profile_img = None
+    receiver_profile_img = None
     
     try:
         if hookup.sender.bio:
@@ -117,8 +127,17 @@ def get_hookup_detail(request, hookup_id):
     except:
         pass
     
+    try:
+        if hookup.receiver.bio:
+            receiver_profile_img = hookup.receiver.bio.uploaded_img
+    except:
+        pass
+    
     serializer_data = HookupResponseSerializer(hookup, context={"request": request}).data
+    
+    # Add profile images to response
     serializer_data['sender_profile_img'] = sender_profile_img
+    serializer_data['receiver_profile_img'] = receiver_profile_img
     
     return Response(serializer_data)
 
@@ -194,7 +213,7 @@ def cancel_hookup(request, hookup_id):
     except Hookup.DoesNotExist:
         return Response({"error": "Not found"}, status=404)
 
-    # ✅ UPDATED: Allow both sender AND receiver to cancel
+    # Allow both sender AND receiver to cancel
     if hookup.sender != client and hookup.receiver != client:
         return Response({"error": "Not allowed"}, status=403)
 
@@ -315,21 +334,39 @@ def mark_hookup_as_paid(request, hookup_id):
 
 
 # =========================
-# UNREAD COUNT 🔔
+# UNREAD COUNT 🔔 - UPDATED to include sender unread
 # =========================
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def unread_hookup_count(request):
     client = request.user.client_profile
 
+    # Count unread hookups for the current user
+    # As receiver: not read by receiver
+    # As sender: not read by sender
     count = Hookup.objects.filter(
-        (Q(sender=client, is_read_by_sender=False) |
-         Q(receiver=client, is_read_by_receiver=False)),
+        Q(receiver=client, is_read_by_receiver=False) |
+        Q(sender=client, is_read_by_sender=False),
+        is_deleted=False
+    ).count()
+
+    # Optional: Break down by type
+    unread_as_receiver = Hookup.objects.filter(
+        receiver=client, 
+        is_read_by_receiver=False,
+        is_deleted=False
+    ).count()
+    
+    unread_as_sender = Hookup.objects.filter(
+        sender=client, 
+        is_read_by_sender=False,
         is_deleted=False
     ).count()
 
     return Response({
-        "unread_count": count
+        "unread_count": count,
+        "unread_as_receiver": unread_as_receiver,  # Hookups you received but haven't read
+        "unread_as_sender": unread_as_sender       # Hookups you sent that haven't been read by receiver
     })
 
 
@@ -354,6 +391,30 @@ def mark_hookup_as_read(request, hookup_id):
         return Response({"error": "Not allowed"}, status=403)
 
     return Response({"message": "Marked as read"})
+
+
+# =========================
+# GET HOOKUP BY STATUS (For debugging)
+# =========================
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_hookup_by_status(request, status):
+    """Get hookups by status for debugging"""
+    client = request.user.client_profile
+    
+    hookups = Hookup.objects.filter(
+        Q(sender=client) | Q(receiver=client),
+        status=status,
+        is_deleted=False
+    )
+    
+    serializer_data = HookupResponseSerializer(hookups, many=True, context={"request": request}).data
+    
+    return Response({
+        "status": status,
+        "count": hookups.count(),
+        "hookups": serializer_data
+    })
 
 
 # =========================

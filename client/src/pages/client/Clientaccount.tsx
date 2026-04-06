@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { logoutUser } from '../../utils/logout';
 import Header from './common/Clientheader';
 import HomeContent from './Homecontent';
@@ -8,6 +9,7 @@ import ProfileContent from './ProfileContent';
 import BillingContent from './BillingContent';
 import Uploadclientimg from './Uploadclientimg';
 import Clientbioupload from './Clientbioupload';
+import SubNotification from './Subnotification';
 import './clientaccount.css';
 
 function Clientaccount() {
@@ -15,15 +17,99 @@ function Clientaccount() {
   const [activePage, setActivePage] = useState('discover');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
+
+
+  // Fetch unread hookup count with automatic refetching
+  const { 
+    data: unreadCountData, 
+    refetch: refetchUnreadCount,
+    isFetching: isFetchingCount
+  } = useQuery({
+    queryKey: ['unread-hookup-count'],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}/hookup/hookup/unread-count/`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch unread count');
+      }
+      
+      const result = await response.json();
+      return result;
+    },
+    // Auto-refetch every 15 seconds for real-time updates
+    refetchInterval: 15000,
+    // Refetch when window regains focus
+    refetchOnWindowFocus: true,
+    // Refetch when component mounts
+    refetchOnMount: true,
+    // Refetch when network reconnects
+    refetchOnReconnect: true,
+    // Keep data fresh for 5 seconds
+    staleTime: 5000,
+  });
+
+  const unreadCount = unreadCountData?.unread_count || 0;
+
+  // Set up a listener for custom events that might affect unread count
+  useEffect(() => {
+    // Function to handle custom refresh events
+    const handleRefreshUnreadCount = () => {
+      refetchUnreadCount();
+    };
+
+    // Listen for custom events from other components
+    window.addEventListener('refreshUnreadCount', handleRefreshUnreadCount);
+    window.addEventListener('hookupStatusChanged', handleRefreshUnreadCount);
+    window.addEventListener('notificationRead', handleRefreshUnreadCount);
+    
+    return () => {
+      window.removeEventListener('refreshUnreadCount', handleRefreshUnreadCount);
+      window.removeEventListener('hookupStatusChanged', handleRefreshUnreadCount);
+      window.removeEventListener('notificationRead', handleRefreshUnreadCount);
+    };
+  }, [refetchUnreadCount]);
+
+  // Refetch when notification modal closes (user has seen notifications)
+  useEffect(() => {
+    if (!showNotificationModal) {
+      // Small delay to ensure backend has processed mark-as-read operations
+      setTimeout(() => {
+        refetchUnreadCount();
+      }, 500);
+    }
+  }, [showNotificationModal, refetchUnreadCount]);
+
+  // Refetch when active page changes to notifications
+  useEffect(() => {
+    if (activePage === 'notifications') {
+      refetchUnreadCount();
+    }
+  }, [activePage, refetchUnreadCount]);
+
+  // Set up an interval to manually refetch even if tab is not focused (optional)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // Only refetch if the document is visible (performance optimization)
+      if (document.visibilityState === 'visible') {
+        refetchUnreadCount();
+      }
+    }, 30000); // Every 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [refetchUnreadCount]);
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      // On mobile, sidebar should be closed by default
-      // On desktop, sidebar should be open by default
       if (mobile) {
         setSidebarOpen(false);
       } else {
@@ -31,9 +117,7 @@ function Clientaccount() {
       }
     };
 
-    // Set initial state based on screen size
     handleResize();
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -49,8 +133,6 @@ function Clientaccount() {
     const success = await logoutUser(apiUrl);
     
     if (success) {
-      // Navigation is handled in the logout function with window.location.href
-      // But we can also use navigate if preferred
       setTimeout(() => {
         navigate('/');
       }, 1500);
@@ -59,19 +141,29 @@ function Clientaccount() {
     }
   };
 
+  const handleNotificationClick = () => {
+    setShowNotificationModal(true);
+    // Refetch immediately when opening notifications
+    refetchUnreadCount();
+  };
+
+  const handleNotificationClose = () => {
+    setShowNotificationModal(false);
+    // Force immediate refetch when closing
+    refetchUnreadCount();
+  };
+
   const menuItems = [
     { id: 'discover', icon: '🔍', label: 'Discover' },
-    { id: 'notifications', icon: '🔔', label: 'Notifications', count: 5 },
+    { id: 'notifications', icon: '🔔', label: 'Notifications', count: unreadCount },
     { id: 'profile', icon: '👤', label: 'Profile' },
     { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
     { id: 'profilephoto', icon: '📸', label: 'Profile Photo' },
     { id: 'profilebio', icon: '✏️', label: 'Profile Bio' }
   ];
 
-  // Handle navigation from child components
   const handleNavigate = (page: string) => {
     setActivePage(page);
-    // On mobile, close sidebar after navigation
     if (isMobile) {
       setSidebarOpen(false);
     }
@@ -98,7 +190,11 @@ function Clientaccount() {
 
   return (
     <div className="ca-app">
-      <Header toggleSidebar={toggleSidebar} />
+      <Header 
+        toggleSidebar={toggleSidebar}
+        unreadCount={unreadCount}
+        onNotificationClick={handleNotificationClick}
+      />
       
       <div className="ca-layout">
         <aside className={`ca-sidebar ${sidebarOpen ? 'ca-sidebar-open' : 'ca-sidebar-closed'}`}>
@@ -109,7 +205,6 @@ function Clientaccount() {
                 className={`ca-nav-item ${activePage === item.id ? 'ca-nav-active' : ''}`}
                 onClick={() => {
                   setActivePage(item.id);
-                  // On mobile, close sidebar after selecting a menu item
                   if (isMobile) {
                     setSidebarOpen(false);
                   }
@@ -117,13 +212,17 @@ function Clientaccount() {
               >
                 <span className="ca-nav-icon">{item.icon}</span>
                 <span className="ca-nav-label">{item.label}</span>
-                {item.count && (
-                  <span className="ca-nav-count">{item.count}</span>
+                {item.count !== undefined && item.count > 0 && (
+                  <span className="ca-nav-count">
+                    {item.count > 99 ? '99+' : item.count}
+                    {isFetchingCount && (
+                      <span className="ca-nav-count-update">...</span>
+                    )}
+                  </span>
                 )}
               </div>
             ))}
             
-            {/* Logout button as separate item */}
             <div 
               className={`ca-nav-item ca-nav-logout ${isLoggingOut ? 'ca-nav-logging-out' : ''}`}
               onClick={handleLogout}
@@ -142,7 +241,6 @@ function Clientaccount() {
           </div>
         </aside>
 
-        {/* Overlay for mobile when sidebar is open */}
         {isMobile && sidebarOpen && (
           <div className="ca-sidebar-overlay" onClick={toggleSidebar}></div>
         )}
@@ -151,6 +249,11 @@ function Clientaccount() {
           {renderContent()}
         </main>
       </div>
+
+      <SubNotification 
+        isOpen={showNotificationModal}
+        onClose={handleNotificationClose}
+      />
     </div>
   );
 }

@@ -1,0 +1,179 @@
+.overall-my-requests {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: white;
+  min-height: 100vh;
+}
+
+.requests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.requests-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: #2c3e2f;
+}
+
+.unread-count-badge {
+  background: #8B6914;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  color: #6c757d;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #8B6914;
+  color: #8B6914;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-button.refreshing {
+  opacity: 0.7;
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Loading and Error States */
+.myrequests-loading-container,
+.myrequests-error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+  background: white;
+}
+
+.error-card {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.error-card h3 {
+  color: #dc3545;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.error-card p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+.retry-btn {
+  background: #8B6914;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #6d4f0f;
+}
+
+/* Empty State */
+.no-requests-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+}
+
+.no-requests-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-requests-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.no-requests-content h3 {
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.no-requests-content p {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .requests-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .requests-title {
+    font-size: 1.1rem;
+  }
+  
+  .refresh-button {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .unread-count-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+  }
+}

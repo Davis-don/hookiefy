@@ -225,3 +225,12 @@ class Hookup(models.Model):
         if not self.is_read_by_receiver:
             self.is_read_by_receiver = True
             self.save(update_fields=["is_read_by_receiver"])
+    
+    # =========================
+    # PROPERTY FOR is_paid (for compatibility)
+    # =========================
+    
+    @property
+    def is_paid(self):
+        """Property to check if payment is paid"""
+        return self.payment_status == "paid"

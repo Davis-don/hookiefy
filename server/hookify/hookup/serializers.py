@@ -47,6 +47,7 @@ class HookupResponseSerializer(serializers.ModelSerializer):
     sender_name = serializers.SerializerMethodField()
     receiver_name = serializers.SerializerMethodField()
     is_read_by_current_user = serializers.SerializerMethodField()
+    is_paid = serializers.BooleanField(read_only=True)  # Remove source='is_paid'
 
     class Meta:
         model = Hookup
@@ -57,7 +58,8 @@ class HookupResponseSerializer(serializers.ModelSerializer):
             'sender_name',
             'receiver_name',
             'status',
-            'payment_status',  # ADD THIS
+            'is_paid',  # This will use the property from the model
+            'payment_status',
             'message',
             'location',
             'scheduled_time',

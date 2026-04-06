@@ -1,0 +1,520 @@
+.myacceptedpaid-container {
+  min-height: 100vh;
+  background: transparent;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.myacceptedpaid-content {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 3rem 2rem;
+  background: transparent;
+  border-radius: 30px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.myacceptedpaid-icon {
+  font-size: 6rem;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.myacceptedpaid-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1rem 0;
+}
+
+.back-button-top {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #8B6914;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.back-button-top:hover {
+  color: #6d4f0f;
+  text-decoration: underline;
+  transform: translateX(-2px);
+}
+
+.myacceptedpaid-message {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.myacceptedpaid-message strong {
+  color: #4caf50;
+  font-weight: 700;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  margin-bottom: 2rem;
+}
+
+.status-indicator.success {
+  background: rgba(76, 175, 80, 0.15);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.status-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4caf50;
+}
+
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.success-icon {
+  width: 50px;
+  height: 50px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.success-text strong {
+  display: block;
+  font-size: 1.2rem;
+  color: #2e7d32;
+  margin-bottom: 0.25rem;
+}
+
+.success-text span {
+  font-size: 1rem;
+  color: #388e3c;
+}
+
+.partner-contact-card {
+  background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+  text-align: left;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.partner-contact-title {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #f57f17;
+  font-weight: 700;
+}
+
+.partner-contact-subtitle {
+  font-size: 1rem;
+  color: #f9a825;
+  margin-bottom: 1.5rem;
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+  min-width: 40px;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.contact-label {
+  font-size: 0.85rem;
+  color: #f57f17;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.contact-value {
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.request-details-card {
+  background: rgba(249, 250, 251, 0.5);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-row {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4caf50;
+  margin-bottom: 0.5rem;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.info-alert {
+  display: flex;
+  gap: 1rem;
+  background: #e3f2fd;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  text-align: left;
+  border-left: 6px solid #2196f3;
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+}
+
+.alert-content strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #1565c0;
+  margin-bottom: 0.5rem;
+}
+
+.alert-content p {
+  font-size: 1rem;
+  color: #1976d2;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.complete-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.complete-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.complete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.info-box {
+  background: rgba(255, 193, 7, 0.15);
+  padding: 1.25rem;
+  border-radius: 16px;
+  border-left: 6px solid #ffc107;
+}
+
+.contact-note {
+  font-size: 1rem;
+  color: #f57c00;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.loading-spinner {
+  text-align: center;
+  color: #6c757d;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.modal-message {
+  font-size: 1.1rem;
+  color: #4b5563;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modal-success {
+  font-size: 1rem;
+  color: #4caf50;
+  background: #e8f5e9;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-cancel {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.modal-cancel:hover:not(:disabled) {
+  background: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.modal-confirm {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+}
+
+.modal-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .myacceptedpaid-container {
+    padding: 1rem;
+  }
+  
+  .myacceptedpaid-content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .myacceptedpaid-title {
+    font-size: 2rem;
+  }
+  
+  .myacceptedpaid-message {
+    font-size: 1rem;
+  }
+  
+  .status-text {
+    font-size: 0.95rem;
+  }
+  
+  .partner-contact-card {
+    padding: 1.5rem;
+  }
+  
+  .partner-contact-title {
+    font-size: 1.3rem;
+  }
+  
+  .contact-value {
+    font-size: 1rem;
+  }
+  
+  .detail-label {
+    font-size: 0.9rem;
+  }
+  
+  .detail-value {
+    font-size: 1rem;
+  }
+  
+  .complete-button {
+    font-size: 1rem;
+    padding: 0.875rem;
+  }
+  
+  .contact-item {
+    flex-wrap: wrap;
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  
+  .modal-message {
+    font-size: 1rem;
+  }
+}
