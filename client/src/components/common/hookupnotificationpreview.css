@@ -1,0 +1,238 @@
+/* hookupnotificationpreview.css */
+
+.overall-hookup-notification-preview {
+  display: flex;
+  flex-direction: row;
+  gap: 1.8rem;
+  align-items: center;
+  padding: 1.5rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(139, 105, 20, 0.1);
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.overall-hookup-notification-preview.unread-notification {
+  background: linear-gradient(135deg, rgba(139, 105, 20, 0.04) 0%, rgba(255, 215, 150, 0.06) 100%);
+}
+
+.overall-hookup-notification-preview.unread-notification::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #8B6914;
+}
+
+.overall-hookup-notification-preview:hover {
+  background: linear-gradient(135deg, rgba(139, 105, 20, 0.05) 0%, rgba(255, 215, 150, 0.08) 100%);
+  transform: translateX(6px);
+}
+
+.unread-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #8B6914;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 25px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  animation: pulse 1.5s ease infinite;
+  z-index: 2;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+.left-side-hookup-preview {
+  flex-shrink: 0;
+}
+
+.hookup-preview-image-container {
+  height: 6rem;
+  width: 6rem;
+  position: relative;
+}
+
+.image-wrapper {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(139, 105, 20, 0.2);
+  transition: all 0.3s ease;
+}
+
+.overall-hookup-notification-preview:hover .image-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 8px 25px rgba(139, 105, 20, 0.3);
+}
+
+.hookup-preview-image {
+  height: 6rem;
+  width: 6rem;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.image-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 15px rgba(139, 105, 20, 0.25);
+  pointer-events: none;
+}
+
+.right-side-hookup-preview {
+  flex: 1;
+}
+
+.hookup-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.romantic-icon {
+  font-size: 1.6rem;
+}
+
+.hookup-preview-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2c3e2f;
+  letter-spacing: -0.3px;
+}
+
+.hookup-preview-description {
+  font-size: 1rem;
+  margin: 0;
+  color: #5a6e5c;
+  line-height: 1.5;
+}
+
+.hookup-preview-description strong {
+  color: #8B6914;
+  font-weight: 600;
+}
+
+.time-section {
+  margin-top: 0.3rem;
+}
+
+.time-ago {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  font-weight: 500;
+}
+
+.notification-arrow {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.overall-hookup-notification-preview:hover .notification-arrow {
+  opacity: 1;
+  transform: translateX(6px);
+}
+
+.arrow-icon {
+  font-size: 1.4rem;
+  color: #8B6914;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .overall-hookup-notification-preview {
+    gap: 1.2rem;
+    padding: 1.2rem 1rem;
+  }
+
+  .hookup-preview-image-container {
+    height: 5rem;
+    width: 5rem;
+  }
+
+  .hookup-preview-image {
+    height: 5rem;
+    width: 5rem;
+  }
+
+  .hookup-preview-title {
+    font-size: 1.2rem;
+  }
+
+  .hookup-preview-description {
+    font-size: 0.9rem;
+  }
+
+  .romantic-icon {
+    font-size: 1.3rem;
+  }
+
+  .unread-badge {
+    top: 10px;
+    right: 10px;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .overall-hookup-notification-preview {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .hookup-preview-image-container {
+    height: 4.5rem;
+    width: 4.5rem;
+  }
+
+  .hookup-preview-image {
+    height: 4.5rem;
+    width: 4.5rem;
+  }
+
+  .hookup-preview-title {
+    font-size: 1.1rem;
+  }
+
+  .hookup-preview-description {
+    font-size: 0.85rem;
+  }
+
+  .romantic-icon {
+    font-size: 1.2rem;
+  }
+
+  .time-ago {
+    font-size: 0.7rem;
+  }
+}

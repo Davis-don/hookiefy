@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaHeart, FaMapMarkerAlt, FaCalendarAlt, FaVenusMars, FaUser, FaBriefcase, FaStar, FaLock } from 'react-icons/fa';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '../../store/Toaststore';
@@ -53,6 +53,25 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
   const [showModal, setShowModal] = useState(false);
   
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [showModal]);
 
   // Create hookup mutation
   const createHookupMutation = useMutation<HookupResponse, HookupError, { receiver_id: string }>({
@@ -172,6 +191,8 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
   };
 
   const defaultImage = 'https://via.placeholder.com/400x300?text=No+Image+Available';
+
+
 
   return (
     <>
@@ -372,7 +393,7 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
         </div>
       </article>
 
-      {/* Full Screen Modal - Only show if clickable */}
+      {/* Full Screen Modal - Enhanced with proper centering */}
       {isClickable && showModal && (
         <div className="cd-modal" onClick={() => setShowModal(false)}>
           <button className="cd-modal__close" onClick={() => setShowModal(false)}>×</button>
@@ -389,19 +410,6 @@ const Clientdatacard: React.FC<ClientdatacardProps> = ({
               />
             </div>
             
-            <div className="cd-modal__caption">
-              <h3 className="cd-modal__name">{name}</h3>
-              <p className="cd-modal__details">
-                {age ? `${age} years` : 'Age not specified'} · {gender || 'Gender not specified'}
-              </p>
-              {country && county && (
-                <p className="cd-modal__location">{country}, {county}</p>
-              )}
-              {location && <p className="cd-modal__location">{location}</p>}
-              {!hasBio && (
-                <p className="cd-modal__note">✨ Profile still being completed</p>
-              )}
-            </div>
           </div>
         </div>
       )}

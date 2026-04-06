@@ -10,7 +10,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  height: 580px; /* Fixed height for consistent card size */
+  height: 580px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -57,15 +57,18 @@
   text-transform: uppercase;
 }
 
-/* Image Section */
+/* Image Section - IMPROVED */
 .cd-card__image-wrapper {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 240px; /* Increased from 200px */
   overflow: hidden;
   cursor: pointer;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cd-card__image {
@@ -73,13 +76,14 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  object-position: center; /* Center the image */
 }
 
 .cd-card__image-wrapper:hover .cd-card__image {
   transform: scale(1.05);
 }
 
-/* Default Image */
+/* Default Image - CENTERED */
 .cd-card__default-image {
   width: 100%;
   height: 100%;
@@ -95,12 +99,31 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  padding: 20px;
 }
 
 .cd-card__default-icon {
-  font-size: 48px;
+  font-size: 56px;
   color: #adb5bd;
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
 }
 
 .cd-card__default-text {
@@ -111,15 +134,17 @@
 
 .cd-card__default-initials {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.6);
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 24px;
+  font-size: 13px;
   font-weight: 600;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.5px;
+  z-index: 2;
 }
 
 .cd-card__image-overlay {
@@ -127,12 +152,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  padding: 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 20px;
   transform: translateY(100%);
   transition: transform 0.3s ease;
   display: flex;
   justify-content: center;
+  z-index: 5;
 }
 
 .cd-card__image-wrapper:hover .cd-card__image-overlay {
@@ -140,18 +166,19 @@
 }
 
 .cd-card__expand-icon {
-  font-size: 14px;
-  margin-right: 6px;
+  font-size: 16px;
+  margin-right: 8px;
 }
 
 .cd-card__expand-text {
   color: white;
   font-size: 13px;
   font-weight: 500;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 18px;
   border-radius: 30px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.3px;
 }
 
 /* Scrollable Content Area */
@@ -433,7 +460,7 @@
   }
 }
 
-/* Modal Styles */
+/* Modal Styles - IMPROVED */
 .cd-modal {
   position: fixed;
   top: 0;
@@ -482,6 +509,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .cd-modal__image-wrapper {
@@ -493,6 +521,7 @@
   background: rgba(0, 0, 0, 0.3);
   border-radius: 20px;
   overflow: hidden;
+  position: relative;
 }
 
 .cd-modal__image {
@@ -503,6 +532,7 @@
   object-fit: contain;
   display: block;
   border-radius: 16px;
+  object-position: center;
 }
 
 .cd-modal__caption {
@@ -542,32 +572,14 @@
   color: #fbb6ce;
 }
 
-/* Scroll Indicator */
-.cd-card__scrollable-content::after {
-  content: '';
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
-  background: linear-gradient(to top, white, transparent);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.cd-card__scrollable-content.is-scrollable::after {
-  opacity: 1;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .cd-card {
-    height: 540px;
+    height: 560px;
   }
   
   .cd-card__image-wrapper {
-    height: 180px;
+    height: 200px; /* Slightly reduced for mobile but still prominent */
   }
   
   .cd-card__content {
@@ -628,15 +640,19 @@
   .cd-modal__name {
     font-size: 1.2rem;
   }
+  
+  .cd-card__default-icon {
+    font-size: 48px;
+  }
 }
 
 @media (max-width: 480px) {
   .cd-card {
-    height: 520px;
+    height: 540px;
   }
   
   .cd-card__image-wrapper {
-    height: 160px;
+    height: 180px;
   }
   
   .cd-card__content {
@@ -650,22 +666,16 @@
   .cd-card__info-item {
     padding: 5px;
   }
-}
-
-/* Custom scrollbar styling for better visibility */
-.cd-card__scrollable-content {
-  scroll-behavior: smooth;
-}
-
-/* Add a subtle gradient to indicate scrollable content */
-.cd-card__scrollable-content {
-  position: relative;
-}
-
-/* Optional: Add a scroll indicator text for mobile */
-@media (max-width: 768px) {
-  .cd-card__scrollable-content {
-    scrollbar-width: thin;
+  
+  .cd-card__default-icon {
+    font-size: 40px;
+  }
+  
+  .cd-card__default-initials {
+    bottom: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    font-size: 11px;
   }
 }
 
@@ -769,3 +779,5 @@
     font-size: 12px;
   }
 }
+
+

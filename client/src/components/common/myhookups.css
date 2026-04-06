@@ -1,0 +1,177 @@
+.overall-my-hookups {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: white;
+  min-height: 100vh;
+}
+
+.hookups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hookups-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: #2c3e2f;
+}
+
+.unread-count-badge {
+  background: #8B6914;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  color: #6c757d;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.refresh-button:hover {
+  background: #f8f9fa;
+  border-color: #8B6914;
+  color: #8B6914;
+}
+
+.notification-card {
+  position: relative;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+}
+
+.notification-card:hover {
+  background-color: #fafaf8;
+}
+
+.notification-card.unread {
+  background: linear-gradient(90deg, rgba(139,105,20,0.04) 0%, rgba(255,255,255,0) 100%);
+}
+
+.notification-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 1rem 0.75rem 6.5rem;
+}
+
+.notification-time {
+  font-size: 0.7rem;
+  color: #adb5bd;
+}
+
+.unread-dot {
+  color: #8B6914;
+  font-size: 0.8rem;
+}
+
+.myhookups-loading-container,
+.myhookups-error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+  background: white;
+}
+
+.error-card {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.error-card h3 {
+  color: #dc3545;
+  margin-bottom: 0.5rem;
+}
+
+.error-card p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+.retry-btn {
+  background: #8B6914;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.no-hookups-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+}
+
+.no-hookups-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-hookups-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.no-hookups-content h3 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.no-hookups-content p {
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .hookups-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .hookups-title {
+    font-size: 1.1rem;
+  }
+  
+  .notification-meta {
+    padding-left: 5rem;
+  }
+}

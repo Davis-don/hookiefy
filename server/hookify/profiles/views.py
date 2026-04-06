@@ -7,7 +7,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, F
 from django.db import connection
 from accounts.models import ClientProfile, User
 from clientbio.models import Bio
-from .serializers import AllProfilesSerializer
+from .serializers import AllProfilesSerializer, SingleProfileSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ class CustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 50
     page_query_param = 'page'
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -129,3 +130,46 @@ def all_profiles(request):
     
     # Return paginated response
     return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile_by_id(request, profile_id):
+    """
+    Endpoint to get a single client profile by ID.
+    Returns detailed profile information including bio data.
+    
+    URL pattern: /api/profiles/profile/<profile_id>/
+    """
+    current_user = request.user
+    
+    try:
+        # Get the profile, excluding deleted ones
+        profile = ClientProfile.objects.filter(
+            is_deleted=False
+        ).select_related(
+            'user'
+        ).prefetch_related(
+            'bio'
+        ).get(id=profile_id)
+        
+        # Optional: Add permission checks if needed
+        # For now, any authenticated user can view any profile
+        # You can add restrictions here if needed (e.g., only view profiles that have sent hookups)
+        
+        # Serialize the data
+        serializer = SingleProfileSerializer(profile, context={'request': request})
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    except ClientProfile.DoesNotExist:
+        return Response(
+            {"error": "Profile not found", "detail": f"No profile found with ID {profile_id}"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error fetching profile {profile_id}: {str(e)}")
+        return Response(
+            {"error": "An error occurred while fetching the profile", "detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
