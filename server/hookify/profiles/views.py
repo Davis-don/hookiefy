@@ -3,173 +3,181 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q, Case, When, Value, IntegerField, F
-from django.db import connection
-from accounts.models import ClientProfile, User
+
+from django.db.models import Q, Case, When, Value, IntegerField
+from accounts.models import ClientProfile
 from clientbio.models import Bio
+from hookup.models import Hookup
+
 from .serializers import AllProfilesSerializer, SingleProfileSerializer
+
 import logging
 
 logger = logging.getLogger(__name__)
 
+
+# =========================
+# PAGINATION
+# =========================
 class CustomPagination(PageNumberPagination):
-    """
-    Custom pagination class for profiles with 10 items per page
-    """
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 50
     page_query_param = 'page'
 
 
+# =========================
+# ALL PROFILES (🔥 SMART MATCHING)
+# =========================
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def all_profiles(request):
-    """
-    Endpoint to get all client profiles except the current user.
-    Ordering logic:
-    1. Same country AND same county as current user (highest priority)
-    2. Same country only (medium priority)
-    3. All other clients (lowest priority)
-    
-    Results are paginated with 10 items per page.
-    """
     current_user = request.user
-    
-    # Only authenticated users can access this endpoint
-    # Can be clients, admins, or superadmins
-    
-    # Get all client profiles that are not deleted and not the current user
-    client_profiles = ClientProfile.objects.filter(
+
+    # Ensure user is a client
+    if not hasattr(current_user, "client_profile"):
+        return Response({"error": "Only clients can access profiles"}, status=403)
+
+    current_client = current_user.client_profile
+
+    # =========================
+    # GET CURRENT USER LOCATION
+    # =========================
+    current_bio = Bio.objects.filter(client_profile=current_client).first()
+
+    current_country = current_bio.country if current_bio else None
+    current_county = current_bio.county if current_bio else None
+
+    # =========================
+    # EXCLUDE USERS WITH EXISTING HOOKUPS 🔥
+    # =========================
+    existing_connections = Hookup.objects.filter(
+        Q(sender=current_client) | Q(receiver=current_client)
+    ).values_list('sender_id', 'receiver_id')
+
+    excluded_ids = set()
+
+    for sender_id, receiver_id in existing_connections:
+        excluded_ids.add(sender_id)
+        excluded_ids.add(receiver_id)
+
+    # Remove self if present
+    excluded_ids.discard(current_client.id)
+
+    # =========================
+    # BASE QUERYSET
+    # =========================
+    profiles = ClientProfile.objects.filter(
         is_deleted=False
+    ).exclude(
+        id__in=excluded_ids
     ).exclude(
         user=current_user
     ).select_related(
-        'user'
+        "user"
     ).prefetch_related(
-        'bio'
+        "bio"
     )
-    
-    # Get current user's bio for location matching
-    current_bio = None
-    current_country = None
-    current_county = None
-    
-    try:
-        # Try to get bio for current user if they have one
-        if hasattr(current_user, 'client_profile'):
-            current_bio = Bio.objects.filter(
-                client_profile=current_user.client_profile
-            ).first()
-            if current_bio:
-                current_country = current_bio.country
-                current_county = current_bio.county
-    except Exception as e:
-        logger.warning(f"Could not get current user bio: {e}")
-    
-    # Build annotation for ordering
-    # Create ordering weights
-    ordering_cases = []
-    
-    # Check if current user has location info
+
+    # =========================
+    # FILTER: MUST HAVE CONTACT INFO 📞
+    # =========================
+    profiles = profiles.filter(
+        bio__phone_number__isnull=False
+    ).exclude(
+        bio__phone_number=""
+    )
+
+    # Also ensure email exists
+    profiles = profiles.exclude(
+        user__email__isnull=True
+    ).exclude(
+        user__email=""
+    )
+
+    # =========================
+    # ORDERING LOGIC 🎯
+    # =========================
     if current_country and current_county:
-        # Priority 1: Same country AND same county
-        ordering_cases.append(
-            When(
-                Q(bio__country=current_country) & Q(bio__county=current_county),
-                then=Value(1)
-            )
-        )
-        # Priority 2: Same country only
-        ordering_cases.append(
-            When(
-                Q(bio__country=current_country) & ~Q(bio__county=current_county),
-                then=Value(2)
-            )
-        )
-        # Priority 3: Everything else
-        ordering_cases.append(
-            When(
-                Q(bio__country__isnull=False),
-                then=Value(3)
-            )
-        )
-        ordering_cases.append(
-            When(
-                Q(bio__country__isnull=True),
-                then=Value(4)
-            )
-        )
-        
-        # Annotate with ordering priority
-        client_profiles = client_profiles.annotate(
-            order_priority=Case(
-                *ordering_cases,
-                default=Value(4),
+        profiles = profiles.annotate(
+            priority=Case(
+                # SAME COUNTRY + COUNTY
+                When(
+                    Q(bio__country=current_country) & Q(bio__county=current_county),
+                    then=Value(1)
+                ),
+                # SAME COUNTRY
+                When(
+                    Q(bio__country=current_country),
+                    then=Value(2)
+                ),
+                # OTHERS
+                default=Value(3),
                 output_field=IntegerField()
             )
-        )
-        
-        # Order by priority, then by creation date (newest first)
-        client_profiles = client_profiles.order_by(
-            'order_priority',
-            '-user__date_joined'
-        )
+        ).order_by("priority", "-user__date_joined")
+
+    elif current_country:
+        profiles = profiles.annotate(
+            priority=Case(
+                When(
+                    Q(bio__country=current_country),
+                    then=Value(1)
+                ),
+                default=Value(2),
+                output_field=IntegerField()
+            )
+        ).order_by("priority", "-user__date_joined")
+
     else:
-        # If current user has no bio, order by creation date only
-        client_profiles = client_profiles.order_by(
-            '-user__date_joined'
-        )
-    
-    # Apply pagination
+        profiles = profiles.order_by("-user__date_joined")
+
+    # =========================
+    # PAGINATION
+    # =========================
     paginator = CustomPagination()
-    paginated_profiles = paginator.paginate_queryset(client_profiles, request)
-    
-    # Serialize the data
-    serializer = AllProfilesSerializer(paginated_profiles, many=True, context={'request': request})
-    
-    # Return paginated response
+    paginated = paginator.paginate_queryset(profiles, request)
+
+    serializer = AllProfilesSerializer(
+        paginated,
+        many=True,
+        context={"request": request}
+    )
+
     return paginator.get_paginated_response(serializer.data)
 
 
+# =========================
+# SINGLE PROFILE
+# =========================
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_profile_by_id(request, profile_id):
-    """
-    Endpoint to get a single client profile by ID.
-    Returns detailed profile information including bio data.
-    
-    URL pattern: /api/profiles/profile/<profile_id>/
-    """
-    current_user = request.user
-    
     try:
-        # Get the profile, excluding deleted ones
         profile = ClientProfile.objects.filter(
             is_deleted=False
         ).select_related(
-            'user'
+            "user"
         ).prefetch_related(
-            'bio'
+            "bio"
         ).get(id=profile_id)
-        
-        # Optional: Add permission checks if needed
-        # For now, any authenticated user can view any profile
-        # You can add restrictions here if needed (e.g., only view profiles that have sent hookups)
-        
-        # Serialize the data
-        serializer = SingleProfileSerializer(profile, context={'request': request})
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
-        
+
+        serializer = SingleProfileSerializer(
+            profile,
+            context={"request": request}
+        )
+
+        return Response(serializer.data)
+
     except ClientProfile.DoesNotExist:
         return Response(
-            {"error": "Profile not found", "detail": f"No profile found with ID {profile_id}"},
+            {"error": "Profile not found"},
             status=status.HTTP_404_NOT_FOUND
         )
+
     except Exception as e:
-        logger.error(f"Error fetching profile {profile_id}: {str(e)}")
+        logger.error(f"Error fetching profile: {str(e)}")
         return Response(
-            {"error": "An error occurred while fetching the profile", "detail": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"error": "Something went wrong"},
+            status=500
         )

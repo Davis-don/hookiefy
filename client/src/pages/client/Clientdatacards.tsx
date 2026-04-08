@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FaSearch, FaFilter, FaTimes, FaMapMarkerAlt, FaVenusMars, FaUserCheck, FaUserPlus, FaSpinner } from 'react-icons/fa';
 import Clientdatacard from './Clientdatacard';
@@ -72,7 +72,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
   const [ageRange, setAgeRange] = useState<{ min: number; max: number }>({ min: 18, max: 100 });
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  // Fetch profiles data
+  // Fetch profiles data with auto-refetch
   const { data, isLoading, error, refetch, isFetching } = useQuery<ApiResponse>({
     queryKey: ['profiles'],
     queryFn: async () => {
@@ -94,10 +94,27 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
 
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
     retry: 1,
   });
+
+  // Auto-refetch when coming back to page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetch();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetch]);
 
   // Extract unique countries and counties from data
   const { countries, counties } = useMemo(() => {
@@ -121,14 +138,12 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
     };
   }, [data?.results]);
 
-  // Filter and sort profiles - WITH BIO PROFILES PRIORITIZED
+  // Filter and sort profiles
   const filteredAndSortedProfiles = useMemo(() => {
     if (!data?.results) return [];
 
-    // First, filter profiles
     let filtered = [...data.results];
 
-    // Search by name
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(profile =>
@@ -136,45 +151,38 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
       );
     }
 
-    // Filter by gender
     if (filterGender !== 'all') {
       filtered = filtered.filter(profile =>
         profile.bio?.gender === filterGender
       );
     }
 
-    // Filter by country
     if (filterCountry !== 'all') {
       filtered = filtered.filter(profile =>
         profile.bio?.country === filterCountry
       );
     }
 
-    // Filter by county
     if (filterCounty !== 'all') {
       filtered = filtered.filter(profile =>
         profile.bio?.county === filterCounty
       );
     }
 
-    // Filter by age range
     filtered = filtered.filter(profile => {
       const age = profile.bio?.age;
       if (!age) return true;
       return age >= ageRange.min && age <= ageRange.max;
     });
 
-    // Filter by has image
     if (showOnlyWithImages) {
       filtered = filtered.filter(profile => profile.has_image);
     }
 
-    // Filter by has bio
     if (showOnlyWithBio) {
       filtered = filtered.filter(profile => profile.has_bio);
     }
 
-    // Apply sorting based on user selection
     if (sortBy !== 'default') {
       filtered.sort((a, b) => {
         switch (sortBy) {
@@ -195,15 +203,9 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
         }
       });
     } else {
-      // DEFAULT ORDER: Profiles with bios (completed) first, then incomplete profiles
-      // Within each group, maintain the original backend order
       filtered.sort((a, b) => {
-        // Prioritize profiles with bios (has_bio = true)
         if (a.has_bio && !b.has_bio) return -1;
         if (!a.has_bio && b.has_bio) return 1;
-        
-        // If both have bio or both don't have bio, maintain original order
-        // by comparing their original indices in the data.results array
         const indexA = data.results.findIndex(p => p.id === a.id);
         const indexB = data.results.findIndex(p => p.id === b.id);
         return indexA - indexB;
@@ -243,11 +245,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
-
-  // Count profiles with bios for display
-  const profilesWithBio = useMemo(() => {
-    return filteredAndSortedProfiles.filter(p => p.has_bio).length;
-  }, [filteredAndSortedProfiles]);
 
   // Loading skeleton
   if (isLoading) {
@@ -298,7 +295,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
             <span className="cds-hero-icon">✨</span>
           </h1>
           <p className="cds-hero-subtitle">
-            Find your perfect connection among <strong>{data?.count || 0}</strong> amazing profiles
+            Find your perfect connection among amazing profiles
           </p>
         </div>
         
@@ -341,7 +338,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
           )}
         </div>
         
-        {/* Sort Dropdown */}
         <div className="cds-sort-wrapper">
           <select
             value={sortBy}
@@ -364,7 +360,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
       {showFilters && (
         <div className="cds-filters-panel">
           <div className="cds-filters-grid">
-            {/* Gender Filter */}
             <div className="cds-filter-group">
               <label className="cds-filter-label">
                 <FaVenusMars /> Gender
@@ -384,7 +379,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
               </select>
             </div>
 
-            {/* Country Filter */}
             <div className="cds-filter-group">
               <label className="cds-filter-label">
                 <FaMapMarkerAlt /> Country
@@ -405,7 +399,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
               </select>
             </div>
 
-            {/* County Filter */}
             <div className="cds-filter-group">
               <label className="cds-filter-label">
                 <FaMapMarkerAlt /> County
@@ -423,7 +416,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
               </select>
             </div>
 
-            {/* Age Range Filter */}
             <div className="cds-filter-group">
               <label className="cds-filter-label">
                 🎂 Age Range
@@ -451,7 +443,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
               </div>
             </div>
 
-            {/* Toggle Filters */}
             <div className="cds-filter-group cds-toggle-group">
               <label className="cds-checkbox-label">
                 <input
@@ -474,7 +465,6 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
             </div>
           </div>
 
-          {/* Filter Actions */}
           {activeFiltersCount > 0 && !isBlurred && (
             <div className="cds-filters-actions">
               <button className="cds-clear-filters-btn" onClick={clearFilters}>
@@ -543,34 +533,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
         </div>
       )}
 
-      {/* Results Stats */}
-      <div className="cds-results-stats">
-        <span className="cds-results-count">
-          <strong>{filteredAndSortedProfiles.length}</strong> {filteredAndSortedProfiles.length === 1 ? 'profile' : 'profiles'} found
-        </span>
-        {filteredAndSortedProfiles.length !== data?.count && (
-          <span className="cds-results-filtered">
-            (filtered from {data?.count} total)
-          </span>
-        )}
-        {profilesWithBio > 0 && sortBy === 'default' && !isBlurred && (
-          <span className="cds-results-badge">
-            ✨ {profilesWithBio} completed {profilesWithBio === 1 ? 'profile' : 'profiles'} shown first
-          </span>
-        )}
-        {sortBy !== 'default' && !isBlurred && (
-          <span className="cds-results-sort">
-            • Sorted by {sortBy.replace('_', ' ')}
-          </span>
-        )}
-        {isBlurred && (
-          <span className="cds-results-badge cds-locked-badge">
-            🔒 Complete your profile to unlock
-          </span>
-        )}
-      </div>
-
-      {/* Cards Grid with blur overlay message */}
+      {/* Cards Grid - No results stats text at all */}
       <div className="cds-grid-wrapper">
         {isBlurred && (
           <div className="cds-blur-overlay">
