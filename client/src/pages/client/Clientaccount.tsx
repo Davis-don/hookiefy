@@ -4,12 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { logoutUser } from '../../utils/logout';
 import Header from './common/Clientheader';
 import HomeContent from './Homecontent';
-import NotificationsContent from './NotificationsContent';
+import MyHookup from './MyHookup';
 import ProfileContent from './ProfileContent';
 import BillingContent from './BillingContent';
 import Uploadclientimg from './Uploadclientimg';
 import Clientbioupload from './Clientbioupload';
-import SubNotification from './Subnotification';
 import './clientaccount.css';
 
 function Clientaccount() {
@@ -17,20 +16,18 @@ function Clientaccount() {
   const [activePage, setActivePage] = useState('discover');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
 
-
-  // Fetch unread hookup count with automatic refetching
+  // Fetch pending hookup count with automatic refetching
   const { 
-    data: unreadCountData, 
-    refetch: refetchUnreadCount,
+    data: pendingCountData, 
+    refetch: refetchPendingCount,
     isFetching: isFetchingCount
   } = useQuery({
-    queryKey: ['unread-hookup-count'],
+    queryKey: ['pending-hookup-count'],
     queryFn: async () => {
-      const response = await fetch(`${apiUrl}/hookup/hookup/unread-count/`, {
+      const response = await fetch(`${apiUrl}/hookup/hookup/pending-count/`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -38,7 +35,7 @@ function Clientaccount() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch unread count');
+        throw new Error('Failed to fetch pending count');
       }
       
       const result = await response.json();
@@ -56,55 +53,43 @@ function Clientaccount() {
     staleTime: 5000,
   });
 
-  const unreadCount = unreadCountData?.unread_count || 0;
+  const pendingCount = pendingCountData?.pending_count || 0;
 
-  // Set up a listener for custom events that might affect unread count
+  // Set up a listener for custom events that might affect pending count
   useEffect(() => {
     // Function to handle custom refresh events
-    const handleRefreshUnreadCount = () => {
-      refetchUnreadCount();
+    const handleRefreshPendingCount = () => {
+      refetchPendingCount();
     };
 
     // Listen for custom events from other components
-    window.addEventListener('refreshUnreadCount', handleRefreshUnreadCount);
-    window.addEventListener('hookupStatusChanged', handleRefreshUnreadCount);
-    window.addEventListener('notificationRead', handleRefreshUnreadCount);
+    window.addEventListener('refreshPendingCount', handleRefreshPendingCount);
+    window.addEventListener('hookupStatusChanged', handleRefreshPendingCount);
     
     return () => {
-      window.removeEventListener('refreshUnreadCount', handleRefreshUnreadCount);
-      window.removeEventListener('hookupStatusChanged', handleRefreshUnreadCount);
-      window.removeEventListener('notificationRead', handleRefreshUnreadCount);
+      window.removeEventListener('refreshPendingCount', handleRefreshPendingCount);
+      window.removeEventListener('hookupStatusChanged', handleRefreshPendingCount);
     };
-  }, [refetchUnreadCount]);
+  }, [refetchPendingCount]);
 
-  // Refetch when notification modal closes (user has seen notifications)
+  // Refetch when active page changes to my hookups
   useEffect(() => {
-    if (!showNotificationModal) {
-      // Small delay to ensure backend has processed mark-as-read operations
-      setTimeout(() => {
-        refetchUnreadCount();
-      }, 500);
+    if (activePage === 'myhookups') {
+      refetchPendingCount();
     }
-  }, [showNotificationModal, refetchUnreadCount]);
-
-  // Refetch when active page changes to notifications
-  useEffect(() => {
-    if (activePage === 'notifications') {
-      refetchUnreadCount();
-    }
-  }, [activePage, refetchUnreadCount]);
+  }, [activePage, refetchPendingCount]);
 
   // Set up an interval to manually refetch even if tab is not focused (optional)
   useEffect(() => {
     const intervalId = setInterval(() => {
       // Only refetch if the document is visible (performance optimization)
       if (document.visibilityState === 'visible') {
-        refetchUnreadCount();
+        refetchPendingCount();
       }
     }, 30000); // Every 30 seconds
     
     return () => clearInterval(intervalId);
-  }, [refetchUnreadCount]);
+  }, [refetchPendingCount]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -141,21 +126,9 @@ function Clientaccount() {
     }
   };
 
-  const handleNotificationClick = () => {
-    setShowNotificationModal(true);
-    // Refetch immediately when opening notifications
-    refetchUnreadCount();
-  };
-
-  const handleNotificationClose = () => {
-    setShowNotificationModal(false);
-    // Force immediate refetch when closing
-    refetchUnreadCount();
-  };
-
   const menuItems = [
     { id: 'discover', icon: '🔍', label: 'Discover' },
-    { id: 'notifications', icon: '🔔', label: 'Notifications', count: unreadCount },
+    { id: 'myhookups', icon: '💚', label: 'My Hookups', count: pendingCount },
     { id: 'profile', icon: '👤', label: 'Profile' },
     { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
     { id: 'profilephoto', icon: '📸', label: 'Profile Photo' },
@@ -173,8 +146,8 @@ function Clientaccount() {
     switch(activePage) {
       case 'discover':
         return <HomeContent onNavigate={handleNavigate} />;
-      case 'notifications':
-        return <NotificationsContent />;
+      case 'myhookups':
+        return <MyHookup />;
       case 'profile':
         return <ProfileContent />;
       case 'billing':
@@ -192,8 +165,7 @@ function Clientaccount() {
     <div className="ca-app">
       <Header 
         toggleSidebar={toggleSidebar}
-        unreadCount={unreadCount}
-        onNotificationClick={handleNotificationClick}
+        unreadCount={pendingCount}
       />
       
       <div className="ca-layout">
@@ -249,11 +221,6 @@ function Clientaccount() {
           {renderContent()}
         </main>
       </div>
-
-      <SubNotification 
-        isOpen={showNotificationModal}
-        onClose={handleNotificationClose}
-      />
     </div>
   );
 }
