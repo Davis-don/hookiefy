@@ -55,6 +55,26 @@ function Clientaccount() {
 
   const unreadCount = unreadCountData?.unread_count || 0;
 
+  // Handle notification bell click
+  const handleNotificationClick = () => {
+    // Navigate to My Hookups page
+    setActivePage('myhookups');
+    
+    // Close sidebar on mobile
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+    
+    // Optional: Mark notifications as read when clicked
+    // You can add an API call here to mark notifications as read
+    // markNotificationsAsRead();
+    
+    // Refetch unread count to update badge
+    setTimeout(() => {
+      refetchUnreadCount();
+    }, 1000);
+  };
+
   // Set up a listener for custom events that might affect unread count
   useEffect(() => {
     const handleRefreshUnreadCount = () => {
@@ -166,6 +186,7 @@ function Clientaccount() {
       <Header 
         toggleSidebar={toggleSidebar}
         unreadCount={unreadCount}
+        onNotificationClick={handleNotificationClick}
       />
       
       <div className="ca-layout">
@@ -203,14 +224,6 @@ function Clientaccount() {
               <span className="ca-nav-label">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
             </div>
           </nav>
-
-          <div className="ca-sidebar-footer">
-            <div className="ca-premium-card">
-              <h4 className="ca-premium-title">Go Premium</h4>
-              <p className="ca-premium-text">Get unlimited access to all features</p>
-              <button className="ca-premium-btn">Upgrade Now</button>
-            </div>
-          </div>
         </aside>
 
         {isMobile && sidebarOpen && (

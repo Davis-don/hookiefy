@@ -11,6 +11,12 @@ interface HeaderProps {
 function Header({ toggleSidebar, unreadCount = 0, onNotificationClick }: HeaderProps) {
   const userInitials = "JD";
 
+  const handleNotificationClick = () => {
+    if (onNotificationClick) {
+      onNotificationClick();
+    }
+  };
+
   return (
     <header className="ca-header">
       <div className="ca-header-container">
@@ -27,7 +33,7 @@ function Header({ toggleSidebar, unreadCount = 0, onNotificationClick }: HeaderP
           <button 
             className="ca-notification-icon" 
             aria-label="Notifications"
-            onClick={onNotificationClick}
+            onClick={handleNotificationClick}
           >
             <IoMdNotificationsOutline />
             {unreadCount > 0 && (
