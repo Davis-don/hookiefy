@@ -7,10 +7,11 @@ import AdminDashboard from '../../components/admin/AdminDashboard';
 import AdminSettings from '../../components/admin/AdminSettings';
 import AdminClients from './AdminClients';
 import AdminBalance from './AdminBalance';
+import AdminProfile from './Adminprofile';
 import { logoutUser } from '../../utils/logout';
 
 // Types
-type ActiveTab = 'dashboard' | 'settings' | 'clients';
+type ActiveTab = 'dashboard' | 'settings' | 'clients' | 'profile';
 
 interface MenuItem {
   id: ActiveTab;
@@ -66,6 +67,7 @@ const Admin: React.FC = () => {
   const menuLinks: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '🌟' },
     { id: 'clients', label: 'Clients', icon: '💑' },
+    { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
@@ -96,6 +98,8 @@ const Admin: React.FC = () => {
         return <AdminSettings />;
       case 'clients':
         return <AdminClients />;
+      case 'profile':
+        return <AdminProfile />;
       default:
         return <AdminDashboard />;
     }
@@ -171,10 +175,6 @@ const Admin: React.FC = () => {
             <span className="hookey-admin-nav-icon">{isLoggingOut ? '⏳' : '💔'}</span>
             <span className="hookey-admin-nav-text">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
           </button>
-        </div>
-
-        <div className="hookey-admin-love-note">
-          <p>"Every love story is beautiful"</p>
         </div>
       </aside>
 

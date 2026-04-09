@@ -24,5 +24,6 @@ urlpatterns = [
     path('superconfig/', include('superconfig.urls')),
     path('client-img/',include('clientbio.urls')),
     path('profiles/', include('profiles.urls')),
-    path('hookup/',include('hookup.urls'))
+    path('hookup/',include('hookup.urls')),
+    path('adminconfig/', include('adminconfig.urls')),
 ]
