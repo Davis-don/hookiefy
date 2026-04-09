@@ -19,15 +19,15 @@ function Clientaccount() {
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Fetch pending hookup count with automatic refetching
+  // Fetch unread hookup count with automatic refetching
   const { 
-    data: pendingCountData, 
-    refetch: refetchPendingCount,
+    data: unreadCountData, 
+    refetch: refetchUnreadCount,
     isFetching: isFetchingCount
   } = useQuery({
-    queryKey: ['pending-hookup-count'],
+    queryKey: ['unread-hookup-count'],
     queryFn: async () => {
-      const response = await fetch(`${apiUrl}/hookup/hookup/pending-count/`, {
+      const response = await fetch(`${apiUrl}/hookup/unread-count/`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -35,7 +35,7 @@ function Clientaccount() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch pending count');
+        throw new Error('Failed to fetch unread count');
       }
       
       const result = await response.json();
@@ -53,43 +53,43 @@ function Clientaccount() {
     staleTime: 5000,
   });
 
-  const pendingCount = pendingCountData?.pending_count || 0;
+  const unreadCount = unreadCountData?.unread_count || 0;
 
-  // Set up a listener for custom events that might affect pending count
+  // Set up a listener for custom events that might affect unread count
   useEffect(() => {
-    // Function to handle custom refresh events
-    const handleRefreshPendingCount = () => {
-      refetchPendingCount();
+    const handleRefreshUnreadCount = () => {
+      refetchUnreadCount();
     };
 
     // Listen for custom events from other components
-    window.addEventListener('refreshPendingCount', handleRefreshPendingCount);
-    window.addEventListener('hookupStatusChanged', handleRefreshPendingCount);
+    window.addEventListener('refreshUnreadCount', handleRefreshUnreadCount);
+    window.addEventListener('hookupStatusChanged', handleRefreshUnreadCount);
+    window.addEventListener('notificationRead', handleRefreshUnreadCount);
     
     return () => {
-      window.removeEventListener('refreshPendingCount', handleRefreshPendingCount);
-      window.removeEventListener('hookupStatusChanged', handleRefreshPendingCount);
+      window.removeEventListener('refreshUnreadCount', handleRefreshUnreadCount);
+      window.removeEventListener('hookupStatusChanged', handleRefreshUnreadCount);
+      window.removeEventListener('notificationRead', handleRefreshUnreadCount);
     };
-  }, [refetchPendingCount]);
+  }, [refetchUnreadCount]);
 
   // Refetch when active page changes to my hookups
   useEffect(() => {
     if (activePage === 'myhookups') {
-      refetchPendingCount();
+      refetchUnreadCount();
     }
-  }, [activePage, refetchPendingCount]);
+  }, [activePage, refetchUnreadCount]);
 
-  // Set up an interval to manually refetch even if tab is not focused (optional)
+  // Set up an interval to manually refetch
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // Only refetch if the document is visible (performance optimization)
       if (document.visibilityState === 'visible') {
-        refetchPendingCount();
+        refetchUnreadCount();
       }
-    }, 30000); // Every 30 seconds
+    }, 30000);
     
     return () => clearInterval(intervalId);
-  }, [refetchPendingCount]);
+  }, [refetchUnreadCount]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -128,7 +128,7 @@ function Clientaccount() {
 
   const menuItems = [
     { id: 'discover', icon: '🔍', label: 'Discover' },
-    { id: 'myhookups', icon: '💚', label: 'My Hookups', count: pendingCount },
+    { id: 'myhookups', icon: '💚', label: 'My Hookups', count: unreadCount },
     { id: 'profile', icon: '👤', label: 'Profile' },
     { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
     { id: 'profilephoto', icon: '📸', label: 'Profile Photo' },
@@ -165,7 +165,7 @@ function Clientaccount() {
     <div className="ca-app">
       <Header 
         toggleSidebar={toggleSidebar}
-        unreadCount={pendingCount}
+        unreadCount={unreadCount}
       />
       
       <div className="ca-layout">
