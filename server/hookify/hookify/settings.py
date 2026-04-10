@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'notifications',
     'hookup',
     'adminconfig',
+    'payments',
 ]
 
 # -------------------------------
@@ -172,3 +173,15 @@ COOKIE_PATH = '/'
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
+
+
+# -------------------------------
+# PESAPAL CONFIG
+# -------------------------------
+PESAPAL_BASE_URL = config("PESAPAL_BASE_URL")
+
+PESAPAL_CONSUMER_KEY = config("PESAPAL_CONSUMER_KEY")
+PESAPAL_CONSUMER_SECRET = config("PESAPAL_CONSUMER_SECRET")
+
+PESAPAL_CALLBACK_URL = config("PESAPAL_CALLBACK_URL")
+PESAPAL_IPN_ID = config("PESAPAL_IPN_ID")

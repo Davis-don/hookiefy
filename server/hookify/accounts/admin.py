@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.utils.html import format_html  # Use format_html instead of mark_safe for better security
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import User, SuperAdminProfile, AdminProfile, ClientProfile, ClientHistory
 
 # ----- Custom Admin Site Configuration -----
@@ -69,19 +70,13 @@ class UserAdmin(BaseUserAdmin):
     save_on_top = True
 
     def get_profile_status(self, obj):
-        """Display profile status with color coding"""
+        """Display profile status with color coding - FIXED using mark_safe instead of format_html"""
         if obj.role == 'client' and hasattr(obj, 'client_profile'):
             profile = obj.client_profile
             if profile.is_deleted:
-                return format_html(
-                    '<span style="color: #e74c3c; font-weight: bold;">🗑️ Deleted</span>'
-                )
-            return format_html(
-                '<span style="color: #27ae60; font-weight: bold;">✓ Active</span>'
-            )
-        return format_html(
-            '<span style="color: #3498db;">✓ Active</span>'
-        )
+                return mark_safe('<span style="color: #e74c3c; font-weight: bold;">🗑️ Deleted</span>')
+            return mark_safe('<span style="color: #27ae60; font-weight: bold;">✓ Active</span>')
+        return mark_safe('<span style="color: #3498db;">✓ Active</span>')
 
     get_profile_status.short_description = 'Profile Status'
     get_profile_status.admin_order_field = 'client_profile__is_deleted'
@@ -177,19 +172,17 @@ class ClientProfileAdmin(admin.ModelAdmin):
     actions = ['soft_delete_selected', 'restore_selected', 'transfer_to_superuser']
 
     def get_status_badge(self, obj):
+        """FIXED: Use mark_safe instead of format_html"""
         if obj.is_deleted:
-            return format_html(
-                '<span style="background-color: #e74c3c; color: white; padding: 3px 10px; border-radius: 10px;">🗑️ Deleted</span>'
-            )
-        return format_html(
-            '<span style="background-color: #27ae60; color: white; padding: 3px 10px; border-radius: 10px;">✓ Active</span>'
-        )
+            return mark_safe('<span style="background-color: #e74c3c; color: white; padding: 3px 10px; border-radius: 10px;">🗑️ Deleted</span>')
+        return mark_safe('<span style="background-color: #27ae60; color: white; padding: 3px 10px; border-radius: 10px;">✓ Active</span>')
     get_status_badge.short_description = 'Status'
 
     def get_client_history_link(self, obj):
         count = obj.history.count()
         url = f"/admin/accounts/clienthistory/?client__id={obj.id}"
-        return format_html('<a href="{}">View History ({} entries)</a>', url, count)
+        # FIXED: Use mark_safe with format
+        return mark_safe(f'<a href="{url}">View History ({count} entries)</a>')
     get_client_history_link.short_description = 'History'
 
     def soft_delete_selected(self, request, queryset):
@@ -255,7 +248,8 @@ class ClientHistoryAdmin(admin.ModelAdmin):
             'transferred': '↔️',
         }
         icon = icons.get(obj.action, '📝')
-        return format_html('{} {}', icon, obj.action)
+        # FIXED: Use mark_safe
+        return mark_safe(f'{icon} {obj.action}')
     get_action_icon.short_description = 'Action'
 
     def has_add_permission(self, request):

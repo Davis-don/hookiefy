@@ -26,4 +26,5 @@ urlpatterns = [
     path('profiles/', include('profiles.urls')),
     path('hookup/',include('hookup.urls')),
     path('adminconfig/', include('adminconfig.urls')),
+    path('payments/', include('payments.urls')),
 ]
