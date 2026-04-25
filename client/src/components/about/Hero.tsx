@@ -1,7 +1,7 @@
 import './hero.css';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Shield, Zap, Users, CreditCard, Heart, Lock, Sparkles } from 'lucide-react';
+import { Shield, Zap ,CreditCard, Heart, Lock, Sparkles } from 'lucide-react';
 
 function Hero() {
   const navigate = useNavigate();
