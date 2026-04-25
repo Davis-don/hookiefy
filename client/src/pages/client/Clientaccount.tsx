@@ -41,47 +41,30 @@ function Clientaccount() {
       const result = await response.json();
       return result;
     },
-    // Auto-refetch every 15 seconds for real-time updates
     refetchInterval: 15000,
-    // Refetch when window regains focus
     refetchOnWindowFocus: true,
-    // Refetch when component mounts
     refetchOnMount: true,
-    // Refetch when network reconnects
     refetchOnReconnect: true,
-    // Keep data fresh for 5 seconds
     staleTime: 5000,
   });
 
   const unreadCount = unreadCountData?.unread_count || 0;
 
-  // Handle notification bell click
   const handleNotificationClick = () => {
-    // Navigate to My Hookups page
     setActivePage('myhookups');
-    
-    // Close sidebar on mobile
     if (isMobile) {
       setSidebarOpen(false);
     }
-    
-    // Optional: Mark notifications as read when clicked
-    // You can add an API call here to mark notifications as read
-    // markNotificationsAsRead();
-    
-    // Refetch unread count to update badge
     setTimeout(() => {
       refetchUnreadCount();
     }, 1000);
   };
 
-  // Set up a listener for custom events that might affect unread count
   useEffect(() => {
     const handleRefreshUnreadCount = () => {
       refetchUnreadCount();
     };
 
-    // Listen for custom events from other components
     window.addEventListener('refreshUnreadCount', handleRefreshUnreadCount);
     window.addEventListener('hookupStatusChanged', handleRefreshUnreadCount);
     window.addEventListener('notificationRead', handleRefreshUnreadCount);
@@ -93,14 +76,12 @@ function Clientaccount() {
     };
   }, [refetchUnreadCount]);
 
-  // Refetch when active page changes to my hookups
   useEffect(() => {
     if (activePage === 'myhookups') {
       refetchUnreadCount();
     }
   }, [activePage, refetchUnreadCount]);
 
-  // Set up an interval to manually refetch
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (document.visibilityState === 'visible') {
