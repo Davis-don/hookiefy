@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { FaHeart, FaCheck, FaTimes, FaClock, FaSpinner, FaSync } from 'react-icons/fa';
 import { toast } from '../../store/Toaststore';
 import SentHookupPreview from './SentHookupPreview';
@@ -47,6 +48,7 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 const MyHookup = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedHookup, setSelectedHookup] = useState<Hookup | null>(null);
@@ -95,6 +97,59 @@ const MyHookup = () => {
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+
+  // Handle payment status from URL params (AFTER refetch is declared)
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const errorMessage = searchParams.get('message');
+    
+    if (paymentStatus === 'success') {
+      toast.success('Payment completed successfully! Your hookup is now active.', {
+        title: '🎉 Payment Successful!',
+        duration: 5000,
+      });
+      // Remove query params from URL without reloading
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      newParams.delete('order_tracking_id');
+      newParams.delete('message');
+      setSearchParams(newParams, { replace: true });
+      // Refresh hookups to show updated status
+      setTimeout(() => refetch(), 500);
+    } else if (paymentStatus === 'failed') {
+      toast.error('Payment failed. Please try again.', {
+        title: '❌ Payment Failed',
+        duration: 5000,
+      });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      newParams.delete('order_tracking_id');
+      setSearchParams(newParams, { replace: true });
+    } else if (paymentStatus === 'pending') {
+      toast.info('Your payment is being processed. Please wait a moment.', {
+        title: '⏳ Payment Processing',
+        duration: 5000,
+      });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      newParams.delete('order_tracking_id');
+      setSearchParams(newParams, { replace: true });
+      // Poll for status update
+      const interval = setInterval(() => {
+        refetch();
+      }, 3000);
+      setTimeout(() => clearInterval(interval), 30000);
+    } else if (paymentStatus === 'error') {
+      toast.error(errorMessage || 'An error occurred processing your payment.', {
+        title: '⚠️ Error',
+        duration: 5000,
+      });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      newParams.delete('message');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, refetch]);
 
   // Manual refresh with visual feedback
   const handleManualRefresh = useCallback(async () => {
@@ -277,6 +332,7 @@ const MyHookup = () => {
   const filteredHookups = getFilteredHookups();
   const unreadCount = getUnreadCount();
 
+  // Listen for custom events to refresh
   useEffect(() => {
     const handleRefresh = () => {
       refetch();

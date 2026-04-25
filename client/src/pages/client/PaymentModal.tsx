@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FaTimes, FaArrowRight, FaSpinner, FaShieldAlt, FaLock } from 'react-icons/fa';
 import { toast } from '../../store/Toaststore';
@@ -24,9 +24,19 @@ interface ClientConfig {
   updated_at: string;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose }) => {
+interface PaymentResponse {
+  success: boolean;
+  message: string;
+  redirect_url: string;
+  order_tracking_id: string;
+  merchant_reference: string;
+  payment_id: number;
+}
+
+const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose, onSuccess }) => {
   const apiUrl = import.meta.env.VITE_API_URL;
   const [isProcessing, setIsProcessing] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   // Fetch hookup fee from admin config
   const { 
@@ -68,20 +78,141 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose }) => {
     }).format(parseFloat(amount));
   };
 
-  // Handle PesaPal payment
-  const handlePesaPalPayment = () => {
+  // Poll payment status (runs in background after redirect)
+  const pollPaymentStatus = async (orderTrackingId: string) => {
+    const maxAttempts = 60; // 60 attempts (3 minutes)
+    const interval = 3000; // 3 seconds
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        
+        const response = await fetch(`${apiUrl}/payments/status/${orderTrackingId}/`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'completed') {
+            toast.success('Payment confirmed!', {
+              title: 'Success',
+              duration: 3000,
+            });
+            onSuccess();
+            onClose();
+            return true;
+          } else if (data.status === 'failed') {
+            toast.error('Payment failed', {
+              title: 'Error',
+              duration: 3000,
+            });
+            return false;
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }
+    return false;
+  };
+
+  // Handle PesaPal payment - REDIRECT to new page
+  const handlePesaPalPayment = async () => {
     setIsProcessing(true);
     
-    // Simulate payment processing - will be replaced with actual PesaPal integration
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast.info('Payment processing will be handled by PesaPal. This feature is coming soon!', {
-        title: 'Coming Soon',
-        icon: '🏦',
+    try {
+      // Validate phone number
+      if (!phoneNumber || phoneNumber.length < 10) {
+        toast.error('Please enter a valid phone number', {
+          title: 'Validation Error',
+          duration: 3000,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Show info toast
+      toast.info('Creating payment request...', {
+        title: 'Processing',
+        duration: 2000,
+      });
+
+      // Make API call to create payment
+      const response = await fetch(`${apiUrl}/payments/make-payment/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          hookup_id: hookup.id,
+          phone: phoneNumber
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Payment initiation failed');
+      }
+
+      const data: PaymentResponse = await response.json();
+      
+      if (data.success && data.redirect_url) {
+        // Store payment info in session storage for later reference
+        sessionStorage.setItem('current_payment', JSON.stringify({
+          order_tracking_id: data.order_tracking_id,
+          merchant_reference: data.merchant_reference,
+          payment_id: data.payment_id,
+          hookup_id: hookup.id
+        }));
+        
+        // Store the order tracking ID for polling after return
+        sessionStorage.setItem('pending_payment_id', data.order_tracking_id);
+        
+        // Show message before redirect
+        toast.info('Redirecting to PesaPal payment page...', {
+          title: 'Redirecting',
+          duration: 2000,
+        });
+        
+        // Small delay to show the toast, then redirect
+        setTimeout(() => {
+          // Redirect to PesaPal payment page
+          window.location.href = data.redirect_url;
+        }, 1000);
+        
+        // Note: The code after redirect won't execute because the page unloads
+        // The polling will happen when the user returns to the page
+        
+      } else {
+        throw new Error('Invalid response from payment gateway');
+      }
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error(error instanceof Error ? error.message : 'Payment processing failed', {
+        title: 'Payment Error',
         duration: 5000,
       });
-    }, 1500);
+      setIsProcessing(false);
+    }
   };
+
+  // Check for pending payment when component mounts (for when user returns from redirect)
+    useEffect(() => {
+      const pendingPaymentId = sessionStorage.getItem('pending_payment_id');
+      if (pendingPaymentId) {
+        // Clear it first to avoid duplicate polling
+        sessionStorage.removeItem('pending_payment_id');
+        // Poll for status
+        pollPaymentStatus(pendingPaymentId);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
   // Loading state
   if (isLoadingConfig) {
@@ -137,6 +268,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose }) => {
           Confirm your hookup with <strong>{hookup.receiver_name || 'the recipient'}</strong>
         </p>
 
+        {/* Phone Number Input */}
+        <div className="payment-phone-input">
+          <label htmlFor="phone">Phone Number (M-Pesa)</label>
+          <input
+            type="tel"
+            id="phone"
+            placeholder="0712345678"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            className="payment-phone-field"
+          />
+          <small>Enter the phone number registered with M-Pesa</small>
+        </div>
+
         <div className="payment-amount-box">
           <span className="payment-amount-label">Total Amount</span>
           <span className="payment-amount-value">{formatKSH(hookupFee)}</span>
@@ -160,7 +305,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose }) => {
         </div>
 
         <div className="payment-note">
-          <p>You will be redirected to PesaPal's secure payment page to complete your transaction.</p>
+          <p>You will be redirected to PesaPal's secure payment page to complete your transaction. After payment, you will be automatically redirected back.</p>
         </div>
 
         <div className="payment-modal-actions">
@@ -170,7 +315,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ hookup, onClose }) => {
           <button 
             className="payment-confirm-button" 
             onClick={handlePesaPalPayment}
-            disabled={isProcessing}
+            disabled={isProcessing || !phoneNumber}
           >
             {isProcessing ? (
               <>

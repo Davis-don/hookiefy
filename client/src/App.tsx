@@ -8,6 +8,9 @@ import ProtectedRoute from "./components/protected/Protectedroute";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/common/Homepage";
+import PaymentSuccess from "./pages/client/common/Paymentsuccess";
+import PaymentFailed from "./pages/client/common/Paymentfailed";
+import Mainlayout from "./layouts/Mainlayout";
 import "./App.css";
 
 function App() {
@@ -15,16 +18,28 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          <Route path="/" element={<Homepage />} />
-          {/* <Route path="/" element={<Clientaccount />} /> */}
           {/* Public routes */}
+          <Route path="/" element={
+            <Mainlayout><Homepage /></Mainlayout>} />
           <Route path="/login" element={
             <Toastlayout>
-            <Login />
-            </Toastlayout>} />
+              <Login />
+            </Toastlayout>
+          } />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />
           
+          {/* Payment redirect routes (public, no auth needed) */}
+          <Route path="/payment-success" element={
+            <Toastlayout>
+              <PaymentSuccess />
+            </Toastlayout>
+          } />
+          <Route path="/payment-failed" element={
+            <Toastlayout>
+              <PaymentFailed />
+            </Toastlayout>
+          } />
 
           {/* Protected routes */}
           <Route
@@ -32,9 +47,8 @@ function App() {
             element={
               <ProtectedRoute>
                 <Toastlayout>
-                <Superadmin />
+                  <Superadmin />
                 </Toastlayout>
-                
               </ProtectedRoute>
             }
           />
@@ -43,7 +57,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Toastlayout>
-                <Admin />
+                  <Admin />
                 </Toastlayout>
               </ProtectedRoute>
             }
@@ -53,7 +67,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Toastlayout>
-                <Clientaccount />
+                  <Clientaccount />
                 </Toastlayout>
               </ProtectedRoute>
             }
