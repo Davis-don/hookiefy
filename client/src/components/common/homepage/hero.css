@@ -35,7 +35,7 @@
   z-index: 1;
 }
 
-/* Floating Hearts - EXTRA LARGE */
+/* Floating Hearts */
 .hookify-floating-hearts {
   position: absolute;
   inset: 0;
@@ -75,7 +75,7 @@
 
 @media (max-width: 768px) {
   .hookify-hero-content-wrapper {
-    padding: 0 2rem;
+    padding: 0 1.5rem;
   }
 }
 
@@ -93,7 +93,7 @@
   }
 }
 
-/* ===== LEFT TEXT SECTION - 2X LARGER FONTS ===== */
+/* ===== LEFT TEXT SECTION ===== */
 .hookify-hero-text-section {
   max-width: 100%;
 }
@@ -127,7 +127,7 @@
 
 @media (max-width: 768px) {
   .hookify-hero-main-heading {
-    font-size: 4rem !important;
+    font-size: 3.5rem !important;
   }
 }
 
@@ -140,27 +140,36 @@
   margin-top: 0.75rem;
 }
 
+/* SUBTITLE - Desktop size unchanged, Mobile made 2x larger */
 .hookify-hero-subtitle {
   font-size: 2rem !important;
   line-height: 1.5;
   color: #374151;
   margin-bottom: 3rem;
   max-width: 700px;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {
   .hookify-hero-subtitle {
-    font-size: 1.4rem !important;
+    font-size: 2.8rem !important;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-hero-subtitle {
+    font-size: 2.2rem !important;
   }
 }
 
 .hookify-hero-highlight {
   color: rgb(79, 70, 229);
   font-weight: 800;
-  font-size: 2rem;
+  font-size: inherit;
 }
 
-/* Stats Grid - EXTRA LARGE FONTS */
+/* Stats Grid */
 .hookify-hero-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -201,13 +210,25 @@
   margin-bottom: 0.75rem;
 }
 
+@media (max-width: 768px) {
+  .hookify-stat-number {
+    font-size: 2.5rem !important;
+  }
+}
+
 .hookify-stat-label {
   font-size: 1.4rem !important;
   color: #4b5563;
   font-weight: 600;
 }
 
-/* CTA Buttons - EXTRA LARGE */
+@media (max-width: 768px) {
+  .hookify-stat-label {
+    font-size: 1.2rem !important;
+  }
+}
+
+/* CTA Buttons */
 .hookify-hero-cta-group {
   display: flex;
   flex-wrap: wrap;
@@ -259,6 +280,14 @@
   transform: translateY(-4px);
 }
 
+@media (max-width: 768px) {
+  .hookify-hero-primary-btn,
+  .hookify-hero-secondary-btn {
+    padding: 1.5rem 2.5rem;
+    font-size: 1.6rem !important;
+  }
+}
+
 /* Tagline */
 .hookify-hero-tagline {
   margin-top: 2.5rem;
@@ -267,6 +296,12 @@
   font-style: italic;
   padding-top: 2rem;
   border-top: 2px solid rgba(79, 70, 229, 0.2);
+}
+
+@media (max-width: 768px) {
+  .hookify-hero-tagline {
+    font-size: 1.4rem !important;
+  }
 }
 
 /* ===== RIGHT SECTION - NOTEBOOK 3D ===== */
@@ -354,7 +389,7 @@
 .hookify-page-line:nth-child(7) { margin-top: 0.8rem; }
 .hookify-page-line:nth-child(8) { margin-top: 0.8rem; }
 
-/* Written Messages - EXTRA LARGE FONTS */
+/* Written Messages */
 .hookify-written-messages {
   position: relative;
   z-index: 10;
@@ -378,9 +413,21 @@
   color: transparent;
 }
 
+@media (max-width: 768px) {
+  .hookify-line-text {
+    font-size: 1.6rem !important;
+  }
+}
+
 .hookify-line-heart {
   font-size: 2rem;
   opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .hookify-line-heart {
+    font-size: 1.6rem;
+  }
 }
 
 .hookify-typing-line {
@@ -398,6 +445,12 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+}
+
+@media (max-width: 768px) {
+  .hookify-typing-text {
+    font-size: 1.6rem !important;
+  }
 }
 
 .hookify-typing-cursor {
@@ -455,7 +508,7 @@
   z-index: 15;
 }
 
-/* Floating Sparkles - EXTRA LARGE */
+/* Floating Sparkles */
 .hookify-floating-sparkle {
   position: absolute;
   font-size: 2.8rem;
@@ -474,7 +527,7 @@
   50% { transform: translateY(-20px) rotate(25deg); opacity: 1; }
 }
 
-/* Scroll Indicator - EXTRA LARGE */
+/* Scroll Indicator */
 .hookify-hero-scroll-indicator {
   position: absolute;
   bottom: 2.5rem;
@@ -539,40 +592,12 @@
   .hookify-notebook-pages {
     min-height: 480px;
   }
-  
-  .hookify-line-text,
-  .hookify-typing-text {
-    font-size: 1.6rem !important;
-  }
 }
 
 @media (max-width: 768px) {
   .hookify-notebook-pages {
-    min-height: 400px;
+    min-height: 420px;
     padding: 1.8rem;
-  }
-  
-  .hookify-line-text,
-  .hookify-typing-text {
-    font-size: 1.2rem !important;
-  }
-  
-  .hookify-hero-primary-btn,
-  .hookify-hero-secondary-btn {
-    padding: 1.2rem 2rem;
-    font-size: 1.4rem !important;
-  }
-  
-  .hookify-stat-number {
-    font-size: 2.2rem !important;
-  }
-  
-  .hookify-stat-label {
-    font-size: 1rem !important;
-  }
-  
-  .hookify-hero-subtitle {
-    font-size: 1.3rem !important;
   }
   
   .hookify-heart {
@@ -582,11 +607,15 @@
   .hookify-heart-2 {
     font-size: 3rem !important;
   }
+  
+  .hookify-floating-sparkle {
+    font-size: 2rem;
+  }
 }
 
 @media (max-width: 480px) {
   .hookify-hero-main-heading {
-    font-size: 3rem !important;
+    font-size: 2.8rem !important;
   }
   
   .hookify-hero-badge {
@@ -594,22 +623,40 @@
     padding: 0.8rem 1.5rem;
   }
   
-  .hookify-hero-subtitle {
-    font-size: 1.1rem !important;
+  .hookify-hero-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .hookify-stat-number {
+    font-size: 2rem !important;
+  }
+  
+  .hookify-stat-label {
+    font-size: 1rem !important;
   }
   
   .hookify-hero-primary-btn,
   .hookify-hero-secondary-btn {
-    padding: 1rem 1.5rem;
+    padding: 1.2rem 2rem;
+    font-size: 1.4rem !important;
+  }
+  
+  .hookify-hero-tagline {
     font-size: 1.2rem !important;
   }
   
-  .hookify-stat-number {
-    font-size: 1.8rem !important;
+  .hookify-line-text,
+  .hookify-typing-text {
+    font-size: 1.3rem !important;
   }
   
-  .hookify-stat-label {
-    font-size: 0.85rem !important;
+  .hookify-line-heart {
+    font-size: 1.3rem;
+  }
+  
+  .hookify-typing-cursor {
+    height: 1.6rem;
   }
 }
 
