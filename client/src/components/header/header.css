@@ -295,7 +295,7 @@
 .sidebar-nav-list li {
   display: flex;
   align-items: center;
-  padding: 1rem 1.8rem;
+  padding: 1.2rem 1.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
@@ -309,19 +309,20 @@
 }
 
 .nav-icon {
-  font-size: 1.5rem;
-  width: 32px;
+  font-size: 1.8rem;
+  width: 40px;
 }
 
 .nav-text {
   flex: 1;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1.4rem;
+  font-weight: 600;
   color: #1f2937;
+  letter-spacing: 0.5px;
 }
 
 .nav-arrow {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: rgb(79, 70, 229);
   opacity: 0;
   transform: translateX(-10px);
@@ -342,8 +343,8 @@
 
 .sidebar-login-btn {
   width: 100%;
-  padding: 0.9rem;
-  font-size: 1rem;
+  padding: 1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   border-radius: 12px;
   border: none;
@@ -384,5 +385,20 @@
   
   .mobile-sidebar {
     width: 280px;
+  }
+  
+  /* Even larger text for very small screens */
+  .nav-text {
+    font-size: 1.3rem;
+  }
+  
+  .nav-icon {
+    font-size: 1.6rem;
+    width: 36px;
+  }
+  
+  .sidebar-login-btn {
+    font-size: 1.1rem;
+    padding: 0.9rem;
   }
 }

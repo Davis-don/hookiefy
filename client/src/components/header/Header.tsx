@@ -27,7 +27,6 @@ function Header() {
   };
 
   const handleNavigation = (path: string) => {
-    // Using window.location for demo, replace with useNavigate in your router setup
     window.location.href = path;
     closeSidebar();
   };
@@ -48,7 +47,10 @@ function Header() {
         </div>
         
         <div className="right-side-header-container">
-          <button className="header-login-btn btn btn-outline-primary" onClick={() => handleNavigation('/signin')}>Sign in</button>
+          {/* Sign in button - hides on mobile, only shows in sidebar */}
+          {!isMobile && (
+            <button className="header-login-btn btn btn-outline-primary" onClick={() => handleNavigation('/signin')}>Sign in</button>
+          )}
           {isMobile && (
             <button className="hamburger-btn" onClick={toggleSidebar}>
               <span className="hamburger-icon">☰</span>
