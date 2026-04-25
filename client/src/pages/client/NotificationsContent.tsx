@@ -1,6 +1,6 @@
 import './notificationcontent.css'
-import Myhookups from '../../components/common/Myhookups'
-import Myrequests from '../../components/common/Myrequests'
+// import Myhookups from '../../components/common/Myhookups'
+// import Myrequests from '../../components/common/Myrequests'
 import 'bootstrap'
 import { useState } from 'react'
 
@@ -29,9 +29,9 @@ function NotificationsContent() {
           </li>
         </ul>
       </div>
-      <div className="ntf-content-area">
+      {/* <div className="ntf-content-area">
         {activeTab === 'hookups' ? <Myhookups /> : <Myrequests />}
-      </div>
+      </div> */}
     </div>
   )
 }
