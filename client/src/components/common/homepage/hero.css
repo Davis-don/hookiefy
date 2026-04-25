@@ -1,0 +1,625 @@
+/* ===== HOOKIFY HERO SECTION - UNIQUE CLASS NAMES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+.hookify-hero-wrapper {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 6rem 0 4rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Background Gradients */
+.hookify-hero-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 100% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 55%),
+              linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #e0e7ff 100%);
+  z-index: 1;
+}
+
+.hookify-hero-bg-gradient-2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.06) 0%, transparent 60%);
+  z-index: 1;
+}
+
+.hookify-hero-bg-gradient-3 {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, rgba(79, 70, 229, 0.02) 0px, rgba(79, 70, 229, 0.02) 2px, transparent 2px, transparent 8px);
+  z-index: 1;
+}
+
+/* Floating Hearts - EXTRA LARGE */
+.hookify-floating-hearts {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hookify-heart {
+  position: absolute;
+  font-size: 4rem !important;
+  animation: hookify-heartFloat 8s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+.hookify-heart-1 { top: 10%; left: 5%; animation-delay: 0s; }
+.hookify-heart-2 { top: 20%; right: 8%; animation-delay: 1s; font-size: 5rem !important; }
+.hookify-heart-3 { bottom: 15%; left: 10%; animation-delay: 2s; font-size: 3.5rem !important; }
+.hookify-heart-4 { bottom: 25%; right: 15%; animation-delay: 3s; font-size: 4.5rem !important; }
+.hookify-heart-5 { top: 60%; left: 3%; animation-delay: 4s; font-size: 3rem !important; }
+.hookify-heart-6 { top: 40%; right: 20%; animation-delay: 5s; font-size: 4rem !important; }
+.hookify-heart-7 { bottom: 50%; left: 20%; animation-delay: 6s; font-size: 3.8rem !important; }
+
+@keyframes hookify-heartFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-40px) rotate(15deg); opacity: 0.7; }
+}
+
+/* Main Content Container */
+.hookify-hero-content-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 5rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-hero-content-wrapper {
+    padding: 0 2rem;
+  }
+}
+
+.hookify-hero-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .hookify-hero-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+}
+
+/* ===== LEFT TEXT SECTION - 2X LARGER FONTS ===== */
+.hookify-hero-text-section {
+  max-width: 100%;
+}
+
+.hookify-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 2.5rem;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(139, 92, 246, 0.12));
+  border-radius: 100px;
+  font-size: 1.8rem !important;
+  font-weight: 700;
+  color: rgb(79, 70, 229);
+  margin-bottom: 2.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.hookify-hero-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.hookify-hero-main-heading {
+  font-size: 7rem !important;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 2.5rem;
+  color: #1a1a2e;
+}
+
+@media (max-width: 768px) {
+  .hookify-hero-main-heading {
+    font-size: 4rem !important;
+  }
+}
+
+.hookify-hero-heading-accent {
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246), rgb(99, 102, 241));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.hookify-hero-subtitle {
+  font-size: 2rem !important;
+  line-height: 1.5;
+  color: #374151;
+  margin-bottom: 3rem;
+  max-width: 700px;
+}
+
+@media (max-width: 768px) {
+  .hookify-hero-subtitle {
+    font-size: 1.4rem !important;
+  }
+}
+
+.hookify-hero-highlight {
+  color: rgb(79, 70, 229);
+  font-weight: 800;
+  font-size: 2rem;
+}
+
+/* Stats Grid - EXTRA LARGE FONTS */
+.hookify-hero-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin: 3.5rem 0;
+  max-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .hookify-hero-stats-grid {
+    gap: 1.5rem;
+  }
+}
+
+.hookify-hero-stat-item {
+  text-align: center;
+  padding: 1.8rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  transition: all 0.3s ease;
+}
+
+.hookify-hero-stat-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 40px rgba(79, 70, 229, 0.15);
+}
+
+.hookify-stat-number {
+  display: block;
+  font-size: 3.5rem !important;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  margin-bottom: 0.75rem;
+}
+
+.hookify-stat-label {
+  font-size: 1.4rem !important;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+/* CTA Buttons - EXTRA LARGE */
+.hookify-hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin: 2.5rem 0;
+}
+
+.hookify-hero-primary-btn {
+  padding: 1.6rem 3.5rem;
+  font-size: 1.8rem !important;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  color: white;
+  border: none;
+  border-radius: 60px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+}
+
+.hookify-hero-primary-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(79, 70, 229, 0.5);
+}
+
+.hookify-hero-primary-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.hookify-hero-secondary-btn {
+  padding: 1.6rem 3.5rem;
+  font-size: 1.8rem !important;
+  font-weight: 700;
+  background: transparent;
+  color: rgb(79, 70, 229);
+  border: 2px solid rgb(79, 70, 229);
+  border-radius: 60px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hookify-hero-secondary-btn:hover {
+  background: rgb(79, 70, 229);
+  color: white;
+  transform: translateY(-4px);
+}
+
+/* Tagline */
+.hookify-hero-tagline {
+  margin-top: 2.5rem;
+  font-size: 1.6rem !important;
+  color: #6b7280;
+  font-style: italic;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(79, 70, 229, 0.2);
+}
+
+/* ===== RIGHT SECTION - NOTEBOOK 3D ===== */
+.hookify-hero-visualization {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hookify-notebook-3d-container {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  perspective: 1200px;
+}
+
+.hookify-notebook-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(-5deg) rotateX(5deg);
+  transition: transform 0.5s ease;
+}
+
+.hookify-notebook-3d:hover {
+  transform: rotateY(-3deg) rotateX(3deg);
+}
+
+.hookify-notebook-spine {
+  position: absolute;
+  left: -15px;
+  top: 15px;
+  bottom: 15px;
+  width: 15px;
+  background: linear-gradient(135deg, #8B4513, #654321);
+  border-radius: 4px 0 0 4px;
+  z-index: 5;
+}
+
+.hookify-notebook-cover {
+  background: #2d1b0e;
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 35px 60px rgba(0, 0, 0, 0.3);
+}
+
+.hookify-notebook-pages {
+  background: #fffef7;
+  border-radius: 14px;
+  padding: 2.5rem 2.5rem 2.5rem 3.5rem;
+  min-height: 550px;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Page Lines */
+.hookify-page-lines-bg {
+  position: absolute;
+  top: 2.5rem;
+  left: 3.5rem;
+  right: 2.5rem;
+  bottom: 2.5rem;
+  pointer-events: none;
+}
+
+.hookify-page-line {
+  height: 3px;
+  background: repeating-linear-gradient(
+    to right,
+    #e0d8c6,
+    #e0d8c6 35px,
+    transparent 35px,
+    transparent 70px
+  );
+  margin-bottom: 3rem;
+  opacity: 0.4;
+}
+
+.hookify-page-line:nth-child(1) { margin-top: 0; }
+.hookify-page-line:nth-child(2) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(3) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(4) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(5) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(6) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(7) { margin-top: 0.8rem; }
+.hookify-page-line:nth-child(8) { margin-top: 0.8rem; }
+
+/* Written Messages - EXTRA LARGE FONTS */
+.hookify-written-messages {
+  position: relative;
+  z-index: 10;
+}
+
+.hookify-written-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  animation: hookify-fadeInUp 0.5s ease;
+}
+
+.hookify-line-text {
+  font-size: 2rem !important;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hookify-line-heart {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.hookify-typing-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+}
+
+.hookify-typing-text {
+  font-size: 2rem !important;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hookify-typing-cursor {
+  display: inline-block;
+  width: 4px;
+  height: 2.2rem;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  margin-left: 8px;
+  animation: hookify-blink 1s step-end infinite;
+}
+
+@keyframes hookify-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes hookify-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Writing Pen */
+.hookify-writing-pen {
+  position: absolute;
+  bottom: -40px;
+  right: 30px;
+  animation: hookify-penMove 2s ease-in-out infinite;
+}
+
+.hookify-pen-body {
+  font-size: 3.5rem;
+  filter: drop-shadow(3px 5px 8px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes hookify-penMove {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-8px, -8px) rotate(8deg); }
+}
+
+/* Notebook Corner */
+.hookify-notebook-corner {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 75px;
+  height: 75px;
+  background: linear-gradient(135deg, transparent 50%, #f0e6d2 50%);
+  border-radius: 0 0 14px 0;
+  z-index: 15;
+}
+
+/* Floating Sparkles - EXTRA LARGE */
+.hookify-floating-sparkle {
+  position: absolute;
+  font-size: 2.8rem;
+  animation: hookify-sparkleFloat 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hookify-sparkle-1 { top: -30px; right: -30px; animation-delay: 0s; }
+.hookify-sparkle-2 { bottom: 40px; left: -35px; animation-delay: 0.5s; }
+.hookify-sparkle-3 { top: 50%; right: -40px; animation-delay: 1s; }
+.hookify-sparkle-4 { bottom: 60%; left: -25px; animation-delay: 1.5s; }
+.hookify-sparkle-5 { top: 20%; right: -25px; animation-delay: 2s; }
+
+@keyframes hookify-sparkleFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.5; }
+  50% { transform: translateY(-20px) rotate(25deg); opacity: 1; }
+}
+
+/* Scroll Indicator - EXTRA LARGE */
+.hookify-hero-scroll-indicator {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.4rem;
+  color: #6b7280;
+  font-weight: 500;
+  animation: hookify-bounce 2s infinite;
+}
+
+.hookify-scroll-mouse {
+  width: 40px;
+  height: 65px;
+  border: 2.5px solid rgb(79, 70, 229);
+  border-radius: 30px;
+  position: relative;
+}
+
+.hookify-scroll-wheel {
+  width: 5px;
+  height: 12px;
+  background: rgb(79, 70, 229);
+  border-radius: 3px;
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: hookify-scrollWheel 2s infinite;
+}
+
+@keyframes hookify-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  40% {
+    transform: translateY(-12px) translateX(-50%);
+  }
+  60% {
+    transform: translateY(-6px) translateX(-50%);
+  }
+}
+
+@keyframes hookify-scrollWheel {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(25px);
+    opacity: 0;
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .hookify-notebook-pages {
+    min-height: 480px;
+  }
+  
+  .hookify-line-text,
+  .hookify-typing-text {
+    font-size: 1.6rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hookify-notebook-pages {
+    min-height: 400px;
+    padding: 1.8rem;
+  }
+  
+  .hookify-line-text,
+  .hookify-typing-text {
+    font-size: 1.2rem !important;
+  }
+  
+  .hookify-hero-primary-btn,
+  .hookify-hero-secondary-btn {
+    padding: 1.2rem 2rem;
+    font-size: 1.4rem !important;
+  }
+  
+  .hookify-stat-number {
+    font-size: 2.2rem !important;
+  }
+  
+  .hookify-stat-label {
+    font-size: 1rem !important;
+  }
+  
+  .hookify-hero-subtitle {
+    font-size: 1.3rem !important;
+  }
+  
+  .hookify-heart {
+    font-size: 2.5rem !important;
+  }
+  
+  .hookify-heart-2 {
+    font-size: 3rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-hero-main-heading {
+    font-size: 3rem !important;
+  }
+  
+  .hookify-hero-badge {
+    font-size: 1.2rem !important;
+    padding: 0.8rem 1.5rem;
+  }
+  
+  .hookify-hero-subtitle {
+    font-size: 1.1rem !important;
+  }
+  
+  .hookify-hero-primary-btn,
+  .hookify-hero-secondary-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem !important;
+  }
+  
+  .hookify-stat-number {
+    font-size: 1.8rem !important;
+  }
+  
+  .hookify-stat-label {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .hookify-heart,
+  .hookify-writing-pen,
+  .hookify-floating-sparkle,
+  .hookify-hero-scroll-indicator,
+  .hookify-scroll-wheel {
+    animation: none !important;
+  }
+}
