@@ -1,34 +1,31 @@
 import './contact.css';
-
 import { Mail, Phone, MessageCircle, MapPin, Heart, Sparkles } from 'lucide-react';
 
 function Contact() {
-
-
   const contactInfo = [
     { 
-      icon: <Mail size={36} />, 
+      icon: <Mail size={42} />, 
       title: "Email Us", 
       details: ["donkenyan45@gmail.com"],
       action: "mailto:donkenyan45@gmail.com",
       color: "#4f46e5"
     },
     { 
-      icon: <Phone size={36} />, 
+      icon: <Phone size={42} />, 
       title: "Call Us", 
       details: ["0758 420 860"],
       action: "tel:+254758420860",
       color: "#7c3aed"
     },
     { 
-      icon: <MessageCircle size={36} />, 
+      icon: <MessageCircle size={42} />, 
       title: "WhatsApp", 
       details: ["0758 420 860", "Technical Support Available"],
       action: "https://wa.me/254758420860",
       color: "#25D366"
     },
     { 
-      icon: <MapPin size={36} />, 
+      icon: <MapPin size={42} />, 
       title: "Visit Us", 
       details: ["Nairobi, Kenya", "Available 24/7 Online Support"],
       color: "#8b5cf6"
@@ -55,7 +52,7 @@ function Contact() {
         {/* Header Section */}
         <div className="hookify-contact-header">
           <div className="hookify-contact-badge">
-            <Heart size={28} fill="currentColor" />
+            <Heart size={32} fill="currentColor" />
             <span>Get in Touch</span>
           </div>
           
@@ -158,7 +155,7 @@ function Contact() {
             
             {/* Support Notice */}
             <div className="hookify-support-notice">
-              <Sparkles size={24} />
+              <Sparkles size={28} />
               <div className="hookify-support-text">
                 <strong>24/7 Technical Support Available</strong>
                 <span>For technical assistance, reach out via WhatsApp or Call</span>
