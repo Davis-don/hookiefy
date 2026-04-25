@@ -27,17 +27,18 @@
 .center-side-header-container ul {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  gap: 3rem;
 }
 
 .center-side-header-container ul li {
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  font-size: 1.6rem;
 }
 
 .header-login-btn {
-  padding-inline: 1.5rem;
-  font-size: 2rem;
+  padding-inline: 2rem;
+  font-size: 1.4rem;
 }
 
 /* ========== ONLY ADDITIONS BELOW ========== */
@@ -101,6 +102,8 @@
   position: relative;
   transition: color 0.3s ease;
   cursor: pointer;
+  font-size: 1.8rem !important;
+  font-weight: 600;
 }
 
 .center-side-header-container ul li:hover {
@@ -110,10 +113,10 @@
 .center-side-header-container ul li::after {
   content: '';
   position: absolute;
-  bottom: -6px;
+  bottom: -8px;
   left: 0;
   width: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(90deg, rgb(79, 70, 229), rgb(139, 92, 246), rgb(99, 102, 241));
   transition: width 0.4s ease;
   border-radius: 2px;
@@ -123,14 +126,42 @@
   width: 100%;
 }
 
+/* ACTIVE LINK STYLES - Double gradient lines */
+.center-side-header-container ul li.active {
+  color: rgb(79, 70, 229);
+  position: relative;
+}
+
+.center-side-header-container ul li.active::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  border-radius: 2px;
+}
+
+.center-side-header-container ul li.active::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(90deg, rgb(139, 92, 246), rgb(99, 102, 241));
+  border-radius: 2px;
+}
+
 /* Responsive: Hide desktop nav & show hamburger on mobile */
 .hamburger-btn {
   display: none;
   background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
   border: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
   cursor: pointer;
   margin-left: 1rem;
   padding: 0;
@@ -144,7 +175,7 @@
 }
 
 .hamburger-icon {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: white;
   display: block;
   line-height: 1;
@@ -153,7 +184,7 @@
 .right-side-header-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 @media (max-width: 768px) {
@@ -209,7 +240,7 @@
   position: fixed;
   top: 0;
   right: -100%;
-  width: 320px;
+  width: 340px;
   max-width: 85%;
   height: 100%;
   background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
@@ -229,7 +260,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.8rem 1.5rem;
+  padding: 2rem 1.8rem;
   border-bottom: 2px solid rgba(79, 70, 229, 0.1);
   background: white;
 }
@@ -240,7 +271,7 @@
 
 .sidebar-logo {
   font-family: 'Pacifico', 'Brush Script MT', cursive;
-  font-size: 2rem;
+  font-size: 2.4rem;
   margin: 0;
   background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246), rgb(99, 102, 241));
   background-clip: text;
@@ -261,10 +292,10 @@
 .close-sidebar {
   background: rgba(79, 70, 229, 0.1);
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   cursor: pointer;
   color: rgb(79, 70, 229);
   transition: all 0.2s ease;
@@ -279,11 +310,11 @@
   transform: rotate(90deg);
 }
 
-/* Sidebar Content */
+/* Sidebar Content - LARGER FONTS */
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
 }
 
 .sidebar-nav-list {
@@ -295,34 +326,50 @@
 .sidebar-nav-list li {
   display: flex;
   align-items: center;
-  padding: 1.2rem 1.8rem;
+  padding: 1.5rem 2rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .sidebar-nav-list li:hover {
   background: linear-gradient(90deg, rgba(79, 70, 229, 0.08), transparent);
   border-left-color: rgb(79, 70, 229);
-  padding-left: 2rem;
+  padding-left: 2.2rem;
+}
+
+/* Active state for sidebar items */
+.sidebar-nav-list li.active {
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.12), transparent);
+  border-left-color: rgb(79, 70, 229);
+}
+
+.sidebar-nav-list li.active .nav-text {
+  color: rgb(79, 70, 229);
+  font-weight: 700;
+}
+
+.sidebar-nav-list li.active .nav-arrow {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .nav-icon {
-  font-size: 1.8rem;
-  width: 40px;
+  font-size: 2.2rem;
+  width: 48px;
 }
 
 .nav-text {
   flex: 1;
-  font-size: 1.4rem;
+  font-size: 1.8rem !important;
   font-weight: 600;
   color: #1f2937;
   letter-spacing: 0.5px;
 }
 
 .nav-arrow {
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   color: rgb(79, 70, 229);
   opacity: 0;
   transform: translateX(-10px);
@@ -336,17 +383,17 @@
 
 /* Sidebar Footer */
 .sidebar-footer {
-  padding: 1.5rem;
+  padding: 1.8rem;
   border-top: 1px solid rgba(79, 70, 229, 0.1);
   background: white;
 }
 
 .sidebar-login-btn {
   width: 100%;
-  padding: 1rem;
-  font-size: 1.2rem;
+  padding: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 14px;
   border: none;
   background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
   color: white;
@@ -355,7 +402,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .sidebar-login-btn:hover {
@@ -375,12 +422,12 @@
   }
   
   .hamburger-btn {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
   }
   
   .hamburger-icon {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
   
   .mobile-sidebar {
@@ -388,16 +435,32 @@
   }
   
   .nav-text {
-    font-size: 1.3rem;
+    font-size: 1.5rem !important;
   }
   
   .nav-icon {
-    font-size: 1.6rem;
-    width: 36px;
+    font-size: 1.8rem;
+    width: 40px;
   }
   
   .sidebar-login-btn {
-    font-size: 1.1rem;
-    padding: 0.9rem;
+    font-size: 1.2rem;
+    padding: 1rem;
+  }
+  
+  .sidebar-logo {
+    font-size: 2rem;
+  }
+}
+
+/* Desktop nav link font size - TWICE LARGER */
+@media (min-width: 769px) {
+  .center-side-header-container ul li {
+    font-size: 2rem !important;
+  }
+  
+  .header-login-btn {
+    font-size: 1.6rem !important;
+    padding-inline: 2.2rem;
   }
 }

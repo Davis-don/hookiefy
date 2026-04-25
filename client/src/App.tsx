@@ -13,6 +13,8 @@ import PaymentFailed from "./pages/client/common/Paymentfailed";
 import Mainlayout from "./layouts/Mainlayout";
 import About from "./pages/common/About";
 import Contact from "./pages/contact/Contact";
+import Privacy from "./pages/common/Privacy";
+import Terms from "./pages/common/Terms";
 import "./App.css";
 
 function App() {
@@ -28,7 +30,12 @@ function App() {
             <Mainlayout><About /></Mainlayout>} />
              <Route path="/contact" element={
             <Mainlayout><Contact /></Mainlayout>} />
-          <Route path="/login" element={
+             <Route path="/privacy" element={
+            <Mainlayout><Privacy /></Mainlayout>} />
+                <Route path="/terms" element={
+            <Mainlayout><Terms /></Mainlayout>} />
+              
+          <Route path="/signin" element={
             <Toastlayout>
               <Login />
             </Toastlayout>

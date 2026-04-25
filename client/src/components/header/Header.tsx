@@ -1,10 +1,11 @@
 import './header.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -33,6 +34,10 @@ function Header() {
     closeSidebar();
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <>
       <div className="overall-header-container">
@@ -42,9 +47,24 @@ function Header() {
         
         <div className="center-side-header-container">
           <ul className='list-unstyled'>
-            <li className="header-nav-item" onClick={() => handleNavigation('/')}>Home</li>
-            <li className="header-nav-item" onClick={() => handleNavigation('/about')}>About</li>
-            <li className="header-nav-item" onClick={() => handleNavigation('/contact')}>Contact</li>
+            <li 
+              className={`header-nav-item ${isActive('/') ? 'active' : ''}`} 
+              onClick={() => handleNavigation('/')}
+            >
+              Home
+            </li>
+            <li 
+              className={`header-nav-item ${isActive('/about') ? 'active' : ''}`} 
+              onClick={() => handleNavigation('/about')}
+            >
+              About
+            </li>
+            <li 
+              className={`header-nav-item ${isActive('/contact') ? 'active' : ''}`} 
+              onClick={() => handleNavigation('/contact')}
+            >
+              Contact
+            </li>
           </ul>
         </div>
         
@@ -76,17 +96,17 @@ function Header() {
           
           <div className="sidebar-content">
             <ul className="sidebar-nav-list">
-              <li onClick={() => handleNavigation('/')}>
+              <li onClick={() => handleNavigation('/')} className={isActive('/') ? 'active' : ''}>
                 <span className="nav-icon">🏠</span>
                 <span className="nav-text">Home</span>
                 <span className="nav-arrow">→</span>
               </li>
-              <li onClick={() => handleNavigation('/about')}>
+              <li onClick={() => handleNavigation('/about')} className={isActive('/about') ? 'active' : ''}>
                 <span className="nav-icon">ℹ️</span>
                 <span className="nav-text">About</span>
                 <span className="nav-arrow">→</span>
               </li>
-              <li onClick={() => handleNavigation('/contact')}>
+              <li onClick={() => handleNavigation('/contact')} className={isActive('/contact') ? 'active' : ''}>
                 <span className="nav-icon">📧</span>
                 <span className="nav-text">Contact</span>
                 <span className="nav-arrow">→</span>

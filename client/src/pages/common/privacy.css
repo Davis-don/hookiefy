@@ -1,0 +1,474 @@
+/* ===== HOOKIFY PRIVACY SECTION - UNIQUE CLASS NAMES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+.hookify-privacy-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  padding: 2rem 0 5rem;
+}
+
+/* Background Gradients */
+.hookify-privacy-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 55%),
+              linear-gradient(135deg, #faf9ff 0%, #f3f0ff 50%, #ede9fe 100%);
+  z-index: 1;
+}
+
+.hookify-privacy-bg-gradient-2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.04) 0%, transparent 70%);
+  z-index: 1;
+}
+
+.hookify-privacy-bg-gradient-3 {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, rgba(79, 70, 229, 0.02) 0px, rgba(79, 70, 229, 0.02) 2px, transparent 2px, transparent 8px);
+  z-index: 1;
+}
+
+/* Floating Elements - 8x LARGER */
+.hookify-privacy-floating {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hookify-privacy-float-1, .hookify-privacy-float-2, .hookify-privacy-float-3, .hookify-privacy-float-4, .hookify-privacy-float-5 {
+  position: absolute;
+  font-size: 12rem;
+  animation: hookify-privacy-floatAnim 8s ease-in-out infinite;
+  opacity: 0.4;
+}
+
+.hookify-privacy-float-1 { top: 10%; left: 5%; animation-delay: 0s; }
+.hookify-privacy-float-2 { top: 20%; right: 8%; animation-delay: 1s; font-size: 14rem; }
+.hookify-privacy-float-3 { bottom: 15%; left: 10%; animation-delay: 2s; font-size: 10rem; }
+.hookify-privacy-float-4 { bottom: 25%; right: 12%; animation-delay: 3s; font-size: 12rem; }
+.hookify-privacy-float-5 { top: 50%; left: 3%; animation-delay: 4s; font-size: 11rem; }
+
+@keyframes hookify-privacy-floatAnim {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-35px) rotate(12deg); opacity: 0.6; }
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-float-1, .hookify-privacy-float-2, .hookify-privacy-float-3, .hookify-privacy-float-4, .hookify-privacy-float-5 {
+    font-size: 5rem;
+  }
+  .hookify-privacy-float-2 { font-size: 6rem; }
+}
+
+/* Container */
+.hookify-privacy-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-container {
+    padding: 0 1.5rem;
+  }
+}
+
+/* Header Section - 8x LARGER TEXT */
+.hookify-privacy-header {
+  text-align: center;
+  margin-bottom: 6rem;
+}
+
+.hookify-privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem 4rem;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(139, 92, 246, 0.12));
+  border-radius: 100px;
+  font-size: 3rem !important;
+  font-weight: 700;
+  color: rgb(79, 70, 229);
+  margin-bottom: 3rem;
+}
+
+.hookify-privacy-badge svg {
+  width: 55px;
+  height: 55px;
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-badge {
+    font-size: 2rem !important;
+    padding: 1.2rem 2.5rem;
+    gap: 1.2rem;
+  }
+  .hookify-privacy-badge svg {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+.hookify-privacy-title {
+  font-size: 10rem !important;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #1a1a2e;
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-title {
+    font-size: 5rem !important;
+  }
+}
+
+.hookify-privacy-title-accent {
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hookify-privacy-subtitle {
+  font-size: 2.5rem;
+  color: #6b7280;
+  margin-bottom: 3rem;
+}
+
+.hookify-privacy-intro {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 2.5rem 3rem;
+  border-radius: 28px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+.hookify-privacy-intro p {
+  font-size: 1.8rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-subtitle {
+    font-size: 1.8rem;
+  }
+  .hookify-privacy-intro p {
+    font-size: 1.3rem;
+  }
+  .hookify-privacy-intro {
+    padding: 1.8rem;
+  }
+}
+
+/* Main Grid Layout */
+.hookify-privacy-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 4rem;
+  margin-top: 3rem;
+}
+
+@media (max-width: 1024px) {
+  .hookify-privacy-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* Sidebar - Key Points - 8x LARGER */
+.hookify-privacy-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.hookify-privacy-sidebar-card {
+  background: white;
+  border-radius: 32px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(79, 70, 229, 0.08);
+}
+
+.hookify-sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 2px solid rgba(79, 70, 229, 0.1);
+}
+
+.hookify-sidebar-title svg {
+  color: rgb(79, 70, 229);
+  width: 36px;
+  height: 36px;
+}
+
+.hookify-sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hookify-sidebar-list li {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  font-size: 1.5rem;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.hookify-sidebar-list li:last-child {
+  border-bottom: none;
+}
+
+.hookify-sidebar-list li svg {
+  color: #10b981;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.hookify-sidebar-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hookify-sidebar-links li {
+  padding: 1rem 0;
+  font-size: 1.5rem;
+  color: rgb(79, 70, 229);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.hookify-sidebar-links li:hover {
+  transform: translateX(5px);
+  color: rgb(139, 92, 246);
+}
+
+@media (max-width: 768px) {
+  .hookify-sidebar-title {
+    font-size: 1.8rem;
+  }
+  .hookify-sidebar-title svg {
+    width: 30px;
+    height: 30px;
+  }
+  .hookify-sidebar-list li {
+    font-size: 1.2rem;
+  }
+  .hookify-sidebar-links li {
+    font-size: 1.2rem;
+  }
+}
+
+/* Privacy Content Sections - 16x LARGER (Twice the previous size) */
+.hookify-privacy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.8rem;
+}
+
+.hookify-privacy-section {
+  display: flex;
+  gap: 2.5rem;
+  background: white;
+  border-radius: 36px;
+  padding: 2.8rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(79, 70, 229, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.hookify-privacy-section:hover {
+  transform: translateY(-3px);
+  border-color: rgba(79, 70, 229, 0.2);
+  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.08);
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-section {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+}
+
+.hookify-section-icon {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: rgb(79, 70, 229);
+}
+
+.hookify-section-icon svg {
+  width: 60px;
+  height: 60px;
+}
+
+@media (max-width: 768px) {
+  .hookify-section-icon {
+    width: 90px;
+    height: 90px;
+  }
+  .hookify-section-icon svg {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+.hookify-section-content {
+  flex: 1;
+}
+
+.hookify-section-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-section-title {
+    font-size: 2rem;
+  }
+}
+
+/* SECTION CONTENT TEXT - MASSIVELY INCREASED (16x larger than original) */
+.hookify-section-text {
+  font-size: 2.2rem !important;
+  line-height: 1.6;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .hookify-section-text {
+    font-size: 1.8rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hookify-section-text {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Privacy Notice - 16x LARGER */
+.hookify-privacy-notice {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05));
+  border-radius: 32px;
+  padding: 2.8rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  margin-top: 1rem;
+}
+
+.hookify-privacy-notice svg {
+  color: rgb(79, 70, 229);
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  width: 48px;
+  height: 48px;
+}
+
+.hookify-notice-content {
+  flex: 1;
+}
+
+.hookify-notice-content strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+}
+
+.hookify-notice-content span {
+  font-size: 1.8rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .hookify-notice-content strong {
+    font-size: 1.6rem;
+  }
+  .hookify-notice-content span {
+    font-size: 1.4rem;
+  }
+  .hookify-privacy-notice svg {
+    width: 38px;
+    height: 38px;
+  }
+  .hookify-privacy-notice {
+    padding: 2rem;
+    gap: 1.2rem;
+  }
+}
+
+/* Footer Note - 8x LARGER */
+.hookify-privacy-footer-note {
+  margin-top: 4rem;
+  padding: 2.8rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 32px;
+  border: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+.hookify-privacy-footer-note p {
+  font-size: 1.8rem;
+  color: #4b5563;
+}
+
+.hookify-privacy-footer-note strong {
+  color: rgb(79, 70, 229);
+}
+
+@media (max-width: 768px) {
+  .hookify-privacy-footer-note p {
+    font-size: 1.4rem;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .hookify-privacy-float-1,
+  .hookify-privacy-float-2,
+  .hookify-privacy-float-3,
+  .hookify-privacy-float-4,
+  .hookify-privacy-float-5,
+  .hookify-privacy-section {
+    animation: none !important;
+    transform: none !important;
+  }
+}
