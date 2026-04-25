@@ -11,6 +11,7 @@ import Homepage from "./pages/common/Homepage";
 import PaymentSuccess from "./pages/client/common/Paymentsuccess";
 import PaymentFailed from "./pages/client/common/Paymentfailed";
 import Mainlayout from "./layouts/Mainlayout";
+import About from "./pages/common/About";
 import "./App.css";
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={
             <Mainlayout><Homepage /></Mainlayout>} />
+
+             <Route path="/about" element={
+            <Mainlayout><About /></Mainlayout>} />
           <Route path="/login" element={
             <Toastlayout>
               <Login />
