@@ -26,7 +26,7 @@
   z-index: 1;
 }
 
-/* Floating Elements - LARGER */
+/* Floating Elements */
 .hookify-howto-floating {
   position: absolute;
   inset: 0;
@@ -47,6 +47,14 @@
 .hookify-float-4 { bottom: 25%; right: 12%; animation-delay: 3s; font-size: 3.5rem; }
 .hookify-float-5 { top: 60%; left: 3%; animation-delay: 4s; font-size: 3.2rem; }
 
+@media (max-width: 768px) {
+  .hookify-float-1, .hookify-float-2, .hookify-float-3, .hookify-float-4, .hookify-float-5 {
+    font-size: 4rem;
+  }
+  .hookify-float-2 { font-size: 5rem; }
+  .hookify-float-3 { font-size: 3.5rem; }
+}
+
 @keyframes hookify-floatAnim {
   0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
   50% { transform: translateY(-25px) rotate(12deg); opacity: 0.6; }
@@ -60,7 +68,7 @@
   margin: 0 auto;
 }
 
-/* Header Section - LARGER FONTS */
+/* Header Section */
 .hookify-howto-header {
   text-align: center;
   margin-bottom: 5rem;
@@ -84,6 +92,29 @@
   height: 30px;
 }
 
+@media (max-width: 768px) {
+  .hookify-howto-badge {
+    font-size: 2.5rem !important;
+    padding: 1.5rem 3rem;
+    gap: 1.5rem;
+  }
+  .hookify-howto-badge svg {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-howto-badge {
+    font-size: 2rem !important;
+    padding: 1rem 2rem;
+  }
+  .hookify-howto-badge svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .hookify-howto-title {
   font-size: 5.5rem !important;
   font-weight: 800;
@@ -92,6 +123,12 @@
 }
 
 @media (max-width: 768px) {
+  .hookify-howto-title {
+    font-size: 4.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
   .hookify-howto-title {
     font-size: 3.5rem !important;
   }
@@ -116,7 +153,14 @@
 
 @media (max-width: 768px) {
   .hookify-howto-subtitle {
-    font-size: 1.3rem !important;
+    font-size: 2.8rem !important;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-howto-subtitle {
+    font-size: 2.2rem !important;
   }
 }
 
@@ -158,7 +202,7 @@
   }
 }
 
-/* Step Number Wrapper - LARGER */
+/* Step Number Wrapper */
 .hookify-step-number-wrapper {
   position: relative;
   display: flex;
@@ -218,7 +262,7 @@
   height: 36px;
 }
 
-/* Step Card - LARGER TEXT */
+/* Step Card */
 .hookify-step-card {
   flex: 1;
   background: white;
@@ -252,7 +296,7 @@
   height: 60px;
 }
 
-/* Step Title - LARGER */
+/* Step Title */
 .hookify-step-title {
   font-size: 2.5rem !important;
   font-weight: 700;
@@ -266,7 +310,7 @@
   }
 }
 
-/* Step Description - LARGER */
+/* Step Description */
 .hookify-step-description {
   font-size: 1.4rem !important;
   color: #4b5563;
@@ -274,7 +318,7 @@
   margin-bottom: 2rem;
 }
 
-/* Step Details List - EXTRA LARGER */
+/* Step Details List - EXTRA LARGER on mobile */
 .hookify-step-details {
   display: flex;
   flex-direction: column;
@@ -291,6 +335,19 @@
   padding: 0.5rem 0;
 }
 
+@media (max-width: 768px) {
+  .hookify-detail-item {
+    font-size: 2.2rem !important;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-detail-item {
+    font-size: 1.8rem !important;
+  }
+}
+
 .hookify-detail-icon {
   color: rgb(79, 70, 229);
   flex-shrink: 0;
@@ -299,6 +356,13 @@
 .hookify-detail-icon svg {
   width: 26px;
   height: 26px;
+}
+
+@media (max-width: 768px) {
+  .hookify-detail-icon svg {
+    width: 38px;
+    height: 38px;
+  }
 }
 
 /* Mobile Timeline View - LARGER TEXT */
@@ -317,38 +381,50 @@
 
 .hookify-timeline-track {
   position: absolute;
-  left: 35px;
+  left: 40px;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 6px;
   background: linear-gradient(180deg, rgb(79, 70, 229), rgb(139, 92, 246), rgb(167, 139, 250));
   border-radius: 4px;
 }
 
 .hookify-timeline-item {
   position: relative;
-  padding-left: 90px;
-  margin-bottom: 2.5rem;
+  padding-left: 100px;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 480px) {
+  .hookify-timeline-item {
+    padding-left: 80px;
+  }
 }
 
 .hookify-timeline-dot {
   position: absolute;
-  left: 26px;
-  top: 22px;
-  width: 24px;
-  height: 24px;
+  left: 30px;
+  top: 28px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 4px solid white;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.2);
   z-index: 5;
 }
 
 .hookify-timeline-card {
   background: white;
-  border-radius: 24px;
-  padding: 1.8rem;
+  border-radius: 28px;
+  padding: 2.2rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+@media (max-width: 768px) {
+  .hookify-timeline-card {
+    padding: 2.5rem;
+  }
 }
 
 .hookify-timeline-number {
@@ -356,6 +432,12 @@
   font-weight: 800;
   color: rgb(79, 70, 229);
   margin-bottom: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-timeline-number {
+    font-size: 2rem;
+  }
 }
 
 .hookify-timeline-icon {
@@ -374,6 +456,19 @@
   height: 36px;
 }
 
+@media (max-width: 768px) {
+  .hookify-timeline-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 24px;
+    margin-bottom: 1.5rem;
+  }
+  .hookify-timeline-icon svg {
+    width: 52px;
+    height: 52px;
+  }
+}
+
 .hookify-timeline-title {
   font-size: 1.8rem !important;
   font-weight: 700;
@@ -381,10 +476,36 @@
   color: #1a1a2e;
 }
 
+@media (max-width: 768px) {
+  .hookify-timeline-title {
+    font-size: 2.5rem !important;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-timeline-title {
+    font-size: 2rem !important;
+  }
+}
+
 .hookify-timeline-desc {
   font-size: 1.2rem !important;
   color: #4b5563;
   line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .hookify-timeline-desc {
+    font-size: 1.8rem !important;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-timeline-desc {
+    font-size: 1.5rem !important;
+  }
 }
 
 /* Timeline Details List */
@@ -403,7 +524,15 @@
   margin-top: 0.5rem;
 }
 
-/* CTA Section - LARGER TEXT */
+@media (max-width: 768px) {
+  .hookify-timeline-detail-item {
+    font-size: 1.8rem;
+    gap: 1.2rem;
+    margin-top: 0.8rem;
+  }
+}
+
+/* CTA Section */
 .hookify-howto-cta {
   background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
   border-radius: 40px;
@@ -414,7 +543,7 @@
 
 @media (max-width: 768px) {
   .hookify-howto-cta {
-    padding: 3rem 1.5rem;
+    padding: 3.5rem 2rem;
   }
 }
 
@@ -427,7 +556,13 @@
 
 @media (max-width: 768px) {
   .hookify-cta-title {
-    font-size: 2rem !important;
+    font-size: 3rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-cta-title {
+    font-size: 2.5rem !important;
   }
 }
 
@@ -435,6 +570,18 @@
   font-size: 1.5rem !important;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-cta-text {
+    font-size: 2rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-cta-text {
+    font-size: 1.6rem !important;
+  }
 }
 
 .hookify-cta-button {
@@ -461,6 +608,24 @@
 .hookify-cta-button svg {
   width: 28px;
   height: 28px;
+}
+
+@media (max-width: 768px) {
+  .hookify-cta-button {
+    padding: 1.5rem 3rem;
+    font-size: 1.8rem !important;
+  }
+  .hookify-cta-button svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hookify-cta-button {
+    padding: 1.2rem 2.5rem;
+    font-size: 1.5rem !important;
+  }
 }
 
 /* Responsive Adjustments */
@@ -498,33 +663,6 @@
   .hookify-step-icon svg {
     width: 52px;
     height: 52px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-step-title {
-    font-size: 1.6rem !important;
-  }
-  
-  .hookify-timeline-title {
-    font-size: 1.5rem !important;
-  }
-  
-  .hookify-timeline-desc {
-    font-size: 1rem !important;
-  }
-  
-  .hookify-cta-title {
-    font-size: 1.8rem !important;
-  }
-  
-  .hookify-cta-text {
-    font-size: 1.2rem !important;
-  }
-  
-  .hookify-cta-button {
-    padding: 1rem 2rem;
-    font-size: 1.2rem !important;
   }
 }
 
