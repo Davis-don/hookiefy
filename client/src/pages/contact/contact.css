@@ -1,0 +1,529 @@
+/* ===== HOOKIFY CONTACT SECTION - UNIQUE CLASS NAMES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+.hookify-contact-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  padding: 2rem 0 5rem;
+}
+
+/* Background Gradients */
+.hookify-contact-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 55%),
+              linear-gradient(135deg, #faf9ff 0%, #f3f0ff 50%, #ede9fe 100%);
+  z-index: 1;
+}
+
+.hookify-contact-bg-gradient-2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.04) 0%, transparent 70%);
+  z-index: 1;
+}
+
+.hookify-contact-bg-gradient-3 {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, rgba(79, 70, 229, 0.02) 0px, rgba(79, 70, 229, 0.02) 2px, transparent 2px, transparent 8px);
+  z-index: 1;
+}
+
+/* Floating Elements */
+.hookify-contact-floating {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hookify-contact-float-1, .hookify-contact-float-2, .hookify-contact-float-3, .hookify-contact-float-4, .hookify-contact-float-5 {
+  position: absolute;
+  font-size: 5rem;
+  animation: hookify-contact-floatAnim 8s ease-in-out infinite;
+  opacity: 0.4;
+}
+
+.hookify-contact-float-1 { top: 10%; left: 5%; animation-delay: 0s; }
+.hookify-contact-float-2 { top: 20%; right: 8%; animation-delay: 1s; font-size: 5.5rem; }
+.hookify-contact-float-3 { bottom: 15%; left: 10%; animation-delay: 2s; font-size: 4rem; }
+.hookify-contact-float-4 { bottom: 25%; right: 12%; animation-delay: 3s; font-size: 5rem; }
+.hookify-contact-float-5 { top: 50%; left: 3%; animation-delay: 4s; font-size: 4.5rem; }
+
+@keyframes hookify-contact-floatAnim {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-35px) rotate(12deg); opacity: 0.6; }
+}
+
+@media (max-width: 768px) {
+  .hookify-contact-float-1, .hookify-contact-float-2, .hookify-contact-float-3, .hookify-contact-float-4, .hookify-contact-float-5 {
+    font-size: 2.5rem;
+  }
+  .hookify-contact-float-2 { font-size: 3rem; }
+}
+
+/* Container */
+.hookify-contact-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .hookify-contact-container {
+    padding: 0 1.5rem;
+  }
+}
+
+/* Header Section */
+.hookify-contact-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.hookify-contact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2.2rem;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(139, 92, 246, 0.12));
+  border-radius: 100px;
+  font-size: 1.6rem !important;
+  font-weight: 700;
+  color: rgb(79, 70, 229);
+  margin-bottom: 2rem;
+}
+
+.hookify-contact-badge svg {
+  width: 30px;
+  height: 30px;
+}
+
+@media (max-width: 768px) {
+  .hookify-contact-badge {
+    font-size: 1.3rem !important;
+    padding: 0.8rem 1.8rem;
+  }
+}
+
+.hookify-contact-title {
+  font-size: 5rem !important;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #1a1a2e;
+}
+
+@media (max-width: 768px) {
+  .hookify-contact-title {
+    font-size: 3.5rem !important;
+  }
+}
+
+.hookify-contact-title-accent {
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hookify-contact-subtitle {
+  font-size: 1.8rem !important;
+  color: #4b5563;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .hookify-contact-subtitle {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* Main Grid Layout */
+.hookify-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+  margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .hookify-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+}
+
+/* ===== LEFT COLUMN - ANIMATED TELEPHONE ===== */
+.hookify-contact-phone-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hookify-telephone-container {
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+}
+
+.hookify-telephone {
+  position: relative;
+  background: linear-gradient(145deg, #2d2d44, #1a1a2e);
+  border-radius: 40px;
+  padding: 25px 20px 30px;
+  box-shadow: 0 30px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.hookify-telephone-base {
+  position: absolute;
+  bottom: -15px;
+  left: 10%;
+  width: 80%;
+  height: 30px;
+  background: #1a1a2e;
+  border-radius: 20px;
+  filter: blur(5px);
+  opacity: 0.5;
+}
+
+/* Telephone Dial Pad */
+.hookify-telephone-dial {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.hookify-dial-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.hookify-dial-key {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(145deg, #3d3d5c, #2a2a44);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.1s ease;
+}
+
+.hookify-dial-key:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  .hookify-dial-key {
+    width: 50px;
+    height: 50px;
+    font-size: 1.4rem;
+  }
+  .hookify-dial-row {
+    gap: 10px;
+  }
+}
+
+/* Telephone Receiver - Animated */
+.hookify-telephone-receiver {
+  position: absolute;
+  top: -40px;
+  right: -20px;
+  width: 80px;
+  height: 120px;
+  background: linear-gradient(145deg, #4a4a6a, #2a2a44);
+  border-radius: 30px 30px 20px 20px;
+  box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.2);
+  animation: hookify-receiverFloat 2s ease-in-out infinite;
+  cursor: pointer;
+}
+
+@keyframes hookify-receiverFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(-3deg);
+  }
+}
+
+.hookify-receiver-speaker {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 20px;
+  background: #1a1a2e;
+  border-radius: 10px;
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  align-items: center;
+}
+
+.hookify-receiver-speaker::before,
+.hookify-receiver-speaker::after {
+  content: '';
+  width: 3px;
+  height: 10px;
+  background: #4a4a6a;
+  border-radius: 2px;
+}
+
+.hookify-receiver-mic {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 8px;
+  background: #1a1a2e;
+  border-radius: 10px;
+}
+
+/* Sound Waves Animation */
+.hookify-sound-waves {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.hookify-wave {
+  width: 4px;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  border-radius: 2px;
+  animation: hookify-waveAnim 1s ease-in-out infinite;
+}
+
+.wave-1 { height: 15px; animation-delay: 0s; }
+.wave-2 { height: 25px; animation-delay: 0.2s; }
+.wave-3 { height: 35px; animation-delay: 0.4s; }
+.wave-4 { height: 20px; animation-delay: 0.6s; }
+
+@keyframes hookify-waveAnim {
+  0%, 100% { height: 10px; }
+  50% { height: 35px; }
+}
+
+/* Floating Call Notification */
+.hookify-call-notification {
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  background: white;
+  border-radius: 20px;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: hookify-notifPop 0.5s ease, hookify-notifFloat 3s ease-in-out infinite 0.5s;
+  z-index: 20;
+}
+
+.hookify-call-icon {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.hookify-call-text {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.hookify-call-text strong {
+  color: rgb(79, 70, 229);
+  display: block;
+  margin-bottom: 3px;
+  font-size: 1rem;
+}
+
+@keyframes hookify-notifPop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes hookify-notifFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ===== RIGHT COLUMN - CONTACT INFO CARDS ===== */
+.hookify-contact-info-section {
+  max-width: 100%;
+}
+
+/* Contact Cards */
+.hookify-contact-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.8rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 480px) {
+  .hookify-contact-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hookify-contact-card {
+  background: white;
+  border-radius: 28px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(79, 70, 229, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.hookify-contact-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(79, 70, 229, 0.25);
+  box-shadow: 0 15px 35px rgba(79, 70, 229, 0.12);
+}
+
+.hookify-card-icon {
+  width: 75px;
+  height: 75px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.hookify-card-icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.hookify-card-title {
+  font-size: 1.6rem !important;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.75rem;
+}
+
+.hookify-card-detail {
+  font-size: 1.1rem !important;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+}
+
+.hookify-card-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(79, 70, 229);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.hookify-card-link:hover {
+  transform: translateX(6px);
+  color: rgb(139, 92, 246);
+}
+
+@media (max-width: 768px) {
+  .hookify-card-icon {
+    width: 65px;
+    height: 65px;
+  }
+  .hookify-card-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  .hookify-card-title {
+    font-size: 1.3rem !important;
+  }
+  .hookify-card-detail {
+    font-size: 0.95rem !important;
+  }
+}
+
+/* Support Notice */
+.hookify-support-notice {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(139, 92, 246, 0.08));
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  margin-top: 1rem;
+}
+
+.hookify-support-notice svg {
+  color: rgb(79, 70, 229);
+  flex-shrink: 0;
+}
+
+.hookify-support-text strong {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.3rem;
+}
+
+.hookify-support-text span {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+@media (max-width: 480px) {
+  .hookify-support-notice {
+    padding: 1.2rem;
+  }
+  .hookify-support-text strong {
+    font-size: 1rem;
+  }
+  .hookify-support-text span {
+    font-size: 0.85rem;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .hookify-contact-float-1,
+  .hookify-contact-float-2,
+  .hookify-contact-float-3,
+  .hookify-contact-float-4,
+  .hookify-contact-float-5,
+  .hookify-telephone-receiver,
+  .hookify-wave,
+  .hookify-call-notification,
+  .hookify-contact-card {
+    animation: none !important;
+    transform: none !important;
+  }
+}
