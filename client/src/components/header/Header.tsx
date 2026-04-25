@@ -1,8 +1,10 @@
 import './header.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -27,7 +29,7 @@ function Header() {
   };
 
   const handleNavigation = (path: string) => {
-    window.location.href = path;
+    navigate(path);
     closeSidebar();
   };
 
