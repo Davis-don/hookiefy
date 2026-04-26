@@ -9,15 +9,73 @@ import ProfileContent from './ProfileContent';
 import BillingContent from './BillingContent';
 import Uploadclientimg from './Uploadclientimg';
 import Clientbioupload from './Clientbioupload';
+import Clientaccountsetprofile from './Clientaccountsetprofile';
 import './clientaccount.css';
+
+// Types for bio completion check
+interface BioCompletionResponse {
+  success: boolean;
+  is_complete: boolean;
+  missing_fields: string[];
+  missing_fields_labels: string[];
+  completion_percentage: number;
+  message: string;
+}
 
 function Clientaccount() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState('discover');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isBioComplete, setIsBioComplete] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Fetch bio completion status
+  const { 
+    data: bioData, 
+    isLoading: bioLoading,
+    refetch: refetchBio
+  } = useQuery<BioCompletionResponse>({
+    queryKey: ['bioCompletionStatus'],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}/client-img/client-check-bio-complete/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch bio completion status');
+      }
+
+      return response.json();
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
+
+  // Update bio complete status when data loads
+  useEffect(() => {
+    if (bioData) {
+      setIsBioComplete(bioData.is_complete);
+    }
+  }, [bioData]);
+
+  // Handle profile completion from Clientaccountsetprofile
+  const handleProfileComplete = () => {
+    // Refetch bio completion status to update the state
+    refetchBio();
+    // Also manually set isBioComplete to true for immediate UI update
+    setIsBioComplete(true);
+    // Optionally set active page to discover after profile completion
+    setActivePage('discover');
+  };
 
   // Fetch unread hookup count with automatic refetching
   const { 
@@ -41,10 +99,11 @@ function Clientaccount() {
       const result = await response.json();
       return result;
     },
-    refetchInterval: 15000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    enabled: isBioComplete === true,
+    refetchInterval: isBioComplete === true ? 15000 : false,
+    refetchOnWindowFocus: isBioComplete === true,
+    refetchOnMount: isBioComplete === true,
+    refetchOnReconnect: isBioComplete === true,
     staleTime: 5000,
   });
 
@@ -77,20 +136,20 @@ function Clientaccount() {
   }, [refetchUnreadCount]);
 
   useEffect(() => {
-    if (activePage === 'myhookups') {
+    if (activePage === 'myhookups' && isBioComplete) {
       refetchUnreadCount();
     }
-  }, [activePage, refetchUnreadCount]);
+  }, [activePage, refetchUnreadCount, isBioComplete]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && isBioComplete) {
         refetchUnreadCount();
       }
     }, 30000);
     
     return () => clearInterval(intervalId);
-  }, [refetchUnreadCount]);
+  }, [refetchUnreadCount, isBioComplete]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -144,6 +203,22 @@ function Clientaccount() {
   };
 
   const renderContent = () => {
+    // Show profile setup if bio is not complete
+    if (isBioComplete === false) {
+      return <Clientaccountsetprofile onProfileComplete={handleProfileComplete} />;
+    }
+    
+    // Show loading state while checking bio completion
+    if (bioLoading || isBioComplete === null) {
+      return (
+        <div className="ca-loading-container">
+          <div className="ca-loading-spinner"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      );
+    }
+    
+    // Show main content if bio is complete
     switch(activePage) {
       case 'discover':
         return <HomeContent onNavigate={handleNavigate} />;
@@ -156,7 +231,7 @@ function Clientaccount() {
       case 'profilephoto':
         return <Uploadclientimg />;
       case 'profilebio':
-        return <Clientbioupload />;
+        return <Clientbioupload onBioUpdateSuccess={handleProfileComplete} />;
       default:
         return <HomeContent onNavigate={handleNavigate} />;
     }

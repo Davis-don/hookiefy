@@ -249,7 +249,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className={`cds-modern-container ${isBlurred ? 'cds-blurred' : ''}`}>
+      <div className="cds-modern-container">
         <div className="cds-loading-skeleton">
           <div className="cds-skeleton-header"></div>
           <div className="cds-skeleton-filters"></div>
@@ -269,7 +269,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
   // Error state
   if (error) {
     return (
-      <div className={`cds-modern-container ${isBlurred ? 'cds-blurred' : ''}`}>
+      <div className="cds-modern-container">
         <div className="cds-modern-error">
           <div className="cds-modern-error-card">
             <span className="cds-modern-error-icon">💔</span>
@@ -533,7 +533,7 @@ const Clientdatacards: React.FC<ClientdatacardsProps> = ({
         </div>
       )}
 
-      {/* Cards Grid - No results stats text at all */}
+      {/* Cards Grid */}
       <div className="cds-grid-wrapper">
         {isBlurred && (
           <div className="cds-blur-overlay">

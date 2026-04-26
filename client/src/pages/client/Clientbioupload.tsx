@@ -57,6 +57,10 @@ interface ApiError {
   non_field_errors?: string[];
 }
 
+interface ClientbiouploadProps {
+  onBioUpdateSuccess?: () => void;
+}
+
 // List of all countries
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
@@ -90,7 +94,7 @@ const kenyaCounties = [
   "Siaya", "Kisumu", "Homa Bay", "Migori", "Kisii", "Nyamira", "Nairobi"
 ];
 
-function Clientbioupload() {
+function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
   const queryClient = useQueryClient();
   const apiUrl = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token');
@@ -193,6 +197,11 @@ function Clientbioupload() {
       
       // Refetch bio data
       queryClient.invalidateQueries({ queryKey: ['clientBio'] });
+      
+      // Call the callback if provided - this will trigger refresh in Clientaccount
+      if (onBioUpdateSuccess) {
+        onBioUpdateSuccess();
+      }
     },
     onError: (error: ApiError) => {
       setIsSubmitting(false);
@@ -372,7 +381,7 @@ function Clientbioupload() {
   if (isLoadingBio) {
     return (
       <div className="hcb-spinner-wrapper">
-        <Spinner size="large" color="#c41e3a" message="Loading your profile..." />
+        <Spinner size="large" color="#4f46e5" message="Loading your profile..." />
       </div>
     );
   }
@@ -394,13 +403,13 @@ function Clientbioupload() {
     <div className="hcb-main-container">
       {isSubmitting ? (
         <div className="hcb-spinner-wrapper">
-          <Spinner size="large" color="#c41e3a" message="Saving changes..." />
+          <Spinner size="large" color="#4f46e5" message="Saving changes..." />
         </div>
       ) : (
         <>
           <div className="hcb-header-section">
-            <h2 className="hcb-page-title">💖 Manage Your Profile</h2>
-            <p className="hcb-page-subtitle">Tell your story and find your perfect match ❤️</p>
+            <h2 className="hcb-page-title">💜 Complete Your Profile</h2>
+            <p className="hcb-page-subtitle">Tell your story and find your perfect match</p>
           </div>
           
           <form onSubmit={handleSubmit} className="hcb-profile-form">
@@ -599,7 +608,7 @@ function Clientbioupload() {
                     className={`hcb-field-textarea ${errors.info ? 'hcb-field-error' : ''}`} 
                     placeholder={`Example:
 ✨ Looking for someone special to share adventures with!
-💕 Hoping to find a genuine connection - whether it's casual fun or something serious.
+💜 Hoping to find a genuine connection - whether it's casual fun or something serious.
 🎵 Love late-night conversations, spontaneous road trips, and good music.
 😊 I'm easy-going, love to laugh, and believe in being real.
 Let's see where this journey takes us!`}
@@ -619,7 +628,7 @@ Let's see where this journey takes us!`}
                     className={`hcb-submit-button ${hasChanges ? 'hcb-submit-active' : ''}`}
                     disabled={!hasChanges}
                   >
-                    {hasChanges ? '💖 Save My Profile' : '✨ Profile Updated'}
+                    {hasChanges ? '💜 Save My Profile' : '✨ Profile Updated'}
                   </button>
                 </div>
               </div>

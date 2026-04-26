@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import './homecontent.css';
 import Clientdatacards from './Clientdatacards';
-import Homecontentinfonotification from './Homecontentinfonotification';
 import Spinner from '../../components/protected/protectedspinner/Spinner';
 
 // Types for the API response
@@ -18,7 +17,7 @@ interface HomecontentProps {
   onNavigate?: (page: string) => void;
 }
 
-function Homecontent({ onNavigate }: HomecontentProps) {
+function Homecontent({ }: HomecontentProps) {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // Fetch bio completion status using React Query
@@ -51,18 +50,12 @@ function Homecontent({ onNavigate }: HomecontentProps) {
     retry: 1,
   });
 
-  const handleNavigate = (page: string) => {
-    if (onNavigate) {
-      onNavigate(page);
-    }
-  };
-
   if (isLoading) {
     return (
-      <div className="loading-container">
+      <div className="homecontent-loading-container">
         <Spinner 
           size="large" 
-          color="#2c7da0" 
+          color="#4f46e5" 
           message="Loading your dashboard..." 
         />
       </div>
@@ -71,12 +64,12 @@ function Homecontent({ onNavigate }: HomecontentProps) {
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error-card">
-          <span className="error-icon">⚠️</span>
+      <div className="homecontent-error-container">
+        <div className="homecontent-error-card">
+          <span className="homecontent-error-icon">⚠️</span>
           <h3>Unable to Load Dashboard</h3>
           <p>There was an error loading your information. Please refresh the page.</p>
-          <button className="retry-btn" onClick={() => refetch()}>
+          <button className="homecontent-retry-btn" onClick={() => refetch()}>
             Retry
           </button>
         </div>
@@ -85,20 +78,9 @@ function Homecontent({ onNavigate }: HomecontentProps) {
   }
 
   const isBioComplete = data?.is_complete ?? false;
-  const completionPercentage = data?.completion_percentage ?? 0;
-  const missingFields = data?.missing_fields_labels ?? [];
 
   return (
-    <div className="overall-homecontent-container-client">
-      {!isBioComplete && (
-        <Homecontentinfonotification 
-          isComplete={isBioComplete}
-          completionPercentage={completionPercentage}
-          missingFields={missingFields}
-          onRefresh={refetch}
-          onNavigate={handleNavigate}
-        />
-      )}
+    <div className="homecontent-main-container">
       <Clientdatacards 
         isBlurred={!isBioComplete}
         isClickable={isBioComplete}

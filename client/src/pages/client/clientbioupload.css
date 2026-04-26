@@ -1,29 +1,29 @@
-/* Client Bio Upload Component - Romantic Hookup Site Style */
+/* Client Bio Upload Component - Hookify Brand Colors (Purple/Indigo) */
 /* Unique Class Names (hcb- prefix) */
 
 .hcb-main-container {
   position: relative;
   width: 100%;
   min-height: 100%;
-  background: #ffffff;
+  background: linear-gradient(135deg, #f0f4fa 0%, #e8edf5 100%);
   padding: 3rem;
-  background: linear-gradient(to bottom, #ffffff, #fff9f9);
+  border-radius: 0;
 }
 
-/* Header Section - Romantic Style */
+/* Header Section - Brand Style */
 .hcb-header-section {
-  margin-bottom: 3.5rem;
+  margin-bottom: 4rem;
   padding-bottom: 2rem;
-  border-bottom: 3px solid rgba(196, 30, 58, 0.2);
+  border-bottom: 3px solid rgba(79, 70, 229, 0.2);
   position: relative;
 }
 
 .hcb-header-section::after {
-  content: '❤️';
+  content: '💜';
   position: absolute;
   bottom: -12px;
   right: 20px;
-  font-size: 1.5rem;
+  font-size: 2rem;
   opacity: 0.3;
   animation: hcb-heart-pulse 2s ease-in-out infinite;
 }
@@ -34,24 +34,24 @@
 }
 
 .hcb-page-title {
-  font-size: 3rem;
+  font-size: 4rem !important;
   font-weight: 800;
-  color: #c41e3a;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-family: 'Playfair Display', 'Georgia', serif;
   letter-spacing: -0.5px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .hcb-page-subtitle {
-  font-size: 1.2rem;
-  color: #d46b7e;
+  font-size: 1.8rem !important;
+  color: #6b7280;
   margin: 0;
   font-weight: 500;
-  font-style: italic;
 }
 
 /* Two Column Layout */
@@ -73,37 +73,42 @@
 }
 
 .hcb-field-label {
-  font-size: 1.3rem;
+  font-size: 1.8rem !important;
   font-weight: 600;
-  color: #2d1a1f;
-  margin-bottom: 0.85rem;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
   display: block;
-  font-family: 'Poppins', sans-serif;
   letter-spacing: -0.3px;
 }
 
 .hcb-optional-badge {
-  font-size: 0.9rem;
+  font-size: 1.2rem !important;
   font-weight: normal;
-  color: #b87385;
-  background: #fff5f7;
-  padding: 0.2rem 0.6rem;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 0.3rem 1rem;
   border-radius: 20px;
   margin-left: 0.5rem;
 }
 
-/* Large Input Fields - Romantic Style */
+.hcb-required-star {
+  color: rgb(79, 70, 229);
+  margin-left: 0.2rem;
+  font-size: 1.2rem;
+}
+
+/* Field Inputs - Brand Style */
 .hcb-field-input,
 .hcb-field-select,
 .hcb-field-textarea {
   width: 100%;
-  padding: 1.4rem 1.5rem;
-  font-size: 1.2rem;
+  padding: 1.5rem 1.8rem;
+  font-size: 1.6rem !important;
   line-height: 1.5;
-  color: #1a1a1a;
+  color: #1a1a2e;
   background-color: #ffffff;
-  border: 2px solid #ffe0e5;
-  border-radius: 20px;
+  border: 2px solid rgba(79, 70, 229, 0.15);
+  border-radius: 24px;
   transition: all 0.3s ease;
   outline: none;
   font-family: inherit;
@@ -112,49 +117,48 @@
 
 .hcb-field-input::placeholder,
 .hcb-field-textarea::placeholder {
-  color: #d4b5be;
-  font-size: 1.1rem;
-  font-style: italic;
+  color: #a0aec0;
+  font-size: 1.4rem !important;
   opacity: 0.7;
 }
 
 .hcb-field-input:focus,
 .hcb-field-select:focus,
 .hcb-field-textarea:focus {
-  border-color: #c41e3a;
-  box-shadow: 0 0 0 6px rgba(196, 30, 58, 0.08);
+  border-color: rgb(79, 70, 229);
+  box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.08);
   transform: translateY(-2px);
 }
 
 .hcb-field-textarea {
   resize: vertical;
-  min-height: 140px;
+  min-height: 160px;
 }
 
 /* Select specific styling */
 .hcb-field-select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c41e3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 1.5rem center;
-  background-size: 1.3em;
+  background-size: 1.6em;
 }
 
 /* Error State */
 .hcb-field-error {
-  border-color: #ff6b6b;
-  background-color: #fff5f5;
+  border-color: #ef4444;
+  background-color: #fef2f2;
 }
 
 .hcb-field-error:focus {
-  border-color: #ff4444;
-  box-shadow: 0 0 0 6px rgba(255, 68, 68, 0.08);
+  border-color: #dc2626;
+  box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.08);
 }
 
 .hcb-error-message {
-  font-size: 0.9rem;
-  color: #ff6b6b;
+  font-size: 1.2rem !important;
+  color: #ef4444;
   margin-top: 0.6rem;
   display: block;
   font-weight: 500;
@@ -163,14 +167,21 @@
 
 /* Character Count */
 .hcb-char-count {
-  font-size: 0.85rem;
-  color: #b87385;
+  font-size: 1.1rem !important;
+  color: #8b5cf6;
   margin-top: 0.6rem;
   display: block;
-  font-style: italic;
 }
 
-/* Submit Button - Romantic Style */
+/* Field Hint */
+.hcb-field-hint {
+  font-size: 1.1rem !important;
+  color: #9ca3af;
+  margin-top: 0.6rem;
+  display: block;
+}
+
+/* Submit Button - Brand Style */
 .hcb-button-wrapper {
   margin-top: 3rem;
   text-align: center;
@@ -179,48 +190,45 @@
 
 .hcb-submit-button {
   width: 100%;
-  padding: 1.4rem 2rem;
-  font-size: 1.2rem;
+  padding: 1.5rem 2.5rem;
+  font-size: 1.6rem !important;
   font-weight: 700;
-  background-color: #f0f0f0;
-  color: #b87385;
-  border: 2px solid #ffe0e5;
-  border-radius: 50px;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
+  color: white;
+  border: none;
+  border-radius: 60px;
   cursor: pointer;
   transition: all 0.3s ease;
-  letter-spacing: 1px;
-  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
 }
 
 .hcb-submit-active {
-  background: linear-gradient(135deg, #c41e3a, #b22222);
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
   color: white;
-  border: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(196, 30, 58, 0.3);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.45);
 }
 
 .hcb-submit-active:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(196, 30, 58, 0.4);
-  background: linear-gradient(135deg, #d42e4a, #c41e3a);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(79, 70, 229, 0.55);
 }
 
 .hcb-submit-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
+  background: #cbd5e1;
+  box-shadow: none;
 }
 
 /* Spinner Container */
 .hcb-spinner-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 500px;
   width: 100%;
 }
 
@@ -233,52 +241,44 @@
   min-height: 500px;
   text-align: center;
   padding: 3rem;
-  background: #fff9f9;
-  border-radius: 30px;
+  background: white;
+  border-radius: 32px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .hcb-error-icon {
   font-size: 4rem;
   margin-bottom: 1.5rem;
-  animation: hcb-heart-beat 1s ease-in-out infinite;
-}
-
-@keyframes hcb-heart-beat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
 }
 
 .hcb-error-title {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #c41e3a;
+  color: #1a1a2e;
   margin-bottom: 0.8rem;
-  font-family: 'Playfair Display', serif;
 }
 
 .hcb-error-message {
-  font-size: 1rem;
-  color: #b87385;
+  font-size: 1.2rem;
+  color: #6b7280;
   margin-bottom: 2rem;
 }
 
 .hcb-retry-button {
-  padding: 1rem 2rem;
-  background: #c41e3a;
+  padding: 1rem 2.5rem;
+  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
   color: white;
   border: none;
-  border-radius: 50px;
-  font-size: 1rem;
+  border-radius: 60px;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
 }
 
 .hcb-retry-button:hover {
-  background: #b22222;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(196, 30, 58, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
 }
 
 /* Romantic Scrollbar */
@@ -287,83 +287,82 @@
 }
 
 .hcb-main-container::-webkit-scrollbar-track {
-  background: #fff0f2;
+  background: #f0f4fa;
   border-radius: 10px;
 }
 
 .hcb-main-container::-webkit-scrollbar-thumb {
-  background: #c41e3a;
+  background: rgba(79, 70, 229, 0.4);
   border-radius: 10px;
 }
 
 .hcb-main-container::-webkit-scrollbar-thumb:hover {
-  background: #b22222;
+  background: rgba(79, 70, 229, 0.6);
 }
 
-/* Responsive Design - Large Screens (Desktop) */
+/* Responsive Design - Large Screens */
 @media screen and (min-width: 1440px) {
   .hcb-main-container {
-    padding: 4rem;
+    padding: 3.5rem;
   }
   
   .hcb-page-title {
-    font-size: 3.5rem;
+    font-size: 4.5rem !important;
   }
   
   .hcb-page-subtitle {
-    font-size: 1.4rem;
+    font-size: 2rem !important;
   }
   
   .hcb-field-label {
-    font-size: 1.4rem;
+    font-size: 2rem !important;
   }
   
   .hcb-field-input,
   .hcb-field-select,
   .hcb-field-textarea {
-    padding: 1.6rem 1.8rem;
-    font-size: 1.3rem;
-  }
-  
-  .hcb-field-input::placeholder,
-  .hcb-field-textarea::placeholder {
-    font-size: 1.2rem;
+    padding: 1.6rem 2rem;
+    font-size: 1.8rem !important;
   }
   
   .hcb-submit-button {
-    padding: 1.6rem 2rem;
-    font-size: 1.3rem;
-  }
-  
-  .hcb-two-column-layout {
-    gap: 4rem;
+    padding: 1.6rem 2.8rem;
+    font-size: 1.8rem !important;
   }
 }
 
-/* Tablet and Desktop */
+/* Tablet */
 @media screen and (max-width: 1024px) {
   .hcb-main-container {
-    padding: 2.5rem;
+    padding: 2rem;
   }
   
   .hcb-page-title {
-    font-size: 2.5rem;
+    font-size: 3rem !important;
+  }
+  
+  .hcb-page-subtitle {
+    font-size: 1.4rem !important;
+  }
+  
+  .hcb-two-column-layout {
+    gap: 2rem;
   }
   
   .hcb-field-label {
-    font-size: 1.2rem;
+    font-size: 1.5rem !important;
   }
   
   .hcb-field-input,
   .hcb-field-select,
   .hcb-field-textarea {
-    padding: 1.2rem 1.3rem;
-    font-size: 1.1rem;
+    padding: 1.3rem 1.5rem;
+    font-size: 1.4rem !important;
   }
   
-  .hcb-field-input::placeholder,
-  .hcb-field-textarea::placeholder {
-    font-size: 1rem;
+  .hcb-submit-button {
+    padding: 1.3rem 2rem;
+    font-size: 1.4rem !important;
   }
 }
 
@@ -384,40 +383,43 @@
   }
   
   .hcb-page-title {
-    font-size: 2rem;
+    font-size: 2.2rem !important;
   }
   
   .hcb-page-subtitle {
-    font-size: 1rem;
+    font-size: 1.1rem !important;
   }
   
   .hcb-field-label {
-    font-size: 1.1rem;
+    font-size: 1.2rem !important;
   }
   
   .hcb-field-input,
   .hcb-field-select,
   .hcb-field-textarea {
     padding: 1rem 1.2rem;
-    font-size: 1rem;
+    font-size: 1.1rem !important;
+    border-radius: 18px;
   }
   
   .hcb-field-input::placeholder,
   .hcb-field-textarea::placeholder {
-    font-size: 0.95rem;
+    font-size: 1rem !important;
   }
   
   .hcb-submit-button {
-    padding: 1.2rem 1.5rem;
-    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem !important;
   }
   
-  .hcb-input-group {
-    margin-bottom: 1.8rem;
+  .hcb-optional-badge {
+    font-size: 0.9rem !important;
   }
   
-  .hcb-header-section {
-    margin-bottom: 2.5rem;
+  .hcb-error-message,
+  .hcb-char-count,
+  .hcb-field-hint {
+    font-size: 0.9rem !important;
   }
 }
 
@@ -428,76 +430,88 @@
   }
   
   .hcb-page-title {
-    font-size: 1.6rem;
+    font-size: 1.8rem !important;
   }
   
   .hcb-page-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.95rem !important;
   }
   
   .hcb-header-section {
-    margin-bottom: 2rem;
-    padding-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
   }
   
   .hcb-field-label {
-    font-size: 1rem;
-  }
-  
-  .hcb-optional-badge {
-    font-size: 0.75rem;
+    font-size: 1rem !important;
   }
   
   .hcb-field-input,
   .hcb-field-select,
   .hcb-field-textarea {
-    padding: 0.9rem 1rem;
-    font-size: 0.95rem;
-    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem !important;
+    border-radius: 14px;
   }
   
   .hcb-field-input::placeholder,
   .hcb-field-textarea::placeholder {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
   }
   
   .hcb-submit-button {
-    padding: 1rem 1.2rem;
-    font-size: 1rem;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem !important;
   }
   
-  .hcb-input-group {
-    margin-bottom: 1.5rem;
+  .hcb-optional-badge {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.6rem;
+  }
+  
+  .hcb-error-message,
+  .hcb-char-count,
+  .hcb-field-hint {
+    font-size: 0.8rem !important;
+  }
+  
+  .hcb-error-title {
+    font-size: 1.3rem;
+  }
+  
+  .hcb-error-message {
+    font-size: 0.9rem;
   }
 }
 
-/* Small Mobile */
-@media screen and (max-width: 360px) {
-  .hcb-main-container {
-    padding: 0.8rem;
+/* Loading Container */
+.ca-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  width: 100%;
+  background: linear-gradient(135deg, #f0f4fa 0%, #e8edf5 100%);
+}
+
+.ca-loading-spinner {
+  width: 80px;
+  height: 80px;
+  border: 5px solid rgba(79, 70, 229, 0.2);
+  border-top-color: rgb(79, 70, 229);
+  border-radius: 50%;
+  animation: ca-spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes ca-spin {
+  to {
+    transform: rotate(360deg);
   }
-  
-  .hcb-page-title {
-    font-size: 1.4rem;
-  }
-  
-  .hcb-page-subtitle {
-    font-size: 0.85rem;
-  }
-  
-  .hcb-field-label {
-    font-size: 0.95rem;
-  }
-  
-  .hcb-field-input,
-  .hcb-field-select,
-  .hcb-field-textarea {
-    padding: 0.8rem 0.9rem;
-    font-size: 0.9rem;
-  }
-  
-  .hcb-submit-button {
-    padding: 0.9rem 1rem;
-    font-size: 0.95rem;
-  }
+}
+
+.ca-loading-container p {
+  font-size: 1.3rem;
+  color: #6b7280;
 }
