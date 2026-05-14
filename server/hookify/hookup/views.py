@@ -3,11 +3,12 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.db.models import Q
+# from django.db.models import Q
 from django.utils import timezone
 
 from .models import Hookup
 from .serializers import CreateHookupSerializer, HookupResponseSerializer
+from django.db import connection
 
 
 # =========================
@@ -22,6 +23,31 @@ def get_client(request):
     return request.user.client_profile
 
 
+
+
+@api_view(["GET"])
+def health_check(request):
+    db_status = "ok"
+
+    try:
+        connection.ensure_connection()
+    except Exception:
+        db_status = "error"
+
+    return Response({
+        "status": "ok",
+        "message": "Backend is running 🚀",
+        "database": db_status,
+        "endpoints": [
+            "/admin/",
+            "/accounts/",
+            "/gallery/",
+            "/events/",
+            "/configurations/",
+            "/memory/",
+            "/hookup/"
+        ]
+    })
 # =========================
 # CREATE HOOKUP
 # =========================
