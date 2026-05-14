@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../store/Toaststore';
 import Spinner from '../../components/protected/protectedspinner/Spinner';
+import Uploadclientimg from './Uploadclientimg';
 import type { FormEvent, ChangeEvent } from 'react';
 import './clientbioupload.css';
 
@@ -195,21 +196,16 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
         duration: 5000,
       });
       
-      // Refetch bio data
       queryClient.invalidateQueries({ queryKey: ['clientBio'] });
       
-      // Call the callback if provided - this will trigger refresh in Clientaccount
       if (onBioUpdateSuccess) {
         onBioUpdateSuccess();
       }
     },
     onError: (error: ApiError) => {
       setIsSubmitting(false);
-      
-      // Clear previous errors
       setErrors({});
       
-      // Handle field-specific errors from server
       const fieldErrors: Partial<Record<keyof UpdateBioData, string>> = {};
       
       if (error.age) {
@@ -287,7 +283,6 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
     
     setFormData(prev => ({ ...prev, [key]: value }));
     
-    // Clear field-specific error when user starts typing
     if (errors[key]) {
       setErrors(prev => ({ ...prev, [key]: undefined }));
     }
@@ -296,7 +291,7 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof UpdateBioData, string>> = {};
     
-    // Age validation
+    // Age validation - REQUIRED
     if (formData.age !== undefined && formData.age !== null) {
       if (formData.age < 18) {
         newErrors.age = 'Age must be at least 18 years';
@@ -307,43 +302,54 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
       newErrors.age = 'Age is required';
     }
     
-    // Gender validation
+    // Gender validation - REQUIRED
     if (!formData.gender) {
       newErrors.gender = 'Please select a gender';
     }
     
-    // Country validation
+    // Country validation - REQUIRED
     if (!formData.country?.trim()) {
       newErrors.country = 'Country is required';
     }
     
-    // County validation
+    // County validation - REQUIRED
     if (!formData.county?.trim()) {
       newErrors.county = 'County/State is required';
     }
     
-    // Location description validation
+    // Location description validation - REQUIRED
     if (!formData.location_desc?.trim()) {
       newErrors.location_desc = 'Location description is required';
     } else if (formData.location_desc.length > 500) {
       newErrors.location_desc = 'Location description must be less than 500 characters';
     }
     
-    // Bio info validation
+    // Bio info validation - REQUIRED
     if (!formData.info?.trim()) {
       newErrors.info = 'Bio information is required';
     } else if (formData.info.length > 1000) {
       newErrors.info = 'Bio must be less than 1000 characters';
     }
     
-    // Phone number validation (optional)
-    if (formData.phone_number && !/^[\d\s\+\-\(\)]{8,20}$/.test(formData.phone_number)) {
+    // Phone number validation - REQUIRED (changed from optional)
+    if (!formData.phone_number?.trim()) {
+      newErrors.phone_number = 'Phone number is required';
+    } else if (!/^[\d\s\+\-\(\)]{8,20}$/.test(formData.phone_number)) {
       newErrors.phone_number = 'Please enter a valid phone number (e.g., +254 712 345 678)';
+    }
+    
+    // Occupation validation - REQUIRED (changed from optional)
+    if (!formData.occupation?.trim()) {
+      newErrors.occupation = 'Occupation is required';
+    }
+    
+    // Interests validation - REQUIRED (changed from optional)
+    if (!formData.interests?.trim()) {
+      newErrors.interests = 'Interests are required';
     }
     
     setErrors(newErrors);
     
-    // Show first error as toast
     if (Object.keys(newErrors).length > 0) {
       const firstError = Object.values(newErrors)[0];
       toast.warning(firstError, { duration: 5000 });
@@ -360,13 +366,10 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
       return;
     }
     
-    // Only send fields that have changed
     const changedData: UpdateBioData = {};
-    Object.keys(formData).forEach((key) => {
-      const typedKey = key as keyof UpdateBioData;
-      if (formData[typedKey] !== originalData[typedKey]) {
-        const value = formData[typedKey];
-        (changedData as any)[typedKey] = value;
+    (Object.keys(formData) as Array<keyof UpdateBioData>).forEach((key) => {
+      if (formData[key] !== originalData[key]) {
+        (changedData as any)[key] = formData[key];
       }
     });
     
@@ -412,6 +415,12 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
             <p className="hcb-page-subtitle">Tell your story and find your perfect match</p>
           </div>
           
+          {/* Profile Photo Section - At the very top */}
+          <div className="hcb-photo-section">
+            <Uploadclientimg />
+          </div>
+
+        
           <form onSubmit={handleSubmit} className="hcb-profile-form">
             <div className="hcb-two-column-layout">
               <div className="hcb-left-panel">
@@ -538,10 +547,10 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
                   {errors.location_desc && <div className="hcb-error-message">{errors.location_desc}</div>}
                 </div>
 
-                {/* Phone Number Field */}
+                {/* Phone Number Field - Now REQUIRED */}
                 <div className="hcb-input-group">
                   <label className="hcb-field-label" htmlFor="hcb-phone">
-                    Phone Number
+                    Phone Number <span className="hcb-required-star">*</span>
                   </label>
                   <input 
                     type="tel" 
@@ -558,10 +567,10 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
               </div>
 
               <div className="hcb-right-panel">
-                {/* Occupation Field */}
+                {/* Occupation Field - Now REQUIRED */}
                 <div className="hcb-input-group">
                   <label className="hcb-field-label" htmlFor="hcb-occupation">
-                    Occupation <span className="hcb-optional-badge">(Optional)</span>
+                    Occupation <span className="hcb-required-star">*</span>
                   </label>
                   <input 
                     type="text" 
@@ -575,10 +584,10 @@ function Clientbioupload({ onBioUpdateSuccess }: ClientbiouploadProps) {
                   {errors.occupation && <div className="hcb-error-message">{errors.occupation}</div>}
                 </div>
 
-                {/* Interests Field */}
+                {/* Interests Field - Now REQUIRED */}
                 <div className="hcb-input-group">
                   <label className="hcb-field-label" htmlFor="hcb-interests">
-                    Interests <span className="hcb-optional-badge">(Optional)</span>
+                    Interests <span className="hcb-required-star">*</span>
                   </label>
                   <textarea 
                     id="hcb-interests" 

@@ -116,7 +116,6 @@ const Uploadclientimg: React.FC = () => {
         title: '✨ Perfect!'
       });
       
-      // If previous image was deleted, show additional info
       if (data.previous_image_deleted) {
         toast.info('Previous image was replaced', {
           duration: 4000,
@@ -124,7 +123,6 @@ const Uploadclientimg: React.FC = () => {
         });
       }
       
-      // Refetch bio to update with new image
       refetchBio();
     },
     onError: (error: Error) => {
@@ -182,10 +180,8 @@ const Uploadclientimg: React.FC = () => {
     },
   });
 
-  // Handle file selection
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
-      // Check file size (max 10MB for full body images)
       if (file.size > 10 * 1024 * 1024) {
         toast.warning('File size must be less than 10MB', {
           duration: 5000,
@@ -209,7 +205,6 @@ const Uploadclientimg: React.FC = () => {
     }
   };
 
-  // Handle drop
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -217,7 +212,6 @@ const Uploadclientimg: React.FC = () => {
     if (file) handleFileSelect(file);
   };
 
-  // Drag events
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
@@ -228,18 +222,15 @@ const Uploadclientimg: React.FC = () => {
     setIsDragging(false);
   };
 
-  // File input change
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFileSelect(file);
   };
 
-  // Crop complete
   const onCropComplete = useCallback((_croppedArea: CropArea, croppedAreaPixels: CropArea) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // Create cropped image
   const createCroppedImage = useCallback(async (): Promise<Blob | null> => {
     if (!selectedImage || !croppedAreaPixels || !originalFile) return null;
 
@@ -283,23 +274,18 @@ const Uploadclientimg: React.FC = () => {
     }
   }, [selectedImage, croppedAreaPixels, originalFile]);
 
-  // Handle save with cropping
   const handleSave = async () => {
     if (!selectedImage) return;
 
     if (showCropper && originalFile && croppedAreaPixels) {
-      // Create cropped image
       const croppedBlob = await createCroppedImage();
       
       if (croppedBlob) {
-        // Create form data with cropped image
         const formData = new FormData();
         const croppedFile = new File([croppedBlob], originalFile.name, {
           type: originalFile.type,
         });
         formData.append('image', croppedFile);
-        
-        // Upload cropped image
         uploadMutation.mutate(formData);
       } else {
         toast.error('Failed to crop image', {
@@ -308,14 +294,12 @@ const Uploadclientimg: React.FC = () => {
         });
       }
     } else if (originalFile) {
-      // Upload original image without cropping
       const formData = new FormData();
       formData.append('image', originalFile);
       uploadMutation.mutate(formData);
     }
   };
 
-  // Handle remove with confirmation
   const handleRemove = () => {
     setShowRemoveConfirm(true);
   };
@@ -328,7 +312,6 @@ const Uploadclientimg: React.FC = () => {
     setShowRemoveConfirm(false);
   };
 
-  // Cancel cropping
   const handleCancelCrop = () => {
     if (hasExistingImage && bioData?.bio?.uploaded_img) {
       setSelectedImage(bioData.bio.uploaded_img);
@@ -340,7 +323,6 @@ const Uploadclientimg: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Handle change image
   const handleChangeImage = () => {
     fileInputRef.current?.click();
   };
@@ -350,7 +332,7 @@ const Uploadclientimg: React.FC = () => {
   if (bioLoading) {
     return (
       <div className="uci-loading-container">
-        <Spinner size="medium" color="#c41e3a" message="Loading..." />
+        <Spinner size="medium" color="#4f46e5" message="Loading..." />
       </div>
     );
   }
@@ -368,7 +350,6 @@ const Uploadclientimg: React.FC = () => {
       </div>
 
       <div className="uci-content">
-        {/* Image Upload/Crop Area */}
         {showCropper ? (
           <div className="uci-cropper-container">
             <div className="uci-cropper-header">
@@ -389,7 +370,7 @@ const Uploadclientimg: React.FC = () => {
               />
               {showProcessing && (
                 <div className="uci-cropper-processing-overlay">
-                  <Spinner size="large" color="#c41e3a" />
+                  <Spinner size="large" color="#4f46e5" />
                   <span className="uci-processing-text">
                     {isUploading ? 'Uploading...' : 'Removing...'}
                   </span>
@@ -437,17 +418,15 @@ const Uploadclientimg: React.FC = () => {
               </div>
             )}
 
-            {/* Processing Overlay - Always visible when processing */}
             {showProcessing && (
               <div className="uci-processing-overlay">
-                <Spinner size="large" color="#c41e3a" />
+                <Spinner size="large" color="#4f46e5" />
                 <span className="uci-processing-text">
                   {isUploading ? 'Uploading...' : 'Removing...'}
                 </span>
               </div>
             )}
 
-            {/* Change Button Overlay - Only show when not processing and image exists */}
             {!showProcessing && selectedImage && !showCropper && (
               <div className="uci-image-actions-overlay">
                 <button 
@@ -473,7 +452,6 @@ const Uploadclientimg: React.FC = () => {
           </div>
         )}
 
-        {/* Remove Photo Confirmation */}
         {showRemoveConfirm && (
           <div className="uci-confirm-overlay">
             <div className="uci-confirm-dialog">
@@ -502,7 +480,6 @@ const Uploadclientimg: React.FC = () => {
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="uci-actions">
           {showCropper ? (
             <div className="uci-crop-actions">
@@ -554,7 +531,6 @@ const Uploadclientimg: React.FC = () => {
           )}
         </div>
 
-        {/* Hint Text */}
         {!selectedImage && !showCropper && !showProcessing && (
           <div className="uci-hint">
             <span className="uci-hint-icon">💡</span>

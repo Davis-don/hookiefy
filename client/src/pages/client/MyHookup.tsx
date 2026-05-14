@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { FaHeart, FaCheck, FaTimes, FaClock, FaSpinner, FaSync } from 'react-icons/fa';
+import { FaSpinner, FaInbox, FaPaperPlane, FaEnvelope } from 'react-icons/fa';
 import { toast } from '../../store/Toaststore';
 import SentHookupPreview from './SentHookupPreview';
 import ReceivedHookupPreview from './ReceivedHookupPreview';
@@ -43,25 +43,21 @@ interface HookupsResponse {
 }
 
 type TabType = 'all' | 'sent' | 'received';
-type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 const MyHookup = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedHookup, setSelectedHookup] = useState<Hookup | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // Fetch all hookups with aggressive real-time settings
   const { 
     data, 
     isLoading, 
     error, 
-    refetch, 
-    isFetching 
+    refetch
   } = useQuery<HookupsResponse>({
     queryKey: ['my-hookups'],
     queryFn: async () => {
@@ -78,7 +74,6 @@ const MyHookup = () => {
       }
       
       const result = await response.json();
-      setLastRefresh(new Date());
       
       return {
         ...result,
@@ -86,7 +81,6 @@ const MyHookup = () => {
         received: result.received.map((h: Hookup) => ({ ...h, role: 'received' as const }))
       };
     },
-    // Real-time refresh settings
     refetchInterval: 10000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
@@ -95,10 +89,10 @@ const MyHookup = () => {
     staleTime: 2000,
     gcTime: 60000,
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Handle payment status from URL params (AFTER refetch is declared)
+  // Handle payment status from URL params
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const errorMessage = searchParams.get('message');
@@ -108,13 +102,11 @@ const MyHookup = () => {
         title: '🎉 Payment Successful!',
         duration: 5000,
       });
-      // Remove query params from URL without reloading
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('payment');
       newParams.delete('order_tracking_id');
       newParams.delete('message');
       setSearchParams(newParams, { replace: true });
-      // Refresh hookups to show updated status
       setTimeout(() => refetch(), 500);
     } else if (paymentStatus === 'failed') {
       toast.error('Payment failed. Please try again.', {
@@ -134,7 +126,6 @@ const MyHookup = () => {
       newParams.delete('payment');
       newParams.delete('order_tracking_id');
       setSearchParams(newParams, { replace: true });
-      // Poll for status update
       const interval = setInterval(() => {
         refetch();
       }, 3000);
@@ -151,22 +142,7 @@ const MyHookup = () => {
     }
   }, [searchParams, setSearchParams, refetch]);
 
-  // Manual refresh with visual feedback
-  const handleManualRefresh = useCallback(async () => {
-    toast.info('Refreshing hookups...', {
-      title: '🔄 Updating',
-      icon: '🔄',
-      duration: 1500,
-    });
-    await refetch();
-    toast.success('Hookups updated!', {
-      title: '✓ Updated',
-      icon: '✨',
-      duration: 2000,
-    });
-  }, [refetch]);
-
-  // WebSocket-like polling for instant updates (every 5 seconds when visible)
+  // Additional polling for instant updates
   useEffect(() => {
     let intervalId: number | null = null;
     
@@ -187,7 +163,6 @@ const MyHookup = () => {
     };
   }, [refetch]);
 
-  // Listen for visibility changes to refresh immediately
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -199,12 +174,10 @@ const MyHookup = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refetch]);
 
-  // Listen for online/offline events
   useEffect(() => {
     const handleOnline = () => {
       toast.success('Back online! Refreshing hookups...', {
         title: '🌐 Connected',
-        icon: '✅',
         duration: 3000,
       });
       refetch();
@@ -213,7 +186,6 @@ const MyHookup = () => {
     const handleOffline = () => {
       toast.warning('You are offline. Hookups may be outdated.', {
         title: '📡 Offline',
-        icon: '⚠️',
         duration: 3000,
       });
     };
@@ -227,7 +199,6 @@ const MyHookup = () => {
     };
   }, [refetch]);
 
-  // Mark as read mutation with immediate UI update
   const markReadMutation = useMutation({
     mutationFn: async (hookupId: number) => {
       const response = await fetch(`${apiUrl}/hookup/hookup/${hookupId}/mark-read/`, {
@@ -245,7 +216,7 @@ const MyHookup = () => {
       
       return response.json();
     },
-    onMutate: async (hookupId) => {
+    onMutate: async (hookupId: number) => {
       await queryClient.cancelQueries({ queryKey: ['my-hookups'] });
       
       const previousData = queryClient.getQueryData<HookupsResponse>(['my-hookups']);
@@ -271,13 +242,12 @@ const MyHookup = () => {
       queryClient.invalidateQueries({ queryKey: ['my-hookups'] });
       window.dispatchEvent(new Event('hookupStatusChanged'));
     },
-    onError: (error: Error, _, context) => {
+    onError: (error: Error, _variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['my-hookups'], context.previousData);
       }
       toast.error(error.message, {
         title: '❌ Error',
-        icon: '💔',
         duration: 3000,
       });
     },
@@ -314,25 +284,8 @@ const MyHookup = () => {
     return [...sent, ...received];
   };
 
-  const getFilteredHookups = (): Hookup[] => {
-    const allHookups = getAllHookups();
-    
-    if (statusFilter === 'all') return allHookups;
-    
-    return allHookups.filter(hookup => hookup.approval_status === statusFilter);
-  };
+  const filteredHookups = getAllHookups();
 
-  const getUnreadCount = (): number => {
-    if (!data) return 0;
-    const sentUnread = (data.sent || []).filter(h => !h.is_read_by_current_user).length;
-    const receivedUnread = (data.received || []).filter(h => !h.is_read_by_current_user).length;
-    return sentUnread + receivedUnread;
-  };
-
-  const filteredHookups = getFilteredHookups();
-  const unreadCount = getUnreadCount();
-
-  // Listen for custom events to refresh
   useEffect(() => {
     const handleRefresh = () => {
       refetch();
@@ -379,115 +332,44 @@ const MyHookup = () => {
 
   return (
     <div className="mh-container">
-      <div className="mh-header">
-        <div className="mh-header-content">
-          <h1 className="mh-title">
-            <FaHeart className="mh-title-icon" />
-            My Hookups
-          </h1>
-          {unreadCount > 0 && (
-            <span className="mh-unread-badge">{unreadCount} new</span>
-          )}
-          <button 
-            className="mh-refresh-btn" 
-            onClick={handleManualRefresh} 
-            disabled={isFetching}
-            title="Refresh now"
+      {/* Tabs with Icons - Centered */}
+      <div className="mh-tabs-wrapper">
+        <div className="mh-tabs">
+          <button
+            className={`mh-tab ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
           >
-            <FaSync className={isFetching ? 'mh-spin-small' : ''} />
+            <FaInbox className="mh-tab-icon" />
+            All
+            {totalCount > 0 && <span className="mh-tab-count">{totalCount}</span>}
+          </button>
+          <button
+            className={`mh-tab ${activeTab === 'sent' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sent')}
+          >
+            <FaPaperPlane className="mh-tab-icon" />
+            Sent
+            {sentCount > 0 && <span className="mh-tab-count">{sentCount}</span>}
+          </button>
+          <button
+            className={`mh-tab ${activeTab === 'received' ? 'active' : ''}`}
+            onClick={() => setActiveTab('received')}
+          >
+            <FaEnvelope className="mh-tab-icon" />
+            Received
+            {receivedCount > 0 && <span className="mh-tab-count">{receivedCount}</span>}
           </button>
         </div>
-        <p className="mh-subtitle">Manage all your hookup requests and connections</p>
-        <div className="mh-last-refresh">
-          Last updated: {lastRefresh.toLocaleTimeString()}
-          {isFetching && <span className="mh-refreshing-text"> (updating...)</span>}
-        </div>
       </div>
 
-      <div className="mh-stats">
-        <div className="mh-stat-card">
-          <div className="mh-stat-icon">📤</div>
-          <div className="mh-stat-info">
-            <span className="mh-stat-value">{sentCount}</span>
-            <span className="mh-stat-label">Sent Requests</span>
-          </div>
-        </div>
-        <div className="mh-stat-card">
-          <div className="mh-stat-icon">📥</div>
-          <div className="mh-stat-info">
-            <span className="mh-stat-value">{receivedCount}</span>
-            <span className="mh-stat-label">Received Requests</span>
-          </div>
-        </div>
-        <div className="mh-stat-card">
-          <div className="mh-stat-icon">💚</div>
-          <div className="mh-stat-info">
-            <span className="mh-stat-value">{totalCount}</span>
-            <span className="mh-stat-label">Total Hookups</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mh-tabs">
-        <button
-          className={`mh-tab ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All
-          {totalCount > 0 && <span className="mh-tab-count">{totalCount}</span>}
-        </button>
-        <button
-          className={`mh-tab ${activeTab === 'sent' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sent')}
-        >
-          Sent
-          {sentCount > 0 && <span className="mh-tab-count">{sentCount}</span>}
-        </button>
-        <button
-          className={`mh-tab ${activeTab === 'received' ? 'active' : ''}`}
-          onClick={() => setActiveTab('received')}
-        >
-          Received
-          {receivedCount > 0 && <span className="mh-tab-count">{receivedCount}</span>}
-        </button>
-      </div>
-
-      <div className="mh-filters">
-        <button
-          className={`mh-filter-chip ${statusFilter === 'all' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('all')}
-        >
-          All Status
-        </button>
-        <button
-          className={`mh-filter-chip ${statusFilter === 'pending' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('pending')}
-        >
-          <FaClock /> Pending
-        </button>
-        <button
-          className={`mh-filter-chip ${statusFilter === 'approved' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('approved')}
-        >
-          <FaCheck /> Approved
-        </button>
-        <button
-          className={`mh-filter-chip ${statusFilter === 'rejected' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('rejected')}
-        >
-          <FaTimes /> Rejected
-        </button>
-      </div>
-
+      {/* Hookup List */}
       {filteredHookups.length === 0 ? (
         <div className="mh-empty">
           <div className="mh-empty-content">
             <span className="mh-empty-icon">💚</span>
             <h3>No hookups found</h3>
             <p>
-              {statusFilter !== 'all'
-                ? `You don't have any ${statusFilter} hookup requests.`
-                : activeTab === 'sent'
+              {activeTab === 'sent'
                 ? "You haven't sent any hookup requests yet."
                 : activeTab === 'received'
                 ? "You haven't received any hookup requests yet."
@@ -515,6 +397,7 @@ const MyHookup = () => {
         </div>
       )}
 
+      {/* Modals */}
       {modalOpen && selectedHookup && (
         selectedHookup.role === 'sent' ? (
           <SentHookupDetail

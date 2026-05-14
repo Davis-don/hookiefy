@@ -1,4 +1,4 @@
-import { FaPaperPlane, FaCheckCircle, FaClock, FaUser } from 'react-icons/fa';
+import { FaPaperPlane, FaCheckCircle, FaClock, FaUser, FaTimesCircle } from 'react-icons/fa';
 import './senthookuppreview.css'
 
 interface Hookup {
@@ -32,7 +32,7 @@ const SentHookupPreview: React.FC<SentHookupPreviewProps> = ({ hookup, onClick }
     return date.toLocaleDateString();
   };
 
-  const truncateMessage = (text: string | null, maxLength: number = 60) => {
+  const truncateMessage = (text: string | null, maxLength: number = 80) => {
     if (!text) return "No message";
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -45,7 +45,7 @@ const SentHookupPreview: React.FC<SentHookupPreviewProps> = ({ hookup, onClick }
       case 'approved':
         return <FaCheckCircle className="shp-status-icon approved" />;
       case 'rejected':
-        return <FaClock className="shp-status-icon rejected" />;
+        return <FaTimesCircle className="shp-status-icon rejected" />;
       default:
         return null;
     }

@@ -82,13 +82,6 @@ const RejectedStatus: React.FC<RejectedStatusProps> = ({ hookup, onRefresh, onCl
     setShowDeleteModal(false);
   };
 
-  const getOtherPartyName = () => {
-    if (hookup.role === 'sent') {
-      return hookup.receiver_name || 'the recipient';
-    }
-    return hookup.sender_name || 'the sender';
-  };
-
   return (
     <>
       <div className="status-card status-rejected">
@@ -98,7 +91,7 @@ const RejectedStatus: React.FC<RejectedStatusProps> = ({ hookup, onRefresh, onCl
         <div className="status-content">
           <h4 className="status-title">Request Declined</h4>
           <p className="status-description">
-            Your hookup request was declined by {getOtherPartyName()}.
+            Hookup request rejected
           </p>
           <div className="status-meta">
             <FaClock className="meta-icon" />
@@ -123,7 +116,7 @@ const RejectedStatus: React.FC<RejectedStatusProps> = ({ hookup, onRefresh, onCl
             </div>
             <h3 className="delete-modal-title">Remove Request?</h3>
             <p className="delete-modal-message">
-              Are you sure you want to remove this declined request from <strong>{getOtherPartyName()}</strong>?
+              Are you sure you want to remove this declined request?
             </p>
             <p className="delete-modal-warning">
               This action cannot be undone.

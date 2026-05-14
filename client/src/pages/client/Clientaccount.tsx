@@ -7,7 +7,6 @@ import HomeContent from './Homecontent';
 import MyHookup from './MyHookup';
 import ProfileContent from './ProfileContent';
 import BillingContent from './BillingContent';
-import Uploadclientimg from './Uploadclientimg';
 import Clientbioupload from './Clientbioupload';
 import Clientaccountsetprofile from './Clientaccountsetprofile';
 import './clientaccount.css';
@@ -23,13 +22,39 @@ interface BioCompletionResponse {
 }
 
 function Clientaccount() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activePage, setActivePage] = useState('discover');
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isBioComplete, setIsBioComplete] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Handle resize for responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      const tablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+      
+      // Keep sidebar behavior based on viewport size without extra state
+      if (mobile) {
+        // On mobile, sidebar starts collapsed (hidden)
+        setSidebarCollapsed(true);
+      } else if (tablet) {
+        // On tablet, sidebar starts collapsed (icons only)
+        setSidebarCollapsed(true);
+      } else {
+        // On desktop, sidebar starts expanded (full)
+        setSidebarCollapsed(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   // Fetch bio completion status
   const { 
@@ -69,11 +94,8 @@ function Clientaccount() {
 
   // Handle profile completion from Clientaccountsetprofile
   const handleProfileComplete = () => {
-    // Refetch bio completion status to update the state
     refetchBio();
-    // Also manually set isBioComplete to true for immediate UI update
     setIsBioComplete(true);
-    // Optionally set active page to discover after profile completion
     setActivePage('discover');
   };
 
@@ -111,9 +133,6 @@ function Clientaccount() {
 
   const handleNotificationClick = () => {
     setActivePage('myhookups');
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
     setTimeout(() => {
       refetchUnreadCount();
     }, 1000);
@@ -151,26 +170,6 @@ function Clientaccount() {
     return () => clearInterval(intervalId);
   }, [refetchUnreadCount, isBioComplete]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   const handleLogout = async () => {
     if (isLoggingOut) return;
     
@@ -186,29 +185,24 @@ function Clientaccount() {
     }
   };
 
+  // Menu items order: Discover, My Hookups, Bio, Billing & Transfers, Settings
   const menuItems = [
     { id: 'discover', icon: '🔍', label: 'Discover' },
     { id: 'myhookups', icon: '💚', label: 'My Hookups', count: unreadCount },
-    { id: 'profile', icon: '👤', label: 'Profile' },
+    { id: 'bio', icon: '✏️', label: 'Bio' },
     { id: 'billing', icon: '💰', label: 'Billing & Transfers' },
-    { id: 'profilephoto', icon: '📸', label: 'Profile Photo' },
-    { id: 'profilebio', icon: '✏️', label: 'Profile Bio' }
+    { id: 'settings', icon: '⚙️', label: 'Settings' }
   ];
 
   const handleNavigate = (page: string) => {
     setActivePage(page);
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
   };
 
   const renderContent = () => {
-    // Show profile setup if bio is not complete
     if (isBioComplete === false) {
       return <Clientaccountsetprofile onProfileComplete={handleProfileComplete} />;
     }
     
-    // Show loading state while checking bio completion
     if (bioLoading || isBioComplete === null) {
       return (
         <div className="ca-loading-container">
@@ -218,20 +212,17 @@ function Clientaccount() {
       );
     }
     
-    // Show main content if bio is complete
     switch(activePage) {
       case 'discover':
         return <HomeContent onNavigate={handleNavigate} />;
       case 'myhookups':
         return <MyHookup />;
-      case 'profile':
-        return <ProfileContent />;
+      case 'bio':
+        return <Clientbioupload onBioUpdateSuccess={handleProfileComplete} />;
       case 'billing':
         return <BillingContent />;
-      case 'profilephoto':
-        return <Uploadclientimg />;
-      case 'profilebio':
-        return <Clientbioupload onBioUpdateSuccess={handleProfileComplete} />;
+      case 'settings':
+        return <ProfileContent />;
       default:
         return <HomeContent onNavigate={handleNavigate} />;
     }
@@ -246,7 +237,13 @@ function Clientaccount() {
       />
       
       <div className="ca-layout">
-        <aside className={`ca-sidebar ${sidebarOpen ? 'ca-sidebar-open' : 'ca-sidebar-closed'}`}>
+        <aside className={`ca-sidebar ${sidebarCollapsed ? 'ca-sidebar-collapsed' : ''}`}>
+          {/* Sidebar Logo */}
+          <div className="ca-sidebar-logo">
+            {!sidebarCollapsed && <span className="ca-sidebar-logo-text">Hookiefy</span>}
+            {sidebarCollapsed && <span className="ca-sidebar-logo-icon">💜</span>}
+          </div>
+          
           <nav className="ca-sidebar-nav">
             {menuItems.map((item) => (
               <div 
@@ -254,20 +251,19 @@ function Clientaccount() {
                 className={`ca-nav-item ${activePage === item.id ? 'ca-nav-active' : ''}`}
                 onClick={() => {
                   setActivePage(item.id);
-                  if (isMobile) {
-                    setSidebarOpen(false);
-                  }
                 }}
+                title={sidebarCollapsed ? item.label : ''}
               >
                 <span className="ca-nav-icon">{item.icon}</span>
-                <span className="ca-nav-label">{item.label}</span>
-                {item.count !== undefined && item.count > 0 && (
+                {!sidebarCollapsed && <span className="ca-nav-label">{item.label}</span>}
+                {item.count !== undefined && item.count > 0 && !sidebarCollapsed && (
                   <span className="ca-nav-count">
                     {item.count > 99 ? '99+' : item.count}
-                    {isFetchingCount && (
-                      <span className="ca-nav-count-update">...</span>
-                    )}
+                    {isFetchingCount && <span className="ca-nav-count-update">...</span>}
                   </span>
+                )}
+                {item.count !== undefined && item.count > 0 && sidebarCollapsed && (
+                  <span className="ca-nav-count-collapsed">{item.count > 99 ? '99+' : item.count}</span>
                 )}
               </div>
             ))}
@@ -275,16 +271,13 @@ function Clientaccount() {
             <div 
               className={`ca-nav-item ca-nav-logout ${isLoggingOut ? 'ca-nav-logging-out' : ''}`}
               onClick={handleLogout}
+              title={sidebarCollapsed ? 'Logout' : ''}
             >
               <span className="ca-nav-icon">{isLoggingOut ? '⏳' : '🚪'}</span>
-              <span className="ca-nav-label">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+              {!sidebarCollapsed && <span className="ca-nav-label">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>}
             </div>
           </nav>
         </aside>
-
-        {isMobile && sidebarOpen && (
-          <div className="ca-sidebar-overlay" onClick={toggleSidebar}></div>
-        )}
 
         <main className="ca-main-content">
           {renderContent()}

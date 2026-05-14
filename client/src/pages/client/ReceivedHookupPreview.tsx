@@ -32,7 +32,7 @@ const ReceivedHookupPreview: React.FC<ReceivedHookupPreviewProps> = ({ hookup, o
     return date.toLocaleDateString();
   };
 
-  const truncateMessage = (text: string | null, maxLength: number = 60) => {
+  const truncateMessage = (text: string | null, maxLength: number = 80) => {
     if (!text) return "Sent you a hookup request";
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
