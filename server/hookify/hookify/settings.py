@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-!mq$h7%9*#$=q8kr6$#+n5u&m5h&@0#tk++3keh%s+l12l6ac_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "hookiefy-server.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 # Application definition
