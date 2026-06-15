@@ -18,9 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from account.views import CookieTokenObtainPairView
+from account.views import health_check
 
 urlpatterns = [
-    
+    path('', health_check), 
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),
 
