@@ -10,6 +10,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import is_superadmin, can_create_user, can_create_admin
 
 
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def health_check(request):
+    return Response({"status": "server is running 🚀"})
+    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_new_user(request):

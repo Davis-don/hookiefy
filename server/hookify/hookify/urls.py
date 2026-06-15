@@ -20,6 +20,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from account.views import CookieTokenObtainPairView
 
 urlpatterns = [
+    
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),
 

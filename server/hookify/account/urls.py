@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("health/", views.health_check),
     # User creation
     path(
         'new/',
@@ -49,4 +50,5 @@ urlpatterns = [
         views.get_users_by_role,
         name='get_users_by_role'
     ),
+    
 ]
