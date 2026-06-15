@@ -1,0 +1,65 @@
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# Python (Django / Server)
+# =========================
+server/__pycache__/
+server/**/__pycache__/
+server/*.pyc
+server/**/*.pyc
+
+server/db.sqlite3
+server/media/
+server/staticfiles/
+
+# =========================
+# Virtual environments (IMPORTANT)
+# =========================
+myworld/
+server/myworld/
+venv/
+env/
+.venv/
+
+# =========================
+# Node / Client
+# =========================
+client/node_modules/
+client/dist/
+client/build/
+
+# env files
+client/.env
+client/.env.*
+
+# logs
+client/npm-debug.log*
+client/yarn-error.log*
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Git internal
+# =========================
+.git/
