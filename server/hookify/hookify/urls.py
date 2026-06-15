@@ -14,29 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# hookify/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
-from django.views.generic import TemplateView
+from rest_framework_simplejwt.views import TokenRefreshView
+from account.views import CookieTokenObtainPairView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
-    path('superconfig/', include('superconfig.urls')),
-    path('client-img/', include('clientbio.urls')),
-    path('profiles/', include('profiles.urls')),
-    path('hookup/', include('hookup.urls')),
-    path('adminconfig/', include('adminconfig.urls')),
-    path('payments/', include('payments.urls')),
-    
-    # Catch-all for frontend routes (SPA support)
-    # This should be the LAST pattern
-    path('', TemplateView.as_view(template_name='index.html')),
-]
+    path('account/', include('account.urls')),
 
-# Serve static files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    path('login/token/', CookieTokenObtainPairView.as_view()),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#!/home/davis-ikou/warehouse/hookiefy/server/my_world/bin/python
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
