@@ -127,10 +127,6 @@ function Login() {
     return () => clearInterval(interval);
   }, [isAutoPlay, nextSlide]);
 
-  const handleLogin = (email: string, password: string) => {
-    console.log('Login attempted:', { email, password });
-    // Add your login logic here
-  };
 
   return (
     <div className='overall-login-container-page'>
@@ -203,7 +199,7 @@ function Login() {
 
         {/* Login Form Overlay - Left Side */}
         <div className="login-form-overlay">
-          <LoginForm onLogin={handleLogin} />
+          <LoginForm  />
         </div>
       </div>
     </div>
