@@ -1,1269 +1,303 @@
-/* ===== HOOKIFY LOGIN PAGE - UNIQUE CLASS NAMES ===== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* login.css - Main Page Styles */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.hookify-login-page {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Background Gradients - Matching About Page */
-.hookify-login-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 55%),
-              linear-gradient(135deg, #faf9ff 0%, #f3f0ff 50%, #ede9fe 100%);
-  z-index: 0;
-}
-
-.hookify-login-page::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.04) 0%, transparent 70%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Floating Hearts - LARGER */
-.hookify-login-floating-hearts {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.hookify-login-heart {
-  position: absolute;
-  font-size: 8rem;
-  animation: loginHeartFloat 8s ease-in-out infinite;
-  opacity: 0.4;
-}
-
-.heart-1 { top: 10%; left: 5%; animation-delay: 0s; }
-.heart-2 { top: 20%; right: 8%; animation-delay: 1s; font-size: 10rem; }
-.heart-3 { bottom: 15%; left: 10%; animation-delay: 2s; font-size: 6rem; }
-.heart-4 { bottom: 25%; right: 15%; animation-delay: 3s; font-size: 8rem; }
-.heart-5 { top: 60%; left: 3%; animation-delay: 4s; font-size: 5rem; }
-.heart-6 { top: 40%; right: 20%; animation-delay: 5s; font-size: 7rem; }
-.heart-7 { bottom: 50%; left: 20%; animation-delay: 6s; font-size: 6.5rem; }
-
-@media (max-width: 768px) {
-  .hookify-login-heart {
-    font-size: 4rem;
-  }
-  .heart-2 { font-size: 5rem; }
-  .heart-4 { font-size: 4.5rem; }
-  .heart-6 { font-size: 4rem; }
-}
-
-@keyframes loginHeartFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-  50% { transform: translateY(-50px) rotate(12deg); opacity: 0.6; }
-}
-
-/* Animated Padlocks */
-.hookify-login-padlocks {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.hookify-login-padlock {
-  position: absolute;
-  color: rgba(79, 70, 229, 0.15);
-  animation: padlockFloat 6s ease-in-out infinite;
-}
-
-.padlock-1 { top: 15%; left: 12%; animation-delay: 0s; }
-.padlock-2 { top: 30%; right: 10%; animation-delay: 1.5s; }
-.padlock-3 { bottom: 20%; left: 8%; animation-delay: 0.8s; }
-.padlock-4 { bottom: 35%; right: 15%; animation-delay: 2.2s; }
-.padlock-5 { top: 55%; left: 18%; animation-delay: 1.2s; }
-.padlock-6 { top: 70%; right: 20%; animation-delay: 2.8s; }
-
-.hookify-login-padlock svg {
-  width: 70px;
-  height: 70px;
-}
-
-.padlock-1 svg { width: 80px; height: 80px; }
-.padlock-2 svg { width: 60px; height: 60px; }
-.padlock-3 svg { width: 90px; height: 90px; }
-.padlock-4 svg { width: 55px; height: 55px; }
-.padlock-5 svg { width: 65px; height: 65px; }
-.padlock-6 svg { width: 50px; height: 50px; }
-
-@media (max-width: 768px) {
-  .hookify-login-padlock svg {
-    width: 40px;
-    height: 40px;
-  }
-  .padlock-1 svg { width: 45px; height: 45px; }
-  .padlock-3 svg { width: 50px; height: 50px; }
-  .padlock-5 svg { width: 38px; height: 38px; }
-}
-
-@keyframes padlockFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.1; }
-  50% { transform: translateY(-30px) rotate(6deg); opacity: 0.2; }
-}
-
-.padlock-shine {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 15px;
-  height: 15px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  animation: shine 2s ease-in-out infinite;
-}
-
-@keyframes shine {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
-/* Security Badges */
-.hookify-login-security-badges {
-  position: absolute;
-  bottom: 3rem;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-  flex-wrap: wrap;
-  z-index: 5;
-  padding: 0 2rem;
-}
-
-.hookify-login-badge {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  padding: 1rem 2.2rem;
-  border-radius: 60px;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: rgb(79, 70, 229);
-  border: 1.5px solid rgba(79, 70, 229, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.hookify-login-badge svg {
-  width: 24px;
-  height: 24px;
-  color: #10b981;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-security-badges {
-    bottom: 1.5rem;
-    gap: 1rem;
-  }
-  .hookify-login-badge {
-    padding: 0.7rem 1.5rem;
-    font-size: 1rem;
-  }
-  .hookify-login-badge svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-security-badges {
-    bottom: 1rem;
-    gap: 0.8rem;
-  }
-  .hookify-login-badge {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-  }
-  .hookify-login-badge svg {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-/* Main Grid */
-.hookify-login-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
-  position: relative;
-  z-index: 2;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* LEFT COLUMN - ANIMATED PHONE */
-.hookify-login-left {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
+/* Main Container */
+.overall-login-container-page {
+  width: 100%;
+  height: 100vh;
   position: relative;
   overflow: hidden;
+  background: #0a0618;
 }
 
-@media (max-width: 1024px) {
-  .hookify-login-left {
-    padding: 2rem;
-    min-height: auto;
-    order: 2;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-left {
-    padding: 1.5rem;
-  }
-}
-
-.hookify-login-left::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(79, 70, 229, 0.2), transparent 70%);
-  pointer-events: none;
-}
-
-/* Animated Phone - Responsive */
-.hookify-login-animated-phone {
-  position: relative;
-  width: 100%;
-  max-width: 550px;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-animated-phone {
-    max-width: 380px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-animated-phone {
-    max-width: 320px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-animated-phone {
-    max-width: 280px;
-  }
-}
-
-.hookify-login-phone-frame {
-  position: relative;
-  background: #1a1a2e;
-  border-radius: 55px;
-  padding: 14px;
-  box-shadow: 0 40px 60px rgba(0, 0, 0, 0.35), inset 0 0 0 1.5px rgba(255, 255, 255, 0.1);
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-frame {
-    border-radius: 40px;
-    padding: 10px;
-  }
-}
-
-.hookify-login-phone-notch {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  height: 35px;
-  background: #1a1a2e;
-  border-radius: 0 0 25px 25px;
-  z-index: 10;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-notch {
-    width: 130px;
-    height: 25px;
-    top: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-notch {
-    width: 110px;
-    height: 22px;
-  }
-}
-
-.hookify-login-phone-screen {
-  background: #fff;
-  border-radius: 45px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 750px;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-phone-screen {
-    min-height: 580px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-screen {
-    min-height: 480px;
-    border-radius: 35px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-screen {
-    min-height: 420px;
-    border-radius: 30px;
-  }
-}
-
-.hookify-login-phone-status {
-  display: flex;
-  justify-content: space-between;
-  padding: 18px 28px;
-  background: #fff;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1a1a2e;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-status {
-    padding: 12px 18px;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-status {
-    padding: 10px 14px;
-    font-size: 0.8rem;
-  }
-}
-
-.hookify-login-phone-chat-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 24px;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-chat-header {
-    padding: 12px 16px;
-    gap: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-chat-header {
-    padding: 10px 12px;
-    gap: 10px;
-  }
-}
-
-.hookify-login-chat-avatar {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-chat-avatar {
-    width: 48px;
-    height: 48px;
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-chat-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-}
-
-.hookify-login-chat-info h4 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 5px;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-chat-info h4 {
-    font-size: 1.2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-chat-info h4 {
-    font-size: 1rem;
-  }
-}
-
-.hookify-login-chat-info span {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-@media (max-width: 768px) {
-  .hookify-login-chat-info span {
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-chat-info span {
-    font-size: 0.65rem;
-  }
-}
-
-.hookify-login-phone-chat-messages {
-  flex: 1;
-  padding: 24px;
-  background: #f8f9ff;
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-chat-messages {
-    padding: 16px;
-    min-height: 320px;
-    gap: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-chat-messages {
-    padding: 12px;
-    min-height: 270px;
-    gap: 10px;
-  }
-}
-
-.hookify-login-chat-bubble p {
-  padding: 14px 20px;
-  border-radius: 24px;
-  font-size: 1.1rem;
-  line-height: 1.5;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-chat-bubble p {
-    padding: 10px 14px;
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-chat-bubble p {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
-}
-
-.hookify-login-chat-bubble span {
-  font-size: 0.75rem;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-chat-bubble span {
-    font-size: 0.65rem;
-  }
-}
-
-.hookify-login-phone-chat-input {
-  padding: 18px 24px;
-  gap: 14px;
-  display: flex;
-  align-items: center;
-  background: white;
-  border-top: 1px solid #f0f0f0;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-chat-input {
-    padding: 12px 16px;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-chat-input {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-}
-
-.hookify-login-input-field {
-  flex: 1;
-  padding: 14px 20px;
-  background: #f3f4f6;
-  border-radius: 30px;
-  font-size: 1rem;
-  color: #9ca3af;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-input-field {
-    padding: 10px 14px;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-input-field {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-}
-
-.hookify-login-send-btn {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-send-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-send-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 0.9rem;
-  }
-}
-
-.hookify-login-phone-home {
-  width: 48px;
-  height: 48px;
-  background: #1a1a2e;
-  border-radius: 50%;
-  margin: 14px auto 8px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-home {
-    width: 38px;
-    height: 38px;
-    margin: 10px auto 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-home {
-    width: 32px;
-    height: 32px;
-    margin: 8px auto 4px;
-  }
-}
-
-.hookify-login-phone-notification {
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  background: white;
-  border-radius: 20px;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-  animation: loginNotifPop 0.5s ease, loginNotifFloat 3s ease-in-out infinite 0.5s;
-  z-index: 20;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-phone-notification {
-    top: -15px;
-    right: -15px;
-    padding: 10px 14px;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-phone-notification {
-    top: -10px;
-    right: -10px;
-    padding: 6px 10px;
-    gap: 8px;
-  }
-}
-
-.hookify-login-notif-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-notif-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-notif-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 0.9rem;
-  }
-}
-
-.hookify-login-notif-text strong {
-  display: block;
-  font-size: 1rem;
-  color: #1a1a2e;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-notif-text strong {
-    font-size: 0.85rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-notif-text strong {
-    font-size: 0.7rem;
-  }
-}
-
-.hookify-login-notif-text span {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-notif-text span {
-    font-size: 0.7rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-notif-text span {
-    font-size: 0.6rem;
-  }
-}
-
-@keyframes loginNotifPop {
-  0% { transform: scale(0); opacity: 0; }
-  70% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes loginNotifFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* RIGHT COLUMN - LOGIN FORM */
-.hookify-login-right {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  background: transparent;
-  position: relative;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-right {
-    padding: 2rem;
-    order: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-right {
-    padding: 1.5rem;
-  }
-}
-
-/* Back Button */
-.hookify-login-back-btn {
-  position: absolute;
-  top: 2.5rem;
-  left: 2.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1.5px solid rgba(79, 70, 229, 0.25);
-  border-radius: 60px;
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: rgb(79, 70, 229);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.hookify-login-back-btn svg {
-  width: 24px;
-  height: 24px;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-back-btn {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
-  }
-  .hookify-login-back-btn svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-back-btn {
-    top: 0.8rem;
-    left: 0.8rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-}
-
-.hookify-login-back-btn:hover {
-  background: rgb(79, 70, 229);
-  color: white;
-  transform: translateX(-8px);
-}
-
-/* Logo - LARGER on Mobile */
-.hookify-login-logo {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.hookify-login-logo-icon {
-  font-size: 7rem;
-  margin-bottom: 1rem;
-}
-
-.hookify-login-logo-name {
-  font-size: 4rem !important;
-  font-weight: 800;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  margin-bottom: 0.8rem;
-}
-
-.hookify-login-logo-tagline {
-  font-size: 1.4rem !important;
-  color: #6b7280;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-logo-icon {
-    font-size: 5rem;
-  }
-  .hookify-login-logo-name {
-    font-size: 3rem !important;
-  }
-  .hookify-login-logo-tagline {
-    font-size: 1.1rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-logo-icon {
-    font-size: 4rem;
-  }
-  .hookify-login-logo-name {
-    font-size: 2.5rem !important;
-  }
-  .hookify-login-logo-tagline {
-    font-size: 0.95rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-logo-icon {
-    font-size: 3.5rem;
-    margin-bottom: 0.5rem;
-  }
-  .hookify-login-logo-name {
-    font-size: 2rem !important;
-  }
-  .hookify-login-logo-tagline {
-    font-size: 0.85rem !important;
-  }
-}
-
-/* Login Form - LARGER on Mobile */
-.hookify-login-form {
-  width: 100%;
-  max-width: 550px;
-}
-
-.hookify-login-form-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.hookify-login-form-header h2 {
-  font-size: 3rem !important;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 1rem;
-}
-
-.hookify-login-form-header p {
-  font-size: 1.4rem !important;
-  color: #6b7280;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-form-header h2 {
-    font-size: 2.5rem !important;
-  }
-  .hookify-login-form-header p {
-    font-size: 1.2rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-form-header {
-    margin-bottom: 2rem;
-  }
-  .hookify-login-form-header h2 {
-    font-size: 2rem !important;
-  }
-  .hookify-login-form-header p {
-    font-size: 1rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-form-header h2 {
-    font-size: 1.6rem !important;
-  }
-  .hookify-login-form-header p {
-    font-size: 0.85rem !important;
-  }
-}
-
-/* Error Message */
-.hookify-login-error {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: #fef2f2;
-  border: 1.5px solid #fecaca;
-  border-radius: 20px;
-  padding: 1.2rem 1.8rem;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-  color: #dc2626;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-error {
-    padding: 0.9rem 1.2rem;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-error {
-    padding: 0.7rem 1rem;
-    font-size: 0.8rem;
-    gap: 0.5rem;
-  }
-}
-
-/* Input Groups - LARGER on Mobile */
-.hookify-login-input-group {
-  position: relative;
-  margin-bottom: 2rem;
-}
-
-.hookify-login-input-icon {
-  position: absolute;
-  left: 1.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  z-index: 2;
-}
-
-.hookify-login-input-icon svg {
-  width: 28px;
-  height: 28px;
-}
-
-.hookify-login-input {
-  width: 100%;
-  padding: 1.5rem 1.5rem 1.5rem 4.5rem;
-  font-size: 1.3rem !important;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 24px;
-  transition: all 0.3s ease;
-  font-family: 'Inter', sans-serif;
-  background: white;
-}
-
-.hookify-login-input:focus {
-  outline: none;
-  border-color: rgb(79, 70, 229);
-  box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.1);
-}
-
-.hookify-login-password-toggle {
-  position: absolute;
-  right: 1.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #9ca3af;
-}
-
-.hookify-login-password-toggle svg {
-  width: 26px;
-  height: 26px;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-input {
-    padding: 1.3rem 1.3rem 1.3rem 4rem;
-    font-size: 1.2rem !important;
-  }
-  .hookify-login-input-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-  .hookify-login-password-toggle svg {
-    width: 22px;
-    height: 22px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-input-group {
-    margin-bottom: 1.5rem;
-  }
-  .hookify-login-input {
-    padding: 1rem 1rem 1rem 3.5rem;
-    font-size: 1rem !important;
-    border-radius: 18px;
-  }
-  .hookify-login-input-icon {
-    left: 1.2rem;
-  }
-  .hookify-login-input-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-  .hookify-login-password-toggle {
-    right: 1.2rem;
-  }
-  .hookify-login-password-toggle svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-input {
-    padding: 0.85rem 0.85rem 0.85rem 3rem;
-    font-size: 0.9rem !important;
-    border-radius: 14px;
-  }
-  .hookify-login-input-icon {
-    left: 1rem;
-  }
-  .hookify-login-input-icon svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-/* Submit Button - LARGER on Mobile */
-.hookify-login-submit {
-  width: 100%;
-  padding: 1.5rem;
-  font-size: 1.4rem !important;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  color: white;
-  border: none;
-  border-radius: 60px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
-  margin-top: 1rem;
-}
-
-.hookify-login-submit svg {
-  width: 26px;
-  height: 26px;
-}
-
-@media (max-width: 1024px) {
-  .hookify-login-submit {
-    padding: 1.2rem;
-    font-size: 1.2rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .hookify-login-submit {
-    padding: 1rem;
-    font-size: 1.1rem !important;
-  }
-  .hookify-login-submit svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-submit {
-    padding: 0.85rem;
-    font-size: 0.95rem !important;
-  }
-  .hookify-login-submit svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.hookify-login-submit:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.45);
-}
-
-/* Footer - LARGER on Mobile */
-.hookify-login-footer {
-  text-align: center;
-  margin-top: 3rem;
-}
-
-.hookify-login-note {
-  font-size: 1.2rem !important;
-  color: #9ca3af;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-footer {
-    margin-top: 2rem;
-  }
-  .hookify-login-note {
-    font-size: 0.9rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .hookify-login-note {
-    font-size: 0.75rem !important;
-  }
-}
-
-/* Spinner */
-.hookify-login-spinner-container {
-  text-align: center;
-  padding: 3rem;
-}
-
-.hookify-login-spinner {
-  width: 80px;
-  height: 80px;
-  border: 5px solid rgba(79, 70, 229, 0.2);
-  border-top-color: rgb(79, 70, 229);
-  border-radius: 50%;
-  animation: loginSpin 1s linear infinite;
-  margin: 0 auto 1.5rem;
-}
-
-.hookify-login-spinner-container p {
-  font-size: 1.3rem;
-  color: #6b7280;
-}
-
-@media (max-width: 768px) {
-  .hookify-login-spinner {
-    width: 50px;
-    height: 50px;
-    border-width: 3px;
-  }
-  .hookify-login-spinner-container p {
-    font-size: 1rem;
-  }
-}
-
-@keyframes loginSpin {
-  to { transform: rotate(360deg); }
-}
-
-/* Redirect Card */
-.hookify-login-redirect-card {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05));
-  border-radius: 40px;
-  padding: 3.5rem;
-  text-align: center;
-  max-width: 550px;
-  border: 1.5px solid rgba(79, 70, 229, 0.15);
-}
-
-.hookify-login-redirect-hearts {
-  display: flex;
-  justify-content: center;
-  gap: 1.2rem;
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
-}
-
-.hookify-login-redirect-card h3 {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 1rem;
-}
-
-.hookify-login-redirect-card p {
-  font-size: 1.2rem;
-  color: #6b7280;
-  margin-bottom: 2rem;
-}
-
-.hookify-login-redirect-progress {
-  width: 100%;
-  height: 8px;
-  background: rgba(79, 70, 229, 0.2);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 2rem;
-}
-
-.hookify-login-redirect-progress-bar {
+.login-carousel-wrapper {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  animation: loginProgress 1.5s linear;
+  position: relative;
 }
 
-@keyframes loginProgress {
-  from { width: 0%; }
-  to { width: 100%; }
+/* Carousel Styles */
+.carousel-global-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-.hookify-login-redirect-user p {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+.carousel-slides-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
-.hookify-login-redirect-role {
-  display: inline-block;
-  padding: 0.4rem 1.2rem;
-  background: linear-gradient(135deg, rgb(79, 70, 229), rgb(139, 92, 246));
-  border-radius: 50px;
-  font-size: 1rem;
+.carousel-slide-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-slide-item.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.carousel-slide-item:not(.active) {
+  z-index: 0;
+}
+
+/* Navigation Buttons - Hidden on small screens */
+.carousel-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
 }
 
+.carousel-nav-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.prev-button {
+  left: 2rem;
+}
+
+.next-button {
+  right: 2rem;
+}
+
+/* Hide navigation arrows on small screens */
 @media (max-width: 768px) {
-  .hookify-login-redirect-card {
-    padding: 2rem;
+  .carousel-nav-button {
+    display: none;
   }
-  .hookify-login-redirect-hearts {
-    font-size: 2rem;
+}
+
+/* Indicators */
+.carousel-indicators-container {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+}
+
+.carousel-indicator-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.carousel-indicator-dot.active {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  transform: scale(1.2);
+}
+
+.carousel-indicator-dot:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.carousel-indicator-dot:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.indicator-progress {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.carousel-indicator-dot.active .indicator-progress {
+  border-color: #4f46e5;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
   }
-  .hookify-login-redirect-card h3 {
-    font-size: 1.6rem;
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
   }
-  .hookify-login-redirect-card p {
-    font-size: 1rem;
+}
+
+/* Auto Play Control */
+.autoplay-control-button {
+  position: absolute;
+  bottom: 3rem;
+  right: 3rem;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.autoplay-control-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+/* Slide Counter */
+.slide-counter-display {
+  position: absolute;
+  bottom: 3rem;
+  left: 3rem;
+  z-index: 10;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 300;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.current-slide {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.counter-divider {
+  opacity: 0.5;
+}
+
+.total-slides {
+  opacity: 0.7;
+}
+
+/* Login Form Overlay - Left Side */
+.login-form-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  /* Dark gradient from left to right, brightening as it goes right */
+  background: linear-gradient(
+    to right,
+    rgba(10, 6, 24, 0.85) 0%,
+    rgba(10, 6, 24, 0.5) 40%,
+    rgba(10, 6, 24, 0.2) 70%,
+    transparent 100%
+  );
+}
+
+/* Responsive - Mobile screens */
+@media (max-width: 768px) {
+  .login-form-overlay {
+    width: 100%;
+    background: transparent; /* No overlay on mobile */
+    padding: 1rem;
   }
-  .hookify-login-redirect-user p {
-    font-size: 0.9rem;
+  
+  .carousel-nav-button {
+    display: none;
+  }
+  
+  .carousel-indicators-container {
+    bottom: 1.5rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .carousel-indicator-dot {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .autoplay-control-button {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 35px;
+    height: 35px;
+    font-size: 0.8rem;
+  }
+  
+  .slide-counter-display {
+    display: none;
   }
 }
 
 @media (max-width: 480px) {
-  .hookify-login-redirect-card {
-    padding: 1.5rem;
+  .login-form-overlay {
+    padding: 0.5rem;
   }
-  .hookify-login-redirect-hearts {
-    font-size: 1.5rem;
-    gap: 0.8rem;
-  }
-  .hookify-login-redirect-card h3 {
-    font-size: 1.3rem;
-  }
-  .hookify-login-redirect-card p {
-    font-size: 0.85rem;
+}
+
+/* Large screens - keep everything as is */
+@media (min-width: 1024px) {
+  .login-form-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(10, 6, 24, 0.85) 0%,
+      rgba(10, 6, 24, 0.5) 40%,
+      rgba(10, 6, 24, 0.2) 70%,
+      transparent 100%
+    );
   }
 }
