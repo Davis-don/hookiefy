@@ -1,93 +1,40 @@
-// LoginForm.tsx - Pure Form with its own styles
-import React, { useState } from 'react';
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+// LoginForm.tsx - Pure Form Container
 import './loginform.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { useState } from 'react';
 
-interface LoginFormProps {
-  onLogin?: (email: string, password: string) => void;
-}
+function LoginForm() {
+    const [loginData,setLoginData]=useState({
+        email:'',
+        password:''
+    })
 
-function LoginForm({ onLogin }: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onLogin) {
-      onLogin(email, password);
-    }
-    console.log('Login attempt:', { email, password, rememberMe });
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setLoginData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+        console.log(loginData)
+    };
 
   return (
     <div className="login-form-container">
       <div className="login-form-wrapper">
-        <h2 className="login-title">Welcome Back</h2>
-        <p className="login-subtitle">Sign in to your account</p>
-        
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <div className="input-icon-wrapper">
-              <FaUser className="input-icon" />
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="form-input"
-              />
+        <h3 className="brand-name">Hookiefy</h3>
+        <h1 className="login-heading">LOGIN</h1>
+        <form className="login-form">
+          <input onChange={(e)=>handleChange(e)} className='form-control' type="email" name="email" id="email" placeholder="Email" required />
+          <input onChange={(e)=>handleChange(e)} className='form-control' type="password" name="password" id="password" placeholder="Password" required />
+          <div className="bottom-login-form">
+            <div className="button-container">
+                <button className='login-button' type="submit">Login</button>
+            </div>
+            <div className="forgot-password">
+                <a href="/forgot-password">Forgot Password ?</a>
             </div>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <div className="input-icon-wrapper">
-              <FaLock className="input-icon" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="form-input"
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-
-          <div className="form-options">
-            <label className="remember-me">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span>Remember me</span>
-            </label>
-            <a href="#" className="forgot-password">
-              Forgot Password?
-            </a>
-          </div>
-
-          <button type="submit" className="login-submit-btn">
-            Sign In
-          </button>
-
-          <div className="login-footer">
-            <p>
-              Don't have an account? <a href="#" className="signup-link">Sign Up</a>
-            </p>
-          </div>
+          
         </form>
       </div>
     </div>
