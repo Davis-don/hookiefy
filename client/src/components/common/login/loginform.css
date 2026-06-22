@@ -1,148 +1,244 @@
-/* loginForm.css - Clean Box Form Styles with Blue Theme */
+/* loginform.css - Clean Official Login Form */
 
-.login-form-container {
+/* ============================================
+   MAIN CONTAINER - With Blur Outline
+   ============================================ */
+
+.auth-login-container {
   width: 100%;
-  max-width: 460px;
-  padding: 2.8rem 2.8rem;
+  max-width: 420px;
+  padding: 2.5rem 2.8rem;
   background: #ffffff;
-  border-radius: 30px;
+  border-radius: 20px;
   position: relative;
-  animation: formSlideIn 0.6s ease-out;
+  animation: authSlideIn 0.5s ease-out;
   
-  /* Raised effect with multiple shadows */
+  /* Blur outline effect */
   box-shadow: 
-    0 30px 60px -15px rgba(0, 0, 0, 0.4),
-    0 15px 30px -10px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 0 1px rgba(26, 58, 138, 0.08),
+    0 0 0 3px rgba(26, 58, 138, 0.04),
+    0 0 0 6px rgba(26, 58, 138, 0.02),
+    0 20px 60px rgba(0, 0, 0, 0.06);
   
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
-/* Glowing border effect - Blue theme */
-.login-form-container::before {
+/* Hover effect - subtle lift with enhanced blur */
+.auth-login-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 0 1px rgba(26, 58, 138, 0.12),
+    0 0 0 4px rgba(26, 58, 138, 0.06),
+    0 0 0 8px rgba(26, 58, 138, 0.03),
+    0 25px 70px rgba(0, 0, 0, 0.08);
+}
+
+/* Decorative blur glow effect */
+.auth-login-container::before {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: 33px;
-  padding: 3px;
+  inset: -8px;
+  border-radius: 28px;
   background: linear-gradient(
     135deg,
-    #4f46e5,
-    #7c3aed,
-    #6366f1,
-    #4f46e5
+    rgba(26, 58, 138, 0.06),
+    rgba(26, 58, 138, 0.03),
+    rgba(26, 58, 138, 0.06)
   );
-  background-size: 300% 300%;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  animation: borderGlow 4s ease-in-out infinite;
-  pointer-events: none;
+  filter: blur(12px);
   z-index: -1;
+  opacity: 0.5;
+  transition: all 0.4s ease;
 }
 
-/* Inner glow effect */
-.login-form-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 30px;
-  background: linear-gradient(
-    135deg,
-    rgba(79, 70, 229, 0.03),
-    rgba(124, 58, 237, 0.05),
-    rgba(99, 102, 241, 0.03)
-  );
-  pointer-events: none;
-  z-index: 0;
+.auth-login-container:hover::before {
+  opacity: 0.8;
+  filter: blur(16px);
 }
 
-@keyframes borderGlow {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes formSlideIn {
+@keyframes authSlideIn {
   from {
     opacity: 0;
-    transform: translateX(-40px) scale(0.95);
+    transform: translateY(20px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
-.login-form-wrapper {
+/* ============================================
+   WRAPPER
+   ============================================ */
+
+.auth-login-wrapper {
   width: 100%;
   position: relative;
   z-index: 1;
-  text-align: left;
 }
 
-/* Brand Name - Hookiefy */
-.login-form-wrapper .brand-name {
-  font-size: 2.8rem;
+/* ============================================
+   HEADER SECTION
+   ============================================ */
+
+.auth-login-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.auth-brand-name {
+  font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 0.2rem 0;
-  letter-spacing: 1px;
-  color: #1a1a2e;
+  letter-spacing: 1.5px;
+  color: #1a2a6a;
   font-family: 'Georgia', 'Times New Roman', serif;
-  display: block;
 }
 
-/* LOGIN Heading */
-.login-form-wrapper .login-heading {
-  font-size: 4rem;
-  font-weight: 900;
-  color: rgb(2, 2, 76);
-  margin: 0 0 2rem 0;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  display: block;
+.auth-login-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0a1a5a;
+  margin: 0.3rem 0 0.1rem 0;
+  letter-spacing: 0.5px;
 }
 
-/* Form Styles */
-.login-form {
+.auth-login-subtitle {
+  font-size: 0.95rem;
+  color: #6a7a9a;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ============================================
+   FORM
+   ============================================ */
+
+.auth-login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 0.5rem;
+  gap: 1.2rem;
 }
 
-/* Input fields */
-.login-form input.form-control {
-  padding: 1rem 1.2rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 1.15rem;
+/* ============================================
+   INPUT GROUPS
+   ============================================ */
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a2a5a;
+  letter-spacing: 0.3px;
+}
+
+/* Input fields - Medium size */
+.auth-input-field {
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #d0d8e8;
+  border-radius: 10px;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
-  background: #f8f9fc;
-  color: #1a1a2e;
+  background: #f8faff;
+  color: #0a1a5a;
   font-family: inherit;
   width: 100%;
+  box-sizing: border-box;
+  height: 44px;
 }
 
-.login-form input.form-control:focus {
-  border-color: #4f46e5;
+.auth-input-field:focus {
+  border-color: #1a3a8a;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(26, 58, 138, 0.08);
   outline: none;
 }
 
-.login-form input.form-control::placeholder {
-  color: #a0a0b0;
+.auth-input-field::placeholder {
+  color: #9aabca;
   font-weight: 400;
-  font-size: 1.15rem;
+  font-size: 0.9rem;
 }
 
-/* Bottom section - button and forgot password */
-.bottom-login-form {
+/* Password Wrapper */
+.auth-password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.auth-password-input {
+  padding-right: 3rem;
+}
+
+/* Password Toggle Button */
+.auth-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #8a9aba;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+
+.auth-password-toggle:hover {
+  color: #1a3a8a;
+  background: rgba(26, 58, 138, 0.06);
+}
+
+.auth-password-toggle:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.auth-password-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   MESSAGES
+   ============================================ */
+
+.auth-success-message {
+  color: #059669;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  background: rgba(5, 150, 105, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #059669;
+}
+
+.auth-error-message {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  background: rgba(220, 38, 38, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #dc2626;
+}
+
+/* ============================================
+   FORM ACTIONS
+   ============================================ */
+
+.auth-form-actions {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -151,162 +247,283 @@
   gap: 1rem;
 }
 
-/* Button container */
-.button-container {
-  flex: 1;
-}
+/* ============================================
+   LOGIN BUTTON - Official
+   ============================================ */
 
-/* Login Button */
-.login-button {
-  background-color: rgb(6, 6, 104);
+.auth-login-btn {
+  background: #0a1a5a;
   color: white;
-  border-radius: 0.5rem;
-  font-size: 1.3rem;
-  padding-block: 0.5rem;
-  padding-inline: 1rem;
-  font-weight: bold;
+  border-radius: 10px;
+  font-size: 1rem;
+  padding: 0.7rem 1.8rem;
+  font-weight: 600;
   border: none;
   cursor: pointer;
-  width: 100%;
+  flex: 1;
   transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  height: 44px;
+  position: relative;
+  overflow: hidden;
 }
 
-.login-button:hover {
-  background-color: rgb(10, 10, 140);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -8px rgba(6, 6, 104, 0.4);
+.auth-login-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  transition: left 0.5s ease;
 }
 
-.login-button:active {
+.auth-login-btn:hover::before {
+  left: 100%;
+}
+
+.auth-login-btn:hover {
+  background: #1a3a8a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -6px rgba(10, 26, 90, 0.3);
+}
+
+.auth-login-btn:active {
   transform: translateY(0) scale(0.98);
 }
 
-/* Forgot password link */
-.forgot-password {
+.auth-login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ============================================
+   FORGOT PASSWORD
+   ============================================ */
+
+.auth-forgot-password {
   flex-shrink: 0;
 }
 
-.forgot-password a {
-  color: black;
+.auth-forgot-password a {
+  color: #5a7aaa;
   text-decoration: none;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   font-weight: 500;
   transition: color 0.3s ease;
   white-space: nowrap;
+  border-bottom: 1.5px solid transparent;
+  padding-bottom: 2px;
+  display: inline-block;
 }
 
-.forgot-password a:hover {
-  color: #4f46e5;
+.auth-forgot-password a:hover {
+  color: #0a1a5a;
+  border-bottom-color: #1a3a8a;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
 @media (max-width: 1024px) {
-  .login-form-container {
-    max-width: 400px;
-    padding: 2.2rem 2rem;
-  }
-  
-  .login-form-wrapper .brand-name {
-    font-size: 2.4rem;
-  }
-  
-  .login-form-wrapper .login-heading {
-    font-size: 3.2rem;
-    letter-spacing: 5px;
+  .auth-login-container {
+    max-width: 380px;
+    padding: 2rem 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .login-form-container {
+  .auth-login-container {
     max-width: 100%;
-    padding: 2rem 1.5rem;
+    padding: 2rem 1.8rem;
     margin: 1rem;
     border-radius: 16px;
   }
   
-  .login-form-container::before {
-    border-radius: 19px;
+  .auth-login-container::before {
+    border-radius: 24px;
   }
   
-  .login-form-container::after {
-    border-radius: 16px;
-  }
-  
-  /* Center only Hookiefy and LOGIN text on mobile */
-  .login-form-wrapper {
+  .auth-login-header {
     text-align: center;
   }
   
-  .login-form-wrapper .brand-name {
-    font-size: 2.8rem;
+  .auth-brand-name {
+    font-size: 1.4rem;
   }
   
-  .login-form-wrapper .login-heading {
-    font-size: 3.5rem;
-    letter-spacing: 5px;
-    margin: 0 0 1.8rem 0;
+  .auth-login-title {
+    font-size: 1.6rem;
   }
   
-  .bottom-login-form {
+  .auth-login-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .auth-form-actions {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.8rem;
+    align-items: stretch;
   }
   
-  .forgot-password a {
-    font-size: 1.1rem;
+  .auth-login-btn {
+    width: 100%;
   }
   
-  .login-button {
-    font-size: 1.2rem;
-    padding-block: 0.6rem;
+  .auth-forgot-password {
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
-  .login-form-container {
+  .auth-login-container {
     padding: 1.5rem 1.2rem;
-    border-radius: 12px;
+    margin: 0.8rem;
+    border-radius: 14px;
   }
   
-  .login-form-container::before {
-    border-radius: 15px;
+  .auth-login-container::before {
+    border-radius: 22px;
   }
   
-  .login-form-container::after {
-    border-radius: 12px;
+  .auth-brand-name {
+    font-size: 1.2rem;
   }
   
-  /* Center only Hookiefy and LOGIN text on mobile */
-  .login-form-wrapper {
-    text-align: center;
+  .auth-login-title {
+    font-size: 1.4rem;
   }
   
-  .login-form-wrapper .brand-name {
-    font-size: 2.4rem;
+  .auth-login-subtitle {
+    font-size: 0.85rem;
   }
   
-  .login-form-wrapper .login-heading {
-    font-size: 2.8rem;
-    letter-spacing: 4px;
-    margin: 0 0 1.5rem 0;
+  .auth-input-field {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.9rem;
+    height: 40px;
   }
   
-  .login-form input.form-control {
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
+  .auth-input-label {
+    font-size: 0.8rem;
   }
   
-  .login-form input.form-control::placeholder {
-    font-size: 1rem;
+  .auth-login-btn {
+    font-size: 0.95rem;
+    padding: 0.6rem 1.2rem;
+    height: 40px;
   }
   
-  .login-button {
-    font-size: 1.1rem;
-    padding-block: 0.5rem;
-    padding-inline: 0.8rem;
+  .auth-forgot-password a {
+    font-size: 0.85rem;
   }
   
-  .forgot-password a {
-    font-size: 1rem;
+  .auth-password-toggle {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .auth-password-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .auth-success-message,
+  .auth-error-message {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  .auth-login-container {
+    background: #1a1a2e;
+    box-shadow: 
+      0 0 0 1px rgba(79, 70, 229, 0.1),
+      0 0 0 3px rgba(79, 70, 229, 0.05),
+      0 0 0 6px rgba(79, 70, 229, 0.02),
+      0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+  
+  .auth-login-container::before {
+    background: linear-gradient(
+      135deg,
+      rgba(79, 70, 229, 0.08),
+      rgba(79, 70, 229, 0.04),
+      rgba(79, 70, 229, 0.08)
+    );
+  }
+  
+  .auth-brand-name {
+    color: #aabbdd;
+  }
+  
+  .auth-login-title {
+    color: #ccd8ee;
+  }
+  
+  .auth-login-subtitle {
+    color: #7a8aaa;
+  }
+  
+  .auth-input-label {
+    color: #9aabca;
+  }
+  
+  .auth-input-field {
+    background: #1e293b;
+    border-color: #334155;
+    color: #ccd8ee;
+  }
+  
+  .auth-input-field:focus {
+    background: #1e293b;
+    border-color: #4a6aaa;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+  
+  .auth-input-field::placeholder {
+    color: #5a6a8a;
+  }
+  
+  .auth-password-toggle {
+    color: #5a7aaa;
+  }
+  
+  .auth-password-toggle:hover {
+    color: #8aabdd;
+    background: rgba(79, 70, 229, 0.1);
+  }
+  
+  .auth-login-btn {
+    background: #2a4a8a;
+  }
+  
+  .auth-login-btn:hover {
+    background: #3a5aaa;
+  }
+  
+  .auth-forgot-password a {
+    color: #6a8aaa;
+  }
+  
+  .auth-forgot-password a:hover {
+    color: #aabbdd;
+    border-bottom-color: #4a6aaa;
+  }
+  
+  .auth-success-message {
+    background: rgba(5, 150, 105, 0.12);
+  }
+  
+  .auth-error-message {
+    background: rgba(220, 38, 38, 0.12);
   }
 }

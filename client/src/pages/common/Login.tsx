@@ -1,5 +1,5 @@
 // Login.tsx
-import  { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaChevronLeft, FaChevronRight, FaPlay, FaPause } from 'react-icons/fa';
 import LoginForm from '../../components/common/login/Loginform';
 import './login.css';
@@ -197,9 +197,9 @@ function Login() {
           </div>
         </div>
 
-        {/* Login Form Overlay - Left Side */}
+        {/* Login Form Overlay - Positioned Left */}
         <div className="login-form-overlay">
-          <LoginForm  />
+          <LoginForm />
         </div>
       </div>
     </div>

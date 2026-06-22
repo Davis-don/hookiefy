@@ -4,7 +4,6 @@ import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
 import Unauthorized from "./pages/common/Unauthorized";
 import Clientaccount from "./pages/client/Clientaccount";
-import ProtectedRoute from "./components/protected/Protectedroute";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/common/Homepage";
@@ -15,6 +14,7 @@ import About from "./pages/common/About";
 import Contact from "./pages/contact/Contact";
 import Privacy from "./pages/common/Privacy";
 import Terms from "./pages/common/Terms";
+import Protectedroute from "./components/protected/Protectedroute";
 import "./App.css";
 
 function App() {
@@ -26,13 +26,13 @@ function App() {
           <Route path="/" element={
             <Mainlayout><Homepage /></Mainlayout>} />
 
-             <Route path="/about" element={
+          <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />
-             <Route path="/contact" element={
+          <Route path="/contact" element={
             <Mainlayout><Contact /></Mainlayout>} />
-             <Route path="/privacy" element={
+          <Route path="/privacy" element={
             <Mainlayout><Privacy /></Mainlayout>} />
-                <Route path="/terms" element={
+          <Route path="/terms" element={
             <Mainlayout><Terms /></Mainlayout>} />
               
           <Route path="/signin" element={
@@ -55,35 +55,41 @@ function App() {
             </Toastlayout>
           } />
 
-          {/* Protected routes */}
+          {/* Protected routes - Superadmin only */}
           <Route
             path="/superadmin/dashboard"
             element={
-              <ProtectedRoute>
+              <Protectedroute>
                 <Toastlayout>
                   <Superadmin />
                 </Toastlayout>
-              </ProtectedRoute>
+              </Protectedroute>
+                
+             
             }
           />
+          
+          {/* Protected routes - Admin only */}
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute>
+              <Protectedroute>
                 <Toastlayout>
                   <Admin />
                 </Toastlayout>
-              </ProtectedRoute>
+              </Protectedroute>
             }
           />
+          
+          {/* Protected routes - User only */}
           <Route
-            path="/client/dashboard"
+            path="/user/dashboard"
             element={
-              <ProtectedRoute>
+              <Protectedroute>
                 <Toastlayout>
                   <Clientaccount />
                 </Toastlayout>
-              </ProtectedRoute>
+              </Protectedroute>
             }
           />
           

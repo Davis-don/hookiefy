@@ -14,17 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+# hookify/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from account.views import CookieTokenObtainPairView
 from account.views import health_check
 
 urlpatterns = [
-    path('', health_check), 
+    # Health check
+    path('', health_check, name='health_check'),
+    
+    # Admin
     path('admin/', admin.site.urls),
+    
+    # Account app URLs (includes all auth and user management endpoints)
     path('account/', include('account.urls')),
-
-    path('login/token/', CookieTokenObtainPairView.as_view()),
+    
+    
+    # Token refresh - using simplejwt's built-in view
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
