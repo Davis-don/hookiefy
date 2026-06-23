@@ -2,6 +2,10 @@
     --border-color: rgb(93, 93, 93);
 }
 
+/* =========================
+   MAIN LAYOUT
+========================= */
+
 .overall-superadmin-container{
     width: 100%;
     height: 100vh;
@@ -9,116 +13,219 @@
     display: flex;
     flex-direction: row;
 }
+
 @media screen and (max-width: 63.75em){
     .overall-superadmin-container{
-      position: relative;
+        position: relative;
     }
 }
 
+/* =========================
+   SIDEBAR
+========================= */
+
 .left-side-dashboard-sidebar{
     width: 20rem;
-    height: 100%;
+    height: 100vh;
     background-color: rgb(3, 32, 35);
     border-style: solid;
     border-color: var(--border-color);
     border-width: 0px 1px 0 1px;
-}
-@media screen and (max-width: 63.75em){
-.left-side-dashboard-sidebar{
-position: absolute;
-z-index: +2;
-width: 35rem;
-visibility: hidden;
-}
-}
-@media screen and (max-width: 25em){
-.left-side-dashboard-sidebar{
-  width: 70vw;
-}
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.right-side-dashboard-body{
-    width: calc(100% - 20rem);
-    background-color: rgb(1, 26, 28);
-    height: 100%;
-}
+/* Mobile sidebar */
 @media screen and (max-width: 63.75em){
- .right-side-dashboard-body{
-  position: absolute;
-  z-index: +1;
-  width: 100%;
- } 
+    .left-side-dashboard-sidebar{
+        position: absolute;
+        z-index: 2;
+        width: 35rem;
+        visibility: hidden;
+    }
 }
+
+@media screen and (max-width: 25em){
+    .left-side-dashboard-sidebar{
+        width: 70vw;
+    }
+}
+
+/* =========================
+   SIDEBAR HEADER
+========================= */
 
 .sidebar-header-container-dashboard{
     border-color: var(--border-color);
     border-width: 0 0 1px 0;
     border-style: solid;
+
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+
     height: 6rem;
 }
-@media screen and (max-width: 63.75em){
-  .sidebar-header-container-dashboard{
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  padding-inline: 3rem;
-}
-}
 
+@media screen and (max-width: 63.75em){
+    .sidebar-header-container-dashboard{
+        justify-content: space-between;
+        padding-inline: 3rem;
+    }
+}
 
 .sidebar-header-container-dashboard h3{
     color: white;
 }
+
+/* Hide close on desktop */
 @media screen and (min-width: 63.751em){
-  .close-sidebar-btn{
-display: none;
-}
+    .close-sidebar-btn{
+        display: none;
+    }
 }
 
+/* =========================
+   SIDEBAR BODY (IMPORTANT FIX AREA)
+========================= */
 
-/* Start of body styles */
+.sidebar-body-container{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding-block: 3rem;
+    padding-inline: 1rem;
+}
+
+/* NAV LINKS */
+.sidebar-body-container ul{
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar_link{
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding-inline: 1rem;
+}
+.sidebar_link:hover{
+background-color: rgb(74, 74, 74);
+border-radius: 1rem;
+}
+.active-sidebar{
+background-color: rgb(37, 58, 1);
+border-radius: 1rem;
+}
+
+/* =========================
+   FOOTER (FIXED VISIBILITY)
+========================= */
+
+.sidebar-body-footer{
+    flex-shrink: 0;
+    margin-top: auto;
+
+    width: 100%;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.footer-content{
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.footer-title{
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.footer-sub{
+    color: rgba(255,255,255,0.6);
+    font-size: .85rem;
+}
+
+/* =========================
+   RIGHT SIDE BODY
+========================= */
+
+.right-side-dashboard-body{
+    width: calc(100% - 20rem);
+    background-color: rgb(1, 26, 28);
+    height: 100vh;
+}
+
+@media screen and (max-width: 63.75em){
+    .right-side-dashboard-body{
+        position: absolute;
+        z-index: 1;
+        width: 100%;
+    }
+}
+
+/* =========================
+   HEADER
+========================= */
 
 .body-header-container{
     border-width: 0 0 1px 0;
     border-color: var(--border-color);
     border-style: solid;
+
     height: 6rem;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+
     padding-inline: 2rem;
 }
+
 .left-side-header-body-container{
-display: flex;
-flex-direction: row;
-gap: 1rem;
-justify-content: center;
-align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
 }
+
 @media screen and (min-width: 63.751em){
-  .menu-icon-dash{
-display: none;
-}
+    .menu-icon-dash{
+        display: none;
+    }
 }
 
 .left-side-header-body-container h3{
     color: white;
     font-weight: 400;
     font-size: 1.5rem;
-   
 }
+
+/* =========================
+   TOP ICONS
+========================= */
 
 .right-side-header-body-container ul{
     list-style: none;
     display: flex;
     flex-direction: row;
     gap: 1rem;
-    justify-content: center;
     align-items: center;
     margin: 0;
     padding: 0;
@@ -130,11 +237,14 @@ display: none;
     cursor: pointer;
 }
 
+/* =========================
+   USER SECTION
+========================= */
+
 .current-user{
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
     gap: 1rem;
     position: relative;
 }
@@ -152,7 +262,9 @@ display: none;
     background-color: white;
 }
 
-/* Dropdown */
+/* =========================
+   DROPDOWN
+========================= */
 
 .user-dropdown{
     position: relative;
@@ -172,9 +284,11 @@ display: none;
     top: calc(100% + 1rem);
     right: 0;
     width: 12rem;
+
     background-color: rgb(3, 32, 35);
     border: 1px solid var(--border-color);
     border-radius: .5rem;
+
     overflow: hidden;
     z-index: 1000;
 
@@ -199,11 +313,10 @@ display: none;
     text-align: left;
     cursor: pointer;
     font-size: .95rem;
-    transition: background-color .2s ease;
 }
 
 .dropdown-item-custom:hover{
-    background-color: rgba(255, 255, 255, .08);
+    background-color: rgba(255,255,255,0.08);
 }
 
 .logout-btn{
