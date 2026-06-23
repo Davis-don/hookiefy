@@ -23,9 +23,10 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={
+          <Route path="/homepage" element={
             <Mainlayout><Homepage /></Mainlayout>} />
-
+               <Route path="/" element={
+            <Superadmin />} />
           <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />
           <Route path="/contact" element={
