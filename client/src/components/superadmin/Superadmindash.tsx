@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import Welcomeconcernsuperadmin from './Welcomeconcernsuperadmin'
 import Substats from './Substats'
 import Graphicalsectionsuperdash from './Graphicalsectionsuperdash'
+import Moreanalysissuperadmindash from './Moreanalysissuperadmindash'
 
 function Superadmindash() {
   return (
@@ -15,6 +16,9 @@ function Superadmindash() {
       </div>
       <div className="graphical-rep-stats-superadmin-container">
      <Graphicalsectionsuperdash/>
+      </div>
+      <div className="more-analytics-section-superadmin">
+    <Moreanalysissuperadmindash/>
       </div>
     </div>
   )
