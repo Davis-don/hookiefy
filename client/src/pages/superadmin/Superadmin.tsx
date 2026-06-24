@@ -45,7 +45,7 @@ function Superadmin() {
       >
         <div className="sidebar-header-container-dashboard">
           <div className="brandname-container">
-            <h3>Hookiefy</h3>
+            <h3 style={{cursor:"pointer"}} onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Hookiefy</h3>
           </div>
 
           <div
@@ -88,7 +88,10 @@ function Superadmin() {
               <IoMdMenu className='fs-1' />
             </h3>
 
-            <h3>Dashboard</h3>
+            {dash && <h3 style={{cursor:"pointer"}}>Dashboard</h3>}
+            {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>users</h3>}
+            {settings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>settings</h3>}
+            {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>finances</h3>}
           </div>
 
           <div className="right-side-header-body-container">

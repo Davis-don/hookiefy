@@ -1,0 +1,20 @@
+.overall-super-admin-users-container{
+
+}
+.header-section-user-super-admin{
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+padding: 1.5rem;
+border-bottom: 1px solid var(--border-color);
+}
+.left-side-header-superadmin{
+color: white;
+font-size: 2rem;
+}
+.right-side-header-super-admin-user{
+
+}
+.users-body-section-container{
+
+}
