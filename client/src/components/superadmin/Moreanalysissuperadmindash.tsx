@@ -1,12 +1,15 @@
 import './moreanalysissuperadmindash.css'
 import Topfivetransactions from './Topfivehoookups'
+import Revenuebylocations from './Revenuebylocations'
 function Moreanalysissuperadmindash() {
   return (
     <div className="overall-more-analysis-admin-container">
       <div className="left-more-analysis-card">
         <Topfivetransactions/>
       </div>
-      <div className="right-more-analysis-card"></div>
+      <div className="right-more-analysis-card">
+     <Revenuebylocations/>
+      </div>
     </div>
   )
 }
