@@ -1,325 +1,464 @@
-:root{
-    --border-color: rgb(93, 93, 93);
+/* ============================================
+   superadmin.css — FUTURISTIC CYBER THEME
+   (only colors, glows, glassmorphism, buttons)
+   ============================================ */
+
+:root {
+  /* ----- base palette (cyber / neon blue) ----- */
+  --border-color: rgba(0, 255, 255, 0.25);
+  --sidebar-background: rgba(2, 20, 24, 0.96);
+  --body-background: #071316;
+
+  /* glow accents */
+  --glow-cyan: #00e5ff;
+  --glow-blue: #0099ff;
+  --glow-pink: #ff2d95;
+
+  /* glass & transparency */
+  --glass-bg: rgba(0, 255, 255, 0.04);
+  --glass-border: rgba(0, 255, 255, 0.2);
+
+  /* text */
+  --text-primary: #d6f0f5;
+  --text-secondary: #87c7d6;
+}
+
+/* =========================
+   GLOBAL RESET / SCROLL
+========================= */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glow-cyan) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--glow-cyan);
+  border-radius: 20px;
+  box-shadow: 0 0 12px var(--glow-cyan);
 }
 
 /* =========================
    MAIN LAYOUT
 ========================= */
+.overall-superadmin-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  background: var(--body-background);
+  backdrop-filter: blur(2px);
+}
 
-.overall-superadmin-container{
-    width: 100%;
-    height: 100vh;
+@media screen and (max-width: 63.75em) {
+  .overall-superadmin-container {
     position: relative;
-    display: flex;
-    flex-direction: row;
-}
-
-@media screen and (max-width: 63.75em){
-    .overall-superadmin-container{
-        position: relative;
-    }
+  }
 }
 
 /* =========================
-   SIDEBAR
+   SIDEBAR — glassmorphism + glow
 ========================= */
-
-.left-side-dashboard-sidebar{
-    width: 20rem;
-    height: 100vh;
-    background-color: rgb(3, 32, 35);
-    border-style: solid;
-    border-color: var(--border-color);
-    border-width: 0px 1px 0 1px;
-
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+.left-side-dashboard-sidebar {
+  width: 20rem;
+  height: 100vh;
+  background: var(--sidebar-background);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.25s ease;
 }
 
-/* Mobile sidebar */
-@media screen and (max-width: 63.75em){
-    .left-side-dashboard-sidebar{
-        position: absolute;
-        z-index: 2;
-        width: 35rem;
-        visibility: hidden;
-    }
+@media screen and (max-width: 63.75em) {
+  .left-side-dashboard-sidebar {
+    position: absolute;
+    z-index: 20;
+    width: 35rem;
+    visibility: hidden;
+    border-right: 1px solid var(--glow-cyan);
+    box-shadow: 0 0 50px rgba(0, 229, 255, 0.15);
+  }
 }
 
-@media screen and (max-width: 25em){
-    .left-side-dashboard-sidebar{
-        width: 70vw;
-    }
+@media screen and (max-width: 25em) {
+  .left-side-dashboard-sidebar {
+    width: 70vw;
+  }
 }
 
 /* =========================
-   SIDEBAR HEADER
+   SIDEBAR HEADER — neon glow
 ========================= */
-
-.sidebar-header-container-dashboard{
-    border-color: var(--border-color);
-    border-width: 0 0 1px 0;
-    border-style: solid;
-
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-
-    height: 6rem;
+.sidebar-header-container-dashboard {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 6rem;
+  padding-inline: 1.5rem;
+  background: rgba(0, 255, 255, 0.02);
 }
 
-@media screen and (max-width: 63.75em){
-    .sidebar-header-container-dashboard{
-        justify-content: space-between;
-        padding-inline: 3rem;
-    }
+@media screen and (max-width: 63.75em) {
+  .sidebar-header-container-dashboard {
+    justify-content: space-between;
+    padding-inline: 2rem;
+  }
 }
 
-.sidebar-header-container-dashboard h3{
-    color: white;
+.sidebar-header-container-dashboard h3 {
+  color: #b6f9ff;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.6), 0 0 30px rgba(0, 153, 255, 0.3);
 }
 
-/* Hide close on desktop */
-@media screen and (min-width: 63.751em){
-    .close-sidebar-btn{
-        display: none;
-    }
+.close-sidebar-btn {
+  cursor: pointer;
+  transition: 0.2s;
+}
+.close-sidebar-btn:hover {
+  transform: scale(1.1) rotate(90deg);
+  color: var(--glow-cyan);
+}
+
+@media screen and (min-width: 63.751em) {
+  .close-sidebar-btn {
+    display: none;
+  }
 }
 
 /* =========================
-   SIDEBAR BODY (IMPORTANT FIX AREA)
+   SIDEBAR BODY — futuristic links
 ========================= */
-
-.sidebar-body-container{
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    padding-block: 3rem;
-    padding-inline: 1rem;
+.sidebar-body-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  padding-block: 2.5rem;
+  padding-inline: 0.5rem;
 }
 
-/* NAV LINKS */
-.sidebar-body-container ul{
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-    flex: 1;
-    margin: 0;
-    padding: 0;
+.sidebar-body-container ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  flex: 1;
+  margin: 0;
+  padding: 0.5rem;
 }
 
-.sidebar_link{
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    padding-inline: 1rem;
+/* --- sidebar links (neon) --- */
+.sidebar_link {
+  color: var(--text-secondary);
+  font-size: 1.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.7rem 1.2rem;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.25s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  letter-spacing: 0.3px;
+  position: relative;
 }
-.sidebar_link:hover{
-background-color: rgb(74, 74, 74);
-border-radius: 1rem;
+
+.sidebar_link:hover {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #e6faff;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+  transform: translateX(6px);
 }
-.active-sidebar{
-background-color: rgb(37, 58, 1);
-border-radius: 1rem;
+
+.active-sidebar {
+  background: rgba(0, 229, 255, 0.12) !important;
+  border: 1px solid var(--glow-cyan) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.15), inset 0 0 20px rgba(0, 229, 255, 0.05);
+  border-radius: 1.5rem;
+  transform: translateX(4px);
 }
 
 /* =========================
-   FOOTER (FIXED VISIBILITY)
+   FOOTER — glass + glow
 ========================= */
-
-.sidebar-body-footer{
-    flex-shrink: 0;
-    margin-top: auto;
-
-    width: 100%;
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+.sidebar-body-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  width: 100%;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: rgba(0, 255, 255, 0.01);
+  backdrop-filter: blur(4px);
 }
 
-.footer-content{
-    display: flex;
-    flex-direction: column;
-    gap: .2rem;
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.footer-title{
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
+.footer-title {
+  color: #b6f9ff;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 
-.footer-sub{
-    color: rgba(255,255,255,0.6);
-    font-size: .85rem;
+.footer-sub {
+  color: rgba(150, 220, 240, 0.6);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
 }
 
 /* =========================
    RIGHT SIDE BODY
 ========================= */
-
-.right-side-dashboard-body{
-    width: calc(100% - 20rem);
-    background-color: rgb(1, 26, 28);
-    height: 100vh;
+.right-side-dashboard-body {
+  width: calc(100% - 20rem);
+  background: var(--body-background);
+  height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  background-image: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.02) 0%, transparent 50%);
 }
 
-@media screen and (max-width: 63.75em){
-    .right-side-dashboard-body{
-        position: absolute;
-        z-index: 1;
-        width: 100%;
-    }
-}
-
-/* =========================
-   HEADER
-========================= */
-
-.body-header-container{
-    border-width: 0 0 1px 0;
-    border-color: var(--border-color);
-    border-style: solid;
-
-    height: 6rem;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-
-    padding-inline: 2rem;
-}
-
-.left-side-header-body-container{
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    align-items: center;
-}
-
-@media screen and (min-width: 63.751em){
-    .menu-icon-dash{
-        display: none;
-    }
-}
-
-.left-side-header-body-container h3{
-    color: white;
-    font-weight: 400;
-    font-size: 1.5rem;
-}
-
-/* =========================
-   TOP ICONS
-========================= */
-
-.right-side-header-body-container ul{
-    list-style: none;
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-}
-
-.right-side-header-body-container ul li{
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-}
-
-/* =========================
-   USER SECTION
-========================= */
-
-.current-user{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-    position: relative;
-}
-
-.current-user h5{
-    margin: 0;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 500;
-}
-
-.icon-image-holder{
-    width: 3rem;
-    height: 3rem;
-    background-color: white;
-}
-
-/* =========================
-   DROPDOWN
-========================= */
-
-.user-dropdown{
-    position: relative;
-}
-
-.dropdown-btn{
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 1.5rem;
-    padding: 0;
-}
-
-.dropdown-menu-custom{
+@media screen and (max-width: 63.75em) {
+  .right-side-dashboard-body {
     position: absolute;
-    top: calc(100% + 1rem);
-    right: 0;
-    width: 12rem;
-
-    background-color: rgb(3, 32, 35);
-    border: 1px solid var(--border-color);
-    border-radius: .5rem;
-
-    overflow: hidden;
-    z-index: 1000;
-
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all .25s ease;
-}
-
-.user-dropdown:hover .dropdown-menu-custom{
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.dropdown-item-custom{
+    z-index: 1;
     width: 100%;
-    padding: .9rem 1rem;
-    border: none;
-    background: transparent;
-    color: white;
-    text-align: left;
-    cursor: pointer;
-    font-size: .95rem;
+  }
 }
 
-.dropdown-item-custom:hover{
-    background-color: rgba(255,255,255,0.08);
+/* =========================
+   HEADER — glass + neon border
+========================= */
+.body-header-container {
+  border-bottom: 1px solid var(--border-color);
+  height: 6rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 2rem;
+  background: rgba(0, 255, 255, 0.01);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
-.logout-btn{
-    color: #ff6b6b;
-    border-top: 1px solid var(--border-color);
+.left-side-header-body-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media screen and (min-width: 63.751em) {
+  .menu-icon-dash {
+    display: none;
+  }
+}
+
+.left-side-header-body-container h3 {
+  color: var(--text-primary);
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.15);
+}
+
+/* =========================
+   TOP ICONS — neon glow
+========================= */
+.right-side-header-body-container ul {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.right-side-header-body-container ul li {
+  color: var(--text-secondary);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.right-side-header-body-container ul li:hover {
+  color: #ffffff;
+  text-shadow: 0 0 20px var(--glow-cyan), 0 0 40px var(--glow-blue);
+  transform: scale(1.05);
+}
+
+/* =========================
+   USER SECTION — futuristic avatar
+========================= */
+.current-user {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.current-user h5 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.icon-image-holder {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(145deg, var(--glow-cyan), var(--glow-blue));
+  border-radius: 50% !important;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* =========================
+   DROPDOWN — cyber glass
+========================= */
+.user-dropdown {
+  position: relative;
+}
+
+.dropdown-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 0 0.2rem;
+  transition: 0.2s;
+}
+.dropdown-btn:hover {
+  color: #fff;
+  text-shadow: 0 0 15px var(--glow-cyan);
+}
+
+.dropdown-menu-custom {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: 0;
+  width: 13rem;
+  background: rgba(2, 20, 24, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  overflow: hidden;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.96);
+  transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 0 50px rgba(0, 229, 255, 0.08);
+}
+
+.user-dropdown:hover .dropdown-menu-custom {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.dropdown-item-custom {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 400;
+  transition: 0.15s;
+  border-bottom: 1px solid transparent;
+}
+.dropdown-item-custom:hover {
+  background: rgba(0, 229, 255, 0.06);
+  color: #fff;
+  padding-left: 1.6rem;
+  border-bottom-color: var(--border-color);
+}
+
+.logout-btn {
+  color: #ff5e7a;
+  border-top: 1px solid var(--border-color);
+}
+.logout-btn:hover {
+  color: #ff8aa3 !important;
+  background: rgba(255, 45, 95, 0.08) !important;
+}
+
+/* =========================
+   FUTURISTIC BUTTONS (global style for any child)
+========================= */
+button,
+.futuristic-btn {
+  background: transparent;
+  border: 1px solid var(--glow-cyan);
+  color: var(--glow-cyan);
+  padding: 0.6rem 1.8rem;
+  border-radius: 3rem;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
+  backdrop-filter: blur(4px);
+}
+button:hover,
+.futuristic-btn:hover {
+  background: rgba(0, 229, 255, 0.08);
+  box-shadow: 0 0 35px rgba(0, 229, 255, 0.15), inset 0 0 20px rgba(0, 229, 255, 0.03);
+  transform: scale(1.02);
+  color: #fff;
+}
+
+/* =========================
+   EXTRA GLOW FOR CARDS / CHILDREN (optional)
+========================= */
+.glow-card {
+  background: rgba(0, 255, 255, 0.02);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.02);
+}
+
+/* small polish for mobile */
+@media screen and (max-width: 63.75em) {
+  .left-side-header-body-container h3 {
+    font-size: 1.3rem;
+  }
+  .current-user h5 {
+    font-size: 1.1rem;
+  }
 }
