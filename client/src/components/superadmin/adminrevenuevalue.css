@@ -122,6 +122,7 @@
   position: relative;
   z-index: 2;
   min-height: 300px;
+  overflow: visible;
 }
 
 /* --- Pie Chart Labels --- */
@@ -129,9 +130,9 @@
   fill: #d6f0f5 !important;
   font-size: 11px !important;
   font-weight: 500 !important;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6) !important;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.7) !important;
   paint-order: stroke;
-  stroke: rgba(0, 0, 0, 0.6);
+  stroke: rgba(0, 0, 0, 0.8);
   stroke-width: 3px;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -327,7 +328,6 @@
     max-width: 260px;
   }
   
-  /* Smaller label text on medium screens */
   .recharts-pie-label-text {
     font-size: 10px !important;
   }
@@ -337,6 +337,8 @@
   .admin-revenue-chart-container {
     padding: 1rem;
     min-height: 250px;
+    overflow-x: auto;
+    overflow-y: auto;
   }
 
   .admin-chart-header {
@@ -353,6 +355,18 @@
   .admin-chart-total {
     font-size: 0.75rem;
     padding: 0.2rem 0.8rem;
+  }
+
+  .admin-chart-wrapper {
+    min-height: 280px;
+    overflow: visible;
+    width: 100%;
+  }
+
+  /* Make pie chart scrollable horizontally on mobile */
+  .admin-chart-wrapper .recharts-responsive-container {
+    min-width: 350px !important;
+    overflow: visible !important;
   }
 
   .admin-custom-legend {
@@ -384,11 +398,6 @@
     font-size: 0.7rem;
   }
   
-  .admin-chart-wrapper {
-    min-height: 250px;
-  }
-  
-  /* Smaller label text on mobile */
   .recharts-pie-label-text {
     font-size: 9px !important;
   }
@@ -399,6 +408,8 @@
     padding: 0.8rem;
     min-height: 220px;
     border-radius: 0.8rem;
+    overflow-x: auto;
+    overflow-y: auto;
   }
 
   .admin-revenue-chart-container::before {
@@ -418,8 +429,21 @@
     padding: 0.15rem 0.6rem;
   }
 
+  .admin-chart-wrapper {
+    min-height: 250px;
+    overflow: visible;
+    width: 100%;
+  }
+
+  /* Make pie chart scrollable horizontally on very small screens */
+  .admin-chart-wrapper .recharts-responsive-container {
+    min-width: 400px !important;
+    overflow: visible !important;
+  }
+
   .admin-custom-legend {
     gap: 0.4rem;
+    flex-wrap: wrap;
   }
 
   .admin-legend-item {
@@ -488,11 +512,6 @@
     margin: 0.05rem 0;
   }
   
-  .admin-chart-wrapper {
-    min-height: 200px;
-  }
-  
-  /* Even smaller label text on small mobile */
   .recharts-pie-label-text {
     font-size: 8px !important;
   }
@@ -503,5 +522,40 @@
   .admin-revenue-chart-container {
     overflow-y: auto;
     max-height: 90vh;
+  }
+}
+
+/* --- Horizontal scroll indicator for mobile --- */
+@media screen and (max-width: 48em) {
+  .admin-revenue-chart-container::after {
+    content: '← Scroll →';
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(150, 220, 240, 0.3);
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    z-index: 3;
+    background: rgba(2, 20, 24, 0.6);
+    padding: 0.2rem 0.8rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 229, 255, 0.05);
+    opacity: 0;
+    animation: fadeInOut 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .admin-revenue-chart-container::after {
+    font-size: 0.5rem;
+    padding: 0.15rem 0.6rem;
+    bottom: 0.3rem;
   }
 }

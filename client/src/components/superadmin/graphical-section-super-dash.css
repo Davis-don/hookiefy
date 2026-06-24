@@ -151,6 +151,7 @@
   position: relative;
   overflow: hidden;
   
+  
   /* --- Futuristic glass background --- */
   background: rgba(2, 20, 24, 0.7);
   backdrop-filter: blur(12px);
