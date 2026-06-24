@@ -21,6 +21,12 @@
   /* text */
   --text-primary: #d6f0f5;
   --text-secondary: #87c7d6;
+  
+  /* Safe area insets for mobile devices */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 /* =========================
@@ -46,12 +52,14 @@
 ========================= */
 .overall-superadmin-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   position: relative;
   display: flex;
   flex-direction: row;
   background: var(--body-background);
   backdrop-filter: blur(2px);
+  overflow: hidden;
 }
 
 @media screen and (max-width: 63.75em) {
@@ -66,6 +74,7 @@
 .left-side-dashboard-sidebar {
   width: 20rem;
   height: 100vh;
+  height: 100dvh;
   background: var(--sidebar-background);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -85,6 +94,8 @@
     visibility: hidden;
     border-right: 1px solid var(--glow-cyan);
     box-shadow: 0 0 50px rgba(0, 229, 255, 0.15);
+    height: 100vh;
+    height: 100dvh;
   }
 }
 
@@ -106,6 +117,7 @@
   height: 6rem;
   padding-inline: 1.5rem;
   background: rgba(0, 255, 255, 0.02);
+  flex-shrink: 0;
 }
 
 @media screen and (max-width: 63.75em) {
@@ -238,11 +250,15 @@
   width: calc(100% - 20rem);
   background: var(--body-background);
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   padding-bottom: 0;
   background-image: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.02) 0%, transparent 50%);
   display: flex;
   flex-direction: column;
+  /* Add safe area padding for mobile devices */
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
 }
 
 @media screen and (max-width: 63.75em) {
@@ -250,6 +266,8 @@
     position: absolute;
     z-index: 1;
     width: 100%;
+    padding-top: max(var(--safe-area-top), 0px);
+    padding-bottom: max(var(--safe-area-bottom), 0px);
   }
 }
 
@@ -259,6 +277,8 @@
 .dashboard-body-content {
   flex: 1;
   padding-bottom: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* =========================
@@ -267,6 +287,7 @@
 .body-header-container {
   border-bottom: 1px solid var(--border-color);
   height: 6rem;
+  min-height: 6rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -276,6 +297,28 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
+  /* Ensure header is always visible */
+  position: relative;
+  z-index: 10;
+  /* Safe area for notch phones */
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+@media screen and (max-width: 63.75em) {
+  .body-header-container {
+    height: 5rem;
+    min-height: 5rem;
+    padding-inline: 1.2rem;
+    padding-top: max(0.3rem, env(safe-area-inset-top));
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .body-header-container {
+    height: 4.5rem;
+    min-height: 4.5rem;
+    padding-inline: 0.8rem;
+  }
 }
 
 .left-side-header-body-container {
@@ -297,6 +340,18 @@
   font-size: 1.5rem;
   letter-spacing: 1px;
   text-shadow: 0 0 12px rgba(0, 229, 255, 0.15);
+}
+
+@media screen and (max-width: 63.75em) {
+  .left-side-header-body-container h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .left-side-header-body-container h3 {
+    font-size: 1rem;
+  }
 }
 
 /* =========================
@@ -326,6 +381,16 @@
   transform: scale(1.05);
 }
 
+@media screen and (max-width: 30em) {
+  .right-side-header-body-container ul li {
+    font-size: 1.5rem;
+  }
+  
+  .right-side-header-body-container ul {
+    gap: 0.8rem;
+  }
+}
+
 /* =========================
    USER SECTION — futuristic avatar
 ========================= */
@@ -345,6 +410,18 @@
   letter-spacing: 0.3px;
 }
 
+@media screen and (max-width: 63.75em) {
+  .current-user h5 {
+    font-size: 1.1rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .current-user h5 {
+    font-size: 0.9rem;
+  }
+}
+
 .icon-image-holder {
   width: 3rem;
   height: 3rem;
@@ -352,6 +429,14 @@
   border-radius: 50% !important;
   box-shadow: 0 0 25px rgba(0, 229, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 30em) {
+  .icon-image-holder {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 
 /* =========================
@@ -478,6 +563,22 @@ button:hover,
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Safe area for bottom buttons on mobile */
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+@media screen and (max-width: 63.75em) {
+  .dashboard-footer {
+    padding: 1.2rem 1.5rem 1.8rem 1.5rem;
+    padding-bottom: max(1.8rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .dashboard-footer {
+    padding: 0.8rem 1rem 1.2rem 1rem;
+    padding-bottom: max(1.2rem, env(safe-area-inset-bottom));
+  }
 }
 
 .footer-divider {
@@ -492,6 +593,14 @@ button:hover,
     transparent
   );
   margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 30em) {
+  .footer-divider {
+    width: 80%;
+    max-width: 250px;
+    margin-bottom: 0.8rem;
+  }
 }
 
 .footer-content-bottom {
@@ -509,6 +618,20 @@ button:hover,
   font-weight: 300;
   letter-spacing: 1.5px;
   text-align: center;
+}
+
+@media screen and (max-width: 63.75em) {
+  .footer-text {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .footer-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
 }
 
 .footer-highlight {
@@ -531,71 +654,88 @@ button:hover,
   text-align: center;
 }
 
-/* =========================
-   RESPONSIVE — Footer (Centered on all screens)
-========================= */
-@media screen and (max-width: 63.75em) {
-  .dashboard-footer {
-    padding: 1.2rem 1.5rem 1.8rem 1.5rem;
-  }
-  
-  .footer-divider {
-    width: 70%;
-    max-width: 350px;
-  }
-  
-  .footer-text {
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-  }
-  
-  .footer-year {
-    font-size: 0.75rem;
-  }
-}
-
-@media screen and (max-width: 48em) {
-  .dashboard-footer {
-    padding: 1rem 1.2rem 1.5rem 1.2rem;
-  }
-  
-  .footer-divider {
-    width: 80%;
-    max-width: 300px;
-  }
-  
-  .footer-text {
-    font-size: 0.8rem;
-    letter-spacing: 0.8px;
-  }
-  
-  .footer-year {
-    font-size: 0.7rem;
-  }
-}
-
 @media screen and (max-width: 30em) {
-  .dashboard-footer {
-    padding: 0.8rem 1rem 1.2rem 1rem;
-  }
-  
-  .footer-divider {
-    width: 90%;
-    max-width: 250px;
-    margin-bottom: 0.8rem;
-  }
-  
-  .footer-content-bottom {
-    gap: 0.2rem;
-  }
-  
-  .footer-text {
-    font-size: 0.7rem;
-    letter-spacing: 0.5px;
-  }
-  
   .footer-year {
     font-size: 0.65rem;
+  }
+}
+
+/* =========================
+   MOBILE SAFE AREA FIXES
+========================= */
+
+/* iPhone notch / dynamic island safe area */
+@supports (padding: max(0px)) {
+  .body-header-container {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+  
+  .right-side-dashboard-body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .dashboard-footer {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Android status bar fix */
+@media screen and (max-width: 63.75em) and (min-resolution: 2dppx) {
+  .body-header-container {
+    padding-top: max(0.8rem, env(safe-area-inset-top));
+  }
+}
+
+/* Fix for browsers that don't support env() */
+@supports not (padding: env(safe-area-inset-top)) {
+  .body-header-container {
+    padding-top: 0.5rem;
+  }
+  
+  .right-side-dashboard-body {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Ensure header is always visible on small screens */
+@media screen and (max-height: 700px) {
+  .body-header-container {
+    height: 4.5rem;
+    min-height: 4.5rem;
+  }
+  
+  .body-header-container h3 {
+    font-size: 1.1rem;
+  }
+  
+  .current-user h5 {
+    font-size: 0.9rem;
+  }
+}
+
+@media screen and (max-height: 600px) {
+  .body-header-container {
+    height: 4rem;
+    min-height: 4rem;
+  }
+  
+  .body-header-container h3 {
+    font-size: 1rem;
+  }
+  
+  .current-user h5 {
+    font-size: 0.8rem;
+  }
+  
+  .icon-image-holder {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  
+  .right-side-header-body-container ul li {
+    font-size: 1.3rem;
   }
 }
 
