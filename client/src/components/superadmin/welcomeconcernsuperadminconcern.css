@@ -80,7 +80,7 @@
   100% { opacity: 0.8; filter: blur(20px); }
 }
 
-/* --- Content Styles (Keep these as they are) --- */
+/* --- Content Styles --- */
 
 .welcome-emoji {
   font-size: 3.5rem;
@@ -105,6 +105,7 @@
   text-shadow: 0 0 30px rgba(0, 229, 255, 0.15);
   position: relative;
   z-index: 2;
+  word-wrap: break-word;
 }
 
 .welcome-header .highlight {
@@ -134,19 +135,207 @@
   z-index: 2;
   line-height: 1.7;
   margin-bottom: 0;
+  word-wrap: break-word;
 }
 
-/* --- Responsive --- */
+/* ============================================
+   RESPONSIVE — Better padding for mobile
+   ============================================ */
+
+/* Tablet and small laptops */
+@media screen and (max-width: 80.625em) {
+  .overall-concern-main {
+    padding: 2.2rem 2.5rem;
+  }
+  
+  .welcome-header {
+    font-size: 2.2rem;
+  }
+  
+  .welcome-subtitle {
+    max-width: 85%;
+    font-size: 1.05rem;
+  }
+}
+
+/* Large phones and tablets */
 @media screen and (max-width: 63.75em) {
-  .overall-concern-main { padding: 2rem; }
-  .welcome-emoji { font-size: 3rem; }
-  .welcome-header { font-size: 2rem; }
-  .welcome-subtitle { max-width: 90%; font-size: 1rem; }
+  .overall-concern-main {
+    padding: 2rem 2.2rem;
+  }
+  
+  .welcome-emoji {
+    font-size: 3rem;
+  }
+  
+  .welcome-header {
+    font-size: 2rem;
+  }
+  
+  .welcome-subtitle {
+    max-width: 90%;
+    font-size: 1rem;
+  }
 }
 
-@media screen and (max-width: 25em) {
-  .overall-concern-main { padding: 1.5rem; }
-  .welcome-emoji { font-size: 2.5rem; }
-  .welcome-header { font-size: 1.6rem; }
-  .welcome-subtitle { max-width: 100%; font-size: 0.9rem; }
+/* Medium phones */
+@media screen and (max-width: 48em) {
+  .overall-concern-main {
+    padding: 1.8rem 1.8rem;
+    border-radius: 1.2rem;
+  }
+  
+  .overall-concern-main::before {
+    border-radius: 1.2rem;
+  }
+  
+  .overall-concern-main::after {
+    border-radius: 1.2rem;
+  }
+  
+  .welcome-emoji {
+    font-size: 2.8rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .welcome-header {
+    font-size: 1.8rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .welcome-subtitle {
+    max-width: 95%;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+}
+
+/* Small phones */
+@media screen and (max-width: 30em) {
+  .overall-concern-main {
+    padding: 1.5rem 1.2rem;
+    border-radius: 1rem;
+  }
+  
+  .overall-concern-main::before {
+    border-radius: 1rem;
+  }
+  
+  .overall-concern-main::after {
+    border-radius: 1rem;
+  }
+  
+  .welcome-emoji {
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+  }
+  
+  .welcome-header {
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+  }
+  
+  .welcome-subtitle {
+    max-width: 100%;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+  }
+}
+
+/* Extra small phones (like iPhone SE) */
+@media screen and (max-width: 22em) {
+  .overall-concern-main {
+    padding: 1.2rem 0.8rem;
+    border-radius: 0.8rem;
+  }
+  
+  .overall-concern-main::before {
+    border-radius: 0.8rem;
+  }
+  
+  .overall-concern-main::after {
+    border-radius: 0.8rem;
+  }
+  
+  .welcome-emoji {
+    font-size: 2rem;
+    margin-bottom: 0.1rem;
+  }
+  
+  .welcome-header {
+    font-size: 1.2rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.1rem;
+  }
+  
+  .welcome-subtitle {
+    max-width: 100%;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.2px;
+  }
+}
+
+/* Landscape mode on phones */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .overall-concern-main {
+    padding: 1rem 2rem;
+    justify-content: center;
+  }
+  
+  .welcome-emoji {
+    font-size: 2rem;
+    margin-bottom: 0.1rem;
+  }
+  
+  .welcome-header {
+    font-size: 1.5rem;
+    margin-bottom: 0.1rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.85rem;
+    max-width: 90%;
+    line-height: 1.4;
+  }
+}
+
+/* Very tall phones (like Galaxy Fold) */
+@media screen and (min-height: 800px) and (max-width: 48em) {
+  .overall-concern-main {
+    padding: 3rem 2.5rem;
+  }
+  
+  .welcome-header {
+    font-size: 2.5rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1.2rem;
+    max-width: 80%;
+  }
+}
+
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+  .overall-concern-main {
+    padding-left: max(3rem, env(safe-area-inset-left));
+    padding-right: max(3rem, env(safe-area-inset-right));
+  }
+  
+  @media screen and (max-width: 48em) {
+    .overall-concern-main {
+      padding-left: max(1.8rem, env(safe-area-inset-left));
+      padding-right: max(1.8rem, env(safe-area-inset-right));
+    }
+  }
+  
+  @media screen and (max-width: 30em) {
+    .overall-concern-main {
+      padding-left: max(1.2rem, env(safe-area-inset-left));
+      padding-right: max(1.2rem, env(safe-area-inset-right));
+    }
+  }
 }
