@@ -139,8 +139,10 @@
 .fau-popup-input {
   position: absolute;
   top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 250px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 280px;
+  max-width: 90vw;
   background: rgba(2, 20, 24, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -157,22 +159,22 @@
 @keyframes fauPopupFade {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.95);
+    transform: translateX(-50%) translateY(-8px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
 .fau-search-input-popup {
   width: 100%;
-  padding: 0.6rem 2.5rem 0.6rem 1rem;
+  padding: 0.7rem 2.8rem 0.7rem 1.2rem;
   border-radius: 0.8rem;
   border: 1px solid rgba(0, 229, 255, 0.15);
   background: rgba(0, 229, 255, 0.03);
   color: #d6f0f5;
-  font-size: 0.95rem;
+  font-size: 1rem;
   outline: none;
   transition: all 0.3s ease;
 }
@@ -193,7 +195,7 @@
   transform: translateY(-50%);
   color: rgba(150, 220, 240, 0.3);
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
 }
 
@@ -205,8 +207,10 @@
 .fau-dropdown-menu {
   position: absolute;
   top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 180px;
+  max-width: 90vw;
   background: rgba(2, 20, 24, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -223,12 +227,12 @@
 .fau-dropdown-item {
   display: block;
   width: 100%;
-  padding: 0.6rem 1rem;
+  padding: 0.7rem 1.2rem;
   border: none;
   border-radius: 0.6rem;
   background: transparent;
   color: rgba(150, 220, 240, 0.7);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
@@ -334,18 +338,18 @@
   
   .fau-header-right {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
   }
   
   .fau-search-filter-container {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
   
   .fau-icon-btn {
-    padding: 0.6rem 1rem;
+    padding: 0.6rem 1.2rem;
     font-size: 1rem;
   }
   
@@ -354,13 +358,30 @@
   }
   
   .fau-popup-input {
-    min-width: 200px;
-    right: -1rem;
+    min-width: 260px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .fau-popup-input {
+    animation: fauPopupFadeMobile 0.2s ease-out;
+  }
+  
+  @keyframes fauPopupFadeMobile {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
   }
   
   .fau-dropdown-menu {
-    right: -1rem;
-    min-width: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 170px;
   }
   
   .fau-clear-filters-btn {
@@ -383,23 +404,35 @@
     font-size: 1.1rem;
   }
   
+  .fau-header-right {
+    justify-content: center;
+  }
+  
+  .fau-search-filter-container {
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  
   .fau-icon-btn {
     padding: 0.7rem 1.2rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
     border-radius: 2rem;
   }
   
   .fau-icon-btn svg {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
   
   .fau-dropdown-arrow {
-    font-size: 0.8rem !important;
+    font-size: 0.7rem !important;
   }
   
   .fau-popup-input {
-    min-width: 180px;
-    right: -0.5rem;
+    min-width: 260px;
+    max-width: 92vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.6rem;
   }
   
   .fau-search-input-popup {
@@ -408,8 +441,10 @@
   }
   
   .fau-dropdown-menu {
-    right: -0.5rem;
-    min-width: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 160px;
+    max-width: 92vw;
   }
   
   .fau-dropdown-item {
@@ -454,27 +489,89 @@
     font-size: 1rem;
   }
   
+  .fau-header-right {
+    justify-content: center;
+  }
+  
+  .fau-search-filter-container {
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  
   .fau-icon-btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
   }
   
   .fau-icon-btn svg {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
   
   .fau-popup-input {
-    min-width: 160px;
-    right: 0;
+    min-width: 200px;
+    max-width: 94vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem;
+    border-radius: 0.8rem;
+  }
+  
+  .fau-search-input-popup {
+    font-size: 0.9rem;
+    padding: 0.6rem 2.2rem 0.6rem 0.8rem;
+    border-radius: 0.6rem;
+  }
+  
+  .fau-popup-clear {
+    font-size: 1rem;
+    right: 0.8rem;
   }
   
   .fau-dropdown-menu {
-    right: 0;
-    min-width: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 140px;
+    max-width: 94vw;
+    border-radius: 0.8rem;
+    padding: 0.3rem;
+  }
+  
+  .fau-dropdown-item {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.8rem;
   }
   
   .fau-clear-filters-btn {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  
+  .fau-clear-filters-btn svg {
+    font-size: 1rem;
+  }
+}
+
+/* --- Landscape phone fix --- */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .fau-popup-input {
+    top: calc(100% + 0.3rem);
+    padding: 0.3rem;
+    min-width: 200px;
+  }
+  
+  .fau-search-input-popup {
+    padding: 0.4rem 2rem 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .fau-dropdown-menu {
+    top: calc(100% + 0.3rem);
+    padding: 0.2rem;
+    min-width: 130px;
+  }
+  
+  .fau-dropdown-item {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
   }
 }
