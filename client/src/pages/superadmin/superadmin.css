@@ -565,6 +565,7 @@ button:hover,
   align-items: center;
   /* Safe area for bottom buttons on mobile */
   padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  margin-top: 2rem;
 }
 
 @media screen and (max-width: 63.75em) {
