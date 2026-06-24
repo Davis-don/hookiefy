@@ -170,7 +170,7 @@
   border: 1px solid rgba(255, 82, 82, 0.2);
 }
 
-/* --- Action Buttons (VISIBLE ICONS) --- */
+/* --- Action Buttons (Transparent with Glowing Icons) --- */
 .fau-action-buttons {
   display: flex;
   gap: 0.8rem;
@@ -187,39 +187,56 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1.3rem;
-  color: #ffffff !important;
+  background: transparent !important;
+  position: relative;
 }
 
 .fau-action-btn:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
-.fau-action-btn svg {
-  color: #ffffff !important;
-  font-size: 1.3rem;
-}
-
-/* Edit Button - White Icon on Cyan Background */
+/* Edit Button - Glowing Cyan Icon */
 .fau-edit-btn {
-  background: linear-gradient(135deg, #00e5ff, #0099ff);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  color: #00e5ff !important;
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
 
 .fau-edit-btn:hover {
-  background: linear-gradient(135deg, #00e5ff, #0077ff);
-  box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
+  color: #00e5ff !important;
+  text-shadow: 
+    0 0 30px rgba(0, 229, 255, 0.5),
+    0 0 60px rgba(0, 229, 255, 0.2);
 }
 
-/* Delete Button - White Icon on Red Background */
+.fau-edit-btn svg {
+  color: #00e5ff !important;
+  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.2));
+}
+
+.fau-edit-btn:hover svg {
+  filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.4));
+}
+
+/* Delete Button - Glowing Red Icon */
 .fau-delete-btn {
-  border: 1px solid rgba(255, 82, 82, 0.3);
-  box-shadow: 0 0 20px rgba(255, 82, 82, 0.15);
+  color: #ff5252 !important;
+  text-shadow: 0 0 20px rgba(255, 82, 82, 0.3);
 }
 
 .fau-delete-btn:hover {
-  background: linear-gradient(135deg, #ff5252, #b71c1c);
-  box-shadow: 0 0 40px rgba(255, 82, 82, 0.3);
+  color: #ff5252 !important;
+  text-shadow: 
+    0 0 30px rgba(255, 82, 82, 0.5),
+    0 0 60px rgba(255, 82, 82, 0.2);
+}
+
+.fau-delete-btn svg {
+  color: #ff5252 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 82, 82, 0.2));
+}
+
+.fau-delete-btn:hover svg {
+  filter: drop-shadow(0 0 20px rgba(255, 82, 82, 0.4));
 }
 
 /* --- No Users Found --- */
@@ -271,10 +288,6 @@
     height: 2.5rem;
     font-size: 1.1rem;
   }
-  
-  .fau-action-btn svg {
-    font-size: 1.1rem;
-  }
 }
 
 @media screen and (max-width: 48em) {
@@ -320,10 +333,6 @@
   .fau-action-btn {
     width: 2.2rem;
     height: 2.2rem;
-    font-size: 1rem;
-  }
-  
-  .fau-action-btn svg {
     font-size: 1rem;
   }
 }
@@ -376,10 +385,6 @@
   .fau-action-btn {
     width: 1.8rem;
     height: 1.8rem;
-    font-size: 0.8rem;
-  }
-  
-  .fau-action-btn svg {
     font-size: 0.8rem;
   }
   

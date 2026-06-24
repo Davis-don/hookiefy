@@ -1,8 +1,11 @@
 import './usertablefetch.css'
 import { useState } from 'react'
 import { FiUser, FiUsers, FiShield, FiSearch } from 'react-icons/fi'
+import { AiTwotoneEdit } from "react-icons/ai";
+import { MdDelete } from "react-icons/md";
 import { sampleUsers } from '../../data/allusers'
 import type { User } from '../../data/allusers'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 interface UsertablefetchProps {
   searchTerm: string
@@ -151,21 +154,17 @@ function Usertablefetch({ searchTerm, selectedRole, searchType }: Usertablefetch
                 </td>
                 <td>
                   <div className="fau-action-buttons">
-                    <button 
-                      className="fau-action-btn fau-edit-btn"
-                      onClick={() => handleEdit(user.id)}
-                      title="Edit user"
-                    >
-                      E
+                    <button
+                    className='btn btn-outline-info'
+                    onClick={() => handleEdit(user.id)}>
+                      <AiTwotoneEdit className='fs-2'/>
                     </button>
-                    <button 
-                      className="fau-action-btn fau-delete-btn"
-                      onClick={() => handleDelete(user.id)}
-                      title="Delete user"
+                     <button
+                     className='btn btn-outline-danger'
+                     onClick={() => handleDelete(user.id)}>
+                      <MdDelete className='fs-2'/>
+                    </button>
                     
-                    >
-                      D
-                    </button>
                   </div>
                 </td>
               </tr>
