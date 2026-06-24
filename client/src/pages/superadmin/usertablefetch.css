@@ -78,7 +78,7 @@
   padding: 1rem 1.2rem;
   color: #d6f0f5;
   vertical-align: middle;
-  font-size: 0.95rem;
+  font-size: 1.5rem;
 }
 
 /* --- User Info --- */
@@ -111,12 +111,12 @@
 .fau-full-name {
   color: #d6f0f5;
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1.5rem;
 }
 
 .fau-user-id {
   color: rgba(150, 220, 240, 0.4);
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 
 /* --- Email & Phone --- */
