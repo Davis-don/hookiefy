@@ -1,3 +1,374 @@
-.overall-fetch-all-users{
-    
+/* ============================================
+   fetchallusers.css — Fetch All Users
+   ============================================ */
+
+.fau-main-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  background: transparent;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.fau-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.2rem 1.5rem;
+  border-radius: 1.2rem;
+  
+  background: rgba(2, 20, 24, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 0 40px rgba(0, 229, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.fau-header-container::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.2rem;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(0, 229, 255, 0.2),
+      rgba(123, 47, 252, 0.15),
+      rgba(0, 153, 255, 0.2));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fau-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fau-header-left h2 {
+  color: #d6f0f5;
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+  margin: 0;
+}
+
+.fau-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fau-search-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   SEARCH
+   ============================================ */
+
+.fau-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fau-search-icon {
+  position: absolute;
+  left: 0.8rem;
+  color: rgba(150, 220, 240, 0.3);
+  font-size: 1rem;
+}
+
+.fau-search-input {
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(0, 229, 255, 0.03);
+  color: #d6f0f5;
+  font-size: 0.9rem;
+  width: 220px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.fau-search-input:focus {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+  background: rgba(0, 229, 255, 0.06);
+}
+
+.fau-search-input::placeholder {
+  color: rgba(150, 220, 240, 0.3);
+}
+
+/* ============================================
+   FILTERS
+   ============================================ */
+
+.fau-filter-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fau-filter-icon {
+  position: absolute;
+  left: 0.8rem;
+  color: rgba(150, 220, 240, 0.3);
+  font-size: 0.9rem;
+}
+
+.fau-filter-select {
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(0, 229, 255, 0.03);
+  color: #d6f0f5;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 10px;
+  padding-right: 2.5rem;
+  min-width: 140px;
+}
+
+.fau-filter-select:focus {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+}
+
+.fau-filter-select option {
+  background: #0a1a1e;
+  color: #d6f0f5;
+}
+
+.fau-role-filter {
+  padding: 0.5rem 1.2rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(0, 229, 255, 0.03);
+  color: #d6f0f5;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 10px;
+  padding-right: 2.5rem;
+  min-width: 120px;
+}
+
+.fau-role-filter:focus {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+}
+
+.fau-role-filter option {
+  background: #0a1a1e;
+  color: #d6f0f5;
+}
+
+/* ============================================
+   TABLE BODY
+   ============================================ */
+
+.fau-table-body {
+  flex: 1;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  min-height: 300px;
+  position: relative;
+  
+  background: rgba(2, 20, 24, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 0 40px rgba(0, 229, 255, 0.03);
+}
+
+.fau-table-body::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.2rem;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(0, 229, 255, 0.2),
+      rgba(123, 47, 252, 0.15),
+      rgba(0, 153, 255, 0.2));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media screen and (max-width: 80.625em) {
+  .fau-main-container {
+    padding: 1rem;
+  }
+  
+  .fau-search-input {
+    width: 180px;
+  }
+}
+
+@media screen and (max-width: 63.75em) {
+  .fau-header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+  }
+  
+  .fau-header-left h2 {
+    font-size: 1.3rem;
+  }
+  
+  .fau-header-right {
+    width: 100%;
+  }
+  
+  .fau-search-filter-container {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .fau-search-wrapper {
+    width: 100%;
+  }
+  
+  .fau-search-input {
+    width: 100%;
+  }
+  
+  .fau-filter-wrapper {
+    width: 100%;
+  }
+  
+  .fau-filter-select,
+  .fau-role-filter {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .fau-main-container {
+    padding: 0.8rem;
+    gap: 1rem;
+  }
+  
+  .fau-header-container {
+    padding: 0.8rem 1rem;
+  }
+  
+  .fau-header-left h2 {
+    font-size: 1.1rem;
+  }
+  
+  .fau-filter-select,
+  .fau-role-filter {
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem 0.4rem 2rem;
+  }
+  
+  .fau-search-input {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem 0.4rem 2rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .fau-main-container {
+    padding: 0.5rem;
+    gap: 0.8rem;
+  }
+  
+  .fau-header-container {
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.8rem;
+  }
+  
+  .fau-header-container::before {
+    border-radius: 0.8rem;
+  }
+  
+  .fau-table-body {
+    border-radius: 0.8rem;
+  }
+  
+  .fau-table-body::before {
+    border-radius: 0.8rem;
+  }
+  
+  .fau-header-left h2 {
+    font-size: 1rem;
+  }
+  
+  .fau-filter-select,
+  .fau-role-filter {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.8rem 0.3rem 1.8rem;
+    background-size: 8px;
+    background-position: right 0.6rem center;
+  }
+  
+  .fau-search-input {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem 0.3rem 1.8rem;
+  }
+  
+  .fau-search-icon {
+    font-size: 0.8rem;
+    left: 0.6rem;
+  }
+  
+  .fau-filter-icon {
+    font-size: 0.7rem;
+    left: 0.6rem;
+  }
 }

@@ -1,0 +1,390 @@
+/* ============================================
+   usertablefetch.css — User Table
+   ============================================ */
+
+.fau-table-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* --- Custom Scrollbar --- */
+.fau-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fau-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 229, 255, 0.03);
+  border-radius: 10px;
+}
+
+.fau-table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00e5ff, #0099ff);
+  border-radius: 10px;
+}
+
+.fau-table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #00e5ff rgba(0, 229, 255, 0.03);
+}
+
+/* --- Table --- */
+.fau-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  min-width: 800px;
+}
+
+.fau-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.fau-table thead tr {
+  background: rgba(0, 229, 255, 0.05);
+  border-bottom: 2px solid rgba(0, 229, 255, 0.1);
+}
+
+.fau-table thead th {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  color: #b6f9ff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.fau-table tbody tr {
+  border-bottom: 1px solid rgba(0, 229, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.fau-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.fau-table tbody tr:hover {
+  background: rgba(0, 229, 255, 0.03);
+}
+
+.fau-table tbody td {
+  padding: 1rem 1.2rem;
+  color: #d6f0f5;
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+/* --- User Info --- */
+.fau-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.fau-user-avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #071316;
+  flex-shrink: 0;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.fau-user-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.fau-full-name {
+  color: #d6f0f5;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.fau-user-id {
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 0.75rem;
+}
+
+/* --- Email & Phone --- */
+.fau-email-cell {
+  color: rgba(150, 220, 240, 0.8);
+  font-size: 0.95rem;
+}
+
+.fau-phone-cell {
+  color: rgba(150, 220, 240, 0.7);
+  font-size: 0.95rem;
+}
+
+/* --- Role Badge --- */
+.fau-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fau-role-badge svg {
+  font-size: 1rem;
+}
+
+/* --- Status Badge --- */
+.fau-status-badge {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.fau-status-active {
+  background: rgba(0, 230, 118, 0.15);
+  color: #00e676;
+  border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+.fau-status-inactive {
+  background: rgba(255, 82, 82, 0.15);
+  color: #ff5252;
+  border: 1px solid rgba(255, 82, 82, 0.2);
+}
+
+/* --- Action Buttons (VISIBLE ICONS) --- */
+.fau-action-buttons {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.fau-action-btn {
+  width: 2.8rem;
+  height: 2.8rem;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  color: #ffffff !important;
+}
+
+.fau-action-btn:hover {
+  transform: scale(1.15);
+}
+
+.fau-action-btn svg {
+  color: #ffffff !important;
+  font-size: 1.3rem;
+}
+
+/* Edit Button - White Icon on Cyan Background */
+.fau-edit-btn {
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+}
+
+.fau-edit-btn:hover {
+  background: linear-gradient(135deg, #00e5ff, #0077ff);
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
+}
+
+/* Delete Button - White Icon on Red Background */
+.fau-delete-btn {
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  box-shadow: 0 0 20px rgba(255, 82, 82, 0.15);
+}
+
+.fau-delete-btn:hover {
+  background: linear-gradient(135deg, #ff5252, #b71c1c);
+  box-shadow: 0 0 40px rgba(255, 82, 82, 0.3);
+}
+
+/* --- No Users Found --- */
+.fau-no-users-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: rgba(150, 220, 240, 0.3);
+}
+
+.fau-no-users-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.fau-no-users-found p {
+  font-size: 1.1rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media screen and (max-width: 63.75em) {
+  .fau-table {
+    min-width: 700px;
+    font-size: 0.95rem;
+  }
+  
+  .fau-table thead th,
+  .fau-table tbody td {
+    padding: 0.8rem 1rem;
+  }
+  
+  .fau-user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .fau-full-name {
+    font-size: 1rem;
+  }
+  
+  .fau-action-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .fau-action-btn svg {
+    font-size: 1.1rem;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .fau-table {
+    min-width: 600px;
+    font-size: 0.9rem;
+  }
+  
+  .fau-table thead th,
+  .fau-table tbody td {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .fau-user-avatar {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 0.8rem;
+  }
+  
+  .fau-full-name {
+    font-size: 0.9rem;
+  }
+  
+  .fau-email-cell,
+  .fau-phone-cell {
+    font-size: 0.85rem;
+  }
+  
+  .fau-role-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+  
+  .fau-role-badge svg {
+    font-size: 0.8rem;
+  }
+  
+  .fau-status-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+  
+  .fau-action-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1rem;
+  }
+  
+  .fau-action-btn svg {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .fau-table {
+    min-width: 500px;
+    font-size: 0.8rem;
+  }
+  
+  .fau-table thead th,
+  .fau-table tbody td {
+    padding: 0.4rem 0.5rem;
+  }
+  
+  .fau-user-avatar {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.7rem;
+  }
+  
+  .fau-full-name {
+    font-size: 0.8rem;
+  }
+  
+  .fau-user-id {
+    font-size: 0.55rem;
+  }
+  
+  .fau-email-cell,
+  .fau-phone-cell {
+    font-size: 0.75rem;
+  }
+  
+  .fau-role-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    gap: 0.2rem;
+  }
+  
+  .fau-role-badge svg {
+    font-size: 0.7rem;
+  }
+  
+  .fau-status-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+  
+  .fau-action-btn {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .fau-action-btn svg {
+    font-size: 0.8rem;
+  }
+  
+  .fau-action-buttons {
+    gap: 0.4rem;
+  }
+}
