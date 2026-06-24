@@ -115,10 +115,23 @@ function Superadmin() {
         </div>
 
         {/* Body content */}
-        {dash && <Superadmindash/>}
-        {users && <Superadminusers/>}
-        {settings && <Superadminsettings/>}
-        {finances && <Superadminfinances/>}
+        <div className="dashboard-body-content">
+          {dash && <Superadmindash/>}
+          {users && <Superadminusers/>}
+          {settings && <Superadminsettings/>}
+          {finances && <Superadminfinances/>}
+        </div>
+
+        {/* Footer */}
+        <div className="dashboard-footer">
+          <div className="footer-divider"></div>
+          <div className="footer-content-bottom">
+            <span className="footer-text">
+              Developed by <span className="footer-highlight">Kinstry Systems</span>
+            </span>
+            <span className="footer-year">© {new Date().getFullYear()}</span>
+          </div>
+        </div>
 
       </div>
     </div>

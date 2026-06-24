@@ -195,7 +195,7 @@
 }
 
 /* =========================
-   FOOTER — glass + glow
+   SIDEBAR FOOTER — glass + glow
 ========================= */
 .sidebar-body-footer {
   flex-shrink: 0;
@@ -239,8 +239,10 @@
   background: var(--body-background);
   height: 100vh;
   overflow-y: auto;
-  padding-bottom: 2rem;
+  padding-bottom: 0;
   background-image: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.02) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
 }
 
 @media screen and (max-width: 63.75em) {
@@ -249,6 +251,14 @@
     z-index: 1;
     width: 100%;
   }
+}
+
+/* =========================
+   BODY CONTENT
+========================= */
+.dashboard-body-content {
+  flex: 1;
+  padding-bottom: 1rem;
 }
 
 /* =========================
@@ -265,6 +275,7 @@
   background: rgba(0, 255, 255, 0.01);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .left-side-header-body-container {
@@ -451,6 +462,141 @@ button:hover,
   border: 1px solid var(--border-color);
   border-radius: 1.5rem;
   box-shadow: 0 0 40px rgba(0, 229, 255, 0.02);
+}
+
+/* =========================
+   DASHBOARD FOOTER — Futuristic (Centered)
+========================= */
+.dashboard-footer {
+  flex-shrink: 0;
+  padding: 1.5rem 2rem 2rem 2rem;
+  background: rgba(0, 255, 255, 0.01);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-top: 1px solid rgba(0, 229, 255, 0.05);
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-divider {
+  width: 60%;
+  max-width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 229, 255, 0.2), 
+    rgba(123, 47, 252, 0.2), 
+    rgba(0, 229, 255, 0.2), 
+    transparent
+  );
+  margin-bottom: 1rem;
+}
+
+.footer-content-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.footer-text {
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 0.95rem;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+.footer-highlight {
+  color: #00e5ff;
+  font-weight: 500;
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.footer-highlight:hover {
+  text-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+  color: #b6f9ff;
+}
+
+.footer-year {
+  color: rgba(150, 220, 240, 0.25);
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* =========================
+   RESPONSIVE — Footer (Centered on all screens)
+========================= */
+@media screen and (max-width: 63.75em) {
+  .dashboard-footer {
+    padding: 1.2rem 1.5rem 1.8rem 1.5rem;
+  }
+  
+  .footer-divider {
+    width: 70%;
+    max-width: 350px;
+  }
+  
+  .footer-text {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+  
+  .footer-year {
+    font-size: 0.75rem;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .dashboard-footer {
+    padding: 1rem 1.2rem 1.5rem 1.2rem;
+  }
+  
+  .footer-divider {
+    width: 80%;
+    max-width: 300px;
+  }
+  
+  .footer-text {
+    font-size: 0.8rem;
+    letter-spacing: 0.8px;
+  }
+  
+  .footer-year {
+    font-size: 0.7rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .dashboard-footer {
+    padding: 0.8rem 1rem 1.2rem 1rem;
+  }
+  
+  .footer-divider {
+    width: 90%;
+    max-width: 250px;
+    margin-bottom: 0.8rem;
+  }
+  
+  .footer-content-bottom {
+    gap: 0.2rem;
+  }
+  
+  .footer-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .footer-year {
+    font-size: 0.65rem;
+  }
 }
 
 /* small polish for mobile */
