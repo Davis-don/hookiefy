@@ -116,7 +116,7 @@
 
 .fau-user-id {
   color: rgba(150, 220, 240, 0.4);
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
 /* --- Email & Phone --- */
@@ -280,7 +280,7 @@
   }
   
   .fau-full-name {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
   
   .fau-action-btn {
@@ -308,7 +308,7 @@
   }
   
   .fau-full-name {
-    font-size: 0.9rem;
+    font-size: 1.5rem;
   }
   
   .fau-email-cell,
@@ -355,7 +355,7 @@
   }
   
   .fau-full-name {
-    font-size: 0.8rem;
+    font-size: 1.5rem;
   }
   
   .fau-user-id {
