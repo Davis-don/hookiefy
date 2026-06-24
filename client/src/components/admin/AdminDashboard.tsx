@@ -1,8 +1,8 @@
-
+import './admindashboard.css'
 
 function AdminDashboard() {
   return (
-    <div>AdminDashboard</div>
+    <div className="overall-admin-dashboard-container"></div>
   )
 }
 

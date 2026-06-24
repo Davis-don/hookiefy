@@ -1,0 +1,152 @@
+/* ============================================
+   welcomeconcernsuperadminconcern.css
+   ============================================ */
+
+.overall-concern-main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 3rem; /* Add internal padding for better spacing */
+  position: relative;
+  
+  /* --- Raised Glass Effect with Bright Gradient Border --- */
+  background: rgba(2, 20, 24, 0.65); /* Semi-transparent dark base */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* The key to the bright, visible gradient outline */
+  border: 2px solid transparent;
+  background-clip: padding-box; /* Important for the gradient border trick */
+  border-radius: 1.5rem;
+  
+  /* Bright, vibrant gradient for the outline */
+  box-shadow: 
+    0 0 0 2px transparent, /* Fallback */
+    0 8px 32px rgba(0, 0, 0, 0.4), /* Raised shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.05); /* Subtle inner highlight */
+  
+  /* This creates the glowing gradient border */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Pseudo-element for the bright gradient border */
+.overall-concern-main::before {
+  content: '';
+  position: absolute;
+  inset: -2px; /* Sit inside the padding */
+  border-radius: 1.5rem;
+  padding: 2px; /* Thickness of the border */
+  background: linear-gradient(135deg, 
+    #00e5ff, /* Cyan */
+    #0099ff, /* Bright Blue */
+    #7b2ffc, /* Purple for depth */
+    #00e5ff
+  );
+  background-size: 300% 300%;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+  animation: gradient-shift 4s ease-in-out infinite alternate; /* Animated shine */
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* --- Additional Glow Effect --- */
+.overall-concern-main::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 1.5rem;
+  z-index: -1;
+  filter: blur(15px);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(0, 153, 255, 0.1), rgba(123, 47, 252, 0.2));
+  opacity: 0.6;
+  animation: glow-pulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+  0% { opacity: 0.4; filter: blur(12px); }
+  100% { opacity: 0.8; filter: blur(20px); }
+}
+
+/* --- Content Styles (Keep these as they are) --- */
+
+.welcome-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+  animation: float-emoji 3s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes float-emoji {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.welcome-header {
+  color: #d6f0f5;
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(0, 229, 255, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-header .highlight {
+  color: #00e5ff;
+  text-shadow: 0 0 30px rgba(0, 229, 255, 0.3), 0 0 60px rgba(0, 229, 255, 0.1);
+  position: relative;
+}
+
+.welcome-header .highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00e5ff, transparent);
+  filter: blur(2px);
+}
+
+.welcome-subtitle {
+  color: rgba(150, 220, 240, 0.75);
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  max-width: 80%;
+  position: relative;
+  z-index: 2;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+/* --- Responsive --- */
+@media screen and (max-width: 63.75em) {
+  .overall-concern-main { padding: 2rem; }
+  .welcome-emoji { font-size: 3rem; }
+  .welcome-header { font-size: 2rem; }
+  .welcome-subtitle { max-width: 90%; font-size: 1rem; }
+}
+
+@media screen and (max-width: 25em) {
+  .overall-concern-main { padding: 1.5rem; }
+  .welcome-emoji { font-size: 2.5rem; }
+  .welcome-header { font-size: 1.6rem; }
+  .welcome-subtitle { max-width: 100%; font-size: 0.9rem; }
+}
