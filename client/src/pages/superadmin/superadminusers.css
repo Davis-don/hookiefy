@@ -15,6 +15,41 @@ font-size: 1.5rem;
 .right-side-header-super-admin-user{
 
 }
-.users-body-section-container{
 
+.add-new-user-main-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  z-index: 9999;
+
+  width: 50rem;
+  height: 45rem;
+  border-radius: 1rem;
+  background-color: white;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-inline: 1rem;
+  padding-block: 1rem;
+
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.add-new-user-main-form::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+@media screen and (max-width: 38.75em) {
+  .add-new-user-main-form {
+    width: 90%;
+  }
+}
+@media screen and (max-width: 22.5em) {
+  .add-new-user-main-form {
+    width: 95%;
+  }
 }

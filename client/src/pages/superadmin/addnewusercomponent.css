@@ -1,0 +1,39 @@
+.overall-add-new-user-form{
+
+}
+.add-users-header-form{
+color:black;
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+padding: 1.5rem;
+font-size: 2rem;
+border-bottom: 2px solid black;
+
+}
+.add-user-form-div-actual{
+    margin-top: 1rem;
+}
+.form-component-div-actual{
+display: flex;
+flex-direction: column;
+gap: 2rem;
+}
+.submit-user-button{
+width: 100%;
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+
+}
+.confirm{
+background-color: black;
+color: white;
+padding: 1rem;
+font-size: 1rem;
+}
+.close{
+color: white;
+padding: 1rem;
+font-size: 1rem;
+}
