@@ -34,8 +34,9 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 0 40px rgba(0, 229, 255, 0.03);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .fau-header-container::before {
@@ -54,7 +55,7 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 1;
+  z-index: -1;
 }
 
 .fau-header-left {
@@ -75,131 +76,198 @@
 .fau-header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.fau-search-filter-container {
-  display: flex;
-  align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
 }
 
 /* ============================================
-   SEARCH
+   ICON-BASED FILTER BAR
    ============================================ */
 
-.fau-search-wrapper {
-  position: relative;
+.fau-search-filter-container {
   display: flex;
   align-items: center;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
 }
 
-.fau-search-icon {
-  position: absolute;
-  left: 0.8rem;
-  color: rgba(150, 220, 240, 0.3);
+/* --- Icon Wrapper --- */
+.fau-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* --- Icon Button --- */
+.fau-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(0, 229, 255, 0.03);
+  color: rgba(150, 220, 240, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
   font-size: 1rem;
+  white-space: nowrap;
 }
 
-.fau-search-input {
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
-  border-radius: 2rem;
+.fau-icon-btn:hover {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #d6f0f5;
+}
+
+.fau-icon-btn.fau-active {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #00e5ff;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
+}
+
+.fau-icon-btn svg {
+  font-size: 1.2rem;
+}
+
+.fau-dropdown-arrow {
+  font-size: 0.7rem !important;
+  opacity: 0.5;
+}
+
+/* --- Popup Search Input --- */
+.fau-popup-input {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 250px;
+  background: rgba(2, 20, 24, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  box-shadow: 
+    0 8px 40px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(0, 229, 255, 0.03);
+  z-index: 100;
+  animation: fauPopupFade 0.2s ease-out;
+}
+
+@keyframes fauPopupFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fau-search-input-popup {
+  width: 100%;
+  padding: 0.6rem 2.5rem 0.6rem 1rem;
+  border-radius: 0.8rem;
   border: 1px solid rgba(0, 229, 255, 0.15);
   background: rgba(0, 229, 255, 0.03);
   color: #d6f0f5;
-  font-size: 0.9rem;
-  width: 220px;
+  font-size: 0.95rem;
   outline: none;
   transition: all 0.3s ease;
 }
 
-.fau-search-input:focus {
+.fau-search-input-popup:focus {
   border-color: rgba(0, 229, 255, 0.4);
   box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
-  background: rgba(0, 229, 255, 0.06);
 }
 
-.fau-search-input::placeholder {
+.fau-search-input-popup::placeholder {
   color: rgba(150, 220, 240, 0.3);
 }
 
-/* ============================================
-   FILTERS
-   ============================================ */
+.fau-popup-clear {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(150, 220, 240, 0.3);
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
 
-.fau-filter-wrapper {
-  position: relative;
+.fau-popup-clear:hover {
+  color: #ff5252;
+}
+
+/* --- Dropdown Menu --- */
+.fau-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 160px;
+  background: rgba(2, 20, 24, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 1rem;
+  padding: 0.4rem;
+  box-shadow: 
+    0 8px 40px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(0, 229, 255, 0.03);
+  z-index: 100;
+  animation: fauPopupFade 0.2s ease-out;
+}
+
+.fau-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: rgba(150, 220, 240, 0.7);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.fau-dropdown-item:hover {
+  background: rgba(0, 229, 255, 0.06);
+  color: #d6f0f5;
+}
+
+.fau-dropdown-item.fau-selected {
+  background: rgba(0, 229, 255, 0.08);
+  color: #00e5ff;
+}
+
+/* --- Clear Filters Button --- */
+.fau-clear-filters-btn {
   display: flex;
   align-items: center;
-}
-
-.fau-filter-icon {
-  position: absolute;
-  left: 0.8rem;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 82, 82, 0.2);
+  background: rgba(255, 82, 82, 0.05);
   color: rgba(150, 220, 240, 0.3);
-  font-size: 0.9rem;
-}
-
-.fau-filter-select {
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
-  border-radius: 2rem;
-  border: 1px solid rgba(0, 229, 255, 0.15);
-  background: rgba(0, 229, 255, 0.03);
-  color: #d6f0f5;
-  font-size: 0.85rem;
-  outline: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-  background-size: 10px;
-  padding-right: 2.5rem;
-  min-width: 140px;
 }
 
-.fau-filter-select:focus {
-  border-color: rgba(0, 229, 255, 0.4);
-  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+.fau-clear-filters-btn:hover {
+  background: rgba(255, 82, 82, 0.15);
+  border-color: rgba(255, 82, 82, 0.4);
+  color: #ff5252;
+  transform: scale(1.1);
 }
 
-.fau-filter-select option {
-  background: #0a1a1e;
-  color: #d6f0f5;
-}
-
-.fau-role-filter {
-  padding: 0.5rem 1.2rem;
-  border-radius: 2rem;
-  border: 1px solid rgba(0, 229, 255, 0.15);
-  background: rgba(0, 229, 255, 0.03);
-  color: #d6f0f5;
-  font-size: 0.85rem;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-  background-size: 10px;
-  padding-right: 2.5rem;
-  min-width: 120px;
-}
-
-.fau-role-filter:focus {
-  border-color: rgba(0, 229, 255, 0.4);
-  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
-}
-
-.fau-role-filter option {
-  background: #0a1a1e;
-  color: #d6f0f5;
+.fau-clear-filters-btn svg {
+  font-size: 1.1rem;
 }
 
 /* ============================================
@@ -250,10 +318,6 @@
   .fau-main-container {
     padding: 1rem;
   }
-  
-  .fau-search-input {
-    width: 180px;
-  }
 }
 
 @media screen and (max-width: 63.75em) {
@@ -270,29 +334,38 @@
   
   .fau-header-right {
     width: 100%;
+    justify-content: flex-start;
   }
   
   .fau-search-filter-container {
     width: 100%;
-    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   
-  .fau-search-wrapper {
-    width: 100%;
+  .fau-icon-btn {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
   }
   
-  .fau-search-input {
-    width: 100%;
+  .fau-icon-btn svg {
+    font-size: 1.3rem;
   }
   
-  .fau-filter-wrapper {
-    width: 100%;
+  .fau-popup-input {
+    min-width: 200px;
+    right: -1rem;
   }
   
-  .fau-filter-select,
-  .fau-role-filter {
-    width: 100%;
-    min-width: unset;
+  .fau-dropdown-menu {
+    right: -1rem;
+    min-width: 150px;
+  }
+  
+  .fau-clear-filters-btn {
+    width: 2.6rem;
+    height: 2.6rem;
   }
 }
 
@@ -310,15 +383,47 @@
     font-size: 1.1rem;
   }
   
-  .fau-filter-select,
-  .fau-role-filter {
-    font-size: 0.8rem;
-    padding: 0.4rem 1rem 0.4rem 2rem;
+  .fau-icon-btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 1.1rem;
+    border-radius: 2rem;
   }
   
-  .fau-search-input {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem 0.4rem 2rem;
+  .fau-icon-btn svg {
+    font-size: 1.4rem;
+  }
+  
+  .fau-dropdown-arrow {
+    font-size: 0.8rem !important;
+  }
+  
+  .fau-popup-input {
+    min-width: 180px;
+    right: -0.5rem;
+  }
+  
+  .fau-search-input-popup {
+    font-size: 1rem;
+    padding: 0.7rem 2.5rem 0.7rem 1rem;
+  }
+  
+  .fau-dropdown-menu {
+    right: -0.5rem;
+    min-width: 140px;
+  }
+  
+  .fau-dropdown-item {
+    font-size: 0.9rem;
+    padding: 0.7rem 1rem;
+  }
+  
+  .fau-clear-filters-btn {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+  
+  .fau-clear-filters-btn svg {
+    font-size: 1.3rem;
   }
 }
 
@@ -349,26 +454,27 @@
     font-size: 1rem;
   }
   
-  .fau-filter-select,
-  .fau-role-filter {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.8rem 0.3rem 1.8rem;
-    background-size: 8px;
-    background-position: right 0.6rem center;
+  .fau-icon-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
   }
   
-  .fau-search-input {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem 0.3rem 1.8rem;
+  .fau-icon-btn svg {
+    font-size: 1.2rem;
   }
   
-  .fau-search-icon {
-    font-size: 0.8rem;
-    left: 0.6rem;
+  .fau-popup-input {
+    min-width: 160px;
+    right: 0;
   }
   
-  .fau-filter-icon {
-    font-size: 0.7rem;
-    left: 0.6rem;
+  .fau-dropdown-menu {
+    right: 0;
+    min-width: 130px;
+  }
+  
+  .fau-clear-filters-btn {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }

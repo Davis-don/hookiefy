@@ -1,8 +1,6 @@
 import './usertablefetch.css'
 import { useState } from 'react'
 import { FiUser, FiUsers, FiShield, FiSearch } from 'react-icons/fi'
-import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
 import { sampleUsers } from '../../data/allusers'
 import type { User } from '../../data/allusers'
 
@@ -158,14 +156,15 @@ function Usertablefetch({ searchTerm, selectedRole, searchType }: Usertablefetch
                       onClick={() => handleEdit(user.id)}
                       title="Edit user"
                     >
-                      <FaEdit />
+                      E
                     </button>
                     <button 
                       className="fau-action-btn fau-delete-btn"
                       onClick={() => handleDelete(user.id)}
                       title="Delete user"
+                    
                     >
-                      <MdDelete />
+                      D
                     </button>
                   </div>
                 </td>
