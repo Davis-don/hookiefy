@@ -1,0 +1,213 @@
+/* ============================================
+   revenuesuperdash.css — Futuristic Revenue Chart
+   ============================================ */
+
+.overall-revenue-super-dash-component {
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.2rem;
+
+  /* --- Glass background matching theme --- */
+  background: rgba(2, 20, 24, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 0 40px rgba(0, 229, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Gradient border glow --- */
+.overall-revenue-super-dash-component::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.2rem;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(0, 229, 255, 0.2),
+      rgba(123, 47, 252, 0.15),
+      rgba(0, 153, 255, 0.2));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* --- Secondary glow --- */
+.overall-revenue-super-dash-component::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.2rem;
+  z-index: 0;
+  filter: blur(20px);
+  background: radial-gradient(circle at 70% 30%,
+      rgba(0, 229, 255, 0.08),
+      transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* --- Header --- */
+.revenue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.revenue-header h3 {
+  color: #d6f0f5;
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+  margin: 0;
+}
+
+/* --- Year Selector Dropdown --- */
+.year-selector-wrapper {
+  position: relative;
+}
+
+.year-dropdown {
+  padding: 0.5rem 2.5rem 0.5rem 1.2rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  background: rgba(0, 229, 255, 0.05);
+  color: #d6f0f5;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 12px;
+  min-width: 100px;
+}
+
+.year-dropdown:hover {
+  border-color: rgba(0, 229, 255, 0.4);
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.year-dropdown:focus {
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.05);
+}
+
+.year-dropdown option {
+  background: #0a1a1e;
+  color: #d6f0f5;
+  padding: 0.5rem;
+}
+
+/* --- No Data Message --- */
+.no-data-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 350px;
+  color: rgba(150, 220, 240, 0.5);
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================
+   GRAPH STYLING (Recharts customizations)
+   ============================================ */
+
+/* --- Enhanced Area Fill --- */
+.recharts-area-area {
+  opacity: 0.9;
+}
+
+/* --- Active dot glow effect --- */
+.recharts-active-dot circle {
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.6));
+}
+
+/* --- Chart tooltip customization --- */
+.recharts-tooltip-wrapper {
+  filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.4));
+}
+
+/* --- Line glow effect --- */
+.recharts-line-curve {
+  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.25));
+}
+
+/* --- Dot hover effect --- */
+.recharts-dot:hover {
+  filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.7));
+}
+
+/* --- Grid line styling (horizontal only) --- */
+.recharts-cartesian-grid-horizontal line {
+  stroke: rgba(0, 229, 255, 0.06) !important;
+}
+
+/* --- Tooltip cursor --- */
+.recharts-tooltip-cursor {
+  stroke: rgba(0, 229, 255, 0.2) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media screen and (max-width: 48em) {
+  .overall-revenue-super-dash-component {
+    padding: 1rem;
+  }
+
+  .revenue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .revenue-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .year-dropdown {
+    padding: 0.4rem 2rem 0.4rem 1rem;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .overall-revenue-super-dash-component {
+    padding: 0.8rem;
+  }
+
+  .year-dropdown {
+    padding: 0.3rem 1.8rem 0.3rem 0.8rem;
+    font-size: 0.75rem;
+    min-width: 70px;
+    background-size: 10px;
+    background-position: right 0.8rem center;
+  }
+}
