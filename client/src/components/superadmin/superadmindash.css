@@ -1,13 +1,110 @@
-.overall-super-admin-dash-container{
-padding-block: 1rem;
-padding-inline: 2rem;
-}
-.welcome-super-admin-dash-concern{
-height: 15rem;
-}
-.graphical-rep-stats-superadmin-container{
+/* ============================================
+   superadmindash.css
+   ============================================ */
 
+.overall-super-admin-dash-container {
+  padding-block: 1rem;
+  padding-inline: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
-.more-analytics-section-superadmin{
-    
+
+.welcome-super-admin-dash-concern {
+  height: 15rem;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.statistics-cards-super-dash-container {
+  width: 100%;
+}
+
+.graphical-rep-stats-superadmin-container {
+  width: 100%;
+  min-height: 30rem;
+}
+
+.more-analytics-section-superadmin {
+  width: 100%;
+  min-height: 30rem;
+}
+
+.revenue-by-gender-container {
+  width: 100%;
+  height: 20rem;
+  min-height: 20rem;
+}
+
+/* --- Responsive --- */
+@media screen and (max-width: 80.625em) {
+  .overall-super-admin-dash-container {
+    padding-inline: 1.5rem;
+    gap: 1.2rem;
+  }
+  
+  .welcome-super-admin-dash-concern {
+    height: 13rem;
+  }
+  
+  .graphical-rep-stats-superadmin-container {
+    min-height: 25rem;
+  }
+  
+  .more-analytics-section-superadmin {
+    min-height: 25rem;
+  }
+  
+  .revenue-by-gender-container {
+    height: 18rem;
+    min-height: 18rem;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .overall-super-admin-dash-container {
+    padding-inline: 1rem;
+    gap: 1rem;
+  }
+  
+  .welcome-super-admin-dash-concern {
+    height: 11rem;
+  }
+  
+  .graphical-rep-stats-superadmin-container {
+    min-height: 22rem;
+  }
+  
+  .more-analytics-section-superadmin {
+    min-height: 22rem;
+  }
+  
+  .revenue-by-gender-container {
+    height: 16rem;
+    min-height: 16rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .overall-super-admin-dash-container {
+    padding-inline: 0.8rem;
+    gap: 0.8rem;
+  }
+  
+  .welcome-super-admin-dash-concern {
+    height: 9rem;
+  }
+  
+  .graphical-rep-stats-superadmin-container {
+    min-height: 18rem;
+  }
+  
+  .more-analytics-section-superadmin {
+    min-height: 18rem;
+  }
+  
+  .revenue-by-gender-container {
+    height: 14rem;
+    min-height: 14rem;
+  }
 }
