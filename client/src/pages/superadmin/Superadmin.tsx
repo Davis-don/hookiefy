@@ -10,20 +10,22 @@ import { FaUsers } from "react-icons/fa";
 import { CiSettings } from "react-icons/ci";
 import { FcMoneyTransfer } from "react-icons/fc";
 import { ImProfile } from "react-icons/im";
+import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 import Superadmindash from '../../components/superadmin/Superadmindash';
 import Superadminusers from './Superadminusers';
-import Superadminsettings from './Superadminsettings';
 import Superadminfinances from './Superadminfinances';
+import Admincommissions from './Admincommissions';
 import Profile from './Profile';
 
 function Superadmin() {
   const [mount, ismounted] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [dash,isdashmount]=useState(true)
-  const [users,isusersmount]=useState(false)
-  const [settings,isSettings]=useState(false)
-  const [finances,isFinances]=useState(false)
-  const [profile,isprofile]=useState(false)
+  const [dash, isdashmount] = useState(true)
+  const [users, isusersmount] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [finances, isFinances] = useState(false)
+  const [profile, isprofile] = useState(false)
+  const [adminCommissions, setAdminCommissions] = useState(false)
 
   useEffect(() => {
     const checkScreen = () => {
@@ -38,6 +40,30 @@ function Superadmin() {
 
   const sidebarVisible = isLargeScreen ? true : mount;
 
+  const clearAllStates = () => {
+    isdashmount(false)
+    isusersmount(false)
+    isFinances(false)
+    isprofile(false)
+    setAdminCommissions(false)
+  }
+
+  const handleSettingsClick = () => {
+    // If settings is already open and we click it again, close it
+    if (settingsOpen) {
+      setSettingsOpen(false)
+      // If adminCommissions is active, clear it
+      if (adminCommissions) {
+        setAdminCommissions(false)
+        isdashmount(true)
+      }
+    } else {
+      // Open settings and clear other states
+      clearAllStates()
+      setSettingsOpen(true)
+    }
+  }
+
   return (
     <div className="overall-superadmin-container">
 
@@ -48,7 +74,7 @@ function Superadmin() {
       >
         <div className="sidebar-header-container-dashboard">
           <div className="brandname-container">
-            <h3 style={{cursor:"pointer"}} onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Hookiefy</h3>
+            <h3 style={{cursor:"pointer"}} onClick={()=>{clearAllStates(); isdashmount(true); setSettingsOpen(false); ismounted(!mount)}}>Hookiefy</h3>
           </div>
 
           <div
@@ -62,15 +88,50 @@ function Superadmin() {
         <div className="sidebar-body-container">
 
           <ul>
-            <div onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);isprofile(false);ismounted(!mount)}} className={dash?"sidebar_link active-sidebar":"sidebar_link"}><MdOutlineSpaceDashboard /> Dashboard</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(true);isSettings(false);isFinances(false);isprofile(false);ismounted(!mount)}}className={users?"sidebar_link active-sidebar":"sidebar_link"}><FaUsers /> Users</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(true);isprofile(false);ismounted(!mount)}}className={finances?"sidebar_link active-sidebar":"sidebar_link"}><FcMoneyTransfer /> Finances</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(true);isFinances(false);isprofile(false);ismounted(!mount)}}className={settings?"sidebar_link active-sidebar":"sidebar_link"}><CiSettings /> Settings</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(false);isprofile(true);ismounted(!mount)}}className={profile?"sidebar_link active-sidebar":"sidebar_link"}><ImProfile /> profile</div>
+            <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}} className={dash?"sidebar_link active-sidebar":"sidebar_link"}>
+              <MdOutlineSpaceDashboard /> Dashboard
+            </div>
             
+            <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isusersmount(true); ismounted(!mount)}} className={users?"sidebar_link active-sidebar":"sidebar_link"}>
+              <FaUsers /> Users
+            </div>
+            
+            <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isFinances(true); ismounted(!mount)}} className={finances?"sidebar_link active-sidebar":"sidebar_link"}>
+              <FcMoneyTransfer /> Finances
+            </div>
+            
+            <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isprofile(true); ismounted(!mount)}} className={profile?"sidebar_link active-sidebar":"sidebar_link"}>
+              <ImProfile /> Profile
+            </div>
+
+            {/* Settings with Sub-links */}
+            <div className="settings-group">
+              <div 
+                onClick={handleSettingsClick}
+                className={`sidebar_link ${settingsOpen || adminCommissions ? 'active-sidebar' : ''}`}
+                style={{ cursor: 'pointer' }}
+              >
+                <CiSettings /> Settings
+                <span className="settings-arrow">
+                  {settingsOpen ? <IoIosArrowDown /> : <IoIosArrowForward />}
+                </span>
+              </div>
+              
+              {settingsOpen && (
+                <div className="settings-sub-links">
+                  <div 
+                    onClick={() => {clearAllStates(); setAdminCommissions(true); ismounted(!mount)}}
+                    className={`sidebar_sub_link ${adminCommissions ? 'active-sidebar-sub' : ''}`}
+                  >
+                    <span className="sub-link-dot"></span>
+                    Commissions
+                  </div>
+                </div>
+              )}
+            </div>
           </ul>
 
-          {/* 👇 ONLY IMPROVED FOOTER */}
+          {/* Footer */}
           <div className="sidebar-body-footer">
             <div className="footer-content">
               <span className="footer-title">System</span>
@@ -94,10 +155,10 @@ function Superadmin() {
             </h3>
 
             {dash && <h3 style={{cursor:"pointer"}}>Dashboard</h3>}
-            {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>users</h3>}
-            {settings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>settings</h3>}
-            {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>finances</h3>}
-            {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>profile</h3>}
+            {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Users</h3>}
+            {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
+            {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
+            {adminCommissions && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Admin Commissions</h3>}
           </div>
 
           <div className="right-side-header-body-container">
@@ -113,7 +174,7 @@ function Superadmin() {
                   <button className="dropdown-btn">▼</button>
 
                   <div className="dropdown-menu-custom">
-                    <button onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(false);isprofile(true);ismounted(!mount)}} className="dropdown-item-custom">Profile</button>
+                    <button onClick={()=>{clearAllStates(); setSettingsOpen(false); isprofile(true); ismounted(!mount)}} className="dropdown-item-custom">Profile</button>
                     <button className="dropdown-item-custom logout-btn">Logout</button>
                   </div>
                 </div>
@@ -127,9 +188,9 @@ function Superadmin() {
         <div className="dashboard-body-content">
           {dash && <Superadmindash/>}
           {users && <Superadminusers/>}
-          {settings && <Superadminsettings/>}
           {finances && <Superadminfinances/>}
           {profile && <Profile/>}
+          {adminCommissions && <Admincommissions/>}
         </div>
 
         {/* Footer */}
