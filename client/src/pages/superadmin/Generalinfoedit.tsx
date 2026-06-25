@@ -46,7 +46,7 @@ function Generalinfoedit({ onClose }: GeneralinfoeditProps) {
     if (onClose) onClose()
   }
 
-  const fullName = `${userData.first_name} ${userData.last_name}`.trim()
+
 
   return (
     <div className="gei-main-wrapper">
