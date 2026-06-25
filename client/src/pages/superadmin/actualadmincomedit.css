@@ -1,0 +1,14 @@
+.overall-actiual-admin-form-edit{
+height: 100%;
+width: 100%;
+padding: 1rem;
+}
+.form-actual-header-com-edit{
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+align-items: center;
+font-size: 3rem;
+padding: 2rem;
+border-bottom: 1px solid black;
+}
