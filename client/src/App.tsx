@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/common/Login";
 import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
-import User from "./pages/user/User";
+import User from "./pages/users/User";
 import Unauthorized from "./pages/common/Unauthorized";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
@@ -24,7 +24,7 @@ function App() {
           <Route path="/homepage" element={
             <Mainlayout><Homepage /></Mainlayout>} />
                <Route path="/" element={
-            <Admin />} />
+            <User />} />
              <Route path="/test" element={
             <Superadmin />} />
           <Route path="/about" element={

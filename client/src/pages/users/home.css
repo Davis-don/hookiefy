@@ -1,0 +1,449 @@
+/* ============================================
+   home.css — Home Feed Component
+   ============================================ */
+
+.user-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* =========================
+   FEED HEADER
+========================= */
+.user-feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+}
+
+.user-feed-header h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.feed-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.feed-header-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.feed-header-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.feed-header-active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* =========================
+   STORIES
+========================= */
+.user-stories {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0 1.5rem 0;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  scrollbar-width: none;
+}
+
+.user-stories::-webkit-scrollbar {
+  display: none;
+}
+
+.story-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.story-circle:hover {
+  transform: scale(1.05);
+}
+
+.story-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  border: 2px solid #ec4899;
+  padding: 2px;
+  position: relative;
+  background: #1a1a1a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.story-circle:first-child .story-avatar {
+  border-color: #3b82f6;
+}
+
+.story-circle span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  max-width: 4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Add Story */
+.story-add-avatar {
+  border-color: #3b82f6;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-add-icon {
+  font-size: 2rem;
+  color: #3b82f6;
+  font-weight: 300;
+}
+
+/* =========================
+   POST
+========================= */
+.user-post {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.user-post:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Post Header */
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.post-avatar-img {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  object-fit: cover;
+}
+
+.post-user-info {
+  flex: 1;
+}
+
+.post-user-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.post-user-name h5 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.post-handle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.post-dot {
+  font-size: 0.4rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Post Image */
+.post-image-wrapper {
+  position: relative;
+  margin-bottom: 0.8rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.post-image-content {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.post-image-wrapper:hover .post-image-content {
+  transform: scale(1.02);
+}
+
+/* Post Actions */
+.post-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.post-actions-left {
+  display: flex;
+  gap: 1rem;
+}
+
+.post-actions-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.post-action-btn {
+  background: transparent;
+  border: none;
+  color: #e5e5e5;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.post-action-btn:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.post-action-btn.liked {
+  color: #ef4444;
+}
+
+.post-action-btn.liked .heart-icon {
+  animation: heartBeat 0.3s ease;
+}
+
+.post-action-btn.saved {
+  color: #f59e0b;
+}
+
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Post Likes */
+.post-likes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.3rem;
+}
+
+.likes-heart-icon {
+  color: #ef4444;
+  font-size: 0.9rem;
+}
+
+/* Post Caption */
+.post-caption {
+  font-size: 0.9rem;
+  color: #e5e5e5;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.post-caption strong {
+  color: #ffffff;
+  font-weight: 600;
+  margin-right: 0.3rem;
+}
+
+/* Post Comments */
+.post-comments {
+  margin-bottom: 0.8rem;
+}
+
+.post-comments span {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.post-comments span:hover {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Comment Input */
+.post-comment-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.post-comment-input input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.post-comment-input input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.post-comment-input input:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.post-comment-input button {
+  background: transparent;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0.3rem 0.8rem;
+}
+
+.post-comment-input button:hover {
+  color: #60a5fa;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media screen and (max-width: 46.875em) {
+  .post-image-content {
+    height: 280px;
+  }
+
+  .story-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .story-circle span {
+    font-size: 0.6rem;
+    max-width: 3.5rem;
+  }
+
+  .post-actions-row {
+    flex-wrap: wrap;
+  }
+
+  .post-user-name h5 {
+    font-size: 0.85rem;
+  }
+
+  .user-feed-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .feed-header-actions {
+    width: 100%;
+  }
+
+  .feed-header-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .post-action-btn {
+    font-size: 1.3rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .post-image-content {
+    height: 200px;
+  }
+
+  .story-avatar {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .user-stories {
+    gap: 0.6rem;
+  }
+
+  .post-avatar-img {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .post-action-btn {
+    font-size: 1.1rem;
+  }
+
+  .post-caption {
+    font-size: 0.85rem;
+  }
+
+  .post-comment-input input {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .post-comment-input button {
+    font-size: 0.8rem;
+  }
+}

@@ -1,0 +1,538 @@
+/* ============================================
+   user.css — User Dashboard (Instagram-style)
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.overall-user-component-container {
+  background-color: #000000;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* =========================
+   SIDEBAR / NAVIGATION (Left on desktop)
+========================= */
+.user-account-header-container {
+  height: 100%;
+  width: 240px;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: #000000;
+  z-index: 10;
+}
+
+.user-brand {
+  padding: 0 0.5rem 2rem 0.5rem;
+}
+
+.user-brand h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff, #a8a8a8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.user-account-header-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.user-account-header-container ul li {
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: #e5e5e5;
+  font-weight: 400;
+}
+
+.user-account-header-container ul li:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.user-account-header-container ul li.active-nav {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.icon-fig {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+}
+
+.nav-name {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* Profile nav item */
+.profile-user-nav {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.8rem;
+}
+
+.profile-div-user {
+  height: 2.4rem;
+  width: 2.4rem;
+  border: 2px solid #ffffff;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  flex-shrink: 0;
+}
+
+/* Sidebar Footer */
+.user-sidebar-footer {
+  padding: 1rem 0.5rem 0 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: 0.5rem;
+}
+
+.user-sidebar-footer span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* =========================
+   BODY CONTENT (Center)
+========================= */
+.overall-user-body-container {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  background: #000000;
+}
+
+.overall-user-body-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overall-user-body-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overall-user-body-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+.actual-body-content-retainer-user {
+  width: 100%;
+  max-width: 600px;
+  height: 100%;
+  padding-bottom: 2rem;
+}
+
+/* =========================
+   FEED CONTENT (Home Component)
+========================= */
+.user-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.user-feed-header h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Stories */
+.user-stories {
+  display: flex;
+  gap: 1rem;
+  padding: 0.8rem 0 1.5rem 0;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.user-stories::-webkit-scrollbar {
+  height: 2px;
+}
+
+.user-stories::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.story-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.story-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  border: 2px solid #ec4899;
+  padding: 2px;
+}
+
+.story-avatar::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #1a1a1a;
+}
+
+.story-circle:first-child .story-avatar {
+  border-color: #3b82f6;
+}
+
+.story-circle span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  max-width: 4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Post */
+.user-post {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.user-post:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.post-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  flex-shrink: 0;
+}
+
+.post-user-info h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.post-user-info span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.post-image {
+  width: 100%;
+  height: 280px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  margin-bottom: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.post-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.post-actions button {
+  background: transparent;
+  border: none;
+  color: #e5e5e5;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.post-actions button:hover {
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.post-likes {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.3rem;
+}
+
+.post-caption {
+  font-size: 0.9rem;
+  color: #e5e5e5;
+}
+
+.post-caption strong {
+  color: #ffffff;
+  font-weight: 600;
+  margin-right: 0.3rem;
+}
+
+/* =========================
+   PLACEHOLDER PAGES
+========================= */
+.user-page-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.user-page-placeholder h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 1rem;
+}
+
+.user-page-placeholder p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* =========================
+   RESPONSIVE - Mobile Bottom Nav
+========================= */
+@media screen and (max-width: 46.875em) {
+  .overall-user-component-container {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Sidebar becomes bottom nav */
+  .user-account-header-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    height: auto;
+    padding: 0.4rem 0.3rem;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #000000;
+    z-index: 100;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .user-brand {
+    display: none;
+  }
+
+  .user-sidebar-footer {
+    display: none;
+  }
+
+  .user-account-header-container ul {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 0.2rem;
+    padding: 0;
+  }
+
+  .user-account-header-container ul li {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.6rem;
+    border-radius: 8px;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .icon-fig {
+    font-size: 1.8rem;
+    min-width: auto;
+  }
+
+  .nav-name {
+    display: none; /* Hide text labels on mobile */
+  }
+
+  .profile-user-nav {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .profile-div-user {
+    height: 1.8rem;
+    width: 1.8rem;
+  }
+
+  /* Main body */
+  .overall-user-body-container {
+    padding: 1rem 0.8rem;
+    height: calc(100% - 65px);
+    margin-bottom: 65px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .actual-body-content-retainer-user {
+    max-width: 100%;
+    padding-bottom: 1rem;
+  }
+
+  .user-stories {
+    gap: 0.6rem;
+    padding: 0.5rem 0 1rem 0;
+  }
+
+  .story-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .story-circle span {
+    font-size: 0.6rem;
+    max-width: 3.5rem;
+  }
+
+  .post-image {
+    height: 200px;
+  }
+
+  .user-post {
+    padding: 0.8rem;
+  }
+
+  .post-actions button {
+    font-size: 1.3rem;
+  }
+
+  /* Active nav on mobile */
+  .user-account-header-container ul li.active-nav {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+  }
+
+  .user-page-placeholder h1 {
+    font-size: 2rem;
+  }
+}
+
+/* =========================
+   EXTRA SMALL SCREENS
+========================= */
+@media screen and (max-width: 30em) {
+  .icon-fig {
+    font-size: 1.5rem;
+  }
+
+  .user-account-header-container ul li {
+    padding: 0.2rem 0.2rem;
+  }
+
+  .profile-div-user {
+    height: 1.6rem;
+    width: 1.6rem;
+  }
+
+  .overall-user-body-container {
+    padding: 0.8rem 0.5rem;
+    margin-bottom: 60px;
+  }
+
+  .post-image {
+    height: 160px;
+  }
+
+  .story-avatar {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .user-stories {
+    gap: 0.4rem;
+  }
+
+  .user-page-placeholder h1 {
+    font-size: 1.5rem;
+  }
+
+  .user-page-placeholder p {
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================
+   SAFE AREA FOR NOTCH PHONES
+========================= */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 46.875em) {
+    .user-account-header-container {
+      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+    }
+  }
+}
