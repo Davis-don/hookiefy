@@ -158,7 +158,7 @@ function Superadmin() {
             {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Users</h3>}
             {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
             {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
-            {adminCommissions && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Admin Commissions</h3>}
+            {adminCommissions && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Commissions</h3>}
           </div>
 
           <div className="right-side-header-body-container">
