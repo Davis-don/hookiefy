@@ -9,10 +9,12 @@ import { MdOutlineSpaceDashboard } from "react-icons/md";
 import { FaUsers } from "react-icons/fa";
 import { CiSettings } from "react-icons/ci";
 import { FcMoneyTransfer } from "react-icons/fc";
+import { ImProfile } from "react-icons/im";
 import Superadmindash from '../../components/superadmin/Superadmindash';
 import Superadminusers from './Superadminusers';
 import Superadminsettings from './Superadminsettings';
 import Superadminfinances from './Superadminfinances';
+import Profile from './Profile';
 
 function Superadmin() {
   const [mount, ismounted] = useState(false);
@@ -21,6 +23,7 @@ function Superadmin() {
   const [users,isusersmount]=useState(false)
   const [settings,isSettings]=useState(false)
   const [finances,isFinances]=useState(false)
+  const [profile,isprofile]=useState(false)
 
   useEffect(() => {
     const checkScreen = () => {
@@ -59,10 +62,12 @@ function Superadmin() {
         <div className="sidebar-body-container">
 
           <ul>
-            <div onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}} className={dash?"sidebar_link active-sidebar":"sidebar_link"}><MdOutlineSpaceDashboard /> Dashboard</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(true);isSettings(false);isFinances(false);ismounted(!mount)}}className={users?"sidebar_link active-sidebar":"sidebar_link"}><FaUsers /> Users</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(true);isFinances(false);ismounted(!mount)}}className={settings?"sidebar_link active-sidebar":"sidebar_link"}><CiSettings /> Settings</div>
-            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(true);ismounted(!mount)}}className={finances?"sidebar_link active-sidebar":"sidebar_link"}><FcMoneyTransfer /> Finances</div>
+            <div onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);isprofile(false);ismounted(!mount)}} className={dash?"sidebar_link active-sidebar":"sidebar_link"}><MdOutlineSpaceDashboard /> Dashboard</div>
+            <div onClick={()=>{isdashmount(false);isusersmount(true);isSettings(false);isFinances(false);isprofile(false);ismounted(!mount)}}className={users?"sidebar_link active-sidebar":"sidebar_link"}><FaUsers /> Users</div>
+            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(true);isprofile(false);ismounted(!mount)}}className={finances?"sidebar_link active-sidebar":"sidebar_link"}><FcMoneyTransfer /> Finances</div>
+            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(true);isFinances(false);isprofile(false);ismounted(!mount)}}className={settings?"sidebar_link active-sidebar":"sidebar_link"}><CiSettings /> Settings</div>
+            <div onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(false);isprofile(true);ismounted(!mount)}}className={profile?"sidebar_link active-sidebar":"sidebar_link"}><ImProfile /> profile</div>
+            
           </ul>
 
           {/* 👇 ONLY IMPROVED FOOTER */}
@@ -123,6 +128,7 @@ function Superadmin() {
           {users && <Superadminusers/>}
           {settings && <Superadminsettings/>}
           {finances && <Superadminfinances/>}
+          {profile && <Profile/>}
         </div>
 
         {/* Footer */}
