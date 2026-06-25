@@ -25,6 +25,8 @@ function App() {
             <Mainlayout><Homepage /></Mainlayout>} />
                <Route path="/" element={
             <Admin />} />
+             <Route path="/test" element={
+            <Superadmin />} />
           <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />
           <Route path="/contact" element={

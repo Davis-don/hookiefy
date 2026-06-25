@@ -76,7 +76,7 @@ function Superadmin() {
             </div>
             
             <div onClick={()=>{clearAllStates(); setAdminsettings(false); isclientmount(true); ismounted(!mount)}} className={clients?"sidebar_link active-sidebar":"sidebar_link"}>
-              <FaUsers /> Users
+              <FaUsers /> Clients
             </div>
             
             <div onClick={()=>{clearAllStates(); setAdminsettings(false); isFinances(true); ismounted(!mount)}} className={finances?"sidebar_link active-sidebar":"sidebar_link"}>
@@ -116,7 +116,7 @@ function Superadmin() {
             </h3>
 
             {dash && <h3 style={{cursor:"pointer"}}>Dashboard</h3>}
-            {clients && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Users</h3>}
+            {clients && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>clients</h3>}
             {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
             {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
             {adminSetings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Settings</h3>}
@@ -151,7 +151,7 @@ function Superadmin() {
           {clients && <Myclients/>}
           {finances && <Adminfinancing/>}
           {profile && <Profile/>}
-          {Adminsettings && <Adminsettings/>}
+          {adminSetings && <Adminsettings/>}
         </div>
 
         {/* Footer */}

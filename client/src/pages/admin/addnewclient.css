@@ -1,0 +1,47 @@
+/* ============================================
+   addnewclient.css — Add New Client Component
+   ============================================ */
+
+.anc-overall-add-new-client-form {
+  /* Empty as requested - same as original */
+}
+
+.anc-add-client-header-form {
+  color: black;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 1.5rem;
+  font-size: 2rem;
+  border-bottom: 2px solid black;
+}
+
+.anc-add-client-form-div-actual {
+  margin-top: 1rem;
+}
+
+.anc-form-component-div-actual {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.anc-submit-client-button {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.anc-confirm-btn {
+  background-color: black;
+  color: white;
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+.anc-close-btn {
+  color: white;
+  padding: 1rem;
+  font-size: 1rem;
+}
