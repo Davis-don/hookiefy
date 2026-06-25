@@ -1,11 +1,13 @@
-import './profileing.css'
+import './profileimg.css'
 import { useState, useRef } from 'react'
 import { IoMdClose } from "react-icons/io";
 import { 
   FiCamera, 
   FiUpload, 
   FiXCircle,
-  FiCheck
+  FiCheck,
+  FiEye,
+  FiX
 } from 'react-icons/fi'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -19,6 +21,7 @@ function Profileimg({ onClose }: ProfileimgProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [showFullPreview, setShowFullPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Current profile image (placeholder)
@@ -82,6 +85,7 @@ function Profileimg({ onClose }: ProfileimgProps) {
     setSelectedFile(null)
     setPreviewUrl(null)
     setError('')
+    setShowFullPreview(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -92,6 +96,7 @@ function Profileimg({ onClose }: ProfileimgProps) {
     setSelectedFile(null)
     setPreviewUrl(null)
     setError('')
+    setShowFullPreview(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -99,6 +104,16 @@ function Profileimg({ onClose }: ProfileimgProps) {
 
   const handleClickUpload = () => {
     fileInputRef.current?.click()
+  }
+
+  const handleFullPreview = () => {
+    if (previewUrl) {
+      setShowFullPreview(true)
+    }
+  }
+
+  const handleClosePreview = () => {
+    setShowFullPreview(false)
   }
 
   // Get initials for placeholder
@@ -162,6 +177,17 @@ function Profileimg({ onClose }: ProfileimgProps) {
                 <span className="pimg-overlay-text">Change Photo</span>
               </div>
             </div>
+
+            {/* Preview Button - Only show when image is selected */}
+            {previewUrl && !uploadSuccess && (
+              <button 
+                className="pimg-preview-btn"
+                onClick={handleFullPreview}
+              >
+                <FiEye className="pimg-preview-icon" />
+                Preview Full Size
+              </button>
+            )}
 
             {/* Upload Status */}
             {uploadSuccess && (
@@ -260,6 +286,39 @@ function Profileimg({ onClose }: ProfileimgProps) {
           )}
         </div>
       </div>
+
+      {/* Full Preview Modal */}
+      {showFullPreview && previewUrl && (
+        <div className="pimg-preview-modal" onClick={handleClosePreview}>
+          <div className="pimg-preview-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="pimg-preview-modal-header">
+              <h3 className="pimg-preview-title">Image Preview</h3>
+              <button 
+                className="pimg-preview-close-btn"
+                onClick={handleClosePreview}
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="pimg-preview-image-wrapper">
+              <img 
+                src={previewUrl} 
+                alt="Full preview" 
+                className="pimg-preview-image"
+              />
+            </div>
+            <div className="pimg-preview-modal-footer">
+              <button 
+                className="pimg-preview-use-btn"
+                onClick={handleClosePreview}
+              >
+                <FiCheck className="pimg-btn-icon" />
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

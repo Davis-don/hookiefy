@@ -119,7 +119,7 @@
   align-items: center;
   gap: 2rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
 }
 
 /* --- Avatar --- */
@@ -128,25 +128,27 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  width: 100%;
 }
 
 .pimg-avatar-circle {
   position: relative;
-  width: 12rem;
-  height: 12rem;
+  width: 16rem;
+  height: 16rem;
   border-radius: 50%;
   background: rgba(0, 229, 255, 0.05);
-  border: 3px solid rgba(0, 229, 255, 0.2);
+  border: 4px solid rgba(0, 229, 255, 0.2);
   overflow: hidden;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .pimg-avatar-circle:hover {
   border-color: #00e5ff;
-  box-shadow: 0 0 40px rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);
 }
 
 .pimg-avatar-circle:hover .pimg-avatar-overlay {
@@ -160,7 +162,7 @@
 }
 
 .pimg-avatar-initials {
-  font-size: 3.5rem;
+  font-size: 4.5rem;
   font-weight: 700;
   color: #071316;
   background: linear-gradient(135deg, #00e5ff, #0099ff);
@@ -177,26 +179,53 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(7, 19, 22, 0.8);
+  background: rgba(7, 19, 22, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   opacity: 0;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .pimg-camera-icon {
-  font-size: 2.5rem;
+  font-size: 3rem;
   color: #00e5ff;
 }
 
 .pimg-overlay-text {
   color: #d6f0f5;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
+}
+
+/* --- Preview Button --- */
+.pimg-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+  color: #00e5ff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.pimg-preview-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
+}
+
+.pimg-preview-icon {
+  font-size: 1.1rem;
 }
 
 /* --- Upload Status --- */
@@ -438,6 +467,127 @@
 }
 
 /* ============================================
+   FULL PREVIEW MODAL
+   ============================================ */
+
+.pimg-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+  animation: pimgModalFadeIn 0.3s ease;
+}
+
+@keyframes pimgModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pimg-preview-modal-content {
+  background: #071316;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+}
+
+.pimg-preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+.pimg-preview-title {
+  color: #d6f0f5;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.pimg-preview-close-btn {
+  background: none;
+  border: none;
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.pimg-preview-close-btn:hover {
+  color: #ff5252;
+  transform: rotate(90deg);
+}
+
+.pimg-preview-image-wrapper {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  max-height: 60vh;
+  overflow: hidden;
+}
+
+.pimg-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.pimg-preview-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 229, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pimg-preview-use-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 2rem;
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  border: none;
+  border-radius: 8px;
+  color: #071316;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.pimg-preview-use-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -462,16 +612,16 @@
   }
 
   .pimg-avatar-circle {
-    width: 10rem;
-    height: 10rem;
+    width: 14rem;
+    height: 14rem;
   }
 
   .pimg-avatar-initials {
-    font-size: 3rem;
+    font-size: 4rem;
   }
 
   .pimg-camera-icon {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
 
   .pimg-upload-btn,
@@ -479,6 +629,10 @@
     height: 3.2rem;
     font-size: 1rem;
     padding: 0.8rem 2rem;
+  }
+
+  .pimg-preview-modal-content {
+    max-width: 700px;
   }
 }
 
@@ -527,20 +681,20 @@
   }
 
   .pimg-avatar-circle {
-    width: 8rem;
-    height: 8rem;
+    width: 12rem;
+    height: 12rem;
   }
 
   .pimg-avatar-initials {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
   }
 
   .pimg-camera-icon {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
   }
 
   .pimg-overlay-text {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .pimg-upload-area {
@@ -584,6 +738,47 @@
 
   .pimg-error-message {
     font-size: 0.9rem;
+  }
+
+  .pimg-preview-modal {
+    padding: 1rem;
+  }
+
+  .pimg-preview-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .pimg-preview-image-wrapper {
+    min-height: 200px;
+    max-height: 50vh;
+    padding: 1rem;
+  }
+
+  .pimg-preview-modal-header {
+    padding: 0.8rem 1rem;
+  }
+
+  .pimg-preview-title {
+    font-size: 1rem;
+  }
+
+  .pimg-preview-close-btn {
+    font-size: 1.5rem;
+  }
+
+  .pimg-preview-modal-footer {
+    padding: 0.8rem 1rem;
+  }
+
+  .pimg-preview-use-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .pimg-preview-btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1.2rem;
   }
 }
 
@@ -631,20 +826,20 @@
   }
 
   .pimg-avatar-circle {
-    width: 6rem;
-    height: 6rem;
+    width: 10rem;
+    height: 10rem;
   }
 
   .pimg-avatar-initials {
-    font-size: 2rem;
+    font-size: 3rem;
   }
 
   .pimg-camera-icon {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .pimg-overlay-text {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 
   .pimg-upload-btn,
@@ -676,5 +871,37 @@
 
   .pimg-btn-icon {
     font-size: 1rem;
+  }
+
+  .pimg-preview-modal {
+    padding: 0.5rem;
+  }
+
+  .pimg-preview-image-wrapper {
+    min-height: 150px;
+    max-height: 40vh;
+    padding: 0.8rem;
+  }
+
+  .pimg-preview-title {
+    font-size: 0.9rem;
+  }
+
+  .pimg-preview-close-btn {
+    font-size: 1.3rem;
+  }
+
+  .pimg-preview-use-btn {
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  .pimg-preview-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .pimg-preview-icon {
+    font-size: 0.9rem;
   }
 }
