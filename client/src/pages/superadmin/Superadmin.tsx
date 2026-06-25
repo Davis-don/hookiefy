@@ -97,6 +97,7 @@ function Superadmin() {
             {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>users</h3>}
             {settings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>settings</h3>}
             {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>finances</h3>}
+            {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{isdashmount(true);isusersmount(false);isSettings(false);isFinances(false);ismounted(!mount)}}>Dashboard/</span>profile</h3>}
           </div>
 
           <div className="right-side-header-body-container">
@@ -112,7 +113,7 @@ function Superadmin() {
                   <button className="dropdown-btn">▼</button>
 
                   <div className="dropdown-menu-custom">
-                    <button className="dropdown-item-custom">Profile</button>
+                    <button onClick={()=>{isdashmount(false);isusersmount(false);isSettings(false);isFinances(false);isprofile(true);ismounted(!mount)}} className="dropdown-item-custom">Profile</button>
                     <button className="dropdown-item-custom logout-btn">Logout</button>
                   </div>
                 </div>
