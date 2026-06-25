@@ -1,0 +1,680 @@
+/* ============================================
+   profileimg.css — Profile Image Update
+   ============================================ */
+
+/* --- Main Container --- */
+.pimg-main-wrapper {
+  background: #071316;
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+/* --- Custom Scrollbar --- */
+.pimg-main-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pimg-main-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 229, 255, 0.03);
+  border-radius: 10px;
+}
+
+.pimg-main-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00e5ff, #0099ff);
+  border-radius: 10px;
+}
+
+.pimg-main-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #00e5ff rgba(0, 229, 255, 0.03);
+}
+
+/* --- Header Section --- */
+.pimg-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid rgba(0, 229, 255, 0.08);
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.pimg-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pimg-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pimg-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 12px;
+  background: rgba(0, 229, 255, 0.1);
+  color: #00e5ff;
+  font-size: 2rem;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+.pimg-page-title {
+  color: #d6f0f5;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.pimg-page-subtitle {
+  color: rgba(150, 220, 240, 0.5);
+  margin: 0;
+  font-size: 1rem;
+}
+
+.pimg-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.pimg-close-icon {
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 2.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pimg-close-icon:hover {
+  color: #ff5252;
+  transform: rotate(90deg);
+}
+
+.pimg-btn-icon {
+  font-size: 1.2rem;
+}
+
+/* --- Content Container --- */
+.pimg-content-container {
+  padding-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* --- Upload Area --- */
+.pimg-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* --- Avatar --- */
+.pimg-avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pimg-avatar-circle {
+  position: relative;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  background: rgba(0, 229, 255, 0.05);
+  border: 3px solid rgba(0, 229, 255, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pimg-avatar-circle:hover {
+  border-color: #00e5ff;
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.15);
+}
+
+.pimg-avatar-circle:hover .pimg-avatar-overlay {
+  opacity: 1;
+}
+
+.pimg-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pimg-avatar-initials {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #071316;
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pimg-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(7, 19, 22, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.pimg-camera-icon {
+  font-size: 2.5rem;
+  color: #00e5ff;
+}
+
+.pimg-overlay-text {
+  color: #d6f0f5;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* --- Upload Status --- */
+.pimg-upload-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(0, 230, 118, 0.1);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  border-radius: 8px;
+  color: #00e676;
+  font-weight: 500;
+  animation: pimgSlideDown 0.3s ease;
+}
+
+.pimg-success-icon {
+  font-size: 1.2rem;
+}
+
+.pimg-uploading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(150, 220, 240, 0.8);
+  font-weight: 500;
+}
+
+.pimg-spinner {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid rgba(0, 229, 255, 0.2);
+  border-top: 2px solid #00e5ff;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+}
+
+.pimg-spinner-small {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(7, 19, 22, 0.2);
+  border-top: 2px solid #071316;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+}
+
+@keyframes pimgSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pimgSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- File Input --- */
+.pimg-file-input {
+  display: none;
+}
+
+/* --- File Info --- */
+.pimg-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.2rem;
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 10px;
+  gap: 1rem;
+}
+
+.pimg-file-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.pimg-file-icon {
+  font-size: 1.5rem;
+  color: #00e5ff;
+}
+
+.pimg-file-name {
+  color: #d6f0f5;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.pimg-file-size {
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.pimg-remove-file-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 82, 82, 0.6);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.pimg-remove-file-btn:hover {
+  color: #ff5252;
+  transform: scale(1.1);
+}
+
+/* --- Error Message --- */
+.pimg-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.2);
+  border-radius: 8px;
+  color: #ff5252;
+  font-weight: 500;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.pimg-error-icon {
+  font-size: 1.2rem;
+}
+
+/* --- Action Buttons --- */
+.pimg-action-buttons {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.pimg-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  border: none;
+  border-radius: 10px;
+  color: #071316;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  height: 3.5rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.pimg-upload-btn:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
+}
+
+.pimg-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pimg-cancel-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #d6f0f5;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  height: 3.5rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.pimg-cancel-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.03);
+}
+
+.pimg-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Upload Instructions --- */
+.pimg-upload-instructions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: rgba(150, 220, 240, 0.4);
+}
+
+.pimg-instructions-icon {
+  font-size: 3rem;
+  color: rgba(0, 229, 255, 0.2);
+}
+
+.pimg-upload-instructions p {
+  font-size: 1rem;
+  margin: 0;
+  color: rgba(150, 220, 240, 0.5);
+}
+
+.pimg-instructions-hint {
+  font-size: 0.85rem;
+  color: rgba(150, 220, 240, 0.25);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet */
+@media screen and (max-width: 63.75em) {
+  .pimg-main-wrapper {
+    padding: 1.5rem;
+  }
+
+  .pimg-page-title {
+    font-size: 1.6rem;
+  }
+
+  .pimg-page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .pimg-title-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.6rem;
+  }
+
+  .pimg-avatar-circle {
+    width: 10rem;
+    height: 10rem;
+  }
+
+  .pimg-avatar-initials {
+    font-size: 3rem;
+  }
+
+  .pimg-camera-icon {
+    font-size: 2rem;
+  }
+
+  .pimg-upload-btn,
+  .pimg-cancel-btn {
+    height: 3.2rem;
+    font-size: 1rem;
+    padding: 0.8rem 2rem;
+  }
+}
+
+/* Mobile Large */
+@media screen and (max-width: 48em) {
+  .pimg-main-wrapper {
+    padding: 1.2rem;
+  }
+
+  .pimg-header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .pimg-header-left {
+    gap: 1rem;
+  }
+
+  .pimg-title-wrapper {
+    gap: 0.8rem;
+  }
+
+  .pimg-header-right {
+    justify-content: flex-end;
+  }
+
+  .pimg-page-title {
+    font-size: 1.4rem;
+  }
+
+  .pimg-page-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .pimg-title-icon {
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1.4rem;
+  }
+
+  .pimg-close-icon {
+    font-size: 1.8rem;
+  }
+
+  .pimg-avatar-circle {
+    width: 8rem;
+    height: 8rem;
+  }
+
+  .pimg-avatar-initials {
+    font-size: 2.5rem;
+  }
+
+  .pimg-camera-icon {
+    font-size: 1.8rem;
+  }
+
+  .pimg-overlay-text {
+    font-size: 0.8rem;
+  }
+
+  .pimg-upload-area {
+    gap: 1.5rem;
+  }
+
+  .pimg-action-buttons {
+    flex-direction: column;
+  }
+
+  .pimg-upload-btn,
+  .pimg-cancel-btn {
+    width: 100%;
+    justify-content: center;
+    height: 3rem;
+    font-size: 1rem;
+    padding: 0.6rem 1.5rem;
+  }
+
+  .pimg-file-info {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .pimg-file-details {
+    flex-direction: column;
+  }
+
+  .pimg-remove-file-btn {
+    align-self: center;
+  }
+
+  .pimg-upload-instructions p {
+    font-size: 0.9rem;
+  }
+
+  .pimg-instructions-icon {
+    font-size: 2.5rem;
+  }
+
+  .pimg-error-message {
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile Small */
+@media screen and (max-width: 30em) {
+  .pimg-main-wrapper {
+    padding: 0.8rem;
+  }
+
+  .pimg-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    width: 100%;
+  }
+
+  .pimg-title-wrapper {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .pimg-title-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.2rem;
+  }
+
+  .pimg-page-title {
+    font-size: 1.2rem;
+  }
+
+  .pimg-page-subtitle {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .pimg-header-right {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pimg-close-icon {
+    font-size: 1.6rem;
+  }
+
+  .pimg-avatar-circle {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .pimg-avatar-initials {
+    font-size: 2rem;
+  }
+
+  .pimg-camera-icon {
+    font-size: 1.5rem;
+  }
+
+  .pimg-overlay-text {
+    font-size: 0.7rem;
+  }
+
+  .pimg-upload-btn,
+  .pimg-cancel-btn {
+    height: 2.8rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .pimg-file-name {
+    font-size: 0.9rem;
+  }
+
+  .pimg-file-size {
+    font-size: 0.8rem;
+  }
+
+  .pimg-upload-instructions p {
+    font-size: 0.85rem;
+  }
+
+  .pimg-instructions-hint {
+    font-size: 0.75rem;
+  }
+
+  .pimg-error-message {
+    font-size: 0.85rem;
+  }
+
+  .pimg-btn-icon {
+    font-size: 1rem;
+  }
+}
