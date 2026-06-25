@@ -2,13 +2,11 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/common/Login";
 import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
+import User from "./pages/user/User";
 import Unauthorized from "./pages/common/Unauthorized";
-import Clientaccount from "./pages/client/Clientaccount";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/common/Homepage";
-import PaymentSuccess from "./pages/client/common/Paymentsuccess";
-import PaymentFailed from "./pages/client/common/Paymentfailed";
 import Mainlayout from "./layouts/Mainlayout";
 import About from "./pages/common/About";
 import Contact from "./pages/contact/Contact";
@@ -26,7 +24,7 @@ function App() {
           <Route path="/homepage" element={
             <Mainlayout><Homepage /></Mainlayout>} />
                <Route path="/" element={
-            <Superadmin />} />
+            <Admin />} />
           <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />
           <Route path="/contact" element={
@@ -44,17 +42,6 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />
           
-          {/* Payment redirect routes (public, no auth needed) */}
-          <Route path="/payment-success" element={
-            <Toastlayout>
-              <PaymentSuccess />
-            </Toastlayout>
-          } />
-          <Route path="/payment-failed" element={
-            <Toastlayout>
-              <PaymentFailed />
-            </Toastlayout>
-          } />
 
           {/* Protected routes - Superadmin only */}
           <Route
@@ -88,7 +75,7 @@ function App() {
             element={
               <Protectedroute>
                 <Toastlayout>
-                  <Clientaccount />
+                  <User />
                 </Toastlayout>
               </Protectedroute>
             }
