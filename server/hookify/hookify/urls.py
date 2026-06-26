@@ -1,36 +1,27 @@
 """
 URL configuration for hookify project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# hookify/urls.py
+
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
+
 from account.views import health_check
 
 urlpatterns = [
-    # Health check
-    path('', health_check, name='health_check'),
-    
-    # Admin
-    path('admin/', admin.site.urls),
-    
-    # Account app URLs (includes all auth and user management endpoints)
-    path('account/', include('account.urls')),
-    
-    
-    # Token refresh - using simplejwt's built-in view
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # API root / health check
+    path("", health_check, name="health_check"),
+
+    # Django Admin
+    path("admin/", admin.site.urls),
+
+    # Authentication & Account APIs
+    path("account/", include("account.urls")),
+
+    # JWT Token Refresh
+    path(
+        "api/token/refresh/",
+        TokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
 ]
