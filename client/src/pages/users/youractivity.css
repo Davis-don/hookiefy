@@ -1,0 +1,133 @@
+/* ============================================
+   youractivity.css — Your Activity Container
+   ============================================ */
+
+.overall-your-activity-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+/* Header */
+.your-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 0.5rem;
+}
+
+.your-activity-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.your-activity-count {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+}
+
+/* Empty state */
+.your-activity-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.your-activity-empty-icon {
+  font-size: 4rem;
+  opacity: 0.3;
+}
+
+.your-activity-empty-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.your-activity-empty-sub {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 300px;
+}
+
+/* Activity list */
+.your-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+/* =========================
+   RESPONSIVE - TABLETS
+========================= */
+@media screen and (max-width: 48em) {
+  .your-activity-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .your-activity-count {
+    font-size: 0.9rem;
+    padding: 0.2rem 0.8rem;
+  }
+
+  .your-activity-empty-title {
+    font-size: 1.4rem;
+  }
+
+  .your-activity-empty-sub {
+    font-size: 1rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - PHONES (DOUBLED)
+========================= */
+@media screen and (max-width: 30em) {
+  .overall-your-activity-container {
+    padding: 0.3rem;
+    gap: 0.6rem;
+  }
+
+  .your-activity-header {
+    padding: 0.3rem 0 0.8rem 0;
+  }
+
+  .your-activity-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .your-activity-count {
+    font-size: 0.9rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .your-activity-empty {
+    padding: 2rem 1rem;
+  }
+
+  .your-activity-empty-icon {
+    font-size: 3rem;
+  }
+
+  .your-activity-empty-title {
+    font-size: 1.3rem;
+  }
+
+  .your-activity-empty-sub {
+    font-size: 1rem;
+  }
+}

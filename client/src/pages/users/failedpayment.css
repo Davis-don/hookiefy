@@ -1,0 +1,193 @@
+/* ============================================
+   failedpayment.css — Failed Payment Modal
+   ============================================ */
+
+.failed-payment-container {
+  width: 100%;
+  max-width: 420px;
+  animation: failedPaymentSlideUp 0.4s ease;
+}
+
+@keyframes failedPaymentSlideUp {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.failed-payment-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.failed-payment-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.failed-payment-icon {
+  font-size: 4.5rem;
+  animation: failedPaymentShake 0.6s ease;
+}
+
+@keyframes failedPaymentShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
+
+.failed-payment-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ef4444;
+  margin: 0 0 0.3rem 0;
+}
+
+.failed-payment-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+.failed-payment-details {
+  background: #f8f8f8;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.failed-payment-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.failed-payment-detail:last-child {
+  border-bottom: none;
+}
+
+.failed-payment-detail-label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.failed-payment-detail-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.failed-payment-detail-failed {
+  color: #ef4444;
+}
+
+.failed-payment-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.failed-payment-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.failed-payment-btn-retry {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+}
+
+.failed-payment-btn-retry:hover {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.failed-payment-btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #e8e8e8;
+}
+
+.failed-payment-btn-cancel:hover {
+  background: #e8e8e8;
+  color: #1a1a1a;
+  transform: scale(1.02);
+}
+
+.failed-payment-btn:active {
+  transform: scale(0.97);
+}
+
+.failed-payment-help {
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0.8rem 0 0 0;
+}
+
+.failed-payment-help-link {
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.failed-payment-help-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media screen and (max-width: 30em) {
+  .failed-payment-card {
+    padding: 2rem 1.2rem;
+    border-radius: 18px;
+  }
+
+  .failed-payment-icon {
+    font-size: 3.5rem;
+  }
+
+  .failed-payment-title {
+    font-size: 1.5rem;
+  }
+
+  .failed-payment-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .failed-payment-details {
+    padding: 0.8rem 1rem;
+  }
+
+  .failed-payment-actions {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .failed-payment-btn {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+}

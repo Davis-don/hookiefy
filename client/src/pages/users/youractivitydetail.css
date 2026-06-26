@@ -1,0 +1,641 @@
+/* ============================================
+   youractivitydetail.css — Activity Detail View
+   ============================================ */
+
+.overall-activity-detail {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  min-height: 100vh;
+  animation: detailFadeIn 0.3s ease;
+}
+
+@keyframes detailFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Back button */
+.activity-detail-back {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.5rem 0.5rem 2rem 0.5rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 2rem;
+}
+
+.activity-detail-back:hover {
+  color: #ffffff;
+}
+
+.activity-detail-back-icon {
+  font-size: 2.5rem;
+}
+
+.activity-detail-back-text {
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+/* Profile Header */
+.activity-detail-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0 2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.activity-detail-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.activity-detail-name {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0.2rem 0;
+}
+
+.activity-detail-handle {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.5rem;
+}
+
+.activity-detail-status-badge {
+  font-size: 1.6rem;
+  font-weight: 600;
+  padding: 0.4rem 1.5rem;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Stats */
+.activity-detail-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.activity-detail-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.activity-detail-stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.activity-detail-stat-label {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Message Section */
+.activity-detail-message {
+  padding: 0.5rem 0 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.activity-detail-message-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.activity-detail-message-text {
+  font-size: 1.8rem;
+  color: #e5e5e5;
+  line-height: 1.8;
+  padding: 1rem 1.2rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  font-style: italic;
+}
+
+.activity-detail-message-time {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+/* Status Info */
+.activity-detail-status-info {
+  padding: 0.5rem 0 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.activity-detail-status-info-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.activity-detail-status-info-text {
+  font-size: 1.6rem;
+  color: #e5e5e5;
+  line-height: 1.8;
+  padding: 1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Payment Section */
+.activity-detail-payment-section {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.02));
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  animation: paymentSectionFadeIn 0.5s ease;
+}
+
+@keyframes paymentSectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.activity-detail-payment-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.activity-detail-payment-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.activity-detail-payment-description {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.activity-detail-payment-description strong {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.activity-detail-payment-features {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.activity-detail-payment-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.activity-detail-payment-feature-icon {
+  font-size: 1rem;
+}
+
+/* Action Buttons */
+.activity-detail-actions {
+  display: flex;
+  gap: 1.2rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.activity-detail-btn {
+  flex: 1;
+  padding: 1.2rem 1.8rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activity-detail-btn-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.activity-detail-btn-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: scale(1.02);
+}
+
+.activity-detail-btn-action {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+}
+
+.activity-detail-btn-action:hover {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.activity-detail-btn:active {
+  transform: scale(0.97);
+}
+
+/* Not Found */
+.activity-detail-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.activity-detail-not-found-icon {
+  font-size: 4rem;
+}
+
+.activity-detail-not-found p {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* =========================
+   RESPONSIVE - TABLETS
+========================= */
+@media screen and (max-width: 48em) {
+  .activity-detail-avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .activity-detail-name {
+    font-size: 2.4rem;
+  }
+
+  .activity-detail-handle {
+    font-size: 1.2rem;
+  }
+
+  .activity-detail-status-badge {
+    font-size: 1.4rem;
+  }
+
+  .activity-detail-stat-number {
+    font-size: 1.6rem;
+  }
+
+  .activity-detail-message-text {
+    font-size: 1.6rem;
+  }
+
+  .activity-detail-status-info-text {
+    font-size: 1.4rem;
+  }
+
+  .activity-detail-btn {
+    font-size: 1.2rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .activity-detail-back-text {
+    font-size: 1.4rem;
+  }
+
+  .activity-detail-back-icon {
+    font-size: 2rem;
+  }
+
+  .activity-detail-payment-title {
+    font-size: 1.2rem;
+  }
+
+  .activity-detail-payment-description {
+    font-size: 0.95rem;
+  }
+
+  .activity-detail-payment-features {
+    gap: 1rem;
+  }
+
+  .activity-detail-payment-feature {
+    font-size: 0.8rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - PHONES
+========================= */
+@media screen and (max-width: 30em) {
+  .overall-activity-detail {
+    padding: 0 0.3rem 1rem 0.3rem;
+  }
+
+  .activity-detail-back {
+    padding: 1rem 0.3rem 1.5rem 0.3rem;
+    gap: 1rem;
+  }
+
+  .activity-detail-back-icon {
+    font-size: 2rem;
+  }
+
+  .activity-detail-back-text {
+    font-size: 1.2rem;
+  }
+
+  .activity-detail-profile {
+    padding: 1rem 0 1.5rem 0;
+  }
+
+  .activity-detail-avatar {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+
+  .activity-detail-name {
+    font-size: 2rem;
+  }
+
+  .activity-detail-handle {
+    font-size: 1rem;
+  }
+
+  .activity-detail-status-badge {
+    font-size: 1.2rem;
+    padding: 0.3rem 1rem;
+  }
+
+  .activity-detail-stats {
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+  }
+
+  .activity-detail-stat-number {
+    font-size: 1.4rem;
+  }
+
+  .activity-detail-stat-label {
+    font-size: 0.8rem;
+  }
+
+  .activity-detail-message-title {
+    font-size: 1rem;
+  }
+
+  .activity-detail-message-text {
+    font-size: 1.4rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .activity-detail-message-time {
+    font-size: 0.85rem;
+  }
+
+  .activity-detail-status-info-title {
+    font-size: 1rem;
+  }
+
+  .activity-detail-status-info-text {
+    font-size: 1.3rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .activity-detail-payment-section {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .activity-detail-payment-icon {
+    font-size: 2.5rem;
+  }
+
+  .activity-detail-payment-title {
+    font-size: 1.1rem;
+  }
+
+  .activity-detail-payment-description {
+    font-size: 0.9rem;
+  }
+
+  .activity-detail-payment-features {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .activity-detail-payment-feature {
+    font-size: 0.8rem;
+  }
+
+  .activity-detail-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .activity-detail-btn {
+    font-size: 1.2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+  }
+
+  .activity-detail-not-found p {
+    font-size: 1.2rem;
+  }
+}
+
+
+/* test */
+/* ============================================
+   TEST MODE STYLES
+============================================ */
+
+.activity-detail-test-mode {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.activity-detail-test-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-detail-test-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Toggle Switch */
+.activity-detail-test-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.activity-detail-test-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.activity-detail-test-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  transition: all 0.3s ease;
+}
+
+.activity-detail-test-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.activity-detail-test-toggle input:checked + .activity-detail-test-slider {
+  background: #3b82f6;
+}
+
+.activity-detail-test-toggle input:checked + .activity-detail-test-slider::before {
+  transform: translateX(18px);
+}
+
+/* Test Options */
+.activity-detail-test-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.activity-detail-test-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.activity-detail-test-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.activity-detail-test-success:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.activity-detail-test-failed:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.activity-detail-test-loading:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.activity-detail-test-payment:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Responsive */
+@media screen and (max-width: 30em) {
+  .activity-detail-test-mode {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .activity-detail-test-label {
+    font-size: 0.75rem;
+  }
+
+  .activity-detail-test-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+    min-width: 50px;
+  }
+
+  .activity-detail-test-options {
+    gap: 0.3rem;
+  }
+}

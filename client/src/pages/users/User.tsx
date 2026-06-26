@@ -5,6 +5,7 @@ import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
 import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
+import Submodalsuser from './Submodalsuser';
 
 // Import components
 import Home from './Home';
@@ -92,6 +93,9 @@ function User() {
         <div className="overall-user-body-container">
             <div className="actual-body-content-retainer-user">
                 {renderContent()}
+            </div>
+            <div className="statauses-user-container">
+                <Submodalsuser/>
             </div>
         </div>
     </div>

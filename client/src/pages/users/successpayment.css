@@ -1,0 +1,160 @@
+/* ============================================
+   successpayment.css — Success Payment Modal
+   ============================================ */
+
+.success-payment-container {
+  width: 100%;
+  max-width: 420px;
+  animation: successPaymentSlideUp 0.4s ease;
+}
+
+@keyframes successPaymentSlideUp {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.success-payment-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.success-payment-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.success-payment-icon {
+  font-size: 4.5rem;
+  animation: successPaymentPop 0.6s ease;
+}
+
+@keyframes successPaymentPop {
+  0% {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.success-payment-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0 0 0.3rem 0;
+}
+
+.success-payment-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+.success-payment-details {
+  background: #f8f8f8;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.success-payment-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.success-payment-detail:last-child {
+  border-bottom: none;
+}
+
+.success-payment-detail-label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.success-payment-detail-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.success-payment-detail-completed {
+  color: #22c55e;
+}
+
+.success-payment-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.success-payment-btn:hover {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+.success-payment-btn:active {
+  transform: scale(0.97);
+}
+
+.success-payment-auto-close {
+  font-size: 0.85rem;
+  color: #bbb;
+  margin: 0.8rem 0 0 0;
+}
+
+/* Responsive */
+@media screen and (max-width: 30em) {
+  .success-payment-card {
+    padding: 2rem 1.2rem;
+    border-radius: 18px;
+  }
+
+  .success-payment-icon {
+    font-size: 3.5rem;
+  }
+
+  .success-payment-title {
+    font-size: 1.5rem;
+  }
+
+  .success-payment-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .success-payment-details {
+    padding: 0.8rem 1rem;
+  }
+
+  .success-payment-btn {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+}

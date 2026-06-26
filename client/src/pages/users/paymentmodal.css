@@ -1,0 +1,827 @@
+/* ============================================
+   paymentmodal.css — Payment Modal (White Theme)
+   ============================================ */
+
+/* Wrapper */
+.payment-modal-wrapper {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  animation: paymentModalSlideUp 0.3s ease;
+}
+
+@keyframes paymentModalSlideUp {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Card - White Background */
+.payment-modal-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2rem 1.8rem;
+  position: relative;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+/* Close Button */
+.payment-modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f5f5f5;
+  border: none;
+  color: #666;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.payment-modal-close-btn:hover {
+  background: #e8e8e8;
+  color: #000;
+  transform: rotate(90deg);
+}
+
+/* Header */
+.payment-modal-header-section {
+  text-align: center;
+  padding: 0.5rem 0 0.5rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-modal-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e8f0fe, #d4e4ff);
+  margin-bottom: 0.8rem;
+}
+
+.payment-modal-icon {
+  font-size: 2.8rem;
+}
+
+.payment-modal-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.2rem 0;
+}
+
+.payment-modal-subtitle {
+  font-size: 1rem;
+  color: #888;
+  margin: 0;
+}
+
+/* Divider */
+.payment-modal-divider {
+  height: 1px;
+  background: #e8e8e8;
+  margin: 1.2rem 0;
+}
+
+/* Amount */
+.payment-modal-amount-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+
+.payment-modal-amount-label {
+  font-size: 1.1rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.payment-modal-amount-box {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.payment-modal-currency {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.payment-modal-amount-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Payment Method */
+.payment-modal-method-section {
+  position: relative;
+  z-index: 1;
+}
+
+.payment-modal-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #888;
+  margin: 0 0 0.8rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.payment-modal-method-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.payment-modal-method-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: #f8f8f8;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.payment-modal-method-option:hover {
+  background: #f0f0f0;
+}
+
+.payment-modal-method-active {
+  border-color: #3b82f6;
+  background: #f0f7ff;
+}
+
+.payment-modal-method-active:hover {
+  background: #e8f0fe;
+}
+
+.payment-modal-method-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.payment-modal-method-icon-wrapper {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.payment-modal-method-icon {
+  font-size: 1.4rem;
+}
+
+.payment-modal-method-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.payment-modal-method-desc {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.payment-modal-method-check {
+  color: #3b82f6;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: #dbeafe;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Input Section */
+.payment-modal-input-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f8f8;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  animation: paymentModalSlideDown 0.3s ease;
+}
+
+@keyframes paymentModalSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-modal-input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.payment-modal-input-field {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.payment-modal-input-field:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.payment-modal-input-prefix {
+  padding: 0.7rem 0.8rem;
+  color: #888;
+  font-weight: 600;
+  font-size: 1rem;
+  background: #f5f5f5;
+  border-right: 1px solid #e8e8e8;
+}
+
+.payment-modal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.7rem 1rem;
+  color: #1a1a1a;
+  font-size: 1rem;
+  outline: none;
+  font-weight: 500;
+}
+
+.payment-modal-input::placeholder {
+  color: #bbb;
+}
+
+.payment-modal-input-icon {
+  padding: 0 1rem;
+  color: #bbb;
+  font-size: 1.2rem;
+}
+
+.payment-modal-input-hint {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0.4rem 0 0 0;
+}
+
+/* Input Row */
+.payment-modal-input-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.payment-modal-input-group {
+  flex: 1;
+}
+
+.payment-modal-input-group .payment-modal-input-label {
+  margin-bottom: 0.3rem;
+}
+
+.payment-modal-input-group .payment-modal-input-field {
+  margin-top: 0;
+}
+
+/* Bank Info */
+.payment-modal-bank-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f8f8;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  animation: paymentModalSlideDown 0.3s ease;
+}
+
+.payment-modal-bank-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-modal-bank-item:last-child {
+  border-bottom: none;
+}
+
+.payment-modal-bank-label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.payment-modal-bank-value {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+/* Summary */
+.payment-modal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payment-modal-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #888;
+}
+
+.payment-modal-summary-free {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.payment-modal-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e8e8e8;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.payment-modal-summary-total-amount {
+  font-size: 1.4rem;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+/* Actions */
+.payment-modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.payment-modal-btn {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+}
+
+.payment-modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.payment-modal-btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #e8e8e8;
+}
+
+.payment-modal-btn-cancel:hover {
+  background: #e8e8e8;
+  color: #1a1a1a;
+  transform: scale(1.02);
+}
+
+.payment-modal-btn-pay {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-modal-btn-pay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.payment-modal-btn-pay:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.payment-modal-btn-pay:hover:not(:disabled) {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 25px rgba(59, 130, 246, 0.3);
+}
+
+.payment-modal-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Spinner */
+.payment-modal-spinner {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.payment-modal-spinner-dot {
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-radius: 50%;
+  animation: paymentModalBounce 1.4s ease-in-out infinite both;
+}
+
+.payment-modal-spinner-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.payment-modal-spinner-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.payment-modal-spinner-dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes paymentModalBounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Security */
+.payment-modal-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.payment-modal-security-icon {
+  font-size: 0.9rem;
+}
+
+/* =========================
+   RESPONSIVE - TABLETS
+========================= */
+@media screen and (max-width: 48em) {
+  .payment-modal-card {
+    padding: 1.8rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .payment-modal-title {
+    font-size: 1.6rem;
+  }
+
+  .payment-modal-amount-value {
+    font-size: 2rem;
+  }
+
+  .payment-modal-icon-wrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .payment-modal-icon {
+    font-size: 2.4rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - PHONES
+========================= */
+@media screen and (max-width: 30em) {
+  .payment-modal-wrapper {
+    max-width: 100%;
+    margin: 0 0.5rem;
+  }
+
+  .payment-modal-card {
+    padding: 1.5rem 1.2rem;
+    border-radius: 18px;
+  }
+
+  .payment-modal-close-btn {
+    top: 0.8rem;
+    right: 0.8rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1rem;
+  }
+
+  .payment-modal-header-section {
+    padding: 0.3rem 0;
+  }
+
+  .payment-modal-icon-wrapper {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .payment-modal-icon {
+    font-size: 2rem;
+  }
+
+  .payment-modal-title {
+    font-size: 1.4rem;
+  }
+
+  .payment-modal-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .payment-modal-amount-value {
+    font-size: 1.8rem;
+  }
+
+  .payment-modal-currency {
+    font-size: 1rem;
+  }
+
+  .payment-modal-section-title {
+    font-size: 0.8rem;
+  }
+
+  .payment-modal-method-option {
+    padding: 0.6rem 0.8rem;
+    border-radius: 12px;
+  }
+
+  .payment-modal-method-name {
+    font-size: 0.9rem;
+  }
+
+  .payment-modal-method-desc {
+    font-size: 0.7rem;
+  }
+
+  .payment-modal-method-icon-wrapper {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .payment-modal-method-icon {
+    font-size: 1.2rem;
+  }
+
+  .payment-modal-method-check {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .payment-modal-input-section {
+    padding: 0.8rem;
+  }
+
+  .payment-modal-input-field {
+    border-radius: 10px;
+  }
+
+  .payment-modal-input {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .payment-modal-input-prefix {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .payment-modal-input-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .payment-modal-bank-info {
+    padding: 0.8rem;
+  }
+
+  .payment-modal-bank-item {
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+  }
+
+  .payment-modal-summary-row {
+    font-size: 0.85rem;
+  }
+
+  .payment-modal-summary-total {
+    font-size: 1rem;
+  }
+
+  .payment-modal-summary-total-amount {
+    font-size: 1.2rem;
+  }
+
+  .payment-modal-actions {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .payment-modal-btn {
+    font-size: 1rem;
+    padding: 0.8rem 1.2rem;
+    min-height: 3rem;
+    border-radius: 12px;
+  }
+
+  .payment-modal-security {
+    font-size: 0.7rem;
+  }
+
+  .payment-modal-divider {
+    margin: 1rem 0;
+  }
+}
+
+
+
+
+/* simulate */
+/* Add these styles to your existing paymentmodal.css */
+
+/* Test Mode */
+.payment-modal-test-mode {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.payment-modal-test-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-modal-test-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+/* Toggle Switch */
+.payment-modal-test-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.payment-modal-test-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.payment-modal-test-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ccc;
+  border-radius: 22px;
+  transition: all 0.3s ease;
+}
+
+.payment-modal-test-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.payment-modal-test-toggle input:checked + .payment-modal-test-slider {
+  background: #3b82f6;
+}
+
+.payment-modal-test-toggle input:checked + .payment-modal-test-slider::before {
+  transform: translateX(18px);
+}
+
+/* Test Options */
+.payment-modal-test-options {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.payment-modal-test-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.payment-modal-test-btn:hover {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+
+.payment-modal-test-active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.payment-modal-test-active:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+/* Responsive for test mode */
+@media screen and (max-width: 30em) {
+  .payment-modal-test-mode {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .payment-modal-test-label {
+    font-size: 0.75rem;
+  }
+
+  .payment-modal-test-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.4rem;
+    min-width: 50px;
+  }
+
+  .payment-modal-test-options {
+    gap: 0.3rem;
+  }
+}
