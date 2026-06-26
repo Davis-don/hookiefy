@@ -68,7 +68,7 @@
   }
   
   .welcome-super-admin-dash-concern {
-    height: 11rem;
+    height: max-content
   }
   
   .graphical-rep-stats-superadmin-container {
@@ -92,7 +92,7 @@
   }
   
   .welcome-super-admin-dash-concern {
-    height: 9rem;
+    height: max-content
   }
   
   .graphical-rep-stats-superadmin-container {

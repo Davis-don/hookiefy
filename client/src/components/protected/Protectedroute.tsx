@@ -72,12 +72,12 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
           } else {
             // Refresh failed, clear tokens and redirect to login
             clearTokens();
-            navigate("/login");
+            navigate("/signin");
             throw new Error("Session expired. Please login again.");
           }
         } catch (refreshError) {
           clearTokens();
-          navigate("/login");
+          navigate("/signin");
           throw refreshError;
         }
       }
@@ -106,7 +106,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   // ✅ Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && (isError || !data?.authenticated)) {
-      navigate("/login");
+      navigate("/signin");
     }
   }, [isLoading, isError, data, navigate]);
 

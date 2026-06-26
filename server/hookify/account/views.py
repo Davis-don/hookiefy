@@ -544,3 +544,22 @@ def get_all_users_paginated(request):
         "has_previous": users_page.has_previous(),
         "data": data
     })
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_current_user(request):
+    """
+    Delete the currently logged in user account
+    """
+    user = request.user
+    
+    # Store user info for response
+    user_email = user.email
+    user_name = user.full_name or f"{user.first_name} {user.last_name}"
+    
+    # Delete the user
+    user.delete()
+    
+    return Response({
+        "message": f"User '{user_name}' ({user_email}) deleted successfully"
+    }, status=status.HTTP_200_OK)

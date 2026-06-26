@@ -16,9 +16,10 @@ import Superadminusers from './Superadminusers';
 import Superadminfinances from './Superadminfinances';
 import Admincommissions from './Admincommissions';
 import Profile from './Profile';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+import { toast } from 'sonner';
 
 interface UserData {
   id: number;
@@ -59,8 +60,34 @@ const fetchCurrentUser = async (accessToken: string | null): Promise<UserData> =
   return response.json();
 };
 
+// Logout function
+const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/account/logout/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Logout failed');
+  }
+
+  return response.json();
+};
+
 function Superadmin() {
-  const { access: accessToken } = useAuthStore();
+  const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const { 
     data: user, 
@@ -77,6 +104,43 @@ function Superadmin() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 1,
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => logoutUser(accessToken, refreshToken),
+    onSuccess: () => {
+      toast.success('Logged out successfully!', {
+        duration: 3000,
+        icon: '👋',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      
+      // Clear tokens from store
+      clearTokens();
+      
+      // Redirect to signin page
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      toast.error('Logout failed', {
+        description: error.message || 'Please try again.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      setIsLoggingOut(false);
+    },
   });
 
   const [mount, ismounted] = useState(false);
@@ -121,6 +185,27 @@ function Superadmin() {
       setSettingsOpen(true)
     }
   }
+
+  // Handle logout
+  const handleLogout = () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const loadingToast = toast.loading('Logging out...', {
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+        setIsLoggingOut(false);
+      }
+    });
+  };
 
   // Show loading state
   if (isLoading) {
@@ -292,7 +377,13 @@ function Superadmin() {
 
                   <div className="dropdown-menu-custom">
                     <button onClick={()=>{clearAllStates(); setSettingsOpen(false); isprofile(true); ismounted(!mount)}} className="dropdown-item-custom">Profile</button>
-                    <button className="dropdown-item-custom logout-btn">Logout</button>
+                    <button 
+                      onClick={handleLogout} 
+                      className="dropdown-item-custom logout-btn"
+                      disabled={isLoggingOut || logoutMutation.isPending}
+                    >
+                      {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    </button>
                   </div>
                 </div>
               </li>
