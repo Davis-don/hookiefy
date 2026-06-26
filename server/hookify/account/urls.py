@@ -30,4 +30,7 @@ urlpatterns = [
     
     # Get all users with pagination (superadmin only)
     path('all/', views.get_all_users_paginated, name='get_all_users_paginated'),
+
+# Profile image upload
+path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
 ]

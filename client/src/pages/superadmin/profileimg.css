@@ -144,6 +144,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .pimg-avatar-circle:hover {
@@ -173,13 +174,43 @@
   justify-content: center;
 }
 
+/* --- Edit Pencil Icon on Avatar Edge --- */
+.pimg-edit-icon-wrapper {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 5;
+  border: 2px solid #071316;
+}
+
+.pimg-edit-icon-wrapper:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+}
+
+.pimg-edit-icon {
+  font-size: 1.4rem;
+  color: #071316;
+  font-weight: 700;
+}
+
+/* --- Hover Overlay --- */
 .pimg-avatar-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(7, 19, 22, 0.85);
+  background: rgba(7, 19, 22, 0.7);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,6 +219,11 @@
   opacity: 0;
   transition: all 0.3s ease;
   cursor: pointer;
+  z-index: 4;
+}
+
+.pimg-avatar-overlay:hover {
+  opacity: 1;
 }
 
 .pimg-camera-icon {
@@ -588,6 +624,74 @@
 }
 
 /* ============================================
+   LOADING & ERROR STATES
+============================================ */
+
+.pimg-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 1rem;
+}
+
+.pimg-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.05);
+  border-top-color: #00e5ff;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+}
+
+.pimg-loading-container p {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.95rem;
+}
+
+.pimg-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 0.8rem;
+  text-align: center;
+}
+
+.pimg-error-icon {
+  font-size: 3rem;
+}
+
+.pimg-error-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+}
+
+.pimg-retry-btn {
+  padding: 0.6rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.pimg-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.pimg-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -622,6 +726,17 @@
 
   .pimg-camera-icon {
     font-size: 2.5rem;
+  }
+
+  .pimg-edit-icon-wrapper {
+    width: 2.8rem;
+    height: 2.8rem;
+    bottom: 6px;
+    right: 6px;
+  }
+
+  .pimg-edit-icon {
+    font-size: 1.2rem;
   }
 
   .pimg-upload-btn,
@@ -695,6 +810,17 @@
 
   .pimg-overlay-text {
     font-size: 0.9rem;
+  }
+
+  .pimg-edit-icon-wrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+    bottom: 5px;
+    right: 5px;
+  }
+
+  .pimg-edit-icon {
+    font-size: 1.1rem;
   }
 
   .pimg-upload-area {
@@ -840,6 +966,17 @@
 
   .pimg-overlay-text {
     font-size: 0.8rem;
+  }
+
+  .pimg-edit-icon-wrapper {
+    width: 2.2rem;
+    height: 2.2rem;
+    bottom: 4px;
+    right: 4px;
+  }
+
+  .pimg-edit-icon {
+    font-size: 1rem;
   }
 
   .pimg-upload-btn,

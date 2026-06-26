@@ -563,3 +563,60 @@ def delete_current_user(request):
     return Response({
         "message": f"User '{user_name}' ({user_email}) deleted successfully"
     }, status=status.HTTP_200_OK)
+
+
+# ============================================
+# USER PROFILE IMAGE UPLOAD
+# ============================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_profile_image(request):
+    """
+    Upload profile image for the current user
+    Receives image file from client and logs it
+    """
+    try:
+        # Check if file was sent
+        if 'image' not in request.FILES:
+            return Response({
+                "message": "No image file provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        image_file = request.FILES['image']
+        
+        # Log file details to console
+        print("=" * 60)
+        print("📸 PROFILE IMAGE UPLOAD RECEIVED")
+        print("=" * 60)
+        print(f"📁 File name: {image_file.name}")
+        print(f"📏 File size: {image_file.size} bytes")
+        print(f"📄 Content type: {image_file.content_type}")
+        print(f"🧑 User ID: {request.user.id}")
+        print(f"👤 User Email: {request.user.email}")
+        
+        # Log file content preview (first 100 characters)
+        file_content = image_file.read()
+        print(f"📝 File content preview (first 100 chars):")
+        print(f"   {file_content[:100]}")
+        
+        # Reset file pointer so it can be read again if needed
+        image_file.seek(0)
+        
+        print("=" * 60)
+        print("✅ Image upload logged successfully")
+        print("=" * 60)
+        
+        # Return success response
+        return Response({
+            "message": "Image uploaded successfully",
+            "file_name": image_file.name,
+            "file_size": image_file.size,
+            "content_type": image_file.content_type,
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"❌ Error in upload_profile_image: {str(e)}")
+        return Response({
+            "message": f"Failed to upload image: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
