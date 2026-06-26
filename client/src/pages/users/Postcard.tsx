@@ -16,7 +16,6 @@ function Postcard({ id, firstName, lastName, time, location, image, caption }: P
   const [showFullImage, setShowFullImage] = useState(false);
 
   const fullName = `${firstName} ${lastName}`;
-  const handle = `@${firstName.toLowerCase()}_${lastName.toLowerCase()}`;
   const avatarUrl = `https://i.pravatar.cc/150?img=${parseInt(id) + 10}`;
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -58,7 +57,6 @@ function Postcard({ id, firstName, lastName, time, location, image, caption }: P
           <div className="post-user-info">
             <div className="post-user-name">
               <h5>{fullName}</h5>
-              <span className="post-handle">{handle}</span>
             </div>
             <div className="post-meta">
               <span>{time}</span>
