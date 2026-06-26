@@ -93,7 +93,7 @@ function Postcard({ id, firstName, lastName, time, location, image, caption }: P
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
           />
-          <button type="submit">Send</button>
+          <button type="submit">Connect</button>
         </form>
       </div>
 

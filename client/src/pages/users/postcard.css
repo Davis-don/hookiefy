@@ -57,12 +57,12 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7); /* Made more visible */
 }
 
 .post-dot {
   font-size: 0.5rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* Post Image */
@@ -162,38 +162,47 @@
 
 .post-comment-input input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.04);
-  border: none;
+  background: rgba(255, 255, 255, 0.08); /* Made background lighter */
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 25px;
   padding: 0.8rem 1.2rem;
   color: #ffffff;
   font-size: 1.2rem;
   outline: none;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .post-comment-input input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.5); /* Made placeholder more visible */
   font-size: 1.1rem;
 }
 
 .post-comment-input input:focus {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .post-comment-input button {
-  background: transparent;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   border: none;
-  color: #3b82f6;
+  color: #ffffff;
   font-weight: 600;
   font-size: 1.3rem;
   cursor: pointer;
-  transition: color 0.2s ease;
-  padding: 0.3rem 1rem;
+  transition: all 0.2s ease;
+  padding: 0.8rem 1.8rem;
+  border-radius: 25px;
+  min-width: 120px;
 }
 
 .post-comment-input button:hover {
-  color: #60a5fa;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.post-comment-input button:active {
+  transform: scale(0.98);
 }
 
 /* =========================
@@ -297,12 +306,13 @@
   }
 
   .post-user-name h5 {
-    font-size: 1.6rem; /* Doubled from 0.85rem */
+    font-size: 1.6rem;
   }
 
   .post-meta {
-    font-size: 1.2rem; /* Doubled from 0.7rem */
+    font-size: 1.2rem;
     gap: 0.6rem;
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .post-dot {
@@ -310,36 +320,42 @@
   }
 
   .post-action-btn {
-    font-size: 2.2rem; /* Increased */
+    font-size: 2.2rem;
   }
 
   .post-caption {
-    font-size: 1.5rem; /* Doubled from 0.85rem */
+    font-size: 1.5rem;
     line-height: 1.7;
   }
 
   .post-caption strong {
-    font-size: 1.5rem; /* Doubled */
+    font-size: 1.5rem;
   }
 
   .post-comment-input {
     padding-top: 1rem;
     gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .post-comment-input input {
-    font-size: 1.4rem; /* Doubled from 0.9rem */
+    font-size: 1.4rem;
     padding: 0.9rem 1.2rem;
     border-radius: 30px;
+    width: 100%;
   }
 
   .post-comment-input input::placeholder {
-    font-size: 1.3rem; /* Doubled */
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.5);
   }
 
   .post-comment-input button {
-    font-size: 1.6rem; /* Doubled from 0.9rem */
-    padding: 0.4rem 1.2rem;
+    font-size: 1.6rem;
+    padding: 0.9rem 2rem;
+    min-width: 150px;
+    width: 100%;
+    border-radius: 30px;
   }
 
   .full-image-content {
@@ -348,14 +364,14 @@
   }
 
   .full-image-caption {
-    font-size: 1.5rem; /* Doubled */
+    font-size: 1.5rem;
     max-width: 90vw;
     padding: 0.8rem 1.2rem;
     line-height: 1.7;
   }
 
   .full-image-caption strong {
-    font-size: 1.5rem; /* Doubled */
+    font-size: 1.5rem;
   }
 
   .close-full-image {
@@ -390,12 +406,13 @@
   }
 
   .post-user-name h5 {
-    font-size: 1.4rem; /* Doubled from 0.7rem */
+    font-size: 1.4rem;
   }
 
   .post-meta {
-    font-size: 1rem; /* Doubled from 0.5rem */
+    font-size: 1rem;
     gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .post-dot {
@@ -407,32 +424,38 @@
   }
 
   .post-caption {
-    font-size: 1.3rem; /* Doubled from 0.65rem */
+    font-size: 1.3rem;
     line-height: 1.6;
   }
 
   .post-caption strong {
-    font-size: 1.3rem; /* Doubled */
+    font-size: 1.3rem;
   }
 
   .post-comment-input {
     padding-top: 0.8rem;
     gap: 0.8rem;
+    flex-wrap: wrap;
   }
 
   .post-comment-input input {
-    font-size: 1.2rem; /* Doubled from 0.6rem */
+    font-size: 1.2rem;
     padding: 0.7rem 1rem;
     border-radius: 25px;
+    width: 100%;
   }
 
   .post-comment-input input::placeholder {
-    font-size: 1.1rem; /* Doubled */
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.5);
   }
 
   .post-comment-input button {
-    font-size: 1.4rem; /* Doubled from 0.7rem */
-    padding: 0.3rem 1rem;
+    font-size: 1.4rem;
+    padding: 0.7rem 1.5rem;
+    min-width: 120px;
+    width: 100%;
+    border-radius: 25px;
   }
 
   .full-image-content {
@@ -441,14 +464,14 @@
   }
 
   .full-image-caption {
-    font-size: 1.3rem; /* Doubled */
+    font-size: 1.3rem;
     max-width: 95vw;
     padding: 0.6rem 1rem;
     line-height: 1.6;
   }
 
   .full-image-caption strong {
-    font-size: 1.3rem; /* Doubled */
+    font-size: 1.3rem;
   }
 
   .close-full-image {
