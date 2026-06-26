@@ -1,0 +1,410 @@
+/* ============================================
+   connectionrequestdetail.css — Connection Request Detail View
+   ============================================ */
+
+.overall-conection-request-detail {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  min-height: 100vh;
+  animation: detailFadeIn 0.3s ease;
+}
+
+@keyframes detailFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Back button */
+.conn-req-detail-back {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 0.5rem 1.5rem 0.5rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.conn-req-detail-back:hover {
+  color: #ffffff;
+}
+
+.conn-req-detail-back-icon {
+  font-size: 1.5rem;
+}
+
+.conn-req-detail-back-text {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Profile Header */
+.conn-req-detail-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.conn-req-detail-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.conn-req-detail-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0.2rem 0;
+}
+
+.conn-req-detail-handle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.5rem;
+}
+
+.conn-req-detail-location {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.conn-req-detail-location-icon {
+  font-size: 1rem;
+}
+
+/* Stats */
+.conn-req-detail-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.conn-req-detail-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.conn-req-detail-stat-number {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.conn-req-detail-stat-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Bio Section */
+.conn-req-detail-bio {
+  padding: 0.5rem 0 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.conn-req-detail-bio-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.conn-req-detail-bio-text {
+  font-size: 1.05rem;
+  color: #e5e5e5;
+  line-height: 1.6;
+}
+
+/* Looking For Section */
+.conn-req-detail-looking {
+  padding: 0.5rem 0 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.conn-req-detail-looking-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.conn-req-detail-looking-text {
+  font-size: 1.05rem;
+  color: #e5e5e5;
+  line-height: 1.6;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Interests Section */
+.conn-req-detail-interests {
+  padding: 0.5rem 0 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.conn-req-detail-interests-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.conn-req-detail-interests-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.conn-req-detail-interest-tag {
+  padding: 0.3rem 0.8rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Message Section */
+.conn-req-detail-message {
+  padding: 0.5rem 0 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.2rem;
+}
+
+.conn-req-detail-message-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.conn-req-detail-message-text {
+  font-size: 1.05rem;
+  color: #e5e5e5;
+  line-height: 1.6;
+  padding: 0.8rem 1rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  font-style: italic;
+}
+
+.conn-req-detail-message-time {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+/* Action Buttons */
+.conn-req-detail-actions {
+  display: flex;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.conn-req-detail-btn {
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.conn-req-detail-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.conn-req-detail-btn-accept {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+}
+
+.conn-req-detail-btn-accept:hover:not(:disabled) {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.conn-req-detail-btn-decline {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.conn-req-detail-btn-decline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: scale(1.02);
+}
+
+.conn-req-detail-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* =========================
+   RESPONSIVE - TABLETS
+========================= */
+@media screen and (max-width: 48em) {
+  .conn-req-detail-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .conn-req-detail-name {
+    font-size: 1.5rem;
+  }
+
+  .conn-req-detail-stat-number {
+    font-size: 1rem;
+  }
+
+  .conn-req-detail-bio-text {
+    font-size: 0.95rem;
+  }
+
+  .conn-req-detail-looking-text {
+    font-size: 0.95rem;
+  }
+
+  .conn-req-detail-message-text {
+    font-size: 0.95rem;
+  }
+
+  .conn-req-detail-btn {
+    font-size: 1rem;
+    padding: 0.8rem 1.2rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - PHONES
+========================= */
+@media screen and (max-width: 30em) {
+  .overall-conection-request-detail {
+    padding: 0 0.3rem 1rem 0.3rem;
+  }
+
+  .conn-req-detail-back {
+    padding: 0.8rem 0.3rem 1rem 0.3rem;
+  }
+
+  .conn-req-detail-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .conn-req-detail-name {
+    font-size: 1.3rem;
+  }
+
+  .conn-req-detail-handle {
+    font-size: 0.85rem;
+  }
+
+  .conn-req-detail-location {
+    font-size: 0.85rem;
+  }
+
+  .conn-req-detail-stat-number {
+    font-size: 0.9rem;
+  }
+
+  .conn-req-detail-stat-label {
+    font-size: 0.7rem;
+  }
+
+  .conn-req-detail-bio-title {
+    font-size: 0.75rem;
+  }
+
+  .conn-req-detail-bio-text {
+    font-size: 0.9rem;
+  }
+
+  .conn-req-detail-looking-title {
+    font-size: 0.75rem;
+  }
+
+  .conn-req-detail-looking-text {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .conn-req-detail-interests-title {
+    font-size: 0.75rem;
+  }
+
+  .conn-req-detail-interest-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .conn-req-detail-message-title {
+    font-size: 0.75rem;
+  }
+
+  .conn-req-detail-message-text {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .conn-req-detail-message-time {
+    font-size: 0.7rem;
+  }
+
+  .conn-req-detail-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .conn-req-detail-btn {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+  }
+}

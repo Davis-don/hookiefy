@@ -1,0 +1,39 @@
+/* ============================================
+   connectionrequest.css — Connection Requests Container
+   ============================================ */
+
+.ovrall-connection-request-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+/* Empty state */
+.conn-req-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  gap: 0.8rem;
+}
+
+.conn-req-empty-icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.conn-req-empty-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.conn-req-empty-sub {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 300px;
+}

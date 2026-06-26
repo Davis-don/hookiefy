@@ -1,0 +1,208 @@
+/* ============================================
+   notification.css — Notifications Component
+   ============================================ */
+
+/* Wrapper */
+.notif-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  min-height: 100vh;
+}
+
+/* Header */
+.notif-header {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.notif-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.notif-header-top h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* Tabs */
+.notif-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 0.5rem;
+}
+
+.notif-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notif-tab-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notif-tab-active {
+  color: #ffffff !important;
+}
+
+.notif-tab-indicator {
+  position: absolute;
+  bottom: -0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 3px;
+  animation: notifSlideIn 0.3s ease;
+}
+
+@keyframes notifSlideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 30px;
+    opacity: 1;
+  }
+}
+
+/* Body */
+.notif-body {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 0.5rem;
+  min-height: 300px;
+  transition: all 0.3s ease;
+}
+
+/* Ensure child components fit well */
+.notif-body > * {
+  width: 100%;
+}
+
+/* Detail view - full width */
+.notif-wrapper .conn-req-detail-wrapper {
+  padding: 0;
+  max-width: 100%;
+}
+
+/* =========================
+   RESPONSIVE - TABLETS & SMALL LAPTOPS
+========================= */
+@media screen and (max-width: 48em) {
+  .notif-wrapper {
+    padding: 0.8rem;
+  }
+
+  .notif-header {
+    padding: 0.8rem 1rem;
+  }
+
+  .notif-header-top h2 {
+    font-size: 1.4rem;
+  }
+
+  .notif-tab-btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .notif-tab-indicator {
+    width: 25px;
+  }
+
+  @keyframes notifSlideIn {
+    from {
+      width: 0;
+      opacity: 0;
+    }
+    to {
+      width: 25px;
+      opacity: 1;
+    }
+  }
+}
+
+/* =========================
+   RESPONSIVE - PHONES
+========================= */
+@media screen and (max-width: 30em) {
+  .notif-wrapper {
+    padding: 0.5rem;
+  }
+
+  .notif-header {
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+  }
+
+  .notif-header-top {
+    margin-bottom: 0.8rem;
+  }
+
+  .notif-header-top h2 {
+    font-size: 1.2rem;
+  }
+
+  .notif-tabs {
+    gap: 0.3rem;
+    padding-bottom: 0.3rem;
+  }
+
+  .notif-tab-btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+
+  .notif-tab-indicator {
+    bottom: -0.35rem;
+    width: 20px;
+    height: 2.5px;
+  }
+
+  @keyframes notifSlideIn {
+    from {
+      width: 0;
+      opacity: 0;
+    }
+    to {
+      width: 20px;
+      opacity: 1;
+    }
+  }
+
+  .notif-body {
+    padding: 0.3rem;
+    min-height: 200px;
+    border-radius: 10px;
+  }
+}
