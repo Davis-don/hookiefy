@@ -1,21 +1,16 @@
-import { useEffect } from "react";
-import Toastcomponent from "../components/Toast/Toastcomponent";
-import { useToastStore } from "../store/Toaststore";
+// layouts/Toastlayout.tsx
+import type { ReactNode } from 'react'
 
-function Toastlayout({ children }: { children: React.ReactNode }) {
-  const { isMounted, setIsMounted } = useToastStore();
-
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, [setIsMounted]);
-
-  return (
-    <div className="main-toast-layout">
-      {children}
-      {isMounted && <Toastcomponent />}
-    </div>
-  );
+interface ToastlayoutProps {
+  children: ReactNode
 }
 
-export default Toastlayout;
+function Toastlayout({ children }: ToastlayoutProps) {
+  return (
+    <div className="toast-layout-container">
+      {children}
+    </div>
+  )
+}
+
+export default Toastlayout

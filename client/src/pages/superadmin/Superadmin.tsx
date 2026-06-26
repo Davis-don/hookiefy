@@ -16,8 +16,69 @@ import Superadminusers from './Superadminusers';
 import Superadminfinances from './Superadminfinances';
 import Admincommissions from './Admincommissions';
 import Profile from './Profile';
+import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '../../store/authtokenstore';
+import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+
+interface UserData {
+  id: number;
+  email: string;
+  role: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone_number: string;
+  gender: string;
+  profile_image_url: string | null;
+  profile_image_public_id: string | null;
+  has_profile_image: boolean;
+}
+
+const fetchCurrentUser = async (accessToken: string | null): Promise<UserData> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/account/current-user/`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Session expired. Please login again.');
+    }
+    throw new Error(`Failed to fetch user: ${response.status}`);
+  }
+
+  return response.json();
+};
 
 function Superadmin() {
+  const { access: accessToken } = useAuthStore();
+  
+  const { 
+    data: user, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['currentUser', accessToken],
+    queryFn: () => fetchCurrentUser(accessToken),
+    enabled: !!accessToken,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+  });
+
   const [mount, ismounted] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [dash, isdashmount] = useState(true)
@@ -49,20 +110,64 @@ function Superadmin() {
   }
 
   const handleSettingsClick = () => {
-    // If settings is already open and we click it again, close it
     if (settingsOpen) {
       setSettingsOpen(false)
-      // If adminCommissions is active, clear it
       if (adminCommissions) {
         setAdminCommissions(false)
         isdashmount(true)
       }
     } else {
-      // Open settings and clear other states
       clearAllStates()
       setSettingsOpen(true)
     }
   }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body loading-container">
+          <Loadingcomponent />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body error-container">
+          <div className="error-content">
+            <div className="error-emoji">😅</div>
+            <p className="error-message">
+              {error instanceof Error ? error.message : 'Failed to load user data'}
+            </p>
+            <button className="error-retry-btn" onClick={() => refetch()}>
+              🔄 Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No token available
+  if (!accessToken) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body no-token-container">
+          <div className="no-token-content">
+            <div className="no-token-emoji">🔒</div>
+            <p className="no-token-message">Please login to continue</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || 'User';
+  const profileImage = user?.profile_image_url || null;
 
   return (
     <div className="overall-superadmin-container">
@@ -167,8 +272,20 @@ function Superadmin() {
               <li><MdNotificationsNone className='fs-1' /></li>
 
               <li className="current-user">
-                <div className="icon-image-holder rounded-circle"></div>
-                <h5>Davis Ikou</h5>
+                <div className="icon-image-holder rounded-circle">
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt={displayName}
+                      className="profile-avatar-image"
+                    />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <h5>{displayName}</h5>
 
                 <div className="user-dropdown">
                   <button className="dropdown-btn">▼</button>

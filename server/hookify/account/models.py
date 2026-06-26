@@ -44,6 +44,20 @@ class Accounts(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Profile image fields for Cloudinary
+    profile_image_url = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="Public URL of the profile image from Cloudinary"
+    )
+    profile_image_public_id = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="Cloudinary public ID for managing the image"
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -53,3 +67,13 @@ class Accounts(AbstractUser):
     def __str__(self):
         name = f"{self.first_name} {self.last_name}".strip()
         return f"{name if name else self.email} ({self.email})"
+    
+    @property
+    def full_name(self):
+        """Returns the user's full name."""
+        return f"{self.first_name} {self.last_name}".strip() or self.email
+    
+    @property
+    def has_profile_image(self):
+        """Returns True if the user has a profile image."""
+        return bool(self.profile_image_url)

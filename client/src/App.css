@@ -13,3 +13,112 @@ body{
   line-height: 1.5;
   color: #333;
 }
+
+
+
+
+/* App.css - Add these styles */
+
+/* Sonner Toast Customization */
+.sonner-toast {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.sonner-toast [data-icon] {
+  font-size: 1.5rem !important;
+}
+
+.sonner-toast [data-title] {
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #ffffff !important;
+}
+
+.sonner-toast [data-description] {
+  font-size: 0.9rem !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Success toast */
+.sonner-toast[data-type="success"] {
+  border-left: 4px solid #22c55e !important;
+}
+
+.sonner-toast[data-type="success"] [data-icon] {
+  color: #22c55e !important;
+}
+
+/* Error toast */
+.sonner-toast[data-type="error"] {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.sonner-toast[data-type="error"] [data-icon] {
+  color: #ef4444 !important;
+}
+
+/* Loading toast */
+.sonner-toast[data-type="loading"] {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.sonner-toast[data-type="loading"] [data-icon] {
+  color: #3b82f6 !important;
+}
+
+/* Info toast */
+.sonner-toast[data-type="info"] {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+/* Warning toast */
+.sonner-toast[data-type="warning"] {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.sonner-toast[data-type="warning"] [data-icon] {
+  color: #f59e0b !important;
+}
+
+/* Close button */
+.sonner-toast [data-close-button] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+}
+
+.sonner-toast [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Mobile responsiveness for Sonner */
+@media screen and (max-width: 48em) {
+  .sonner-toast {
+    border-radius: 12px !important;
+    padding: 0.8rem !important;
+  }
+
+  .sonner-toast [data-title] {
+    font-size: 0.9rem !important;
+  }
+
+  .sonner-toast [data-description] {
+    font-size: 0.8rem !important;
+  }
+
+  .sonner-toast [data-icon] {
+    font-size: 1.2rem !important;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .sonner-toast {
+    border-radius: 10px !important;
+    padding: 0.6rem !important;
+  }
+}

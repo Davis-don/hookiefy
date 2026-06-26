@@ -1,4 +1,3 @@
-# views.py
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -6,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import Accounts
 from .permissions import is_superadmin, can_create_user, can_create_admin
@@ -24,7 +24,7 @@ def health_check(request):
 
 
 # ============================================
-# AUTHENTICATION VIEWS (NEW - Using Headers)
+# AUTHENTICATION VIEWS
 # ============================================
 
 @api_view(['POST'])
@@ -53,6 +53,9 @@ def login_view(request):
                 "role": user.role,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "full_name": user.full_name,
+                "profile_image_url": user.profile_image_url,
+                "has_profile_image": user.has_profile_image,
             }
         }, status=status.HTTP_200_OK)
 
@@ -128,19 +131,22 @@ def auth_check(request):
             "role": user.role,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "full_name": user.full_name,
+            "profile_image_url": user.profile_image_url,
+            "has_profile_image": user.has_profile_image,
         }
     })
 
 
 # ============================================
-# USER MANAGEMENT VIEWS (KEPT FROM ORIGINAL)
+# USER MANAGEMENT VIEWS
 # ============================================
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_current_logged_in_user(request):
     """
-    Get current user details
+    Get current user details including profile image
     """
     user = request.user
     return Response({
@@ -149,8 +155,12 @@ def get_current_logged_in_user(request):
         "role": user.role,
         "first_name": user.first_name,
         "last_name": user.last_name,
+        "full_name": user.full_name,
         "phone_number": user.phone_number,
         "gender": user.gender,
+        "profile_image_url": user.profile_image_url,
+        "profile_image_public_id": user.profile_image_public_id,
+        "has_profile_image": bool(user.profile_image_url),
     })
 
 
@@ -224,6 +234,9 @@ def update_user_details(request):
             "last_name": user.last_name,
             "phone_number": user.phone_number,
             "gender": user.gender,
+            "full_name": user.full_name,
+            "profile_image_url": user.profile_image_url,
+            "has_profile_image": user.has_profile_image,
         }
     })
 
@@ -269,19 +282,34 @@ def fetch_user_by_id(request, id):
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "full_name": user.full_name,
             "role": user.role,
             "phone_number": user.phone_number,
             "gender": user.gender,
+            "profile_image_url": user.profile_image_url,
+            "profile_image_public_id": user.profile_image_public_id,
+            "has_profile_image": user.has_profile_image,
+            "is_active": user.is_active,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
         })
     except Accounts.DoesNotExist:
         return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
+# ============================================
+# USERS BY ROLE VIEWS WITH PAGINATION (Superadmin only)
+# ============================================
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_users_by_role(request, role):
+def get_users_by_role_or_all(request, role=None):
     """
-    Get all users with a specific role (superadmin only)
+    Get users by role with pagination, or all users if 'all' is passed
+    Excludes the current logged-in user
+    (superadmin only)
     """
     if not is_superadmin(request.user):
         return Response(
@@ -289,7 +317,116 @@ def get_users_by_role(request, role):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    users = Accounts.objects.filter(role=role)
+    current_user = request.user
+
+    # Base queryset
+    if role == 'all' or role is None:
+        users = Accounts.objects.exclude(id=current_user.id).order_by('-date_joined')
+        message = "All users fetched successfully (excluding current user)"
+    else:
+        users = Accounts.objects.filter(role=role).exclude(id=current_user.id).order_by('-date_joined')
+        message = f"Users with role '{role}' fetched successfully (excluding current user)"
+
+    # Pagination parameters
+    page = request.GET.get('page', 1)
+    page_size = request.GET.get('page_size', 5)
+
+    try:
+        page = int(page)
+        page_size = int(page_size)
+        if page_size > 100:
+            page_size = 100  # Limit max page size
+    except ValueError:
+        page = 1
+        page_size = 5
+
+    # Paginate
+    paginator = Paginator(users, page_size)
+    total_pages = paginator.num_pages
+    total_count = paginator.count
+
+    try:
+        users_page = paginator.page(page)
+    except PageNotAnInteger:
+        users_page = paginator.page(1)
+    except EmptyPage:
+        users_page = paginator.page(paginator.num_pages)
+
+    # Serialize data
+    data = [
+        {
+            "id": u.id,
+            "email": u.email,
+            "role": u.role,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "full_name": u.full_name,
+            "phone_number": u.phone_number,
+            "gender": u.gender,
+            "profile_image_url": u.profile_image_url,
+            "profile_image_public_id": u.profile_image_public_id,
+            "has_profile_image": u.has_profile_image,
+            "is_active": u.is_active,
+            "is_staff": u.is_staff,
+            "is_superuser": u.is_superuser,
+            "date_joined": u.date_joined,
+            "last_login": u.last_login,
+        }
+        for u in users_page
+    ]
+
+    return Response({
+        "message": message,
+        "count": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "has_next": users_page.has_next(),
+        "has_previous": users_page.has_previous(),
+        "data": data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_users_paginated(request):
+    """
+    Get all users with pagination (superadmin only)
+    """
+    if not is_superadmin(request.user):
+        return Response(
+            {"message": "Permission denied. Superadmin only."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    current_user = request.user
+    
+    # Exclude current user
+    users = Accounts.objects.exclude(id=current_user.id).order_by('-date_joined')
+
+    # Pagination parameters
+    page = request.GET.get('page', 1)
+    page_size = request.GET.get('page_size', 5)
+
+    try:
+        page = int(page)
+        page_size = int(page_size)
+        if page_size > 100:
+            page_size = 100
+    except ValueError:
+        page = 1
+        page_size = 5
+
+    paginator = Paginator(users, page_size)
+    total_pages = paginator.num_pages
+    total_count = paginator.count
+
+    try:
+        users_page = paginator.page(page)
+    except PageNotAnInteger:
+        users_page = paginator.page(1)
+    except EmptyPage:
+        users_page = paginator.page(paginator.num_pages)
 
     data = [
         {
@@ -298,12 +435,28 @@ def get_users_by_role(request, role):
             "role": u.role,
             "first_name": u.first_name,
             "last_name": u.last_name,
+            "full_name": u.full_name,
+            "phone_number": u.phone_number,
+            "gender": u.gender,
+            "profile_image_url": u.profile_image_url,
+            "profile_image_public_id": u.profile_image_public_id,
+            "has_profile_image": u.has_profile_image,
+            "is_active": u.is_active,
+            "is_staff": u.is_staff,
+            "is_superuser": u.is_superuser,
+            "date_joined": u.date_joined,
+            "last_login": u.last_login,
         }
-        for u in users
+        for u in users_page
     ]
 
     return Response({
-        "message": f"Users with role '{role}' fetched successfully",
-        "count": len(data),
+        "message": "All users fetched successfully (excluding current user)",
+        "count": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "has_next": users_page.has_next(),
+        "has_previous": users_page.has_previous(),
         "data": data
     })

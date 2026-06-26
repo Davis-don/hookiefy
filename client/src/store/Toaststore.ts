@@ -21,7 +21,7 @@ interface ToastStore {
 
 export const useToastStore = create<ToastStore>((set) => ({
   currentToast: null,
-  isMounted: false,
+  isMounted: true,
   
   addToast: (toast) => {
     const id = Math.random().toString(36).substring(2, 9);

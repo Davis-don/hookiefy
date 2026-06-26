@@ -1,7 +1,8 @@
 import './fetchallusers.css'
 import Usertablefetch from './Usertablefetch'
 import { useState, useRef, useEffect } from 'react'
-import { FiSearch, FiFilter, FiX, FiChevronDown } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiChevronDown, FiRefreshCw } from 'react-icons/fi'
+import { useMountStore } from './store/usermodalstore'
 
 function FetchallUsers() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -10,12 +11,22 @@ function FetchallUsers() {
   const [showSearchInput, setShowSearchInput] = useState(false)
   const [showRoleDropdown, setShowRoleDropdown] = useState(false)
   const [showSearchTypeDropdown, setShowSearchTypeDropdown] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   
   const searchInputRef = useRef<HTMLInputElement>(null)
   const roleDropdownRef = useRef<HTMLDivElement>(null)
   const searchTypeDropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdowns when clicking outside
+  const { isMounted } = useMountStore();
+
+  // Initial load
+  useEffect(() => {
+    if (isMounted === false) {
+      setRefreshTrigger(prev => prev + 1);
+    }
+  }, [isMounted]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
@@ -64,16 +75,44 @@ function FetchallUsers() {
     }
   }
 
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    setRefreshTrigger(prev => prev + 1)
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 600)
+  }
+
   return (
     <div className="fau-main-container">
       <div className="fau-header-container">
         <div className="fau-header-left">
           <h2>Users</h2>
+          {selectedRole !== 'all' && (
+            <span className="fau-active-filter-badge">
+              {selectedRole}
+              <FiX onClick={() => handleRoleChange('all')} />
+            </span>
+          )}
+          {searchTerm && (
+            <span className="fau-active-filter-badge fau-search-badge">
+              Search: {searchTerm}
+              <FiX onClick={() => setSearchTerm('')} />
+            </span>
+          )}
         </div>
         <div className="fau-header-right">
-          {/* Filter bar - always in a row */}
           <div className="fau-search-filter-container">
-            {/* Search Icon with popup input */}
+            {/* Refresh Button */}
+            <button 
+              className={`fau-refresh-btn ${isRefreshing ? 'fau-refreshing' : ''}`}
+              onClick={handleRefresh}
+              title="Refresh users"
+            >
+              <FiRefreshCw />
+            </button>
+
             <div className="fau-icon-wrapper" ref={searchInputRef}>
               <button 
                 className={`fau-icon-btn ${searchTerm ? 'fau-active' : ''}`}
@@ -101,7 +140,6 @@ function FetchallUsers() {
               )}
             </div>
 
-            {/* Search Type Dropdown */}
             <div className="fau-icon-wrapper" ref={searchTypeDropdownRef}>
               <button 
                 className={`fau-icon-btn ${searchType !== 'all' ? 'fau-active' : ''}`}
@@ -147,7 +185,6 @@ function FetchallUsers() {
               )}
             </div>
 
-            {/* Role Dropdown */}
             <div className="fau-icon-wrapper" ref={roleDropdownRef}>
               <button 
                 className={`fau-icon-btn ${selectedRole !== 'all' ? 'fau-active' : ''}`}
@@ -187,10 +224,9 @@ function FetchallUsers() {
               )}
             </div>
 
-            {/* Clear Filters Button */}
             {(searchTerm || selectedRole !== 'all' || searchType !== 'all') && (
               <button 
-                className="fau-clear-filters-btn"
+                className=""
                 onClick={clearAllFilters}
                 title="Clear all filters"
               >
@@ -206,6 +242,7 @@ function FetchallUsers() {
           searchTerm={searchTerm}
           selectedRole={selectedRole}
           searchType={searchType}
+          refreshTrigger={refreshTrigger}
         />
       </div>
     </div>
