@@ -279,53 +279,67 @@
 }
 
 /* =========================
-   RESPONSIVE
-========================= */
+   RESPONSIVE - SMALL SCREENS (PHONES)
+   ========================= */
 @media screen and (max-width: 46.875em) {
   .overall-post-card-container {
-    padding: 1rem;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
   }
 
   .post-image-content {
-    height: 300px;
+    height: 320px;
   }
 
   .post-avatar-img {
-    width: 3rem;
-    height: 3rem;
+    width: 3.2rem;
+    height: 3.2rem;
   }
 
   .post-user-name h5 {
-    font-size: 1.2rem;
+    font-size: 1.6rem; /* Doubled from 0.85rem */
   }
 
   .post-meta {
-    font-size: 0.9rem;
+    font-size: 1.2rem; /* Doubled from 0.7rem */
+    gap: 0.6rem;
+  }
+
+  .post-dot {
+    font-size: 0.8rem;
   }
 
   .post-action-btn {
-    font-size: 1.7rem;
+    font-size: 2.2rem; /* Increased */
   }
 
   .post-caption {
-    font-size: 1.1rem;
+    font-size: 1.5rem; /* Doubled from 0.85rem */
+    line-height: 1.7;
   }
 
   .post-caption strong {
-    font-size: 1.1rem;
+    font-size: 1.5rem; /* Doubled */
+  }
+
+  .post-comment-input {
+    padding-top: 1rem;
+    gap: 1rem;
   }
 
   .post-comment-input input {
-    font-size: 1rem;
-    padding: 0.7rem 1rem;
+    font-size: 1.4rem; /* Doubled from 0.9rem */
+    padding: 0.9rem 1.2rem;
+    border-radius: 30px;
   }
 
   .post-comment-input input::placeholder {
-    font-size: 0.95rem;
+    font-size: 1.3rem; /* Doubled */
   }
 
   .post-comment-input button {
-    font-size: 1.1rem;
+    font-size: 1.6rem; /* Doubled from 0.9rem */
+    padding: 0.4rem 1.2rem;
   }
 
   .full-image-content {
@@ -334,74 +348,91 @@
   }
 
   .full-image-caption {
-    font-size: 1.1rem;
+    font-size: 1.5rem; /* Doubled */
     max-width: 90vw;
-    padding: 0.6rem 1rem;
+    padding: 0.8rem 1.2rem;
+    line-height: 1.7;
   }
 
   .full-image-caption strong {
-    font-size: 1.1rem;
+    font-size: 1.5rem; /* Doubled */
   }
 
   .close-full-image {
-    top: -2.8rem;
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.3rem;
+    top: -3rem;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.6rem;
   }
 }
 
+/* =========================
+   RESPONSIVE - VERY SMALL SCREENS
+   ========================= */
 @media screen and (max-width: 30em) {
   .overall-post-card-container {
-    padding: 0.8rem;
+    padding: 1rem;
     margin-bottom: 1rem;
-  }
-
-  .post-image-content {
-    height: 220px;
-  }
-
-  .post-avatar-img {
-    width: 2.5rem;
-    height: 2.5rem;
   }
 
   .post-header {
     gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .post-image-content {
+    height: 260px;
+  }
+
+  .post-avatar-img {
+    width: 2.8rem;
+    height: 2.8rem;
   }
 
   .post-user-name h5 {
-    font-size: 1rem;
+    font-size: 1.4rem; /* Doubled from 0.7rem */
   }
 
   .post-meta {
-    font-size: 0.8rem;
+    font-size: 1rem; /* Doubled from 0.5rem */
+    gap: 0.5rem;
+  }
+
+  .post-dot {
+    font-size: 0.6rem;
   }
 
   .post-action-btn {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .post-caption {
-    font-size: 0.95rem;
+    font-size: 1.3rem; /* Doubled from 0.65rem */
+    line-height: 1.6;
   }
 
   .post-caption strong {
-    font-size: 0.95rem;
+    font-size: 1.3rem; /* Doubled */
+  }
+
+  .post-comment-input {
+    padding-top: 0.8rem;
+    gap: 0.8rem;
   }
 
   .post-comment-input input {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.8rem;
+    font-size: 1.2rem; /* Doubled from 0.6rem */
+    padding: 0.7rem 1rem;
+    border-radius: 25px;
   }
 
   .post-comment-input input::placeholder {
-    font-size: 0.85rem;
+    font-size: 1.1rem; /* Doubled */
   }
 
   .post-comment-input button {
-    font-size: 1rem;
-    padding: 0.3rem 0.6rem;
+    font-size: 1.4rem; /* Doubled from 0.7rem */
+    padding: 0.3rem 1rem;
   }
 
   .full-image-content {
@@ -410,19 +441,20 @@
   }
 
   .full-image-caption {
-    font-size: 0.95rem;
+    font-size: 1.3rem; /* Doubled */
     max-width: 95vw;
-    padding: 0.5rem 0.8rem;
+    padding: 0.6rem 1rem;
+    line-height: 1.6;
   }
 
   .full-image-caption strong {
-    font-size: 0.95rem;
+    font-size: 1.3rem; /* Doubled */
   }
 
   .close-full-image {
-    top: -2.2rem;
-    width: 2rem;
-    height: 2rem;
-    font-size: 1rem;
+    top: -2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.4rem;
   }
 }
