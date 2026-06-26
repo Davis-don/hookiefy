@@ -10,6 +10,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Accounts
 from .permissions import is_superadmin, can_create_user, can_create_admin
 from .serializers import MyTokenObtainPairSerializer, CreateNewUserSerializer
+import time
+from .controllers.cloudinary_utils import upload_image_to_cloudinary, delete_image_from_cloudinary, upload_or_replace_profile_image
 
 User = get_user_model()
 
@@ -564,7 +566,6 @@ def delete_current_user(request):
         "message": f"User '{user_name}' ({user_email}) deleted successfully"
     }, status=status.HTTP_200_OK)
 
-
 # ============================================
 # USER PROFILE IMAGE UPLOAD
 # ============================================
@@ -574,7 +575,7 @@ def delete_current_user(request):
 def upload_profile_image(request):
     """
     Upload profile image for the current user
-    Receives image file from client and logs it
+    Uses upload_or_replace_profile_image to handle replace or add
     """
     try:
         # Check if file was sent
@@ -585,6 +586,19 @@ def upload_profile_image(request):
 
         image_file = request.FILES['image']
         
+        # Validate file type
+        valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in valid_types:
+            return Response({
+                "message": f"Invalid file type. Allowed: {', '.join(valid_types)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file size (max 5MB)
+        if image_file.size > 5 * 1024 * 1024:
+            return Response({
+                "message": "File size must be less than 5MB"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         # Log file details to console
         print("=" * 60)
         print("📸 PROFILE IMAGE UPLOAD RECEIVED")
@@ -594,25 +608,48 @@ def upload_profile_image(request):
         print(f"📄 Content type: {image_file.content_type}")
         print(f"🧑 User ID: {request.user.id}")
         print(f"👤 User Email: {request.user.email}")
-        
-        # Log file content preview (first 100 characters)
-        file_content = image_file.read()
-        print(f"📝 File content preview (first 100 chars):")
-        print(f"   {file_content[:100]}")
-        
-        # Reset file pointer so it can be read again if needed
-        image_file.seek(0)
-        
         print("=" * 60)
-        print("✅ Image upload logged successfully")
+        
+        # Upload or replace profile image
+        print("\n🔄 Processing profile image...")
+        result = upload_or_replace_profile_image(
+            image_file=image_file,
+            user=request.user,
+            folder="profile_images"
+        )
+        
+        # Log result
+        print("\n✅ Upload Result:")
+        print("-" * 40)
+        print(f"🔗 URL: {result['url']}")
+        print(f"🆔 Public ID: {result['public_id']}")
+        print(f"🔄 Replaced: {result['replaced']}")
+        if result['replaced']:
+            print(f"🗑️ Old Public ID: {result['old_public_id']}")
+        print("-" * 40)
+        print("=" * 60)
+        print("✅ Profile image processed successfully")
         print("=" * 60)
         
         # Return success response
         return Response({
-            "message": "Image uploaded successfully",
+            "message": "Profile image uploaded successfully",
             "file_name": image_file.name,
             "file_size": image_file.size,
             "content_type": image_file.content_type,
+            "replaced": result['replaced'],
+            "old_public_id": result['old_public_id'],
+            "cloudinary": {
+                "url": result['url'],
+                "public_id": result['public_id'],
+            },
+            "user": {
+                "id": request.user.id,
+                "email": request.user.email,
+                "profile_image_url": request.user.profile_image_url,
+                "profile_image_public_id": request.user.profile_image_public_id,
+                "has_profile_image": request.user.has_profile_image
+            }
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
