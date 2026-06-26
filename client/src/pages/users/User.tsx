@@ -1,6 +1,6 @@
 import './user.css'
 import { CiHome } from "react-icons/ci";
-import { RiMessage2Line } from "react-icons/ri";
+// import { RiMessage2Line } from "react-icons/ri";
 import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
 import { useState } from 'react';
@@ -10,7 +10,7 @@ import Submodalsuser from './Submodalsuser';
 // Import components
 import Home from './Home';
 import Search from './Search';
-import Messages from './Messages';
+// import Messages from './Messages';
 import Notifications from './Notifications';
 import Profile from './Profile';
 
@@ -29,8 +29,8 @@ function User() {
         return <Home />;
       case 'search':
         return <Search />;
-      case 'messages':
-        return <Messages />;
+      // case 'messages':
+      //   return <Messages />;
       case 'notifications':
         return <Notifications />;
       case 'profile':
@@ -62,13 +62,13 @@ function User() {
                     <div className="icon-fig"><IoSearch /></div>
                     <div className="nav-name">Search</div>
                 </li>
-                <li 
+                {/* <li 
                     className={activeTab === 'messages' ? 'active-nav' : ''}
                     onClick={() => handleNavClick('messages')}
                 >
                     <div className="icon-fig"><RiMessage2Line /></div>
                     <div className="nav-name">Messages</div>
-                </li>
+                </li> */}
                 <li 
                     className={activeTab === 'notifications' ? 'active-nav' : ''}
                     onClick={() => handleNavClick('notifications')}
