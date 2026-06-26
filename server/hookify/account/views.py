@@ -266,17 +266,29 @@ def update_user_password(request):
     return Response({"message": "Password updated successfully"})
 
 
-@api_view(['GET'])
+# ============================================
+# USER MANAGEMENT BY ID (Superadmin only)
+# ============================================
+
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def fetch_user_by_id(request, id):
+def manage_user_by_id(request, id):
     """
-    Fetch user by ID (admin/superadmin only)
+    Fetch, update, or delete user by ID (superadmin only)
     """
-    if request.user.role not in ["admin", "superadmin"]:
-        return Response({"message": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+    if not is_superadmin(request.user):
+        return Response(
+            {"message": "Permission denied. Superadmin only."},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
     try:
         user = Accounts.objects.get(id=id)
+    except Accounts.DoesNotExist:
+        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # GET - Fetch user
+    if request.method == 'GET':
         return Response({
             "id": user.id,
             "email": user.email,
@@ -295,8 +307,80 @@ def fetch_user_by_id(request, id):
             "date_joined": user.date_joined,
             "last_login": user.last_login,
         })
-    except Accounts.DoesNotExist:
-        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # PUT - Update user
+    elif request.method == 'PUT':
+        # Don't allow updating yourself
+        if user.id == request.user.id:
+            return Response(
+                {"message": "You cannot update your own account through this endpoint."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update fields
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
+        email = request.data.get("email")
+        phone_number = request.data.get("phone_number")
+        role = request.data.get("role")
+        is_active = request.data.get("is_active")
+
+        if email and email != user.email:
+            if Accounts.objects.filter(email=email).exclude(id=user.id).exists():
+                return Response(
+                    {"message": "Email already exists."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.email = email
+
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if phone_number is not None:
+            user.phone_number = phone_number
+        if role and role in ['user', 'admin', 'superadmin']:
+            user.role = role
+        if is_active is not None:
+            user.is_active = is_active
+
+        user.save()
+
+        return Response({
+            "message": "User updated successfully",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "role": user.role,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "full_name": user.full_name,
+                "phone_number": user.phone_number,
+                "gender": user.gender,
+                "profile_image_url": user.profile_image_url,
+                "has_profile_image": user.has_profile_image,
+                "is_active": user.is_active,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+            }
+        })
+
+    # DELETE - Delete user
+    elif request.method == 'DELETE':
+        # Don't allow deleting yourself
+        if user.id == request.user.id:
+            return Response(
+                {"message": "You cannot delete your own account."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_email = user.email
+        user_name = user.full_name
+        user.delete()
+
+        return Response({
+            "message": f"User '{user_name}' ({user_email}) deleted successfully"
+        }, status=status.HTTP_200_OK)
 
 
 # ============================================

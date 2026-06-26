@@ -1,12 +1,13 @@
 import './usertablefetch.css'
-import { useState, useEffect } from 'react'
-import { FiUser, FiUsers, FiShield, FiSearch } from 'react-icons/fi'
+import { useState, useEffect, useRef } from 'react'
+import { FiUser, FiUsers, FiShield, FiSearch, FiSave, FiX, FiAlertTriangle } from 'react-icons/fi'
 import { AiTwotoneEdit } from "react-icons/ai";
 import { MdDelete } from "react-icons/md";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+import { toast } from 'sonner'
 
 interface User {
   id: number;
@@ -65,7 +66,7 @@ const fetchAllUsers = async (
   return data.data || [];
 };
 
-// Fetch users by role - get ALL users of that role (1000 records)
+// Fetch users by role
 const fetchUsersByRole = async (
   accessToken: string | null,
   role: string
@@ -97,6 +98,56 @@ const fetchUsersByRole = async (
   return data.data || [];
 };
 
+// Update user function
+const updateUser = async (
+  accessToken: string | null,
+  userId: number,
+  userData: Partial<User>
+): Promise<User> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/user/${userId}/`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to update user');
+  }
+
+  return response.json();
+};
+
+// Delete user function - using the same endpoint with DELETE method
+const deleteUser = async (
+  accessToken: string | null,
+  userId: number
+): Promise<void> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/user/${userId}/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to delete user');
+  }
+};
+
 function Usertablefetch({ 
   searchTerm, 
   selectedRole, 
@@ -104,8 +155,20 @@ function Usertablefetch({
   refreshTrigger = 0
 }: UsertablefetchProps) {
   const { access: accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [editingData, setEditingData] = useState<Partial<User>>({});
+  const [deleteModal, setDeleteModal] = useState<{ show: boolean; userId: number | null; userName: string; userEmail: string }>({
+    show: false,
+    userId: null,
+    userName: '',
+    userEmail: ''
+  });
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const modalInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch users based on selected role
   const {
@@ -132,6 +195,75 @@ function Usertablefetch({
     retry: 1,
   });
 
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ userId, userData }: { userId: number; userData: Partial<User> }) =>
+      updateUser(accessToken, userId, userData),
+    onSuccess: () => {
+      toast.success('User updated successfully!', {
+        duration: 3000,
+        icon: '✅',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      setEditingUserId(null);
+      setEditingData({});
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update user', {
+        description: error.message,
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (userId: number) => deleteUser(accessToken, userId),
+    onSuccess: () => {
+      toast.success('User deleted successfully!', {
+        duration: 3000,
+        icon: '🗑️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      setDeleteModal({ show: false, userId: null, userName: '', userEmail: '' });
+      setDeleteConfirmText('');
+      setIsDeleting(false);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete user', {
+        description: error.message,
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      setDeleteModal({ show: false, userId: null, userName: '', userEmail: '' });
+      setDeleteConfirmText('');
+      setIsDeleting(false);
+    },
+  });
+
   // Update data when response changes
   useEffect(() => {
     if (data) {
@@ -139,7 +271,7 @@ function Usertablefetch({
     }
   }, [data]);
 
-  // Handle search filtering - search across ALL fetched data
+  // Handle search filtering
   useEffect(() => {
     if (!searchTerm) {
       setDisplayedUsers(allUsers);
@@ -178,7 +310,99 @@ function Usertablefetch({
   useEffect(() => {
     setAllUsers([]);
     setDisplayedUsers([]);
+    setEditingUserId(null);
+    setEditingData({});
   }, [selectedRole]);
+
+  // Focus input when modal opens
+  useEffect(() => {
+    if (deleteModal.show && modalInputRef.current) {
+      setTimeout(() => {
+        modalInputRef.current?.focus();
+      }, 100);
+    }
+  }, [deleteModal.show]);
+
+  // Handle edit start
+  const handleEditStart = (user: User) => {
+    setEditingUserId(user.id);
+    setEditingData({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      phone_number: user.phone_number,
+      role: user.role,
+      is_active: user.is_active,
+    });
+  };
+
+  // Handle edit cancel
+  const handleEditCancel = () => {
+    setEditingUserId(null);
+    setEditingData({});
+  };
+
+  // Handle edit save
+  const handleEditSave = (userId: number) => {
+    updateMutation.mutate({ userId, userData: editingData });
+  };
+
+  // Handle field change during edit
+  const handleFieldChange = (field: keyof User, value: string | boolean) => {
+    setEditingData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle delete click - open modal
+  const handleDeleteClick = (userId: number, userName: string, userEmail: string) => {
+    setDeleteModal({
+      show: true,
+      userId,
+      userName,
+      userEmail
+    });
+    setDeleteConfirmText('');
+    setIsDeleting(false);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = () => {
+    if (deleteModal.userId && deleteConfirmText.toLowerCase() === `delete ${deleteModal.userEmail.toLowerCase()}`) {
+      setIsDeleting(true);
+      deleteMutation.mutate(deleteModal.userId);
+    } else {
+      toast.error('Confirmation text does not match!', {
+        description: `Please type "delete ${deleteModal.userEmail}" exactly as shown.`,
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+    }
+  };
+
+  // Close delete modal
+  const closeDeleteModal = () => {
+    if (!isDeleting) {
+      setDeleteModal({ show: false, userId: null, userName: '', userEmail: '' });
+      setDeleteConfirmText('');
+    }
+  };
+
+  // Handle key press for modal
+  const handleModalKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+    }
+    if (e.key === 'Enter') {
+      handleDeleteConfirm();
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     switch(role) {
@@ -195,14 +419,6 @@ function Usertablefetch({
 
   const getStatusBadge = (isActive: boolean) => {
     return isActive ? 'fau-status-active' : 'fau-status-inactive'
-  }
-
-  const handleDelete = (id: number) => {
-    alert(`Delete user with ID: ${id}`)
-  }
-
-  const handleEdit = (id: number) => {
-    alert(`Edit user with ID: ${id}`)
   }
 
   const getInitials = (firstName: string, lastName: string) => {
@@ -307,6 +523,90 @@ function Usertablefetch({
     );
   };
 
+  // ============================================
+  // DELETE CONFIRMATION MODAL
+  // ============================================
+  const DeleteConfirmationModal = () => {
+    if (!deleteModal.show) return null;
+
+    const expectedText = `delete ${deleteModal.userEmail}`;
+
+    return (
+      <div className="fau-modal-overlay" onClick={closeDeleteModal}>
+        <div className="fau-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="fau-modal-header">
+            <div className="fau-modal-icon-wrapper">
+              <FiAlertTriangle className="fau-modal-icon" />
+            </div>
+            <h3 className="fau-modal-title">Delete User</h3>
+            <button className="fau-modal-close" onClick={closeDeleteModal} disabled={isDeleting}>
+              <FiX />
+            </button>
+          </div>
+          
+          <div className="fau-modal-body">
+            <p className="fau-modal-warning">
+              Are you sure you want to delete <strong>"{deleteModal.userName}"</strong>?
+            </p>
+            <p className="fau-modal-description">
+              This action <strong>cannot</strong> be undone. All associated data will be permanently removed.
+            </p>
+            
+            <div className="fau-modal-confirm-box">
+              <p className="fau-modal-confirm-label">
+                Type <span className="fau-modal-confirm-code">delete {deleteModal.userEmail}</span> to confirm:
+              </p>
+              <input
+                ref={modalInputRef}
+                type="text"
+                className={`fau-modal-input ${deleteConfirmText && deleteConfirmText.toLowerCase() !== expectedText.toLowerCase() && !isDeleting ? 'fau-modal-input-error' : ''}`}
+                placeholder={`delete ${deleteModal.userEmail}`}
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                onKeyDown={handleModalKeyDown}
+                disabled={isDeleting}
+              />
+              {deleteConfirmText && deleteConfirmText.toLowerCase() !== expectedText.toLowerCase() && !isDeleting && (
+                <p className="fau-modal-error-text">
+                  Please type exactly: <span className="fau-modal-error-code">{expectedText}</span>
+                </p>
+              )}
+              {deleteConfirmText.toLowerCase() === expectedText.toLowerCase() && !isDeleting && (
+                <p className="fau-modal-success-text">
+                  ✓ Confirmation matches. You can proceed with deletion.
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="fau-modal-footer">
+            <button 
+              className="fau-modal-btn fau-modal-btn-cancel" 
+              onClick={closeDeleteModal}
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button 
+              className={`fau-modal-btn fau-modal-btn-danger ${deleteConfirmText.toLowerCase() === expectedText.toLowerCase() && !isDeleting ? 'fau-modal-btn-active' : ''}`}
+              onClick={handleDeleteConfirm}
+              disabled={deleteConfirmText.toLowerCase() !== expectedText.toLowerCase() || isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <span className="fau-modal-spinner"></span>
+                  Deleting...
+                </>
+              ) : (
+                'Delete User'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading && !allUsers.length) {
     return (
       <div className="fau-table-wrapper">
@@ -391,6 +691,8 @@ function Usertablefetch({
           <tbody>
             {displayedUsers.map((user) => {
               const roleBadge = getRoleBadge(user.role)
+              const isEditing = editingUserId === user.id;
+              
               return (
                 <tr key={user.id}>
                   <td>
@@ -410,38 +712,132 @@ function Usertablefetch({
                         )}
                       </div>
                       <div className="fau-user-name">
-                        <span className="fau-full-name">{user.full_name || `${user.first_name} ${user.last_name}`}</span>
-                        <span className="fau-user-id">ID: {user.id}</span>
+                        {isEditing ? (
+                          <div className="fau-edit-fields">
+                            <input
+                              type="text"
+                              className="fau-edit-input"
+                              value={editingData.first_name || ''}
+                              onChange={(e) => handleFieldChange('first_name', e.target.value)}
+                              placeholder="First Name"
+                            />
+                            <input
+                              type="text"
+                              className="fau-edit-input"
+                              value={editingData.last_name || ''}
+                              onChange={(e) => handleFieldChange('last_name', e.target.value)}
+                              placeholder="Last Name"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <span className="fau-full-name">{user.full_name || `${user.first_name} ${user.last_name}`}</span>
+                            <span className="fau-user-id">ID: {user.id}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>
-                  <td className="fau-email-cell">{user.email}</td>
-                  <td className="fau-phone-cell">{user.phone_number || 'N/A'}</td>
-                  <td>
-                    <span className="fau-role-badge" style={{ color: roleBadge.color }}>
-                      {roleBadge.icon}
-                      {roleBadge.label}
-                    </span>
+                  <td className="fau-email-cell">
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        className="fau-edit-input"
+                        value={editingData.email || ''}
+                        onChange={(e) => handleFieldChange('email', e.target.value)}
+                        placeholder="Email"
+                      />
+                    ) : (
+                      user.email
+                    )}
+                  </td>
+                  <td className="fau-phone-cell">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="fau-edit-input"
+                        value={editingData.phone_number || ''}
+                        onChange={(e) => handleFieldChange('phone_number', e.target.value)}
+                        placeholder="Phone"
+                      />
+                    ) : (
+                      user.phone_number || 'N/A'
+                    )}
                   </td>
                   <td>
-                    <span className={`fau-status-badge ${getStatusBadge(user.is_active)}`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    {isEditing ? (
+                      <select
+                        className="fau-edit-select"
+                        value={editingData.role || 'user'}
+                        onChange={(e) => handleFieldChange('role', e.target.value)}
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Super Admin</option>
+                      </select>
+                    ) : (
+                      <span className="fau-role-badge" style={{ color: roleBadge.color }}>
+                        {roleBadge.icon}
+                        {roleBadge.label}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
+                      <select
+                        className="fau-edit-select"
+                        value={editingData.is_active ? 'active' : 'inactive'}
+                        onChange={(e) => handleFieldChange('is_active', e.target.value === 'active')}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    ) : (
+                      <span className={`fau-status-badge ${getStatusBadge(user.is_active)}`}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <div className="fau-action-buttons">
-                      <button
-                        className='btn btn-outline-info fau-edit-btn'
-                        onClick={() => handleEdit(user.id)}
-                      >
-                        <AiTwotoneEdit className='fs-2'/>
-                      </button>
-                      <button
-                        className='btn btn-outline-danger fau-delete-btn'
-                        onClick={() => handleDelete(user.id)}
-                      >
-                        <MdDelete className='fs-2'/>
-                      </button>
+                      {isEditing ? (
+                        <>
+                          <button
+                            className='btn btn-success fau-save-btn'
+                            onClick={() => handleEditSave(user.id)}
+                            disabled={updateMutation.isPending}
+                            title="Save changes"
+                          >
+                            <FiSave />
+                          </button>
+                          <button
+                            className='btn btn-secondary fau-cancel-btn'
+                            onClick={handleEditCancel}
+                            disabled={updateMutation.isPending}
+                            title="Cancel editing"
+                          >
+                            <FiX />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className='btn btn-outline-info fau-edit-btn'
+                            onClick={() => handleEditStart(user)}
+                            title="Edit user"
+                          >
+                            <AiTwotoneEdit />
+                          </button>
+                          <button
+                            className='btn btn-outline-danger fau-delete-btn'
+                            onClick={() => handleDeleteClick(user.id, user.full_name || user.email, user.email)}
+                            disabled={deleteMutation.isPending}
+                            title="Delete user"
+                          >
+                            <MdDelete />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -464,6 +860,9 @@ function Usertablefetch({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal />
     </div>
   )
 }

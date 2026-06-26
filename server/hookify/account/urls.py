@@ -18,10 +18,11 @@ urlpatterns = [
     path('new/', views.create_new_user, name='create_user'),
     path('update-user/', views.update_user_details, name='update_user'),
     path('update-password/', views.update_user_password, name='update_password'),
-    path('user/<int:id>/', views.fetch_user_by_id, name='fetch_user_by_id'),
+    
+    # User management by ID (GET, PUT, DELETE) - MUST come before role/all paths
+    path('user/<int:id>/', views.manage_user_by_id, name='manage_user_by_id'),
     
     # Get users by role OR all users with pagination (superadmin only)
-    # Examples: /role/superadmin/?page=1&page_size=5
     path('role/<str:role>/', views.get_users_by_role_or_all, name='get_users_by_role_or_all'),
     
     # Get all users with pagination (superadmin only)
