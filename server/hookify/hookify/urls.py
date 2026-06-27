@@ -20,6 +20,12 @@ urlpatterns = [
     # Assignments
     path("assignments/", include("assignments.urls")),
 
+     # User Profile
+    path("profile/", include("userprofile.urls")),
+
+    # User preference
+    path("preference/", include("userpreference.urls")),
+
     # JWT Token Refresh
     path(
         "api/token/refresh/",

@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "account",
     "assignments",
+    "userprofile",
+    "userpreference",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]
