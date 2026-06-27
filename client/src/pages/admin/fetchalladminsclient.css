@@ -1,5 +1,5 @@
 /* ============================================
-   fetchalladminclients.css — Fetch All Admin Clients
+   fetchalladminsclient.css — Fetch All Admin Clients
    ============================================ */
 
 .fac-main-container {
@@ -73,6 +73,36 @@
   margin: 0;
 }
 
+.fac-active-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 2rem;
+  color: #00e5ff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fac-active-filter-badge svg {
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.fac-active-filter-badge svg:hover {
+  color: #ff5252;
+  transform: scale(1.2);
+}
+
+.fac-search-badge {
+  background: rgba(0, 229, 255, 0.05);
+  border-color: rgba(0, 229, 255, 0.15);
+}
+
 .fac-header-right {
   display: flex;
   align-items: center;
@@ -89,6 +119,44 @@
   align-items: center;
   gap: 0.6rem;
   flex-wrap: nowrap;
+}
+
+/* --- Refresh Button --- */
+.fac-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(0, 229, 255, 0.03);
+  color: rgba(150, 220, 240, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+}
+
+.fac-refresh-btn:hover {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #d6f0f5;
+  transform: rotate(180deg);
+}
+
+.fac-refresh-btn.fac-refreshing {
+  animation: facSpin 0.6s linear infinite;
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+@keyframes facSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* --- Icon Wrapper --- */
@@ -388,6 +456,11 @@
     width: 2.6rem;
     height: 2.6rem;
   }
+  
+  .fac-refresh-btn {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
 }
 
 @media screen and (max-width: 48em) {
@@ -458,6 +531,12 @@
   }
   
   .fac-clear-filters-btn svg {
+    font-size: 1.3rem;
+  }
+  
+  .fac-refresh-btn {
+    width: 2.8rem;
+    height: 2.8rem;
     font-size: 1.3rem;
   }
 }
@@ -549,6 +628,12 @@
   .fac-clear-filters-btn svg {
     font-size: 1rem;
   }
+  
+  .fac-refresh-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1rem;
+  }
 }
 
 /* --- Landscape phone fix --- */
@@ -573,5 +658,11 @@
   .fac-dropdown-item {
     padding: 0.4rem 0.8rem;
     font-size: 0.75rem;
+  }
+  
+  .fac-refresh-btn {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
   }
 }

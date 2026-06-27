@@ -11,6 +11,7 @@ import { CiSettings } from "react-icons/ci";
 import { FcMoneyTransfer } from "react-icons/fc";
 import { ImProfile } from "react-icons/im";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
+import { FaUserFriends } from "react-icons/fa";
 import Superadmindash from '../../components/superadmin/Superadmindash';
 import Superadminusers from './Superadminusers';
 import Superadminfinances from './Superadminfinances';
@@ -20,6 +21,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner';
+import Myclients from '../admin/Myclients';
 
 interface UserData {
   id: number;
@@ -151,6 +153,7 @@ function Superadmin() {
   const [finances, isFinances] = useState(false)
   const [profile, isprofile] = useState(false)
   const [adminCommissions, setAdminCommissions] = useState(false)
+  const [clients, setClients] = useState(false)
 
   useEffect(() => {
     const checkScreen = () => {
@@ -171,6 +174,7 @@ function Superadmin() {
     isFinances(false)
     isprofile(false)
     setAdminCommissions(false)
+    setClients(false)
   }
 
   const handleSettingsClick = () => {
@@ -285,6 +289,10 @@ function Superadmin() {
             <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isusersmount(true); ismounted(!mount)}} className={users?"sidebar_link active-sidebar":"sidebar_link"}>
               <FaUsers /> Users
             </div>
+
+            <div onClick={()=>{clearAllStates(); setSettingsOpen(false); setClients(true); ismounted(!mount)}} className={clients?"sidebar_link active-sidebar":"sidebar_link"}>
+              <FaUserFriends /> Clients
+            </div>
             
             <div onClick={()=>{clearAllStates(); setSettingsOpen(false); isFinances(true); ismounted(!mount)}} className={finances?"sidebar_link active-sidebar":"sidebar_link"}>
               <FcMoneyTransfer /> Finances
@@ -346,6 +354,7 @@ function Superadmin() {
 
             {dash && <h3 style={{cursor:"pointer"}}>Dashboard</h3>}
             {users && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Users</h3>}
+            {clients && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Clients</h3>}
             {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
             {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
             {adminCommissions && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Commissions</h3>}
@@ -396,6 +405,7 @@ function Superadmin() {
         <div className="dashboard-body-content">
           {dash && <Superadmindash/>}
           {users && <Superadminusers/>}
+          {clients && <Myclients/>}
           {finances && <Superadminfinances/>}
           {profile && <Profile/>}
           {adminCommissions && <Admincommissions/>}

@@ -1,13 +1,15 @@
 import './fetchalladminsclient.css'
 import Adminclientfetch from './Adminclientfetch'
 import { useState, useRef, useEffect } from 'react'
-import { FiSearch, FiFilter, FiX, FiChevronDown } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiChevronDown, FiRefreshCw } from 'react-icons/fi'
 
 function Fetchalladminclients() {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchType, setSearchType] = useState('all')
   const [showSearchInput, setShowSearchInput] = useState(false)
   const [showSearchTypeDropdown, setShowSearchTypeDropdown] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchTypeDropdownRef = useRef<HTMLDivElement>(null)
@@ -52,15 +54,38 @@ function Fetchalladminclients() {
     }
   }
 
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    setRefreshTrigger(prev => prev + 1)
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 600)
+  }
+
   return (
     <div className="fac-main-container">
       <div className="fac-header-container">
         <div className="fac-header-left">
           <h2>Clients</h2>
+          {searchTerm && (
+            <span className="fac-active-filter-badge fac-search-badge">
+              Search: {searchTerm}
+              <FiX onClick={() => setSearchTerm('')} />
+            </span>
+          )}
         </div>
         <div className="fac-header-right">
-          {/* Filter bar - always in a row */}
           <div className="fac-search-filter-container">
+            {/* Refresh Button */}
+            <button 
+              className={` ${isRefreshing ? 'fac-refreshing' : ''}`}
+              onClick={handleRefresh}
+              title="Refresh clients"
+            >
+              <FiRefreshCw />
+            </button>
+
             {/* Search Icon with popup input */}
             <div className="fac-icon-wrapper" ref={searchInputRef}>
               <button 
@@ -159,6 +184,7 @@ function Fetchalladminclients() {
         <Adminclientfetch 
           searchTerm={searchTerm}
           searchType={searchType}
+          refreshTrigger={refreshTrigger}
         />
       </div>
     </div>

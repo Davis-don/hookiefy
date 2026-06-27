@@ -17,6 +17,8 @@ urlpatterns = [
 
     # Authentication & Account APIs
     path("account/", include("account.urls")),
+    # Assignments
+    path("assignments/", include("assignments.urls")),
 
     # JWT Token Refresh
     path(
