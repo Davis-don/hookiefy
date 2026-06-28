@@ -21,8 +21,6 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          <Route path="/" element={
-            <User />} />
           {/* Public routes */}
           <Route path="/home" element={
             <Mainlayout><Homepage /></Mainlayout>} />
