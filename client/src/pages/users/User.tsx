@@ -24,8 +24,8 @@ const TEST_MODE = true; // Set to false for production
 
 function User() {
   const [activeTab, setActiveTab] = useState('home');
-  const [showProfileModal, setShowProfileModal] = useState(true);
-  const [showPreferenceModal, setShowPreferenceModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPreferenceModal, setShowPreferenceModal] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [hasPreference, setHasPreference] = useState(false);
