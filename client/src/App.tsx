@@ -22,7 +22,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/home" element={
+          <Route path="/" element={
             <Mainlayout><Homepage /></Mainlayout>} />
           <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />
