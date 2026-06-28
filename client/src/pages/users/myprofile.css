@@ -1,0 +1,435 @@
+/* ============================================
+   myprofile.css - Profile Modal
+   ============================================ */
+
+/* Overlay */
+.mpf-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  animation: mpfFadeIn 0.3s ease;
+  padding: 1rem;
+}
+
+@keyframes mpfFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Modal Content */
+.mpf-modal-content {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  animation: mpfSlideUp 0.3s ease;
+}
+
+@keyframes mpfSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mpf-modal-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mpf-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mpf-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+/* Header */
+.mpf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  z-index: 10;
+}
+
+.mpf-header-left h3 {
+  color: #000000;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.mpf-header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Close icon removed - hidden */
+.mpf-close-icon {
+  display: none;
+}
+
+/* Form Container */
+.mpf-form-container {
+  padding: 2rem;
+}
+
+.mpf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mpf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.mpf-label {
+  color: #333333;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.mpf-input,
+.mpf-select,
+.mpf-textarea {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  color: #000000;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  outline: none;
+}
+
+.mpf-input:focus,
+.mpf-select:focus,
+.mpf-textarea:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.mpf-input::placeholder,
+.mpf-textarea::placeholder {
+  color: #999999;
+  font-size: 1rem;
+}
+
+.mpf-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  padding-right: 3rem;
+  cursor: pointer;
+}
+
+.mpf-select option {
+  background: #ffffff;
+  color: #000000;
+}
+
+.mpf-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mpf-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.mpf-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Form Actions */
+.mpf-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.mpf-submit-btn,
+.mpf-cancel-btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.mpf-submit-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.mpf-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.mpf-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mpf-cancel-btn {
+  background: #f0f0f0;
+  color: #333333;
+  border: 1px solid #e0e0e0;
+}
+
+.mpf-cancel-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+  color: #000000;
+}
+
+.mpf-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.mpf-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
+}
+
+.mpf-loading-container p {
+  color: #666666;
+  font-size: 1.1rem;
+}
+
+.mpf-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(0, 0, 0, 0.05);
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: mpfSpin 0.8s linear infinite;
+}
+
+@keyframes mpfSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablets and smaller */
+@media screen and (max-width: 768px) {
+  .mpf-modal-content {
+    max-width: 100%;
+    margin: 1rem;
+    border-radius: 16px;
+  }
+
+  .mpf-header {
+    padding: 1.2rem 1.5rem;
+  }
+
+  .mpf-header-left h3 {
+    font-size: 1.4rem;
+  }
+
+  .mpf-form-container {
+    padding: 1.5rem;
+  }
+
+  .mpf-form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .mpf-form-actions {
+    flex-direction: column;
+  }
+
+  .mpf-submit-btn,
+  .mpf-cancel-btn {
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .mpf-input,
+  .mpf-select,
+  .mpf-textarea {
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Mobile phones */
+@media screen and (max-width: 480px) {
+  .mpf-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .mpf-modal-content {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+    animation: mpfSlideUpMobile 0.3s ease;
+  }
+
+  @keyframes mpfSlideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mpf-header {
+    padding: 1rem 1.2rem;
+  }
+
+  .mpf-header-left h3 {
+    font-size: 1.3rem;
+  }
+
+  .mpf-form-container {
+    padding: 1.2rem;
+  }
+
+  .mpf-form-group {
+    gap: 0.4rem;
+  }
+
+  .mpf-label {
+    font-size: 0.95rem;
+  }
+
+  .mpf-input,
+  .mpf-select,
+  .mpf-textarea {
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .mpf-textarea {
+    min-height: 80px;
+  }
+
+  .mpf-form-actions {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .mpf-submit-btn,
+  .mpf-cancel-btn {
+    padding: 0.9rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .mpf-loading-container {
+    padding: 3rem 1.5rem;
+  }
+
+  .mpf-loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Extra small phones */
+@media screen and (max-width: 360px) {
+  .mpf-header {
+    padding: 0.8rem 1rem;
+  }
+
+  .mpf-header-left h3 {
+    font-size: 1.1rem;
+  }
+
+  .mpf-form-container {
+    padding: 1rem;
+  }
+
+  .mpf-input,
+  .mpf-select,
+  .mpf-textarea {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .mpf-label {
+    font-size: 0.85rem;
+  }
+
+  .mpf-submit-btn,
+  .mpf-cancel-btn {
+    font-size: 0.9rem;
+    padding: 0.7rem 0.8rem;
+  }
+}
+
+/* Safe area for notch phones */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 480px) {
+    .mpf-modal-content {
+      padding-bottom: max(1.2rem, env(safe-area-inset-bottom));
+    }
+  }
+}

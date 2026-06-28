@@ -131,3 +131,31 @@ def get_preference(request):
             {"message": "Preferences not found. Please create one first."},
             status=status.HTTP_404_NOT_FOUND
         )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_preference(request):
+    """
+    Check if the currently authenticated user has preferences.
+    Returns true if preferences exist, false otherwise.
+    """
+    user = request.user
+    
+    # Check if user has role 'user'
+    if user.role != 'user':
+        return Response(
+            {
+                "has_preference": False, 
+                "message": "Only users with role 'user' can have preferences.",
+                "user_role": user.role
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    # Check if preference exists
+    preference_exists = Preference.objects.filter(user=user).exists()
+    
+    return Response({
+        "has_preference": preference_exists,
+        "message": "Preference status checked successfully"
+    }, status=status.HTTP_200_OK)

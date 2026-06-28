@@ -21,8 +21,10 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          {/* Public routes */}
           <Route path="/" element={
+            <User />} />
+          {/* Public routes */}
+          <Route path="/home" element={
             <Mainlayout><Homepage /></Mainlayout>} />
           <Route path="/about" element={
             <Mainlayout><About /></Mainlayout>} />

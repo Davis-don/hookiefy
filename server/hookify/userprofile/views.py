@@ -90,3 +90,27 @@ def get_profile(request):
             {"message": "Profile not found. Please create one first."},
             status=status.HTTP_404_NOT_FOUND
         )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_profile(request):
+    """
+    Check if the currently authenticated user has a profile.
+    Returns true if profile exists, false otherwise.
+    """
+    user = request.user
+    
+    # Check if user has role 'user'
+    if user.role != 'user':
+        return Response(
+            {"has_profile": False, "message": "Only users with role 'user' can have profiles."},
+            status=status.HTTP_200_OK
+        )
+    
+    # Check if profile exists
+    profile_exists = UserProfile.objects.filter(user=user).exists()
+    
+    return Response({
+        "has_profile": profile_exists,
+        "message": "Profile status checked successfully"
+    }, status=status.HTTP_200_OK)
