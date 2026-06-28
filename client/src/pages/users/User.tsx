@@ -17,17 +17,27 @@ import Profile from './Profile';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { useAuthStore } from '../../store/authtokenstore';
 
+// ============================================
+// TEST MODE - Set to true to test UI without login
+// ============================================
+const TEST_MODE = true; // Set to false for production
+
 function User() {
   const [activeTab, setActiveTab] = useState('home');
   const [showProfileModal, setShowProfileModal] = useState(true);
-  const [showPreferenceModal, setShowPreferenceModal] = useState(true);
-  const [isChecking, setIsChecking] = useState(true);
+  const [showPreferenceModal, setShowPreferenceModal] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [hasPreference, setHasPreference] = useState(false);
   const { access: accessToken } = useAuthStore();
 
   // Check if user has profile
   const checkProfile = async () => {
+    // TEST MODE: Simulate no profile
+    if (TEST_MODE) {
+      return false;
+    }
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/profile/has-profile/`,
@@ -53,6 +63,11 @@ function User() {
 
   // Check if user has preference
   const checkPreference = async () => {
+    // TEST MODE: Simulate no preference
+    if (TEST_MODE) {
+      return false;
+    }
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/preference/has-preference/`,
@@ -79,6 +94,16 @@ function User() {
   // Check both profile and preference status on mount
   useEffect(() => {
     const checkStatus = async () => {
+      // TEST MODE: Skip checking and show profile modal
+      if (TEST_MODE) {
+        setShowProfileModal(true);
+        setShowPreferenceModal(false);
+        setHasProfile(false);
+        setHasPreference(false);
+        setIsChecking(false);
+        return;
+      }
+
       if (!accessToken) {
         setIsChecking(false);
         return;
@@ -118,6 +143,14 @@ function User() {
   // Handle profile completion
   const handleProfileComplete = async () => {
     setShowProfileModal(false);
+    
+    // TEST MODE: Show preference modal after profile
+    if (TEST_MODE) {
+      setShowPreferenceModal(true);
+      setHasProfile(true);
+      return;
+    }
+
     // Re-check profile status
     const profileExists = await checkProfile();
     setHasProfile(profileExists);
@@ -131,6 +164,13 @@ function User() {
   // Handle preference completion
   const handlePreferenceComplete = async () => {
     setShowPreferenceModal(false);
+    
+    // TEST MODE: Mark preference as complete
+    if (TEST_MODE) {
+      setHasPreference(true);
+      return;
+    }
+
     // Re-check preference status
     const preferenceExists = await checkPreference();
     setHasPreference(preferenceExists);
@@ -216,8 +256,8 @@ function User() {
     }
   };
 
-  // No token available
-  if (!accessToken) {
+  // No token available - but in test mode we bypass this
+  if (!accessToken && !TEST_MODE) {
     return (
       <div className="overall-user-component-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
