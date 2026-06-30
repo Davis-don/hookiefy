@@ -1,0 +1,293 @@
+/* ============================================================
+   myuserprofile.css  (Instagram-style profile edit)
+   ============================================================ */
+
+/* ----- Overlay ----- */
+.mup-overlay {
+  width: 100%;
+  animation: mupFadeIn 0.3s ease;
+}
+
+@keyframes mupFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- Modal Content ----- */
+.mup-modal-content {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px 28px 28px 28px;
+  border: 1px solid #2a2a2a;
+  width: 100%;
+}
+
+/* ----- Header ----- */
+.mup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.mup-header-left h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+}
+
+.mup-header-subtitle {
+  font-size: 14px;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+.mup-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.mup-close-icon {
+  font-size: 24px;
+  color: #8e8e8e;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.mup-close-icon:hover {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+/* ----- Form ----- */
+.mup-form-container {
+  width: 100%;
+}
+
+.mup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mup-form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.mup-form-row .mup-form-group {
+  flex: 1;
+}
+
+.mup-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mup-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+.mup-input,
+.mup-textarea,
+.mup-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #ffffff;
+  background: #0a0a0a;
+  transition: border 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.mup-input:focus,
+.mup-textarea:focus,
+.mup-select:focus {
+  border-color: #0095f6;
+  background: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.1);
+}
+
+.mup-input::placeholder,
+.mup-textarea::placeholder {
+  color: #555555;
+}
+
+.mup-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.mup-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e8e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+.mup-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mup-select option {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* ----- Form Actions ----- */
+.mup-form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #2a2a2a;
+}
+
+.mup-submit-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #0095f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mup-submit-btn:hover:not(:disabled) {
+  background: #0080d6;
+  transform: scale(1.01);
+}
+
+.mup-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mup-cancel-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #2a2a2a;
+  color: #d4d4d4;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mup-cancel-btn:hover:not(:disabled) {
+  background: #3a3a3a;
+}
+
+.mup-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ----- Loading ----- */
+.mup-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 16px;
+}
+
+.mup-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #0095f6;
+  border-radius: 50%;
+  animation: mupSpin 0.8s linear infinite;
+}
+
+@keyframes mupSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mup-loading-container p {
+  color: #8e8e8e;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ----- Responsive ----- */
+@media screen and (max-width: 540px) {
+  .mup-modal-content {
+    padding: 20px 16px 24px 16px;
+  }
+
+  .mup-form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mup-header-left h3 {
+    font-size: 18px;
+  }
+
+  .mup-header-subtitle {
+    font-size: 13px;
+  }
+
+  .mup-form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mup-input,
+  .mup-textarea,
+  .mup-select {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .mup-submit-btn,
+  .mup-cancel-btn {
+    font-size: 14px;
+    padding: 8px 0;
+  }
+
+  .mup-close-icon {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .mup-modal-content {
+    padding: 16px 12px 20px 12px;
+  }
+
+  .mup-header-left h3 {
+    font-size: 16px;
+  }
+
+  .mup-header-subtitle {
+    font-size: 12px;
+  }
+
+  .mup-label {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,277 @@
+/* ============================================================
+   myuserpreference.css  (Instagram-style preference edit)
+   ============================================================ */
+
+/* ----- Overlay ----- */
+.mupref-overlay {
+  width: 100%;
+  animation: muprefFadeIn 0.3s ease;
+}
+
+@keyframes muprefFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- Modal Content ----- */
+.mupref-modal-content {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px 28px 28px 28px;
+  border: 1px solid #2a2a2a;
+  width: 100%;
+}
+
+/* ----- Header ----- */
+.mupref-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.mupref-header-left h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+}
+
+.mupref-header-subtitle {
+  font-size: 14px;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+.mupref-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.mupref-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #8e8e8e;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.mupref-close-btn:hover {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+/* ----- Form ----- */
+.mupref-form-container {
+  width: 100%;
+}
+
+.mupref-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mupref-form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.mupref-form-row .mupref-form-group {
+  flex: 1;
+}
+
+.mupref-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mupref-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+.mupref-input,
+.mupref-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #ffffff;
+  background: #0a0a0a;
+  transition: border 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.mupref-input:focus,
+.mupref-select:focus {
+  border-color: #0095f6;
+  background: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.1);
+}
+
+.mupref-input::placeholder {
+  color: #555555;
+}
+
+.mupref-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e8e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+.mupref-select option {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* ----- Form Actions ----- */
+.mupref-form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #2a2a2a;
+}
+
+.mupref-submit-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #0095f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mupref-submit-btn:hover:not(:disabled) {
+  background: #0080d6;
+  transform: scale(1.01);
+}
+
+.mupref-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mupref-cancel-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #2a2a2a;
+  color: #d4d4d4;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mupref-cancel-btn:hover:not(:disabled) {
+  background: #3a3a3a;
+}
+
+.mupref-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ----- Loading ----- */
+.mupref-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 16px;
+}
+
+.mupref-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #0095f6;
+  border-radius: 50%;
+  animation: muprefSpin 0.8s linear infinite;
+}
+
+@keyframes muprefSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mupref-loading-container p {
+  color: #8e8e8e;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ----- Responsive ----- */
+@media screen and (max-width: 540px) {
+  .mupref-modal-content {
+    padding: 20px 16px 24px 16px;
+  }
+
+  .mupref-form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mupref-header-left h3 {
+    font-size: 18px;
+  }
+
+  .mupref-header-subtitle {
+    font-size: 13px;
+  }
+
+  .mupref-form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mupref-input,
+  .mupref-select {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .mupref-submit-btn,
+  .mupref-cancel-btn {
+    font-size: 14px;
+    padding: 8px 0;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .mupref-modal-content {
+    padding: 16px 12px 20px 12px;
+  }
+
+  .mupref-header-left h3 {
+    font-size: 16px;
+  }
+
+  .mupref-header-subtitle {
+    font-size: 12px;
+  }
+
+  .mupref-label {
+    font-size: 12px;
+  }
+}
