@@ -107,6 +107,52 @@ def delete_image_from_cloudinary(public_id):
         raise Exception(f"Cloudinary delete failed: {str(e)}")
 
 
+def delete_user_all_images(user):
+    """
+    Delete all Cloudinary images associated with a user
+    This includes profile images and any other images stored for the user
+    
+    Args:
+        user: The user object (must have profile_image_public_id field)
+    
+    Returns:
+        dict: {
+            'deleted': bool,
+            'public_id_deleted': str or None,
+            'message': str
+        }
+    """
+    deleted = False
+    public_id_deleted = None
+    
+    try:
+        if user.profile_image_public_id:
+            print(f"🗑️ Deleting profile image: {user.profile_image_public_id}")
+            delete_result = delete_image_from_cloudinary(user.profile_image_public_id)
+            if delete_result.get('result') == 'ok':
+                deleted = True
+                public_id_deleted = user.profile_image_public_id
+                print(f"✅ Profile image deleted successfully")
+            else:
+                print(f"⚠️ Failed to delete profile image: {delete_result}")
+        else:
+            print("ℹ️ No profile image to delete")
+        
+        return {
+            'deleted': deleted,
+            'public_id_deleted': public_id_deleted,
+            'message': 'Profile image deleted' if deleted else 'No image to delete'
+        }
+        
+    except Exception as e:
+        print(f"❌ Error deleting user images: {str(e)}")
+        return {
+            'deleted': False,
+            'public_id_deleted': None,
+            'message': f'Error deleting images: {str(e)}'
+        }
+
+
 def upload_or_replace_profile_image(image_file, user, folder="profile_images"):
     """
     Upload a profile image for a user.

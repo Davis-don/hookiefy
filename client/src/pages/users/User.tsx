@@ -1,8 +1,13 @@
+// ============================================================
+// User.tsx - Updated with unique class names for profile avatar
+// ============================================================
+
 import './user.css'
 import { CiHome } from "react-icons/ci";
 // import { RiMessage2Line } from "react-icons/ri";
 import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
+import { IoPerson } from "react-icons/io5";
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Submodalsuser from './Submodalsuser';
@@ -16,6 +21,60 @@ import Notifications from './Notifications';
 import Profile from './Profile';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { useAuthStore } from '../../store/authtokenstore';
+import { useQuery } from '@tanstack/react-query';
+
+// ============================================================
+// TYPES
+// ============================================================
+
+interface CurrentUserData {
+  id: number;
+  email: string;
+  role: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone_number: string;
+  gender: string;
+  profile_image_url: string | null;
+  profile_image_public_id: string | null;
+  has_profile_image: boolean;
+  assignment: {
+    assigned_to_id: number;
+    assigned_to_email: string;
+    assigned_to_name: string;
+  } | null;
+}
+
+// ============================================================
+// API HELPER
+// ============================================================
+
+const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUserData> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/current-user/`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Session expired. Please login again.');
+    }
+    throw new Error(`Failed to fetch user: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 function User() {
   const [activeTab, setActiveTab] = useState('home');
@@ -25,6 +84,21 @@ function User() {
   const [hasProfile, setHasProfile] = useState(false);
   const [hasPreference, setHasPreference] = useState(false);
   const { access: accessToken } = useAuthStore();
+
+  // ---- Fetch current user data for profile icon ----
+  const { 
+    data: userData, 
+    isLoading: isLoadingUser,
+  
+  } = useQuery<CurrentUserData>({
+    queryKey: ['currentUser', accessToken],
+    queryFn: () => fetchCurrentUser(accessToken),
+    enabled: !!accessToken,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
 
   // Check if user has profile
   const checkProfile = async () => {
@@ -139,6 +213,36 @@ function User() {
   // Close sidebar on mobile when clicking a link (optional)
   const handleNavClick = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  // ---- Render profile avatar content with unique classes ----
+  const renderProfileAvatar = () => {
+    if (isLoadingUser) {
+      return (
+        <div className="user-profile-avatar-wrapper user-profile-avatar-loading">
+          <div className="user-profile-avatar-spinner"></div>
+        </div>
+      );
+    }
+
+    if (userData?.profile_image_url) {
+      return (
+        <div className="user-profile-avatar-wrapper">
+          <img 
+            src={userData.profile_image_url} 
+            alt={userData.full_name || 'Profile'}
+            className="user-profile-avatar-img"
+          />
+        </div>
+      );
+    }
+
+    // Default: User icon
+    return (
+      <div className="user-profile-avatar-wrapper default-bg">
+        <IoPerson className="user-profile-avatar-icon" />
+      </div>
+    );
   };
 
   // Render the appropriate component based on active tab
@@ -265,7 +369,7 @@ function User() {
                       className={`profile-user-nav ${activeTab === 'profile' ? 'active-nav' : ''}`}
                       onClick={() => handleNavClick('profile')}
                   >
-                      <div className="profile-div-user rounded-circle"></div>
+                      {renderProfileAvatar()}
                       <div className="nav-name">Profile</div>
                   </li>
               </ul>
@@ -305,4 +409,4 @@ function User() {
   )
 }
 
-export default User
+export default User;

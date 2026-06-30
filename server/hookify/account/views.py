@@ -13,8 +13,15 @@ from .models import Accounts
 from .permissions import is_superadmin, can_create_user, can_create_admin
 from .serializers import MyTokenObtainPairSerializer, CreateNewUserSerializer
 from assignments.models import ClientAssignment
+from userprofile.models import UserProfile
+from userpreference.models import Preference
+from .controllers.cloudinary_utils import (
+    upload_image_to_cloudinary, 
+    delete_image_from_cloudinary, 
+    upload_or_replace_profile_image,
+    delete_user_all_images
+)
 import time
-from .controllers.cloudinary_utils import upload_image_to_cloudinary, delete_image_from_cloudinary, upload_or_replace_profile_image
 
 User = get_user_model()
 
@@ -401,6 +408,120 @@ def update_user_password(request):
 
 
 # ============================================
+# HELPER: Delete user and all associated data
+# ============================================
+
+def delete_user_completely(user, reassign_admin=None):
+    """
+    Completely delete a user and all associated data including:
+    - Cloudinary images
+    - Profile
+    - Preferences
+    - Assignments
+    - Account
+    
+    Args:
+        user: The user to delete
+        reassign_admin: If provided, reassign clients to this admin (for admin deletion)
+    
+    Returns:
+        dict: {
+            'deleted': bool,
+            'cloudinary_images_deleted': bool,
+            'reassigned_count': int
+        }
+    """
+    deleted = False
+    cloudinary_images_deleted = False
+    reassigned_count = 0
+    
+    print("=" * 60)
+    print("🗑️ STARTING USER DELETION PROCESS")
+    print("=" * 60)
+    print(f"👤 User: {user.email} ({user.full_name})")
+    print(f"🆔 ID: {user.id}")
+    print(f"📋 Role: {user.role}")
+    print("=" * 60)
+    
+    try:
+        # --- 1. DELETE CLOUDINARY IMAGES ---
+        if user.profile_image_public_id:
+            print("\n📸 Deleting Cloudinary images...")
+            try:
+                # Delete the profile image
+                delete_result = delete_image_from_cloudinary(user.profile_image_public_id)
+                if delete_result.get('result') == 'ok':
+                    print(f"✅ Profile image deleted: {user.profile_image_public_id}")
+                    cloudinary_images_deleted = True
+                else:
+                    print(f"⚠️ Failed to delete profile image: {delete_result}")
+            except Exception as e:
+                print(f"⚠️ Error deleting profile image: {str(e)}")
+                # Continue with deletion even if Cloudinary fails
+        else:
+            print("\n📸 No profile image to delete")
+        
+        # --- 2. DELETE PROFILE ---
+        print("\n📝 Deleting user profile...")
+        try:
+            profile = UserProfile.objects.get(user=user)
+            profile.delete()
+            print("✅ Profile deleted successfully")
+        except UserProfile.DoesNotExist:
+            print("ℹ️ No profile found")
+        except Exception as e:
+            print(f"⚠️ Error deleting profile: {str(e)}")
+        
+        # --- 3. DELETE PREFERENCES ---
+        print("\n⚙️ Deleting user preferences...")
+        try:
+            preference = Preference.objects.get(user=user)
+            preference.delete()
+            print("✅ Preferences deleted successfully")
+        except Preference.DoesNotExist:
+            print("ℹ️ No preferences found")
+        except Exception as e:
+            print(f"⚠️ Error deleting preferences: {str(e)}")
+        
+        # --- 4. HANDLE ASSIGNMENTS ---
+        print("\n📋 Handling assignments...")
+        if user.role == 'admin' and reassign_admin:
+            # Reassign clients from this admin to the new admin
+            reassigned_count = ClientAssignment.objects.filter(assigned_admin=user).update(
+                assigned_admin=reassign_admin
+            )
+            print(f"✅ Reassigned {reassigned_count} clients to {reassign_admin.email}")
+        elif user.role == 'user':
+            # Delete the user's assignment
+            try:
+                assignment = ClientAssignment.objects.get(user=user)
+                assignment.delete()
+                print("✅ User assignment deleted")
+            except ClientAssignment.DoesNotExist:
+                print("ℹ️ No assignment found")
+        
+        # --- 5. DELETE THE ACCOUNT ---
+        print("\n🗑️ Deleting user account...")
+        user.delete()
+        deleted = True
+        print("✅ Account deleted successfully")
+        
+        print("\n" + "=" * 60)
+        print("✅ USER DELETION COMPLETED SUCCESSFULLY")
+        print("=" * 60)
+        
+        return {
+            'deleted': deleted,
+            'cloudinary_images_deleted': cloudinary_images_deleted,
+            'reassigned_count': reassigned_count
+        }
+        
+    except Exception as e:
+        print(f"❌ Error during user deletion: {str(e)}")
+        raise
+
+
+# ============================================
 # USER MANAGEMENT BY ID (Superadmin only)
 # ============================================
 
@@ -590,25 +711,33 @@ def manage_user_by_id(request, id):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Get user info before deletion
         user_email = user.email
         user_name = user.full_name
         user_role = user.role
+        reassigned_count = 0
 
-        # If deleting an admin, reassign their clients to superadmin
-        if user_role == 'admin':
-            superadmin = Accounts.objects.get(role='superadmin')
-            # Reassign all clients assigned to this admin
-            reassigned_count = ClientAssignment.objects.filter(assigned_admin=user).update(assigned_admin=superadmin)
-            print(f"✅ Reassigned {reassigned_count} clients from admin {user_email} to superadmin")
-
-        # Delete the user (cascade will handle assignment deletion for users)
-        user.delete()
-
-        return Response({
-            "message": f"User '{user_name}' ({user_email}) deleted successfully",
-            "role_deleted": user_role,
-            "clients_reassigned": reassigned_count if user_role == 'admin' else 0
-        }, status=status.HTTP_200_OK)
+        try:
+            # Get superadmin for reassignment (if needed)
+            superadmin = None
+            if user_role == 'admin':
+                superadmin = Accounts.objects.get(role='superadmin')
+            
+            # Delete user completely with all associated data
+            result = delete_user_completely(user, reassign_admin=superadmin)
+            
+            return Response({
+                "message": f"User '{user_name}' ({user_email}) deleted successfully",
+                "role_deleted": user_role,
+                "cloudinary_images_deleted": result.get('cloudinary_images_deleted', False),
+                "clients_reassigned": result.get('reassigned_count', 0)
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"❌ Error during user deletion: {str(e)}")
+            return Response({
+                "message": f"Failed to delete user: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================
@@ -797,12 +926,15 @@ def get_all_users_paginated(request):
         "data": data
     })
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def delete_current_user(request):
     """
     Delete the currently logged in user account
     Superadmin cannot be deleted
+    Also deletes Cloudinary images, profile, preferences, and assignments
     """
     user = request.user
     
@@ -813,25 +945,37 @@ def delete_current_user(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # If user is admin, reassign their clients before deletion
-    if user.role == 'admin':
-        superadmin = Accounts.objects.get(role='superadmin')
-        reassigned_count = ClientAssignment.objects.filter(assigned_admin=user).update(assigned_admin=superadmin)
-        print(f"✅ Reassigned {reassigned_count} clients from admin {user.email} to superadmin")
-    
-    # Store user info for response
+    # Get user info before deletion
     user_email = user.email
     user_name = user.full_name or f"{user.first_name} {user.last_name}"
     user_role = user.role
+    reassigned_count = 0
     
-    # Delete the user
-    user.delete()
-    
-    return Response({
-        "message": f"User '{user_name}' ({user_email}) deleted successfully",
-        "role_deleted": user_role,
-        "clients_reassigned": reassigned_count if user_role == 'admin' else 0
-    }, status=status.HTTP_200_OK)
+    try:
+        # If user is admin, get superadmin for reassignment
+        superadmin = None
+        if user_role == 'admin':
+            superadmin = Accounts.objects.get(role='superadmin')
+        
+        # Delete user completely with all associated data
+        result = delete_user_completely(user, reassign_admin=superadmin)
+        
+        return Response({
+            "message": f"User '{user_name}' ({user_email}) deleted successfully",
+            "role_deleted": user_role,
+            "cloudinary_images_deleted": result.get('cloudinary_images_deleted', False),
+            "clients_reassigned": result.get('reassigned_count', 0)
+        }, status=status.HTTP_200_OK)
+        
+    except Accounts.DoesNotExist:
+        return Response({
+            "message": "Superadmin not found"
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"❌ Error during user deletion: {str(e)}")
+        return Response({
+            "message": f"Failed to delete user: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================

@@ -1,6 +1,6 @@
-/* ============================================
+/* ============================================================
    user.css — User Dashboard (Instagram-style)
-   ============================================ */
+   ============================================================ */
 
 * {
   margin: 0;
@@ -104,22 +104,92 @@
   white-space: nowrap;
 }
 
-/* Profile nav item */
+/* =========================
+   PROFILE NAV ITEM WITH IMAGE - UNIQUE CLASSES
+========================= */
 .profile-user-nav {
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: 0.8rem;
 }
 
-.profile-div-user {
+/* Profile avatar wrapper - unique class */
+.user-profile-avatar-wrapper {
   height: 2.4rem;
   width: 2.4rem;
-  border: 2px solid #ffffff;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 50% !important;
   flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-/* Sidebar Footer */
+/* Background for default icon */
+.user-profile-avatar-wrapper.default-bg {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Profile image loaded - unique class */
+.user-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% !important;
+  display: block;
+}
+
+/* Default icon when no image - unique class */
+.user-profile-avatar-icon {
+  font-size: 1.2rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading state - unique class */
+.user-profile-avatar-loading {
+  background: #1a1a1a;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-avatar-spinner {
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: userProfileSpin 0.8s linear infinite;
+}
+
+@keyframes userProfileSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Hover effect on profile nav item */
+.profile-user-nav:hover .user-profile-avatar-wrapper {
+  transform: scale(1.05);
+  border-color: #0095f6;
+}
+
+.profile-user-nav.active-nav .user-profile-avatar-wrapper {
+  border-color: #0095f6;
+  box-shadow: 0 0 20px rgba(0, 149, 246, 0.3);
+}
+
+/* =========================
+   SIDEBAR FOOTER
+========================= */
 .user-sidebar-footer {
   padding: 1rem 0.5rem 0 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -440,7 +510,7 @@
   }
 
   .nav-name {
-    display: none; /* Hide text labels on mobile */
+    display: none;
   }
 
   .profile-user-nav {
@@ -449,9 +519,19 @@
     padding-top: 0;
   }
 
-  .profile-div-user {
+  /* Mobile profile avatar sizes */
+  .user-profile-avatar-wrapper {
     height: 1.8rem;
     width: 1.8rem;
+  }
+
+  .user-profile-avatar-icon {
+    font-size: 0.9rem;
+  }
+
+  .user-profile-avatar-spinner {
+    width: 1rem;
+    height: 1rem;
   }
 
   /* Main body */
@@ -523,9 +603,18 @@
     padding: 0.2rem 0.2rem;
   }
 
-  .profile-div-user {
+  .user-profile-avatar-wrapper {
     height: 1.6rem;
     width: 1.6rem;
+  }
+
+  .user-profile-avatar-icon {
+    font-size: 0.8rem;
+  }
+
+  .user-profile-avatar-spinner {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 
   .overall-user-body-container {
