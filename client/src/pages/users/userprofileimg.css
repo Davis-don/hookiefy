@@ -1,0 +1,551 @@
+/* ============================================================
+   userprofileimg.css  (Instagram-style profile image component)
+   ============================================================ */
+
+/* ----- Main container ----- */
+.overall-user-image-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ----- Avatar Circle (bigger - 160px) ----- */
+.image-avatar-user-container {
+  width: 160px;
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 3px solid #333333;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.image-avatar-user-container:hover {
+  border-color: #0095f6;
+  transform: scale(1.02);
+}
+
+.image-avatar-user-container:hover .pimg-avatar-overlay {
+  opacity: 1;
+}
+
+.image-avatar-user-container:hover .pimg-avatar-icon {
+  filter: blur(2px);
+}
+
+.image-avatar-user-container:hover .pimg-avatar-image {
+  filter: blur(2px);
+}
+
+/* ----- Avatar content ----- */
+.pimg-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.3s ease;
+}
+
+.pimg-avatar-icon {
+  font-size: 64px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transition: filter 0.3s ease;
+}
+
+/* ----- Overlay (shows on hover) ----- */
+.pimg-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50% !important;
+  z-index: 2;
+}
+
+.pimg-camera-icon {
+  font-size: 32px;
+  color: #ffffff;
+}
+
+.pimg-overlay-text {
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 600;
+  margin-top: 4px;
+  text-align: center;
+  padding: 0 8px;
+}
+
+/* ----- Hidden file input ----- */
+.pimg-file-input {
+  display: none;
+}
+
+/* ----- Loading spinner ----- */
+.pimg-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+}
+
+@keyframes pimgSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ----- Preview wrapper ----- */
+.pimg-preview-wrapper {
+  min-height: 28px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.pimg-preview-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8e8e8e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pimg-preview-btn:hover {
+  color: #0095f6;
+}
+
+.pimg-preview-icon {
+  font-size: 14px;
+}
+
+/* ----- Uploading status ----- */
+.pimg-uploading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #8e8e8e;
+  min-height: 28px;
+}
+
+.pimg-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #333333;
+  border-top: 2px solid #0095f6;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+}
+
+.pimg-spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: pimgSpin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* ----- File info ----- */
+.pimg-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 340px;
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 8px 12px;
+  border: 1px solid #2a2a2a;
+}
+
+.pimg-file-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pimg-file-thumbnail {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pimg-file-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pimg-file-icon {
+  font-size: 16px;
+  color: #0095f6;
+}
+
+.pimg-file-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pimg-file-size {
+  font-size: 10px;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+/* ----- Error message ----- */
+.pimg-error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 340px;
+  background: #2a0a0a;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #ed4956;
+  font-size: 12px;
+  border: 1px solid #ed495633;
+}
+
+.pimg-error-icon {
+  font-size: 12px;
+}
+
+/* ----- Action Buttons - Save & Cancel (smaller, cleaner) ----- */
+.image-handle-buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  min-height: 36px;
+}
+
+.pimg-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  background: #0095f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pimg-save-btn:hover:not(:disabled) {
+  background: #0080d6;
+  transform: scale(1.02);
+}
+
+.pimg-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pimg-btn-icon {
+  font-size: 15px;
+}
+
+.pimg-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  background: #2a2a2a;
+  color: #d4d4d4;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pimg-cancel-btn:hover:not(:disabled) {
+  background: #3a3a3a;
+  transform: scale(1.02);
+}
+
+.pimg-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ----- Full Preview Modal ----- */
+.pimg-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: pimgFadeIn 0.25s ease;
+}
+
+@keyframes pimgFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pimg-preview-modal-content {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+}
+
+.pimg-preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.pimg-preview-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.pimg-preview-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #8e8e8e;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pimg-preview-close-btn:hover {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+.pimg-preview-image-wrapper {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  max-height: 60vh;
+  background: #0a0a0a;
+}
+
+.pimg-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.pimg-preview-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #2a2a2a;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pimg-preview-use-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0095f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pimg-preview-use-btn:hover {
+  background: #0080d6;
+}
+
+/* ----- Responsive ----- */
+@media screen and (max-width: 768px) {
+  .image-avatar-user-container {
+    width: 140px;
+    height: 140px;
+  }
+
+  .pimg-avatar-icon {
+    font-size: 56px;
+  }
+
+  .image-handle-buttons {
+    max-width: 100%;
+  }
+
+  .pimg-file-info {
+    max-width: 100%;
+  }
+
+  .pimg-error-message {
+    max-width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .image-avatar-user-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .pimg-avatar-icon {
+    font-size: 48px;
+  }
+
+  .image-handle-buttons {
+    flex-direction: row;
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  .pimg-save-btn,
+  .pimg-cancel-btn {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+
+  .pimg-btn-icon {
+    font-size: 13px;
+  }
+
+  .pimg-overlay-text {
+    font-size: 11px;
+  }
+
+  .pimg-camera-icon {
+    font-size: 24px;
+  }
+
+  .pimg-file-info {
+    max-width: 100%;
+    padding: 6px 10px;
+  }
+
+  .pimg-file-thumbnail {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pimg-file-name {
+    font-size: 11px;
+  }
+
+  .pimg-file-size {
+    font-size: 9px;
+  }
+
+  .pimg-preview-btn {
+    font-size: 11px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .image-avatar-user-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .pimg-avatar-icon {
+    font-size: 40px;
+  }
+
+  .image-handle-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pimg-save-btn,
+  .pimg-cancel-btn {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+
+  .pimg-overlay-text {
+    font-size: 10px;
+  }
+
+  .pimg-camera-icon {
+    font-size: 20px;
+  }
+}
