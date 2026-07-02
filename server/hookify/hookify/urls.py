@@ -26,6 +26,9 @@ urlpatterns = [
     # User preference
     path("preference/", include("userpreference.urls")),
 
+     # User feed
+    path("feed/", include("feed.urls")),
+
     # JWT Token Refresh
     path(
         "api/token/refresh/",

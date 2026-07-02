@@ -79,7 +79,17 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
   const [error, setError] = useState<string>('');
   const [showFullPreview, setShowFullPreview] = useState<boolean>(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [showCrop, setShowCrop] = useState<boolean>(false);
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [cropSize, setCropSize] = useState<number>(250);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, size: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cropContainerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // ---- Fetch current user ----
   const {
@@ -109,6 +119,8 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
       });
       setSelectedFile(null);
       setPreviewUrl(null);
+      setShowCrop(false);
+      setCropImageUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -143,24 +155,138 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB');
-      toast.error('File too large', {
-        description: 'Image must be less than 5MB.',
-        duration: 3000,
-        icon: '⚠️',
-        style: { background: '#1a1a2e', border: '1px solid #ef4444', color: '#ffffff' },
-      });
-      return;
-    }
-
     setError('');
     setSelectedFile(file);
+    setCropSize(250);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
+      const imageUrl = reader.result as string;
+      setPreviewUrl(imageUrl);
+      setCropImageUrl(imageUrl);
+      setShowCrop(true);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropImage = () => {
+    if (!cropImageUrl || !imageRef.current) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = imageRef.current;
+    const containerRect = cropContainerRef.current?.getBoundingClientRect();
+    if (!containerRect) return;
+
+    const cropSizePx = cropSize;
+    const imageNaturalWidth = img.naturalWidth;
+    const imageNaturalHeight = img.naturalHeight;
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+
+    const cropX = (cropPosition.x / containerWidth) * imageNaturalWidth;
+    const cropY = (cropPosition.y / containerHeight) * imageNaturalHeight;
+    const cropWidth = (cropSizePx / containerWidth) * imageNaturalWidth;
+    const cropHeight = (cropSizePx / containerHeight) * imageNaturalHeight;
+
+    canvas.width = cropSizePx;
+    canvas.height = cropSizePx;
+
+    ctx.drawImage(
+      img,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      cropSizePx,
+      cropSizePx
+    );
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const croppedFile = new File([blob], selectedFile?.name || 'cropped-image.jpg', {
+          type: 'image/jpeg',
+        });
+        setSelectedFile(croppedFile);
+        const croppedUrl = URL.createObjectURL(blob);
+        setPreviewUrl(croppedUrl);
+        setShowCrop(false);
+        setCropImageUrl(null);
+        toast.success('Image cropped successfully!', {
+          duration: 2000,
+          icon: '✂️',
+          style: {
+            background: '#1a1a2e',
+            border: '1px solid #22c55e',
+            color: '#ffffff',
+          },
+        });
+      }
+    }, 'image/jpeg', 0.95);
+  };
+
+  const handleCancelCrop = () => {
+    setShowCrop(false);
+    setCropImageUrl(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - cropPosition.x, y: e.clientY - cropPosition.y });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeStart({ x: e.clientX, y: e.clientY, size: cropSize });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cropContainerRef.current) return;
+    
+    const containerRect = cropContainerRef.current.getBoundingClientRect();
+    
+    if (isDragging) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+      
+      const maxX = containerRect.width - cropSize;
+      const maxY = containerRect.height - cropSize;
+      
+      setCropPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    }
+    
+    if (isResizing) {
+      const deltaX = e.clientX - resizeStart.x;
+      const deltaY = e.clientY - resizeStart.y;
+      const delta = Math.max(deltaX, deltaY);
+      const newSize = Math.max(100, Math.min(400, resizeStart.size + delta));
+      
+      const sizeDiff = newSize - cropSize;
+      setCropSize(newSize);
+      setCropPosition(prev => ({
+        x: Math.max(0, Math.min(containerRect.width - newSize, prev.x - sizeDiff / 2)),
+        y: Math.max(0, Math.min(containerRect.height - newSize, prev.y - sizeDiff / 2)),
+      }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
   };
 
   const handleSave = () => {
@@ -179,13 +305,17 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
     setError('');
     setShowFullPreview(false);
     setPreviewImageUrl(null);
+    setShowCrop(false);
+    setCropImageUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleClickUpload = () => {
-    fileInputRef.current?.click();
+    if (!showCrop) {
+      fileInputRef.current?.click();
+    }
   };
 
   const handlePreviewNew = () => {
@@ -231,6 +361,106 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
       <div className="overall-user-image-container">
         <div className="image-avatar-user-container rounded-circle">
           <FiUser className="pimg-avatar-icon" />
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Crop UI ----
+  if (showCrop && cropImageUrl) {
+    return (
+      <div className="pimg-crop-overlay">
+        <div className="pimg-crop-modal">
+          <div className="pimg-crop-header">
+            <h3 className="pimg-crop-title">Crop Image</h3>
+            <p className="pimg-crop-subtitle">Drag to move • Drag corner to resize</p>
+          </div>
+
+          <div className="pimg-crop-content">
+            <div 
+              className="pimg-crop-wrapper"
+              ref={cropContainerRef}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <img 
+                ref={imageRef}
+                src={cropImageUrl} 
+                alt="Crop preview" 
+                className="pimg-crop-image"
+                draggable="false"
+                onLoad={() => {
+                  if (cropContainerRef.current && imageRef.current) {
+                    const containerRect = cropContainerRef.current.getBoundingClientRect();
+                    const centeredX = (containerRect.width - cropSize) / 2;
+                    const centeredY = (containerRect.height - cropSize) / 2;
+                    setCropPosition({
+                      x: Math.max(0, centeredX),
+                      y: Math.max(0, centeredY),
+                    });
+                  }
+                }}
+              />
+              <div 
+                className="pimg-crop-box"
+                style={{
+                  left: cropPosition.x,
+                  top: cropPosition.y,
+                  width: cropSize,
+                  height: cropSize,
+                }}
+              >
+                <div 
+                  className="pimg-crop-drag-area"
+                  onMouseDown={handleMouseDown}
+                />
+                <div className="pimg-crop-grid">
+                  <div className="pimg-crop-grid-line pimg-crop-grid-horizontal" style={{ top: '33.33%' }}></div>
+                  <div className="pimg-crop-grid-line pimg-crop-grid-horizontal" style={{ top: '66.66%' }}></div>
+                  <div className="pimg-crop-grid-line pimg-crop-grid-vertical" style={{ left: '33.33%' }}></div>
+                  <div className="pimg-crop-grid-line pimg-crop-grid-vertical" style={{ left: '66.66%' }}></div>
+                </div>
+                <div 
+                  className="pimg-crop-resize-handle"
+                  onMouseDown={handleResizeStart}
+                />
+              </div>
+            </div>
+
+            <div className="pimg-crop-controls">
+              <div className="pimg-crop-size-control">
+                <span className="pimg-crop-size-label">Crop Size: {cropSize}px</span>
+                <input
+                  type="range"
+                  min="100"
+                  max="400"
+                  value={cropSize}
+                  onChange={(e) => {
+                    const newSize = parseInt(e.target.value);
+                    setCropSize(newSize);
+                    if (cropContainerRef.current) {
+                      const containerRect = cropContainerRef.current.getBoundingClientRect();
+                      setCropPosition(prev => ({
+                        x: Math.max(0, Math.min(containerRect.width - newSize, prev.x)),
+                        y: Math.max(0, Math.min(containerRect.height - newSize, prev.y)),
+                      }));
+                    }
+                  }}
+                  className="pimg-crop-slider"
+                />
+              </div>
+            </div>
+
+            <div className="pimg-crop-actions">
+              <button className="pimg-crop-cancel-btn" onClick={handleCancelCrop}>
+                <FiX /> Cancel
+              </button>
+              <button className="pimg-crop-confirm-btn" onClick={handleCropImage}>
+                <FiCheck /> Apply Crop
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

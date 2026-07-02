@@ -14,6 +14,9 @@ urlpatterns = [
     # Current user
     path('current-user/', views.get_current_logged_in_user, name='current_user'),
     
+    # Check if user has profile image
+    path('has-profile-image/', views.has_profile_image, name='has_profile_image'),
+    
     # User management
     path('new/', views.create_new_user, name='create_user'),
     path('update-user/', views.update_user_details, name='update_user'),
@@ -31,6 +34,6 @@ urlpatterns = [
     # Get all users with pagination (superadmin only)
     path('all/', views.get_all_users_paginated, name='get_all_users_paginated'),
 
-# Profile image upload
-path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
+    # Profile image upload
+    path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
 ]

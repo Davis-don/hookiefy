@@ -654,3 +654,66 @@
     }
   }
 }
+
+
+
+/* Add to user.css - Logout button styles */
+
+/* =========================
+   LOGOUT BUTTON
+========================= */
+.user-logout-section {
+  padding: 0.5rem 0.8rem 0.3rem 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 0.3rem;
+}
+
+.user-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: #e5e5e5;
+  font-size: 1.1rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.user-logout-btn:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.user-logout-btn:hover:not(:disabled) .user-logout-icon {
+  color: #ef4444;
+}
+
+.user-logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.user-logout-icon {
+  font-size: 2rem;
+  min-width: 2.2rem;
+  transition: color 0.2s ease;
+  color: #e5e5e5;
+}
+
+.user-logout-text {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* Mobile responsive */
+@media screen and (max-width: 46.875em) {
+  .user-logout-section {
+    display: none;
+  }
+}

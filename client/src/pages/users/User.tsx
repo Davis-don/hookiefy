@@ -1,5 +1,5 @@
 // ============================================================
-// User.tsx - Updated with unique class names for profile avatar
+// User.tsx - Updated with profile image check and logout
 // ============================================================
 
 import './user.css'
@@ -8,11 +8,13 @@ import { CiHome } from "react-icons/ci";
 import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
 import { IoPerson } from "react-icons/io5";
+import { IoLogOutOutline } from "react-icons/io5";
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Submodalsuser from './Submodalsuser';
 import Mypreference from './Mypreference';
 import Myprofile from './Myprofile';
+import Addprofileimguserpop from './Addprofileimguserpop';
 // Import components
 import Home from './Home';
 import Search from './Search';
@@ -21,7 +23,8 @@ import Notifications from './Notifications';
 import Profile from './Profile';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { useAuthStore } from '../../store/authtokenstore';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 // ============================================================
 // TYPES
@@ -47,7 +50,7 @@ interface CurrentUserData {
 }
 
 // ============================================================
-// API HELPER
+// API HELPERS
 // ============================================================
 
 const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUserData> => {
@@ -72,6 +75,31 @@ const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUser
   return response.json();
 };
 
+// Logout function
+const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/account/logout/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Logout failed');
+  }
+
+  return response.json();
+};
+
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
@@ -80,16 +108,19 @@ function User() {
   const [activeTab, setActiveTab] = useState('home');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
+  const [showProfileImageModal, setShowProfileImageModal] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
   const [hasPreference, setHasPreference] = useState(false);
-  const { access: accessToken } = useAuthStore();
+  const [hasProfileImage, setHasProfileImage] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
 
   // ---- Fetch current user data for profile icon ----
   const { 
     data: userData, 
     isLoading: isLoadingUser,
-  
+    refetch: refetchUser
   } = useQuery<CurrentUserData>({
     queryKey: ['currentUser', accessToken],
     queryFn: () => fetchCurrentUser(accessToken),
@@ -100,8 +131,43 @@ function User() {
     retry: 1,
   });
 
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => logoutUser(accessToken, refreshToken),
+    onSuccess: () => {
+      toast.success('Logged out successfully!', {
+        duration: 3000,
+        icon: '👋',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      
+      clearTokens();
+      
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      toast.error('Logout failed', {
+        description: error.message || 'Please try again.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      setIsLoggingOut(false);
+    },
+  });
+
   // Check if user has profile
-  const checkProfile = async () => {
+  const checkProfile = async (): Promise<boolean> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/profile/has-profile/`,
@@ -126,7 +192,7 @@ function User() {
   };
 
   // Check if user has preference
-  const checkPreference = async () => {
+  const checkPreference = async (): Promise<boolean> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/preference/has-preference/`,
@@ -150,9 +216,34 @@ function User() {
     }
   };
 
-  // Check both profile and preference status on mount
+  // Check if user has profile image
+  const checkProfileImageStatus = async (): Promise<boolean> => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/account/has-profile-image/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to check profile image status');
+      }
+
+      const data = await response.json();
+      return data.has_profile_image;
+    } catch (error) {
+      console.error('Error checking profile image:', error);
+      return false;
+    }
+  };
+
+  // Check all statuses on mount
   useEffect(() => {
-    const checkStatus = async () => {
+    const checkAllStatuses = async () => {
       if (!accessToken) {
         setIsChecking(false);
         return;
@@ -160,24 +251,34 @@ function User() {
 
       setIsChecking(true);
       try {
-        const [profileExists, preferenceExists] = await Promise.all([
+        const [profileExists, preferenceExists, profileImageExists] = await Promise.all([
           checkProfile(),
-          checkPreference()
+          checkPreference(),
+          checkProfileImageStatus()
         ]);
 
         setHasProfile(profileExists);
         setHasPreference(preferenceExists);
+        setHasProfileImage(profileImageExists);
 
         // Show modals based on what's missing
+        // Priority: Profile > Preference > Profile Image
         if (!profileExists) {
           setShowProfileModal(true);
           setShowPreferenceModal(false);
+          setShowProfileImageModal(false);
         } else if (!preferenceExists) {
           setShowPreferenceModal(true);
           setShowProfileModal(false);
+          setShowProfileImageModal(false);
+        } else if (!profileImageExists) {
+          setShowProfileImageModal(true);
+          setShowProfileModal(false);
+          setShowPreferenceModal(false);
         } else {
           setShowProfileModal(false);
           setShowPreferenceModal(false);
+          setShowProfileImageModal(false);
         }
       } catch (error) {
         console.error('Error checking status:', error);
@@ -186,7 +287,7 @@ function User() {
       }
     };
 
-    checkStatus();
+    checkAllStatuses();
   }, [accessToken]);
 
   // Handle profile completion
@@ -196,9 +297,21 @@ function User() {
     const profileExists = await checkProfile();
     setHasProfile(profileExists);
     
-    // If profile is complete but preference is missing, show preference modal
-    if (profileExists && !hasPreference) {
-      setShowPreferenceModal(true);
+    // If profile is complete, check preference
+    if (profileExists) {
+      const preferenceExists = await checkPreference();
+      setHasPreference(preferenceExists);
+      
+      if (!preferenceExists) {
+        setShowPreferenceModal(true);
+      } else {
+        // If both profile and preference exist, check profile image
+        const profileImageExists = await checkProfileImageStatus();
+        setHasProfileImage(profileImageExists);
+        if (!profileImageExists) {
+          setShowProfileImageModal(true);
+        }
+      }
     }
   };
 
@@ -208,6 +321,46 @@ function User() {
     // Re-check preference status
     const preferenceExists = await checkPreference();
     setHasPreference(preferenceExists);
+    
+    // If preference is complete, check profile image
+    if (preferenceExists) {
+      const profileImageExists = await checkProfileImageStatus();
+      setHasProfileImage(profileImageExists);
+      if (!profileImageExists) {
+        setShowProfileImageModal(true);
+      }
+    }
+  };
+
+  // Handle profile image completion
+  const handleProfileImageComplete = async () => {
+    setShowProfileImageModal(false);
+    // Re-check profile image status
+    const profileImageExists = await checkProfileImageStatus();
+    setHasProfileImage(profileImageExists);
+    // Refetch user data to update the profile icon
+    await refetchUser();
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const loadingToast = toast.loading('Logging out...', {
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+        setIsLoggingOut(false);
+      }
+    });
   };
 
   // Close sidebar on mobile when clicking a link (optional)
@@ -262,8 +415,8 @@ function User() {
       );
     }
 
-    // If no profile or preference, show overlay message
-    if (!hasProfile || !hasPreference) {
+    // If no profile, preference, or profile image, show overlay message
+    if (!hasProfile || !hasPreference || !hasProfileImage) {
       return (
         <div style={{ 
           display: 'flex', 
@@ -280,24 +433,25 @@ function User() {
             marginBottom: '1rem',
             opacity: 0.3
           }}>
-            📝
+            📸
           </div>
           <h3 style={{ 
             color: '#ffffff', 
             marginBottom: '0.5rem',
             fontWeight: '300'
           }}>
-            {!hasProfile && !hasPreference ? 'Complete Your Profile & Preferences' :
-             !hasProfile ? 'Complete Your Profile' :
-             'Complete Your Preferences'}
+            {!hasProfile ? 'Complete Your Profile' :
+             !hasPreference ? 'Complete Your Preferences' :
+             'Add a Profile Image'}
           </h3>
           <p style={{ 
             color: 'rgba(255,255,255,0.5)',
             maxWidth: '400px',
             margin: '0 auto'
           }}>
-            Please complete your {!hasProfile && !hasPreference ? 'profile and preferences' :
-             !hasProfile ? 'profile' : 'preferences'} to continue
+            {!hasProfile ? 'Please complete your profile to continue' :
+             !hasPreference ? 'Please complete your preferences to continue' :
+             'Please add a profile image to continue'}
           </p>
         </div>
       );
@@ -337,7 +491,7 @@ function User() {
   return (
     <div className="overall-user-component-container">
         {/* Sidebar / Navigation - Hidden when modals are shown */}
-        {!showProfileModal && !showPreferenceModal && (
+        {!showProfileModal && !showPreferenceModal && !showProfileImageModal && (
           <div className="user-account-header-container">
               <div className="user-brand">
                   <h3>Hookiefy</h3>
@@ -373,6 +527,21 @@ function User() {
                       <div className="nav-name">Profile</div>
                   </li>
               </ul>
+
+              {/* Logout Button */}
+              <div className="user-logout-section">
+                <button 
+                  className="user-logout-btn"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut || logoutMutation.isPending}
+                >
+                  <IoLogOutOutline className="user-logout-icon" />
+                  <span className="user-logout-text">
+                    {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  </span>
+                </button>
+              </div>
+
               <div className="user-sidebar-footer">
                   <span>© 2026</span>
               </div>
@@ -400,6 +569,14 @@ function User() {
                 {showPreferenceModal && (
                   <Mypreference 
                     onComplete={handlePreferenceComplete}
+                    onCancel={() => {}}
+                  />
+                )}
+
+                {/* Profile Image Modal */}
+                {showProfileImageModal && (
+                  <Addprofileimguserpop 
+                    onComplete={handleProfileImageComplete}
                     onCancel={() => {}}
                   />
                 )}

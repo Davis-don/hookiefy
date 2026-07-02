@@ -226,6 +226,26 @@ def get_current_logged_in_user(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_profile_image(request):
+    """
+    Check if the currently authenticated user has a profile image.
+    Returns true if profile_image_url is not null and not empty string,
+    false otherwise.
+    """
+    user = request.user
+    profile_image_url = user.profile_image_url
+    
+    # Check if profile_image_url exists and is not empty string
+    has_image = bool(profile_image_url and profile_image_url.strip())
+    
+    return Response({
+        "has_profile_image": has_image,
+        "message": "Profile image status checked successfully"
+    }, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @transaction.atomic
@@ -988,6 +1008,7 @@ def upload_profile_image(request):
     """
     Upload profile image for the current user
     Uses upload_or_replace_profile_image to handle replace or add
+    No file size limit - any size image can be uploaded
     """
     try:
         # Check if file was sent
@@ -998,25 +1019,22 @@ def upload_profile_image(request):
 
         image_file = request.FILES['image']
         
-        # Validate file type
+        # Validate file type only (no size limit)
         valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         if image_file.content_type not in valid_types:
             return Response({
                 "message": f"Invalid file type. Allowed: {', '.join(valid_types)}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Validate file size (max 5MB)
-        if image_file.size > 5 * 1024 * 1024:
-            return Response({
-                "message": "File size must be less than 5MB"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ NO FILE SIZE LIMIT - removed the 5MB validation
+        # Users can upload images of any size
         
         # Log file details to console
         print("=" * 60)
         print("📸 PROFILE IMAGE UPLOAD RECEIVED")
         print("=" * 60)
         print(f"📁 File name: {image_file.name}")
-        print(f"📏 File size: {image_file.size} bytes")
+        print(f"📏 File size: {image_file.size} bytes ({image_file.size / (1024*1024):.2f} MB)")
         print(f"📄 Content type: {image_file.content_type}")
         print(f"🧑 User ID: {request.user.id}")
         print(f"👤 User Email: {request.user.email}")
@@ -1048,6 +1066,7 @@ def upload_profile_image(request):
             "message": "Profile image uploaded successfully",
             "file_name": image_file.name,
             "file_size": image_file.size,
+            "file_size_mb": round(image_file.size / (1024 * 1024), 2),
             "content_type": image_file.content_type,
             "replaced": result['replaced'],
             "old_public_id": result['old_public_id'],

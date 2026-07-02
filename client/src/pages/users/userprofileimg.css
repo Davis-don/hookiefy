@@ -439,6 +439,249 @@
   background: #0080d6;
 }
 
+/* ============================================================
+   CROP MODAL STYLES
+   ============================================================ */
+
+.pimg-crop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 1rem;
+  animation: pimgFadeIn 0.25s ease;
+}
+
+.pimg-crop-modal {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+}
+
+.pimg-crop-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.pimg-crop-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.pimg-crop-subtitle {
+  font-size: 14px;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+.pimg-crop-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pimg-crop-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0a0a0a;
+  border: 2px solid #2a2a2a;
+  user-select: none;
+}
+
+.pimg-crop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.pimg-crop-box {
+  position: absolute;
+  border: 2px solid #0095f6;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  transition: none;
+}
+
+.pimg-crop-box:hover {
+  border-color: #66b8f7;
+}
+
+.pimg-crop-drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: move;
+  z-index: 1;
+}
+
+.pimg-crop-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pimg-crop-grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.pimg-crop-grid-horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.pimg-crop-grid-vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.pimg-crop-resize-handle {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  background: #0095f6;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  z-index: 3;
+  transition: transform 0.2s ease;
+}
+
+.pimg-crop-resize-handle:hover {
+  transform: scale(1.2);
+  background: #0080d6;
+}
+
+/* Crop Controls */
+.pimg-crop-controls {
+  width: 100%;
+}
+
+.pimg-crop-size-control {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.pimg-crop-size-label {
+  color: #d4d4d4;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.pimg-crop-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #2a2a2a;
+  outline: none;
+  transition: background 0.3s ease;
+}
+
+.pimg-crop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0095f6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pimg-crop-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  background: #0080d6;
+}
+
+.pimg-crop-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0095f6;
+  cursor: pointer;
+  border: none;
+}
+
+.pimg-crop-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.pimg-crop-cancel-btn,
+.pimg-crop-confirm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.pimg-crop-cancel-btn {
+  background: #2a2a2a;
+  color: #d4d4d4;
+  border: 1px solid #3a3a3a;
+}
+
+.pimg-crop-cancel-btn:hover {
+  background: #3a3a3a;
+  color: #ffffff;
+}
+
+.pimg-crop-confirm-btn {
+  background: #0095f6;
+  color: #ffffff;
+}
+
+.pimg-crop-confirm-btn:hover {
+  background: #0080d6;
+  transform: scale(1.02);
+}
+
 /* ----- Responsive ----- */
 @media screen and (max-width: 768px) {
   .image-avatar-user-container {
@@ -460,6 +703,21 @@
 
   .pimg-error-message {
     max-width: 100%;
+  }
+
+  .pimg-crop-modal {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+
+  .pimg-crop-size-control {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pimg-crop-size-label {
+    min-width: auto;
+    font-size: 12px;
   }
 }
 
@@ -517,6 +775,40 @@
 
   .pimg-preview-btn {
     font-size: 11px;
+  }
+
+  .pimg-crop-header {
+    padding: 12px 16px;
+  }
+
+  .pimg-crop-title {
+    font-size: 17px;
+  }
+
+  .pimg-crop-subtitle {
+    font-size: 12px;
+  }
+
+  .pimg-crop-content {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .pimg-crop-actions {
+    flex-direction: column;
+  }
+
+  .pimg-crop-cancel-btn,
+  .pimg-crop-confirm-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .pimg-crop-resize-handle {
+    width: 20px;
+    height: 20px;
+    bottom: -8px;
+    right: -8px;
   }
 }
 
