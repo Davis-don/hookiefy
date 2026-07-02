@@ -433,3 +433,27 @@
     }
   }
 }
+
+
+/* Add to myprofile.css */
+
+/* Bio hint text */
+.mpf-bio-hint {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.4);
+  margin-top: 0.25rem;
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+
+/* Dark mode support for hint */
+@media (prefers-color-scheme: dark) {
+  .mpf-bio-hint {
+    color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Or if your modal uses dark background */
+.mpf-overlay .mpf-bio-hint {
+  color: rgba(255, 255, 255, 0.4);
+}

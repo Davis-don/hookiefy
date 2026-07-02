@@ -119,6 +119,23 @@ const countriesData: Record<string, string[]> = {
   ]
 };
 
+// Get random bio placeholder
+const getRandomBioPlaceholder = (): string => {
+  const placeholders = [
+    "Hey there! I'm looking for fun and meaningful connections. Life's too short to be boring — let's make some memories together! 😉✨",
+    "Looking for someone to share adventures with. I believe in living life to the fullest and enjoying every moment. Let's connect and see where it goes! 🌟",
+    "I'm all about good vibes and great conversations. Looking for someone genuine to share laughs, fun times, and maybe something more... 😏",
+    "Life is an adventure, and I'm looking for a partner in crime! Let's explore, laugh, and create unforgettable moments together. 🎉",
+    "I'm looking for someone who's up for anything — from deep conversations to spontaneous fun. Let's see where this journey takes us! 💫",
+    "Just a fun-loving person looking for someone to vibe with. Let's get to know each other and create our own story. ❤️",
+    "I believe in living in the moment and making every second count. Looking for someone to share the good times with. Let's talk! 😊",
+    "Looking for a spark — someone who can keep up with my energy and passion for life. Let's make magic happen! 🔥",
+    "I'm a firm believer that the best things in life are shared. Looking for someone to share adventures, laughter, and good times with. 🌈",
+    "Let's skip the small talk and get to the good stuff. I'm looking for real connections and unforgettable experiences. Who's with me? 🚀"
+  ];
+  return placeholders[Math.floor(Math.random() * placeholders.length)];
+};
+
 // Fetch profile
 const fetchProfile = async (accessToken: string | null): Promise<ProfileResponse | null> => {
   if (!accessToken) {
@@ -176,6 +193,12 @@ function Myuserprofile({ onComplete, onCancel }: MyuserprofileProps) {
   });
   const [isExistingProfile, setIsExistingProfile] = useState(false);
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
+  const [bioPlaceholder, setBioPlaceholder] = useState<string>('');
+
+  // Set bio placeholder on mount
+  useEffect(() => {
+    setBioPlaceholder(getRandomBioPlaceholder());
+  }, []);
 
   // Fetch existing profile data
   const { isLoading: isLoadingProfile } = useQuery({
@@ -416,13 +439,14 @@ function Myuserprofile({ onComplete, onCancel }: MyuserprofileProps) {
               <label className="mup-label">Bio</label>
               <textarea
                 name="bio"
-                placeholder="Tell us about yourself..."
+                placeholder={bioPlaceholder}
                 className="mup-textarea"
                 value={formData.bio}
                 onChange={handleChange}
                 rows={4}
                 required
               />
+              <span className="mup-bio-hint">Let others know who you are and what you're looking for 😊</span>
             </div>
 
             <div className="mup-form-row">
