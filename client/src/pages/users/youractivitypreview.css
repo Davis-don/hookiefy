@@ -443,3 +443,32 @@
     text-align: center;
   }
 }
+
+/* Click hint for accepted status */
+.your-activity-click-hint {
+  font-size: 0.7rem;
+  color: rgba(34, 197, 94, 0.6);
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  animation: pulseHint 2s ease-in-out infinite;
+}
+
+@keyframes pulseHint {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Make accepted items stand out more */
+.overall-your-activity-preview:not(.your-activity-disabled) {
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.overall-your-activity-preview:not(.your-activity-disabled):hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.05);
+}

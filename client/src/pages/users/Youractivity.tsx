@@ -4,9 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import { toast } from 'sonner'
 import Youractivitypreview from './Youractivitypreview'
-import { usePreviewStore } from './store/connectpreview'
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent'
-import { usePaymentModalStore } from './store/modalstore'
 
 // Interface matching the API response for all connection requests (non-pending)
 interface ConnectionRequestData {
@@ -138,8 +136,6 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
 
 function Youractivity() {
   const { access: accessToken } = useAuthStore();
-  const { openActivityPreview, closeActivityPreview } = usePreviewStore();
-  const { open: openPaymentModal } = usePaymentModalStore();
   const [activities, setActivities] = useState<Activity[]>([]);
   const intervalRef = useRef<number | null>(null);
 
@@ -193,35 +189,6 @@ function Youractivity() {
       }
     };
   }, [accessToken, refetch, isFetching]);
-
-  // Handle preview click - pass the sender ID and status
-  const handlePreviewClick = (activity: Activity) => {
-    console.log('🔑 Opening activity preview for:', activity.senderName);
-    console.log('📌 Status:', activity.status);
-    
-    // If status is 'accepted', open payment modal directly
-    if (activity.status === 'accepted') {
-      // Close any existing preview
-      closeActivityPreview();
-      // Open payment modal with the connection ID
-      openPaymentModal(activity.connection_id);
-      return;
-    }
-    
-    // For other statuses (rejected, completed), show alert
-    if (activity.status === 'rejected') {
-      alert(`You declined the request from ${activity.senderName}`);
-      return;
-    }
-    
-    if (activity.status === 'completed') {
-      alert(`You completed the hookup with ${activity.senderName}`);
-      return;
-    }
-    
-    // Fallback - open the detail view
-    openActivityPreview(activity.senderId);
-  };
 
   // Show error toast if fetch fails
   useEffect(() => {
@@ -318,7 +285,6 @@ function Youractivity() {
           <Youractivitypreview 
             key={activity.id}
             activity={activity}
-            onClick={() => handlePreviewClick(activity)}
           />
         ))}
       </div>
