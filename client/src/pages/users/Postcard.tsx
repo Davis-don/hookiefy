@@ -1,6 +1,9 @@
 import './postcard.css'
 import { useState } from 'react';
 import { FaUser, FaChevronDown, FaChevronUp, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { useMutation } from '@tanstack/react-query';
+import { useAuthStore } from '../../store/authtokenstore';
+import { toast } from 'sonner';
 
 interface PostcardProps {
   id: string;
@@ -21,7 +24,30 @@ interface PostcardProps {
   phone_number?: string;
 }
 
+// API call to send connection request
+const sendConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/connections/hookup/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to send connection request');
+  }
+
+  return response.json();
+};
+
 function Postcard({ 
+  id,
   firstName, 
   lastName, 
   time, 
@@ -34,14 +60,62 @@ function Postcard({
 }: PostcardProps) {
   const [showFullImage, setShowFullImage] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const { access: accessToken } = useAuthStore();
 
   const fullName = `${firstName} ${lastName}`;
-  
-  // Use profile image if available, otherwise null
   const avatarUrl = profile_image_url || null;
 
+  // Mutation for sending connection request
+  const connectionMutation = useMutation({
+    mutationFn: () => sendConnectionRequest(id, accessToken),
+    onSuccess: (data) => {
+      // Show success message from server or custom message
+      toast.success(data.message || 'Connection request sent successfully!', {
+        description: `You have connected with ${fullName}`,
+        duration: 5000,
+        icon: '🤝',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      console.log('Connection successful:', data);
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to send connection request', {
+        description: error.message || 'Please try again later.',
+        duration: 6000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      console.error('Connection error:', error);
+    },
+  });
+
   const handleConnect = () => {
-    console.log(`Connect request sent to ${fullName}`);
+    console.log(`Connect request sent to ${fullName} (ID: ${id})`);
+    
+    // Show loading toast
+    const loadingToast = toast.loading('Sending connection request...', {
+      description: `Connecting with ${fullName}`,
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    // Execute mutation
+    connectionMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+      }
+    });
   };
 
   const handleImageClick = () => {
@@ -84,6 +158,8 @@ function Postcard({
     };
     return genderMap[interested] || interested;
   };
+
+  const isConnecting = connectionMutation.isPending;
 
   return (
     <>
@@ -221,8 +297,12 @@ function Postcard({
 
         {/* Connect Button Only */}
         <div className="post-connect-section">
-          <button className="connect-btn" onClick={handleConnect}>
-            Connect
+          <button 
+            className="connect-btn" 
+            onClick={handleConnect}
+            disabled={isConnecting}
+          >
+            {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
         </div>
       </div>

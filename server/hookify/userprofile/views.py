@@ -233,3 +233,126 @@ def get_current_user_full_data(request):
     }
     
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+# ============================================
+# GET USER FULL DATA BY ID
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_full_data_by_id(request, user_id):
+    """
+    Get ALL data for a specific user by ID in one response:
+    - Account details (id, email, role, name, phone, gender, profile image, is_active, etc.)
+    - Profile details (bio, country, county, city, date_of_birth, age)
+    - Preferences (interested_in_gender, minimum_age, maximum_age)
+    - Assignment info (for users with role 'user')
+    
+    This is the same as get_current_user_full_data but for any user ID.
+    """
+    
+    # Try to find the target user
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"message": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # --- 1. ACCOUNT DATA ---
+    account_data = {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "full_name": user.full_name,
+        "phone_number": user.phone_number,
+        "gender": user.gender,
+        "profile_image_url": user.profile_image_url,
+        "profile_image_public_id": user.profile_image_public_id,
+        "has_profile_image": user.has_profile_image,
+        "is_active": user.is_active,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+        "date_joined": user.date_joined,
+        "last_login": user.last_login,
+    }
+    
+    # --- 2. PROFILE DATA ---
+    profile_data = None
+    if user.role == 'user':
+        try:
+            profile = UserProfile.objects.get(user=user)
+            profile_data = {
+                "bio": profile.bio,
+                "country": profile.country,
+                "county": profile.county,
+                "city": profile.city,
+                "date_of_birth": profile.date_of_birth,
+                "age": profile.age,  # Using the property from UserProfile model
+                "created_at": profile.created_at,
+                "updated_at": profile.updated_at,
+            }
+        except UserProfile.DoesNotExist:
+            profile_data = None
+    else:
+        # Non-user roles don't have profiles
+        profile_data = {
+            "message": f"Profile not available for users with role '{user.role}'"
+        }
+    
+    # --- 3. PREFERENCE DATA ---
+    preference_data = None
+    if user.role == 'user':
+        try:
+            preference = Preference.objects.get(user=user)
+            preference_data = {
+                "interested_in_gender": preference.interested_in_gender,
+                "interested_in_gender_display": preference.get_interested_in_gender_display() if preference.interested_in_gender else None,
+                "minimum_age": preference.minimum_age,
+                "maximum_age": preference.maximum_age,
+                "created_at": preference.created_at,
+                "updated_at": preference.updated_at,
+            }
+        except Preference.DoesNotExist:
+            preference_data = None
+    else:
+        # Non-user roles don't have preferences
+        preference_data = {
+            "message": f"Preferences not available for users with role '{user.role}'"
+        }
+    
+    # --- 4. ASSIGNMENT DATA (only for users with role 'user') ---
+    assignment_data = None
+    if user.role == 'user':
+        try:
+            assignment = ClientAssignment.objects.get(user=user)
+            assignment_data = {
+                "assigned_to_id": assignment.assigned_admin.id,
+                "assigned_to_email": assignment.assigned_admin.email,
+                "assigned_to_name": assignment.assigned_admin.full_name,
+                "assigned_to_role": assignment.assigned_admin.role,
+                "assigned_at": assignment.assigned_at,
+            }
+        except ClientAssignment.DoesNotExist:
+            assignment_data = None
+    else:
+        assignment_data = {
+            "message": f"Assignment not available for users with role '{user.role}'"
+        }
+    
+    # --- 5. BUILD COMPLETE RESPONSE ---
+    response_data = {
+        "message": "User full data fetched successfully",
+        "data": {
+            "account": account_data,
+            "profile": profile_data,
+            "preference": preference_data,
+            "assignment": assignment_data,
+        }
+    }
+    
+    return Response(response_data, status=status.HTTP_200_OK)

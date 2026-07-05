@@ -1,5 +1,5 @@
 import './postsdiv.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import Postcard from './Postcard'
@@ -38,12 +38,26 @@ interface DisplayPost extends Post {
   caption: string;
 }
 
-// Fetch feed function
-const fetchFeed = async (accessToken: string | null): Promise<DisplayPost[]> => {
+// Simple in-memory cache
+let cachedPosts: DisplayPost[] | null = null;
+let cacheTimestamp: number | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Fetch feed function with caching
+const fetchFeed = async (accessToken: string | null, forceRefresh = false): Promise<DisplayPost[]> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
   }
 
+  // Check if cache is valid
+  const now = Date.now();
+  if (!forceRefresh && cachedPosts && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+    console.log('📦 Using cached feed data');
+    return cachedPosts;
+  }
+
+  console.log('🌐 Fetching fresh feed data');
+  
   const response = await fetch('http://localhost:8000/feed/info/', {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -103,12 +117,18 @@ const fetchFeed = async (accessToken: string | null): Promise<DisplayPost[]> => 
     };
   });
 
+  // Update cache
+  cachedPosts = transformedPosts;
+  cacheTimestamp = now;
+
   return transformedPosts;
 };
 
 function Postsdiv() {
   const { access: accessToken } = useAuthStore();
   const [posts, setPosts] = useState<DisplayPost[]>([]);
+  const intervalRef = useRef<number | null>(null);
+  const isFirstLoad = useRef(true);
 
   // Fetch feed using useQuery
   const {
@@ -118,23 +138,62 @@ function Postsdiv() {
     error,
     refetch,
     isFetching,
+    isRefetching,
   } = useQuery({
     queryKey: ['feed', accessToken],
-    queryFn: () => fetchFeed(accessToken),
+    queryFn: () => fetchFeed(accessToken, false),
     enabled: !!accessToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 1,
+    // Don't show loading on refetch
+    placeholderData: (previousData) => previousData,
   });
 
   // Update posts when data changes
   useEffect(() => {
     if (data) {
       setPosts(data);
+      isFirstLoad.current = false;
     }
   }, [data]);
+
+  // Background refresh every 30 seconds (only if not fetching)
+  useEffect(() => {
+    if (!accessToken) return;
+
+    // Clear existing interval
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Set up background refresh interval
+    intervalRef.current = window.setInterval(() => {
+      if (!isFetching && !isRefetching) {
+        console.log('🔄 Background refresh triggered');
+        // Force refresh with cache bypass
+        fetchFeed(accessToken, true)
+          .then((freshData) => {
+            setPosts(freshData);
+            console.log('✅ Background refresh completed');
+          })
+          .catch((err) => {
+            console.warn('⚠️ Background refresh failed:', err);
+          });
+      }
+    }, 30000); // 30 seconds
+
+    // Cleanup interval on unmount
+    return () => {
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [accessToken, isFetching, isRefetching]);
 
   // Show error toast if fetch fails
   useEffect(() => {
@@ -218,7 +277,7 @@ function Postsdiv() {
 
   return (
     <div className="overall-posts-container">
-      {/* Show refresh indicator when fetching */}
+      {/* Show refresh indicator when fetching - subtle and small */}
       {isFetching && posts.length > 0 && (
         <div className="feed-refreshing-indicator">
           <span className="feed-refreshing-dot"></span>
@@ -240,4 +299,4 @@ function Postsdiv() {
   );
 }
 
-export default Postsdiv;
+export default Postsdiv

@@ -28,6 +28,10 @@ urlpatterns = [
 
      # User feed
     path("feed/", include("feed.urls")),
+    # User connections
+    path("connections/", include("connections.urls")),
+    # Notifications
+    path("notifications/", include("notification.urls")),
 
     # JWT Token Refresh
     path(
