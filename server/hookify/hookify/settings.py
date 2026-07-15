@@ -2,11 +2,13 @@
 Django settings for hookify project.
 """
 
+
 from pathlib import Path
 from datetime import timedelta
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+from decouple import config
 
 # ---------------------------------------------------
 # CORE SECURITY SETTINGS
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     "connections",
     "notification",
     "administration",
+    "payments",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]
@@ -173,3 +176,11 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+
+# Pesapal env stuff
+from decouple import config
+
+PESAPAL_CONSUMER_KEY = config("PESAPAL_CONSUMER_KEY")
+PESAPAL_CONSUMER_SECRET = config("PESAPAL_CONSUMER_SECRET")
+PESAPAL_BASE_URL = config("PESAPAL_BASE_URL")

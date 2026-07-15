@@ -42,4 +42,6 @@ urlpatterns = [
 
     # Administration APIs
     path("administration/", include("administration.urls")),
+    # Payments APIs
+    path("payments/", include("payments.urls")),
 ]
