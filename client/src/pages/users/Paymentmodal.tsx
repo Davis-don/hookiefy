@@ -1,9 +1,64 @@
 import './paymentmodal.css'
 import { usePaymentModalStore } from './store/modalstore'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useAuthStore } from '../../store/authtokenstore'
+import { toast } from 'sonner'
+
+interface HookupFeeResponse {
+  success: boolean;
+  message: string;
+  data: {
+    hookup_fee: number;
+    currency: string;
+    assigned_admin: {
+      id: number;
+      name: string;
+      email: string;
+    };
+  };
+}
+
+// Fetch hookup fee
+const fetchHookupFee = async (accessToken: string | null): Promise<HookupFeeResponse> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const url = `${import.meta.env.VITE_API_URL}/administration/hookup-fee/`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Session expired. Please login again.');
+    }
+    if (response.status === 403) {
+      throw new Error('Access denied. Only regular users can access this.');
+    }
+    if (response.status === 404) {
+      throw new Error('No assignment found. You are not assigned to any admin.');
+    }
+    throw new Error(`Failed to fetch hookup fee: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch hookup fee');
+  }
+  
+  return data;
+};
 
 function Paymentmodal() {
   const { hookupId, close } = usePaymentModalStore();
+  const { access: accessToken } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('mpesa');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -12,20 +67,101 @@ function Paymentmodal() {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
 
+  // Fetch hookup fee using useQuery
+  const {
+    data: hookupFeeData,
+    isLoading: isLoadingFee,
+    isError: isFeeError,
+    error: feeError,
+    refetch: refetchFee,
+  } = useQuery({
+    queryKey: ['hookupFee', accessToken],
+    queryFn: () => fetchHookupFee(accessToken),
+    enabled: !!accessToken,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  // Show toast on error
+  useEffect(() => {
+    if (isFeeError && feeError) {
+      const errorMessage = feeError instanceof Error ? feeError.message : 'Failed to load hookup fee';
+      toast.error('Failed to load payment details', {
+        description: errorMessage,
+        duration: 5000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+    }
+  }, [isFeeError, feeError]);
+
   const handlePayment = async () => {
     if (selectedMethod === 'mpesa' && !phoneNumber) {
       setShowPhoneInput(true);
+      toast.warning('Phone number required', {
+        description: 'Please enter your M-Pesa phone number.',
+        duration: 3000,
+        icon: '📱',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #f59e0b',
+          color: '#ffffff',
+        },
+      });
       return;
     }
     if (selectedMethod === 'card' && (!cardNumber || !expiryDate || !cvv)) {
+      toast.warning('Card details required', {
+        description: 'Please fill in all card details.',
+        duration: 3000,
+        icon: '💳',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #f59e0b',
+          color: '#ffffff',
+        },
+      });
       return;
     }
 
     setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    console.log(`Processing payment for hookup: ${hookupId} via ${selectedMethod}`);
-    setIsProcessing(false);
-    close();
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      toast.success('Payment successful!', {
+        description: `Payment of KES ${hookupFeeData?.data.hookup_fee || '500'} processed successfully.`,
+        duration: 4000,
+        icon: '✅',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      
+      console.log(`Processing payment for hookup: ${hookupId} via ${selectedMethod}`);
+    } catch (error) {
+      toast.error('Payment failed', {
+        description: 'An error occurred while processing your payment. Please try again.',
+        duration: 4000,
+        icon: '❌',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+    } finally {
+      setIsProcessing(false);
+      close();
+    }
   };
 
   const handleMethodSelect = (method: string) => {
@@ -51,6 +187,64 @@ function Paymentmodal() {
     return cleaned;
   };
 
+  // Get the fee amount
+  const feeAmount = hookupFeeData?.data?.hookup_fee || 500;
+  const currency = hookupFeeData?.data?.currency || 'KES';
+  const assignedAdmin = hookupFeeData?.data?.assigned_admin;
+
+  // Loading state
+  if (isLoadingFee) {
+    return (
+      <div className="payment-modal-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className="payment-modal-card payment-modal-loading">
+          <button className="payment-modal-close-btn" onClick={close}>
+            ✕
+          </button>
+          <div className="payment-modal-loading-content">
+            <div className="payment-modal-loading-spinner">
+              <span className="payment-modal-loading-dot"></span>
+              <span className="payment-modal-loading-dot"></span>
+              <span className="payment-modal-loading-dot"></span>
+            </div>
+            <p className="payment-modal-loading-text">Loading payment details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isFeeError) {
+    return (
+      <div className="payment-modal-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className="payment-modal-card payment-modal-error">
+          <button className="payment-modal-close-btn" onClick={close}>
+            ✕
+          </button>
+          <div className="payment-modal-error-content">
+            <span className="payment-modal-error-icon">⚠️</span>
+            <h3 className="payment-modal-error-title">Failed to Load Payment</h3>
+            <p className="payment-modal-error-message">
+              {feeError instanceof Error ? feeError.message : 'Unable to fetch payment details.'}
+            </p>
+            <button 
+              className="payment-modal-error-retry"
+              onClick={() => refetchFee()}
+            >
+              Retry
+            </button>
+            <button 
+              className="payment-modal-error-cancel"
+              onClick={close}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="payment-modal-wrapper" onClick={(e) => e.stopPropagation()}>
       <div className="payment-modal-card">
@@ -75,9 +269,14 @@ function Paymentmodal() {
         <div className="payment-modal-amount-section">
           <span className="payment-modal-amount-label">Amount to Pay</span>
           <div className="payment-modal-amount-box">
-            <span className="payment-modal-currency">KES</span>
-            <span className="payment-modal-amount-value">500</span>
+            <span className="payment-modal-currency">{currency}</span>
+            <span className="payment-modal-amount-value">{feeAmount}</span>
           </div>
+          {assignedAdmin && (
+            <span className="payment-modal-admin-info">
+              Admin: {assignedAdmin.name}
+            </span>
+          )}
         </div>
 
         {/* Divider */}
@@ -238,7 +437,7 @@ function Paymentmodal() {
         <div className="payment-modal-summary">
           <div className="payment-modal-summary-row">
             <span>Subtotal</span>
-            <span>KES 500</span>
+            <span>{currency} {feeAmount}</span>
           </div>
           <div className="payment-modal-summary-row">
             <span>Service Fee</span>
@@ -246,7 +445,7 @@ function Paymentmodal() {
           </div>
           <div className="payment-modal-summary-total">
             <span>Total</span>
-            <span className="payment-modal-summary-total-amount">KES 500</span>
+            <span className="payment-modal-summary-total-amount">{currency} {feeAmount}</span>
           </div>
         </div>
 
@@ -255,7 +454,7 @@ function Paymentmodal() {
 
         {/* Action Buttons */}
         <div className="payment-modal-actions">
-          <button className="payment-modal-btn payment-modal-btn-cancel" onClick={close}>
+          <button className="payment-modal-btn payment-modal-btn-cancel" onClick={close} disabled={isProcessing}>
             Cancel
           </button>
           <button 

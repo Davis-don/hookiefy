@@ -825,3 +825,145 @@
     gap: 0.3rem;
   }
 }
+
+/* Add these styles to your existing paymentmodal.css */
+
+/* Loading State */
+.payment-modal-loading {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-modal-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.payment-modal-loading-spinner {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.payment-modal-loading-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00e5ff, #7b2ffc);
+  animation: payment-loading-bounce 1.2s ease-in-out infinite;
+}
+
+.payment-modal-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+  background: linear-gradient(135deg, #7b2ffc, #ff6b6b);
+}
+
+.payment-modal-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+  background: linear-gradient(135deg, #ff6b6b, #feca57);
+}
+
+@keyframes payment-loading-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.payment-modal-loading-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Error State */
+.payment-modal-error {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-modal-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.payment-modal-error-icon {
+  font-size: 3rem;
+  display: block;
+}
+
+.payment-modal-error-title {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.payment-modal-error-message {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  max-width: 300px;
+  margin: 0;
+}
+
+.payment-modal-error-retry {
+  background: linear-gradient(135deg, #00e5ff, #7b2ffc);
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.payment-modal-error-retry:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+}
+
+.payment-modal-error-cancel {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-modal-error-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Admin Info */
+.payment-modal-admin-info {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.25rem;
+  display: block;
+}

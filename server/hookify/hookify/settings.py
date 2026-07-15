@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "feed",
     "connections",
     "notification",
+    "administration",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]

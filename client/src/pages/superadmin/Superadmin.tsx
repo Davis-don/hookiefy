@@ -22,6 +22,7 @@ import { useAuthStore } from '../../store/authtokenstore';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner';
 import Myclients from '../admin/Myclients';
+import Hookupfeesettings from './Hookupfeesettings';
 
 interface UserData {
   id: number;
@@ -154,6 +155,7 @@ function Superadmin() {
   const [profile, isprofile] = useState(false)
   const [adminCommissions, setAdminCommissions] = useState(false)
   const [clients, setClients] = useState(false)
+  const [hookupFeeSettings, setHookupFeeSettings] = useState(false) // New state for hookup fee
 
   useEffect(() => {
     const checkScreen = () => {
@@ -175,13 +177,15 @@ function Superadmin() {
     isprofile(false)
     setAdminCommissions(false)
     setClients(false)
+    setHookupFeeSettings(false) // Clear hookup fee state
   }
 
   const handleSettingsClick = () => {
     if (settingsOpen) {
       setSettingsOpen(false)
-      if (adminCommissions) {
+      if (adminCommissions || hookupFeeSettings) {
         setAdminCommissions(false)
+        setHookupFeeSettings(false)
         isdashmount(true)
       }
     } else {
@@ -306,7 +310,7 @@ function Superadmin() {
             <div className="settings-group">
               <div 
                 onClick={handleSettingsClick}
-                className={`sidebar_link ${settingsOpen || adminCommissions ? 'active-sidebar' : ''}`}
+                className={`sidebar_link ${settingsOpen || adminCommissions || hookupFeeSettings ? 'active-sidebar' : ''}`}
                 style={{ cursor: 'pointer' }}
               >
                 <CiSettings /> Settings
@@ -323,6 +327,14 @@ function Superadmin() {
                   >
                     <span className="sub-link-dot"></span>
                     Commissions
+                  </div>
+                  {/* Hookup Fee Settings - Added below Commissions */}
+                  <div 
+                    onClick={() => {clearAllStates(); setHookupFeeSettings(true); ismounted(!mount)}}
+                    className={`sidebar_sub_link ${hookupFeeSettings ? 'active-sidebar-sub' : ''}`}
+                  >
+                    <span className="sub-link-dot"></span>
+                    Hookup Fee
                   </div>
                 </div>
               )}
@@ -358,6 +370,7 @@ function Superadmin() {
             {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
             {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
             {adminCommissions && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Commissions</h3>}
+            {hookupFeeSettings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setSettingsOpen(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Hookup Fee</h3>}
           </div>
 
           <div className="right-side-header-body-container">
@@ -409,6 +422,7 @@ function Superadmin() {
           {finances && <Superadminfinances/>}
           {profile && <Profile/>}
           {adminCommissions && <Admincommissions/>}
+          {hookupFeeSettings && <Hookupfeesettings/>}
         </div>
 
         {/* Footer */}

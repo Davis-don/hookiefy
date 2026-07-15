@@ -36,4 +36,5 @@ urlpatterns = [
 
     # Profile image upload
     path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
+
 ]

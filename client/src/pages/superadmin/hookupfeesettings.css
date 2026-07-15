@@ -1,0 +1,820 @@
+/* ============================================
+   hookupfeesettings.css — Hookup Fee Settings
+   ============================================ */
+
+/* --- Main Container --- */
+.hfs-main-wrapper {
+  background: #071316;
+  padding: 2.5rem;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+/* --- Custom Scrollbar --- */
+.hfs-main-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.hfs-main-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 229, 255, 0.03);
+  border-radius: 10px;
+}
+
+.hfs-main-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00e5ff, #0099ff);
+  border-radius: 10px;
+}
+
+.hfs-main-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #00e5ff rgba(0, 229, 255, 0.03);
+}
+
+/* --- Header Section --- */
+.hfs-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 2.5rem;
+  border-bottom: 2px solid rgba(0, 229, 255, 0.08);
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.hfs-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hfs-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hfs-page-title {
+  color: #d6f0f5;
+  margin: 0;
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.hfs-page-subtitle {
+  color: rgba(150, 220, 240, 0.5);
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.hfs-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-shrink: 0;
+}
+
+.hfs-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(150, 220, 240, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.8rem;
+}
+
+.hfs-refresh-btn:hover:not(:disabled) {
+  background: rgba(0, 229, 255, 0.1);
+  border-color: rgba(0, 229, 255, 0.2);
+  color: #00e5ff;
+}
+
+.hfs-refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hfs-refresh-icon {
+  transition: transform 0.5s ease;
+}
+
+.hfs-refresh-icon.hfs-spinning {
+  animation: hfsSpin 1s linear infinite;
+}
+
+@keyframes hfsSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hfs-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2.5rem;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 12px;
+  color: #00e5ff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  height: 4.5rem;
+}
+
+.hfs-edit-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.15);
+  transform: scale(1.03);
+}
+
+.hfs-close-icon {
+  color: rgba(150, 220, 240, 0.4);
+  font-size: 2.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hfs-close-icon:hover:not(.hfs-disabled) {
+  color: #ff5252;
+  transform: rotate(90deg);
+}
+
+.hfs-close-icon.hfs-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.hfs-btn-icon {
+  font-size: 1.5rem;
+}
+
+/* --- Fee Display --- */
+.hfs-fee-display {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 229, 255, 0.08);
+  border-radius: 16px;
+  padding: 2.5rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.hfs-fee-label {
+  color: rgba(150, 220, 240, 0.5);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.8rem;
+}
+
+.hfs-fee-amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.hfs-currency {
+  font-size: 2rem;
+  color: rgba(150, 220, 240, 0.4);
+  font-weight: 700;
+}
+
+.hfs-amount {
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: #d6f0f5;
+  letter-spacing: -2px;
+}
+
+.hfs-admin-info {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.hfs-admin-label {
+  font-size: 1.1rem;
+  color: rgba(150, 220, 240, 0.4);
+}
+
+.hfs-admin-name {
+  font-size: 1.2rem;
+  color: rgba(150, 220, 240, 0.7);
+  font-weight: 600;
+}
+
+.hfs-default-badge {
+  display: inline-block;
+  margin-top: 0.8rem;
+  padding: 0.4rem 1.5rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 24px;
+  color: #f59e0b;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* --- Form Container --- */
+.hfs-form-container {
+  padding-top: 0.5rem;
+}
+
+.hfs-form {
+  width: 100%;
+}
+
+.hfs-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hfs-form-label {
+  color: rgba(150, 220, 240, 0.8);
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hfs-label-icon {
+  font-size: 1.4rem;
+}
+
+.hfs-required {
+  color: #ff5252;
+}
+
+.hfs-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hfs-input-prefix {
+  position: absolute;
+  left: 1.5rem;
+  color: rgba(150, 220, 240, 0.3);
+  font-size: 1.4rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.hfs-form-input {
+  width: 100%;
+  padding: 1.2rem 1.5rem 1.2rem 4.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 12px;
+  color: #d6f0f5;
+  font-size: 1.4rem;
+  transition: all 0.3s ease;
+  outline: none;
+  height: 4.5rem;
+}
+
+.hfs-form-input:focus:not(:disabled) {
+  border-color: #00e5ff;
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.12);
+}
+
+.hfs-form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hfs-form-input::placeholder {
+  color: rgba(150, 220, 240, 0.2);
+  font-size: 1.2rem;
+}
+
+/* Remove number input arrows */
+.hfs-form-input[type="number"]::-webkit-outer-spin-button,
+.hfs-form-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hfs-form-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.hfs-input-hint {
+  font-size: 1.1rem;
+  color: rgba(150, 220, 240, 0.3);
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+/* --- Form Actions --- */
+.hfs-form-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+.hfs-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 3rem;
+  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  border: none;
+  border-radius: 12px;
+  color: #071316;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  height: 4.5rem;
+}
+
+.hfs-save-btn:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 0 50px rgba(0, 229, 255, 0.3);
+}
+
+.hfs-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hfs-cancel-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 3rem;
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.2);
+  border-radius: 12px;
+  color: #ff5252;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  height: 4.5rem;
+}
+
+.hfs-cancel-btn:hover:not(:disabled) {
+  background: rgba(255, 82, 82, 0.15);
+  transform: scale(1.03);
+}
+
+.hfs-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Info Note --- */
+.hfs-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding: 1.5rem 2rem;
+  background: rgba(0, 229, 255, 0.04);
+  border: 1px solid rgba(0, 229, 255, 0.06);
+  border-radius: 12px;
+}
+
+.hfs-info-icon {
+  font-size: 1.5rem;
+  color: rgba(0, 229, 255, 0.4);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.hfs-info-text {
+  font-size: 1.2rem;
+  color: rgba(150, 220, 240, 0.4);
+  line-height: 1.6;
+}
+
+/* --- Loading --- */
+.hfs-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  gap: 2rem;
+  min-height: 400px;
+}
+
+.hfs-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(0, 229, 255, 0.1);
+  border-top: 4px solid #00e5ff;
+  border-radius: 50%;
+  animation: hfsLoadingSpin 0.8s linear infinite;
+}
+
+@keyframes hfsLoadingSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hfs-loading-container p {
+  color: rgba(150, 220, 240, 0.5);
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* --- Error --- */
+.hfs-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+  min-height: 400px;
+  text-align: center;
+}
+
+.hfs-error-icon {
+  font-size: 4rem;
+}
+
+.hfs-error-text {
+  color: rgba(150, 220, 240, 0.5);
+  font-size: 1.3rem;
+  margin: 0;
+  max-width: 500px;
+}
+
+.hfs-retry-btn {
+  margin-top: 0.5rem;
+  padding: 1rem 3rem;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 12px;
+  color: #00e5ff;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hfs-retry-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
+  transform: scale(1.03);
+}
+
+/* --- Spinner Small --- */
+.hfs-spinner-small {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(7, 19, 22, 0.2);
+  border-top: 2px solid #071316;
+  border-radius: 50%;
+  animation: hfsSmallSpin 0.7s linear infinite;
+}
+
+@keyframes hfsSmallSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet */
+@media screen and (max-width: 63.75em) {
+  .hfs-main-wrapper {
+    padding: 2rem;
+  }
+
+  .hfs-page-title {
+    font-size: 2.2rem;
+  }
+
+  .hfs-page-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .hfs-amount {
+    font-size: 3.5rem;
+  }
+
+  .hfs-currency {
+    font-size: 1.6rem;
+  }
+
+  .hfs-fee-label {
+    font-size: 1rem;
+  }
+
+  .hfs-form-input {
+    font-size: 1.2rem;
+    height: 4rem;
+    padding: 1rem 1.2rem 1rem 4rem;
+  }
+
+  .hfs-input-prefix {
+    font-size: 1.2rem;
+    left: 1.2rem;
+  }
+
+  .hfs-form-label {
+    font-size: 1.1rem;
+  }
+
+  .hfs-save-btn,
+  .hfs-cancel-btn,
+  .hfs-edit-btn {
+    height: 4rem;
+    font-size: 1.1rem;
+    padding: 0.8rem 2rem;
+  }
+
+  .hfs-refresh-btn {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.4rem;
+  }
+
+  .hfs-close-icon {
+    font-size: 2.4rem;
+  }
+
+  .hfs-info-text {
+    font-size: 1rem;
+  }
+
+  .hfs-admin-label,
+  .hfs-admin-name {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile Large */
+@media screen and (max-width: 48em) {
+  .hfs-main-wrapper {
+    padding: 1.5rem;
+  }
+
+  .hfs-header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.2rem;
+    padding-bottom: 1.8rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .hfs-header-left {
+    gap: 1rem;
+  }
+
+  .hfs-header-right {
+    justify-content: flex-end;
+  }
+
+  .hfs-page-title {
+    font-size: 1.8rem;
+  }
+
+  .hfs-page-subtitle {
+    font-size: 1rem;
+  }
+
+  .hfs-fee-display {
+    padding: 1.8rem;
+  }
+
+  .hfs-amount {
+    font-size: 3rem;
+  }
+
+  .hfs-currency {
+    font-size: 1.4rem;
+  }
+
+  .hfs-fee-label {
+    font-size: 0.95rem;
+  }
+
+  .hfs-edit-btn {
+    padding: 0.8rem 1.8rem;
+    font-size: 1rem;
+    height: 3.5rem;
+  }
+
+  .hfs-close-icon {
+    font-size: 2rem;
+  }
+
+  .hfs-form-input {
+    font-size: 1.1rem;
+    height: 3.5rem;
+    padding: 0.8rem 1rem 0.8rem 3.5rem;
+  }
+
+  .hfs-input-prefix {
+    font-size: 1.1rem;
+    left: 1rem;
+  }
+
+  .hfs-form-label {
+    font-size: 1rem;
+  }
+
+  .hfs-input-hint {
+    font-size: 0.95rem;
+  }
+
+  .hfs-form-actions {
+    flex-direction: column;
+  }
+
+  .hfs-save-btn,
+  .hfs-cancel-btn {
+    width: 100%;
+    justify-content: center;
+    height: 3.5rem;
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .hfs-refresh-btn {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.2rem;
+  }
+
+  .hfs-info-note {
+    padding: 1rem 1.5rem;
+  }
+
+  .hfs-info-text {
+    font-size: 0.95rem;
+  }
+
+  .hfs-admin-label,
+  .hfs-admin-name {
+    font-size: 0.95rem;
+  }
+
+  .hfs-default-badge {
+    font-size: 0.9rem;
+    padding: 0.3rem 1.2rem;
+  }
+
+  .hfs-btn-icon {
+    font-size: 1.2rem;
+  }
+}
+
+/* Mobile Small */
+@media screen and (max-width: 30em) {
+  .hfs-main-wrapper {
+    padding: 1rem;
+  }
+
+  .hfs-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    width: 100%;
+  }
+
+  .hfs-title-wrapper {
+    align-items: center;
+    width: 100%;
+  }
+
+  .hfs-page-title {
+    font-size: 1.5rem;
+  }
+
+  .hfs-page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .hfs-header-right {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .hfs-fee-display {
+    padding: 1.5rem;
+  }
+
+  .hfs-amount {
+    font-size: 2.5rem;
+  }
+
+  .hfs-currency {
+    font-size: 1.2rem;
+  }
+
+  .hfs-fee-label {
+    font-size: 0.85rem;
+  }
+
+  .hfs-admin-label,
+  .hfs-admin-name {
+    font-size: 0.85rem;
+  }
+
+  .hfs-edit-btn {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+    height: 3rem;
+  }
+
+  .hfs-close-icon {
+    font-size: 1.8rem;
+  }
+
+  .hfs-refresh-btn {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+
+  .hfs-form-input {
+    font-size: 1rem;
+    height: 3rem;
+    padding: 0.7rem 0.8rem 0.7rem 3rem;
+  }
+
+  .hfs-input-prefix {
+    font-size: 1rem;
+    left: 0.8rem;
+  }
+
+  .hfs-form-label {
+    font-size: 0.95rem;
+  }
+
+  .hfs-input-hint {
+    font-size: 0.85rem;
+  }
+
+  .hfs-save-btn,
+  .hfs-cancel-btn {
+    height: 3rem;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .hfs-btn-icon {
+    font-size: 1rem;
+  }
+
+  .hfs-info-note {
+    padding: 0.8rem 1rem;
+  }
+
+  .hfs-info-text {
+    font-size: 0.85rem;
+  }
+
+  .hfs-info-icon {
+    font-size: 1.2rem;
+  }
+
+  .hfs-default-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 1rem;
+  }
+
+  .hfs-loading-container p {
+    font-size: 1rem;
+  }
+
+  .hfs-error-text {
+    font-size: 1rem;
+  }
+
+  .hfs-retry-btn {
+    font-size: 1rem;
+    padding: 0.8rem 2rem;
+  }
+}

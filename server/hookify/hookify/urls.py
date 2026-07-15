@@ -39,4 +39,7 @@ urlpatterns = [
         TokenRefreshView.as_view(),
         name="token_refresh",
     ),
+
+    # Administration APIs
+    path("administration/", include("administration.urls")),
 ]
