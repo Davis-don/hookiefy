@@ -14,7 +14,7 @@ from administration.models import PlatformConfig
 from paymentconfigurations.models import PaymentConfiguration
 from connections.models import Connection
 from payments.models import Payment
-from notifications.models import Notification
+from notification.models import Notification
 
 from .services.register_ipn import register_ipn_url
 from .services.submit_order import submit_order
