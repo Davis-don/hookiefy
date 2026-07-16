@@ -66,6 +66,27 @@ def submit_order(
     )
     logger.info(f"📡 Submitting order to: {url}")
 
+    # ============================================================
+    # GET CALLBACK URLs FROM SETTINGS (with fallbacks)
+    # ============================================================
+    
+    # Try to get from settings, with fallback to hardcoded production URLs
+    callback_url = getattr(
+        settings, 
+        'PESAPAL_CALLBACK_URL', 
+        'https://hookiefy-server.onrender.com/payments/payment-success/'  # Updated with /payments/ prefix
+    )
+    
+    cancellation_url = getattr(
+        settings, 
+        'PESAPAL_CANCELLATION_URL', 
+        'https://hookiefy-server.onrender.com/payments/payment-failure/'  # Updated with /payments/ prefix
+    )
+    
+    # Log the URLs being used
+    logger.info(f"🔗 Callback URL: {callback_url}")
+    logger.info(f"❌ Cancellation URL: {cancellation_url}")
+
     # Prepare the payload
     payload = {
         "id": payment.merchant_reference,
@@ -73,9 +94,9 @@ def submit_order(
         "amount": float(payment.amount),
         "description": "Hookup payment",
         
-        # Success and failure redirect URLs
-        "callback_url": "https://hookiefy-server.onrender.com/payment-success/",
-        "cancellation_url": "https://hookiefy-server.onrender.com/payment-failure/",
+        # Success and failure redirect URLs - Now using settings
+        "callback_url": callback_url,
+        "cancellation_url": cancellation_url,
         
         # IPN notification ID
         "notification_id": config.ipn_id,

@@ -178,10 +178,100 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+# ============================================================
+# PESAPAL CONFIGURATION
+# ============================================================
 
-# Pesapal env stuff
-from decouple import config
-
+# Required PesaPal credentials
 PESAPAL_CONSUMER_KEY = config("PESAPAL_CONSUMER_KEY")
 PESAPAL_CONSUMER_SECRET = config("PESAPAL_CONSUMER_SECRET")
-PESAPAL_BASE_URL = config("PESAPAL_BASE_URL")
+
+# PesaPal Base URL - Sandbox or Production
+# Sandbox: https://cybqa.pesapal.com/pesapalv3
+# Production: https://pay.pesapal.com/v3
+PESAPAL_BASE_URL = config("PESAPAL_BASE_URL", default="https://cybqa.pesapal.com/pesapalv3")
+
+# ============================================================
+# PESAPAL CALLBACK URLs - Updated with /payments/ prefix
+# ============================================================
+
+# Base domain for your server
+BASE_DOMAIN = os.environ.get(
+    "BASE_DOMAIN",
+    "https://hookiefy-server.onrender.com"
+)
+
+# Callback URLs - Note the /payments/ prefix to match your URL structure
+PESAPAL_CALLBACK_URL = os.environ.get(
+    "PESAPAL_CALLBACK_URL",
+    f"{BASE_DOMAIN}/payments/payment-success/"
+)
+
+PESAPAL_CANCELLATION_URL = os.environ.get(
+    "PESAPAL_CANCELLATION_URL",
+    f"{BASE_DOMAIN}/payments/payment-failure/"
+)
+
+# IPN URL - Where PesaPal sends server-to-server notifications
+PESAPAL_IPN_URL = os.environ.get(
+    "PESAPAL_IPN_URL",
+    f"{BASE_DOMAIN}/payments/ipn/"
+)
+
+# ============================================================
+# LOGGING CONFIGURATION (for debugging PesaPal)
+# ============================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'pesapal.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'payments': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'propagate': True,
+        },
+    },
+}
+
+# ============================================================
+# DEBUG LOGGING FOR PESAPAL (only in development)
+# ============================================================
+
+if DEBUG:
+    print("=" * 60)
+    print("PESAPAL CONFIGURATION")
+    print(f"Consumer Key: {'Set' if PESAPAL_CONSUMER_KEY else 'NOT SET'}")
+    print(f"Consumer Secret: {'Set' if PESAPAL_CONSUMER_SECRET else 'NOT SET'}")
+    print(f"Base URL: {PESAPAL_BASE_URL}")
+    print(f"BASE_DOMAIN: {BASE_DOMAIN}")
+    print(f"Callback URL: {PESAPAL_CALLBACK_URL}")
+    print(f"Cancellation URL: {PESAPAL_CANCELLATION_URL}")
+    print(f"IPN URL: {PESAPAL_IPN_URL}")
+    print("=" * 60)
