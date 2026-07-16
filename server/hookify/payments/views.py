@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.utils import timezone
+from django.shortcuts import redirect
 
 from assignments.models import ClientAssignment
 from administration.models import PlatformConfig
@@ -497,14 +498,14 @@ def register_ipn(request):
 
 
 # =====================================================
-# PAYMENT SUCCESS - Redirect from PesaPal
+# PAYMENT SUCCESS - Redirect from PesaPal to Frontend
 # =====================================================
 
 @api_view(["GET"])
 def payment_success(request):
     """
     Handles the redirect from PesaPal after a user completes payment.
-    This is where the user is sent after paying on PesaPal's site.
+    Redirects to the frontend success page with payment details.
     """
     
     # Get the tracking ID and merchant reference from the URL
@@ -518,13 +519,9 @@ def payment_success(request):
     logger.info("=" * 60)
     
     if not order_tracking_id:
-        return Response(
-            {
-                "success": False,
-                "message": "Missing OrderTrackingId."
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        # Redirect to frontend with error
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Missing+OrderTrackingId"
+        return redirect(error_url)
     
     try:
         # Find the payment
@@ -595,55 +592,48 @@ def payment_success(request):
             logger.info(f"   Amount: KES {payment.amount}")
             logger.info(f"   Connection ID: {connection.connection_id}")
         
-        # Return a success response
-        return Response(
-            {
-                "success": True,
-                "message": "Payment processed successfully.",
-                "data": {
-                    "order_tracking_id": order_tracking_id,
-                    "merchant_reference": merchant_reference,
-                    "payment_status": payment.status,
-                    "amount": payment.amount,
-                    "currency": "KES",
-                    "connection_id": str(payment.connection.connection_id),
-                    "sender": payment.connection.sender.full_name,
-                    "receiver": payment.connection.receiver.full_name,
-                }
-            },
-            status=status.HTTP_200_OK
+        # ============================================================
+        # REDIRECT TO FRONTEND SUCCESS PAGE
+        # ============================================================
+        
+        # Frontend URL
+        frontend_url = "https://hookiefy.netlify.app/payment-success"
+        
+        # Add query parameters with payment details
+        redirect_url = (
+            f"{frontend_url}"
+            f"?order_tracking_id={order_tracking_id}"
+            f"&merchant_reference={merchant_reference}"
+            f"&payment_status={payment.status}"
+            f"&amount={payment.amount}"
+            f"&connection_id={payment.connection.connection_id}"
         )
+        
+        logger.info(f"🔀 Redirecting to: {redirect_url}")
+        
+        # Redirect to frontend
+        return redirect(redirect_url)
         
     except Payment.DoesNotExist:
         logger.error(f"❌ Payment not found for tracking ID: {order_tracking_id}")
-        return Response(
-            {
-                "success": False,
-                "message": "Payment not found."
-            },
-            status=status.HTTP_404_NOT_FOUND
-        )
+        error_url = f"https://hookiefy.netlify.app/payment-error?message=Payment+not+found"
+        return redirect(error_url)
         
     except Exception as e:
         logger.error(f"❌ Error processing payment success: {e}")
-        return Response(
-            {
-                "success": False,
-                "message": "An error occurred while processing your payment.",
-                "error": str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        error_url = f"https://hookiefy.netlify.app/payment-error?message={str(e)}"
+        return redirect(error_url)
 
 
 # =====================================================
-# PAYMENT FAILURE - Redirect from PesaPal
+# PAYMENT FAILURE - Redirect from PesaPal to Frontend
 # =====================================================
 
 @api_view(["GET"])
 def payment_failure(request):
     """
     Handles the redirect from PesaPal when a payment fails or is cancelled.
+    Redirects to the frontend failure page.
     """
     
     order_tracking_id = request.query_params.get("OrderTrackingId")
@@ -675,16 +665,18 @@ def payment_failure(request):
             
         except Payment.DoesNotExist:
             logger.warning(f"Payment not found for tracking ID: {order_tracking_id}")
-            pass
     
-    return Response(
-        {
-            "success": False,
-            "message": "Payment was not completed. Please try again.",
-            "data": {
-                "order_tracking_id": order_tracking_id,
-                "merchant_reference": merchant_reference,
-            }
-        },
-        status=status.HTTP_200_OK
+    # Redirect to frontend failure page
+    frontend_url = "https://hookiefy.netlify.app/payment-failure"
+    
+    # Add query parameters
+    redirect_url = (
+        f"{frontend_url}"
+        f"?order_tracking_id={order_tracking_id}"
+        f"&merchant_reference={merchant_reference}"
+        f"&message=Payment+was+not+completed"
     )
+    
+    logger.info(f"🔀 Redirecting to: {redirect_url}")
+    
+    return redirect(redirect_url)

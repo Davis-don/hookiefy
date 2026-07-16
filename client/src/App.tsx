@@ -14,6 +14,12 @@ import Contact from "./pages/contact/Contact";
 import Privacy from "./pages/common/Privacy";
 import Terms from "./pages/common/Terms";
 import Protectedroute from "./components/protected/Protectedroute";
+// ============================================================
+// IMPORT PAYMENT PAGES
+// ============================================================
+import PaymentSuccess from "./pages/payments/PaymentSuccess";
+import PaymentFailure from "./pages/payments/PaymentFailure";
+import PaymentError from "./pages/payments/PaymentError";
 import "./App.css";
 
 function App() {
@@ -41,6 +47,24 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />
           
+          // ============================================================
+          // PAYMENT ROUTES - Public (no authentication required)
+          // ============================================================
+          <Route path="/payment-success" element={
+            <Mainlayout>
+              <PaymentSuccess />
+            </Mainlayout>
+          } />
+          <Route path="/payment-failure" element={
+            <Mainlayout>
+              <PaymentFailure />
+            </Mainlayout>
+          } />
+          <Route path="/payment-error" element={
+            <Mainlayout>
+              <PaymentError />
+            </Mainlayout>
+          } />
 
           {/* Protected routes - Superadmin only */}
           <Route
