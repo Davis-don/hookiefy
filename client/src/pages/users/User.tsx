@@ -577,7 +577,6 @@ function User() {
                 {showProfileImageModal && (
                   <Addprofileimguserpop 
                     onComplete={handleProfileImageComplete}
-                    onCancel={() => {}}
                   />
                 )}
             </div>
