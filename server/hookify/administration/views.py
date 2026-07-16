@@ -5,20 +5,17 @@ from rest_framework.response import Response
 
 from account.models import Accounts
 from assignments.models import ClientAssignment
+from connections.models import Connection
 from .models import PlatformConfig
 
 
-# ============================================
-# VIEW 1: FETCH HOOKUP FEE (For Regular Users)
-# ============================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_hookup_fee_view(request):
+def get_hookup_fee_view(request, connection_id=None):
     """
     Returns the hookup fee for the authenticated user.
-    Only regular users (not admins or superadmins) can access this.
-    The fee is obtained from the PlatformConfig of the user's assigned admin.
+    Includes the connection_id for payment initiation.
     """
     
     user = request.user
@@ -44,19 +41,45 @@ def get_hookup_fee_view(request):
         # Get the admin's configuration
         config = PlatformConfig.objects.get(owner=assigned_admin)
 
+        # Get the connection if connection_id is provided
+        connection = None
+        if connection_id:
+            try:
+                connection = Connection.objects.get(
+                    connection_id=connection_id,
+                    sender=user  # Ensure the user is the sender
+                )
+            except Connection.DoesNotExist:
+                pass  # Connection not found, but we still return the fee
+
+        response_data = {
+            "hookup_fee": config.hookup_fee,
+            "currency": "KES",
+            "assigned_admin": {
+                "id": assigned_admin.id,
+                "name": assigned_admin.full_name,
+                "email": assigned_admin.email,
+            },
+            "user": {
+                "id": user.id,
+                "phone_number": user.phone_number,  # Auto-fetch phone number
+                "email": user.email,
+                "full_name": user.full_name,
+            }
+        }
+
+        # Add connection_id if available
+        if connection:
+            response_data["connection_id"] = str(connection.connection_id)
+        elif connection_id:
+            # If connection_id was provided but not found, still pass it
+            response_data["connection_id"] = connection_id
+
         return Response(
             {
                 "success": True,
                 "message": "Hookup fee retrieved successfully.",
-                "data": {
-                    "hookup_fee": config.hookup_fee,
-                    "currency": "KES",
-                    "assigned_admin": {
-                        "id": assigned_admin.id,
-                        "name": assigned_admin.full_name,
-                        "email": assigned_admin.email,
-                    },
-                },
+                "data": response_data,
             },
             status=status.HTTP_200_OK,
         )
@@ -88,7 +111,6 @@ def get_hookup_fee_view(request):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-
 
 # ============================================
 # VIEW 2: FETCH HOOKUP FEE FOR ADMIN/SUPERADMIN

@@ -1,3 +1,4 @@
+// Youractivitypreview.tsx
 import './youractivitypreview.css'
 import { usePaymentModalStore } from './store/modalstore'
 import type { Activity } from './Youractivity'
@@ -14,20 +15,47 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
   }
 
   const { senderName, senderAvatar, status, time, connection_id } = activity;
-  const { open: openPaymentModal } = usePaymentModalStore();
+  const { open: openPaymentModal, isMount, hookupId } = usePaymentModalStore();
+
+  // Debug log to verify connection_id
+  console.log('🔍 Activity connection_id:', connection_id);
+  console.log('📋 Full activity:', activity);
+  console.log('📂 Modal state - isMount:', isMount);
+  console.log('📂 Modal state - hookupId:', hookupId);
 
   // Check if the activity is clickable (only accepted status is clickable)
-  const isClickable = status === 'accepted';
+  const isClickable = status === 'accepted' && !!connection_id;
   const isDisabled = status === 'rejected' || status === 'completed';
 
   const handlePreviewClick = () => {
     if (isClickable && connection_id) {
       try {
         console.log('💳 Opening payment modal for:', senderName);
+        console.log('🔑 Connection ID being passed:', connection_id);
+        
+        // Open the modal with the connection ID
         openPaymentModal(connection_id);
+        
+        // Log the updated state
+        setTimeout(() => {
+          const currentState = usePaymentModalStore.getState();
+          console.log('📂 Updated modal state:', {
+            isMount: currentState.isMount,
+            hookupId: currentState.hookupId,
+          });
+        }, 100);
+        
+        console.log('✅ Payment modal opened successfully');
       } catch (error) {
-        console.error('Error opening payment modal:', error);
+        console.error('❌ Error opening payment modal:', error);
+        // You could show a toast notification here
       }
+    } else {
+      console.log('⛔ Activity is not clickable:', {
+        isClickable,
+        hasConnectionId: !!connection_id,
+        status
+      });
     }
   };
 
@@ -137,6 +165,14 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
       className={`overall-your-activity-preview ${!isClickable ? 'your-activity-disabled' : ''}`}
       onClick={handlePreviewClick}
       style={{ cursor: isClickable ? 'pointer' : 'default' }}
+      role={isClickable ? 'button' : 'none'}
+      tabIndex={isClickable ? 0 : -1}
+      onKeyDown={(e) => {
+        if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          handlePreviewClick();
+        }
+      }}
     >
       <div className="your-activity-avatar-wrapper">
         {displayAvatar ? (

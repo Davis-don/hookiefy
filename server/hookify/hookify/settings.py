@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "notification",
     "administration",
     "payments",
+    "paymentconfigurations",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]

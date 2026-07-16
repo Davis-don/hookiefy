@@ -6,7 +6,6 @@ def register_ipn_url():
     Register IPN URL with Pesapal
     Returns ipn_id to be used in payment requests
     """
-    # First get the token
     from .get_pesapal_token import get_pesapal_token
     
     token_response = get_pesapal_token()
@@ -18,9 +17,10 @@ def register_ipn_url():
     # Register IPN URL
     url = f"{settings.PESAPAL_BASE_URL}/api/URLSetup/RegisterIPN"
     
+    # Use your live server URL
     payload = {
-        "url": "https://yourdomain.com/api/payments/ipn/",  # Your IPN endpoint
-        "ipn_notification_type": "POST"  # or "GET"
+        "url": "https://hookiefy-server.onrender.com/payments/ipn/",
+        "ipn_notification_type": "POST"
     }
     
     headers = {

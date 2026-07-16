@@ -1,7 +1,7 @@
 import './paymentmodal.css'
 import { usePaymentModalStore } from './store/modalstore'
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import { toast } from 'sonner'
 
@@ -16,16 +16,39 @@ interface HookupFeeResponse {
       name: string;
       email: string;
     };
+    user: {
+      id: number;
+      phone_number: string | null;
+      email: string;
+      full_name: string;
+    };
   };
 }
 
-// Fetch hookup fee
-const fetchHookupFee = async (accessToken: string | null): Promise<HookupFeeResponse> => {
+interface PaymentInitResponse {
+  success: boolean;
+  message: string;
+  payment: {
+    id: number;
+    merchant_reference: string;
+    amount: number;
+    status: string;
+    order_tracking_id: string;
+  };
+  redirect_url: string;
+}
+
+// Fetch hookup fee - just gets the fee and user phone number
+const fetchHookupFee = async (
+  accessToken: string | null
+): Promise<HookupFeeResponse> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
   }
 
   const url = `${import.meta.env.VITE_API_URL}/administration/hookup-fee/`;
+
+  console.log('📡 Fetching hookup fee from:', url);
 
   const response = await fetch(url, {
     headers: {
@@ -53,21 +76,64 @@ const fetchHookupFee = async (accessToken: string | null): Promise<HookupFeeResp
     throw new Error(data.message || 'Failed to fetch hookup fee');
   }
   
+  console.log('✅ Hookup fee data received:', data);
+  return data;
+};
+
+// Initiate payment - amount is fetched from backend, not sent in payload
+const initiatePayment = async ({
+  accessToken,
+  connectionId,
+  phoneNumber,
+}: {
+  accessToken: string;
+  connectionId: string;
+  phoneNumber: string;
+}): Promise<PaymentInitResponse> => {
+  const payload = {
+    connection_id: connectionId,
+    phone_number: phoneNumber,
+  };
+
+  console.log('📤 Initiating payment with payload:', payload);
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('❌ Payment initiation failed:', errorData);
+    throw new Error(errorData.message || 'Payment initiation failed');
+  }
+
+  const data = await response.json();
+  console.log('✅ Payment initiated successfully:', data);
   return data;
 };
 
 function Paymentmodal() {
-  const { hookupId, close } = usePaymentModalStore();
+  const { hookupId, close, isMount } = usePaymentModalStore();
   const { access: accessToken } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('mpesa');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [showPhoneInput, setShowPhoneInput] = useState(false);
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
 
-  // Fetch hookup fee using useQuery
+  // Debug logging
+  console.log('💳 PaymentModal rendering');
+  console.log('📂 isMount:', isMount);
+  console.log('🔑 hookupId from store (connection_id):', hookupId);
+
+  // If modal is not mounted, don't render anything
+  if (!isMount) {
+    console.log('🚫 PaymentModal: Not mounted, returning null');
+    return null;
+  }
+
+  // Fetch hookup fee - doesn't need connection_id
   const {
     data: hookupFeeData,
     isLoading: isLoadingFee,
@@ -77,11 +143,61 @@ function Paymentmodal() {
   } = useQuery({
     queryKey: ['hookupFee', accessToken],
     queryFn: () => fetchHookupFee(accessToken),
-    enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!accessToken && isMount,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
+  });
+
+  // Payment mutation - amount is fetched from backend
+  const paymentMutation = useMutation({
+    mutationFn: initiatePayment,
+    onSuccess: (data) => {
+      toast.success('Payment initiated!', {
+        description: 'Redirecting to payment gateway...',
+        duration: 3000,
+        icon: '🔄',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+
+      // Redirect to PesaPal payment URL
+      if (data.redirect_url) {
+        console.log('🔀 Redirecting to:', data.redirect_url);
+        window.location.replace(data.redirect_url);
+      } else {
+        console.error('❌ No redirect_url in response:', data);
+        toast.error('No redirect URL received', {
+          description: 'Please contact support.',
+          duration: 4000,
+          icon: '❌',
+          style: {
+            background: '#1a1a2e',
+            border: '1px solid #ef4444',
+            color: '#ffffff',
+          },
+        });
+        setIsProcessing(false);
+      }
+    },
+    onError: (error) => {
+      console.error('❌ Payment mutation error:', error);
+      toast.error('Payment initiation failed', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+        duration: 4000,
+        icon: '❌',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      setIsProcessing(false);
+    },
   });
 
   // Show toast on error
@@ -102,55 +218,19 @@ function Paymentmodal() {
   }, [isFeeError, feeError]);
 
   const handlePayment = async () => {
-    if (selectedMethod === 'mpesa' && !phoneNumber) {
-      setShowPhoneInput(true);
-      toast.warning('Phone number required', {
-        description: 'Please enter your M-Pesa phone number.',
-        duration: 3000,
-        icon: '📱',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #f59e0b',
-          color: '#ffffff',
-        },
-      });
-      return;
-    }
-    if (selectedMethod === 'card' && (!cardNumber || !expiryDate || !cvv)) {
-      toast.warning('Card details required', {
-        description: 'Please fill in all card details.',
-        duration: 3000,
-        icon: '💳',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #f59e0b',
-          color: '#ffffff',
-        },
-      });
-      return;
-    }
+    console.log('🔄 handlePayment called');
+    
+    // Get connection_id from the store
+    const connectionId = hookupId;
+    
+    console.log('🔑 Connection ID from store:', connectionId);
 
-    setIsProcessing(true);
-    try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
-      toast.success('Payment successful!', {
-        description: `Payment of KES ${hookupFeeData?.data.hookup_fee || '500'} processed successfully.`,
-        duration: 4000,
-        icon: '✅',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #22c55e',
-          color: '#ffffff',
-        },
-      });
-      
-      console.log(`Processing payment for hookup: ${hookupId} via ${selectedMethod}`);
-    } catch (error) {
-      toast.error('Payment failed', {
-        description: 'An error occurred while processing your payment. Please try again.',
-        duration: 4000,
+    // Check if we have connection_id
+    if (!connectionId) {
+      console.error('❌ No connection ID found in store');
+      toast.error('Connection ID not found', {
+        description: 'Unable to process payment. Please try again.',
+        duration: 3000,
         icon: '❌',
         style: {
           background: '#1a1a2e',
@@ -158,39 +238,84 @@ function Paymentmodal() {
           color: '#ffffff',
         },
       });
-    } finally {
+      return;
+    }
+
+    if (!hookupFeeData?.data) {
+      console.error('❌ No hookup fee data available');
+      toast.error('Payment details not available', {
+        description: 'Please refresh and try again.',
+        duration: 3000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    const { user } = hookupFeeData.data;
+    
+    console.log('👤 User data:', user);
+
+    // Auto-fetch phone number from user data
+    const phoneNumber = user?.phone_number;
+    
+    if (!phoneNumber) {
+      console.error('❌ No phone number found for user');
+      toast.error('Phone number not found', {
+        description: 'Please update your phone number in profile settings.',
+        duration: 4000,
+        icon: '📱',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    // Format phone number (ensure it starts with 254)
+    let formattedPhone = phoneNumber;
+    
+    // Remove any leading + or 0
+    formattedPhone = formattedPhone.replace(/^\+/, '');
+    formattedPhone = formattedPhone.replace(/^0/, '');
+    
+    // Ensure it starts with 254
+    if (!formattedPhone.startsWith('254')) {
+      formattedPhone = `254${formattedPhone}`;
+    }
+
+    console.log('📱 Original phone number:', phoneNumber);
+    console.log('📱 Formatted phone number:', formattedPhone);
+    console.log('🔑 Connection ID for payment:', connectionId);
+    console.log('💰 Amount will be fetched from backend');
+
+    setIsProcessing(true);
+
+    try {
+      // Amount is not sent in payload - backend fetches it
+      await paymentMutation.mutateAsync({
+        accessToken: accessToken!,
+        connectionId: connectionId,
+        phoneNumber: formattedPhone,
+      });
+    } catch (error) {
+      // Error is handled in mutation's onError
+      console.error('❌ Payment error:', error);
       setIsProcessing(false);
-      close();
     }
   };
 
-  const handleMethodSelect = (method: string) => {
-    setSelectedMethod(method);
-    if (method === 'mpesa') {
-      setShowPhoneInput(true);
-    } else {
-      setShowPhoneInput(false);
-    }
-  };
-
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s/g, '');
-    const formatted = cleaned.replace(/(.{4})/g, '$1 ').trim();
-    return formatted.slice(0, 19);
-  };
-
-  const formatExpiry = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length >= 2) {
-      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
-    }
-    return cleaned;
-  };
-
-  // Get the fee amount
+  // Get the fee amount for display only
   const feeAmount = hookupFeeData?.data?.hookup_fee || 500;
   const currency = hookupFeeData?.data?.currency || 'KES';
   const assignedAdmin = hookupFeeData?.data?.assigned_admin;
+  const userPhoneNumber = hookupFeeData?.data?.user?.phone_number;
 
   // Loading state
   if (isLoadingFee) {
@@ -277,158 +402,50 @@ function Paymentmodal() {
               Admin: {assignedAdmin.name}
             </span>
           )}
+          {userPhoneNumber && (
+            <span className="payment-modal-phone-info">
+              📱 Phone: {userPhoneNumber}
+            </span>
+          )}
+          {hookupId && (
+            <span className="payment-modal-connection-info">
+              🔗 Connection: {hookupId.slice(0, 8)}...
+            </span>
+          )}
         </div>
 
         {/* Divider */}
         <div className="payment-modal-divider"></div>
 
-        {/* Payment Method */}
+        {/* Payment Method - Simplified since user just clicks pay */}
         <div className="payment-modal-method-section">
-          <h4 className="payment-modal-section-title">Select Payment Method</h4>
+          <h4 className="payment-modal-section-title">Payment Details</h4>
           
-          <div className="payment-modal-method-options">
-            {/* M-Pesa Option */}
-            <div 
-              className={`payment-modal-method-option ${selectedMethod === 'mpesa' ? 'payment-modal-method-active' : ''}`}
-              onClick={() => handleMethodSelect('mpesa')}
-            >
-              <div className="payment-modal-method-left">
-                <div className="payment-modal-method-icon-wrapper">
-                  <span className="payment-modal-method-icon">📱</span>
-                </div>
-                <div>
-                  <div className="payment-modal-method-name">M-Pesa</div>
-                  <div className="payment-modal-method-desc">Pay with mobile money</div>
-                </div>
-              </div>
-              {selectedMethod === 'mpesa' && (
-                <span className="payment-modal-method-check">✓</span>
-              )}
+          <div className="payment-modal-info-box">
+            <div className="payment-modal-info-row">
+              <span className="payment-modal-info-label">Payment Method</span>
+              <span className="payment-modal-info-value">M-Pesa</span>
             </div>
-
-            {/* Card Option */}
-            <div 
-              className={`payment-modal-method-option ${selectedMethod === 'card' ? 'payment-modal-method-active' : ''}`}
-              onClick={() => handleMethodSelect('card')}
-            >
-              <div className="payment-modal-method-left">
-                <div className="payment-modal-method-icon-wrapper">
-                  <span className="payment-modal-method-icon">💳</span>
-                </div>
-                <div>
-                  <div className="payment-modal-method-name">Card</div>
-                  <div className="payment-modal-method-desc">Visa, Mastercard, Amex</div>
-                </div>
+            {userPhoneNumber && (
+              <div className="payment-modal-info-row">
+                <span className="payment-modal-info-label">Phone Number</span>
+                <span className="payment-modal-info-value">{userPhoneNumber}</span>
               </div>
-              {selectedMethod === 'card' && (
-                <span className="payment-modal-method-check">✓</span>
-              )}
-            </div>
-
-            {/* Bank Option */}
-            <div 
-              className={`payment-modal-method-option ${selectedMethod === 'bank' ? 'payment-modal-method-active' : ''}`}
-              onClick={() => handleMethodSelect('bank')}
-            >
-              <div className="payment-modal-method-left">
-                <div className="payment-modal-method-icon-wrapper">
-                  <span className="payment-modal-method-icon">🏦</span>
-                </div>
-                <div>
-                  <div className="payment-modal-method-name">Bank Transfer</div>
-                  <div className="payment-modal-method-desc">Direct bank payment</div>
-                </div>
+            )}
+            {hookupId && (
+              <div className="payment-modal-info-row">
+                <span className="payment-modal-info-label">Reference</span>
+                <span className="payment-modal-info-value">
+                  {hookupId.slice(0, 8)}...
+                </span>
               </div>
-              {selectedMethod === 'bank' && (
-                <span className="payment-modal-method-check">✓</span>
-              )}
-            </div>
+            )}
           </div>
+          
+          <p className="payment-modal-info-hint">
+            🔒 You'll receive a prompt to confirm payment on your phone
+          </p>
         </div>
-
-        {/* Phone Input for M-Pesa */}
-        {showPhoneInput && selectedMethod === 'mpesa' && (
-          <div className="payment-modal-input-section">
-            <label className="payment-modal-input-label">M-Pesa Phone Number</label>
-            <div className="payment-modal-input-field">
-              <span className="payment-modal-input-prefix">+254</span>
-              <input 
-                type="tel" 
-                className="payment-modal-input"
-                placeholder="701 234 567"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                maxLength={10}
-              />
-            </div>
-            <p className="payment-modal-input-hint">You'll receive a prompt to confirm payment on your phone</p>
-          </div>
-        )}
-
-        {/* Card Input Fields */}
-        {selectedMethod === 'card' && (
-          <div className="payment-modal-input-section">
-            <label className="payment-modal-input-label">Card Number</label>
-            <div className="payment-modal-input-field">
-              <input 
-                type="text" 
-                className="payment-modal-input"
-                placeholder="1234 5678 9012 3456"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                maxLength={19}
-              />
-              <span className="payment-modal-input-icon">💳</span>
-            </div>
-
-            <div className="payment-modal-input-row">
-              <div className="payment-modal-input-group">
-                <label className="payment-modal-input-label">Expiry Date</label>
-                <input 
-                  type="text" 
-                  className="payment-modal-input"
-                  placeholder="MM/YY"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(formatExpiry(e.target.value))}
-                  maxLength={5}
-                />
-              </div>
-              <div className="payment-modal-input-group">
-                <label className="payment-modal-input-label">CVV</label>
-                <input 
-                  type="password" 
-                  className="payment-modal-input"
-                  placeholder="•••"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  maxLength={4}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bank Transfer Info */}
-        {selectedMethod === 'bank' && (
-          <div className="payment-modal-bank-info">
-            <div className="payment-modal-bank-item">
-              <span className="payment-modal-bank-label">Bank</span>
-              <span className="payment-modal-bank-value">Equity Bank</span>
-            </div>
-            <div className="payment-modal-bank-item">
-              <span className="payment-modal-bank-label">Account Name</span>
-              <span className="payment-modal-bank-value">Hookiefy Payments</span>
-            </div>
-            <div className="payment-modal-bank-item">
-              <span className="payment-modal-bank-label">Account Number</span>
-              <span className="payment-modal-bank-value">1234567890</span>
-            </div>
-            <div className="payment-modal-bank-item">
-              <span className="payment-modal-bank-label">Reference</span>
-              <span className="payment-modal-bank-value">HKY-{hookupId?.slice(0, 6).toUpperCase()}</span>
-            </div>
-          </div>
-        )}
 
         {/* Divider */}
         <div className="payment-modal-divider"></div>
@@ -436,7 +453,7 @@ function Paymentmodal() {
         {/* Summary */}
         <div className="payment-modal-summary">
           <div className="payment-modal-summary-row">
-            <span>Subtotal</span>
+            <span>Hookup Fee</span>
             <span>{currency} {feeAmount}</span>
           </div>
           <div className="payment-modal-summary-row">
@@ -460,7 +477,7 @@ function Paymentmodal() {
           <button 
             className="payment-modal-btn payment-modal-btn-pay" 
             onClick={handlePayment}
-            disabled={isProcessing}
+            disabled={isProcessing || !hookupId || !userPhoneNumber}
           >
             {isProcessing ? (
               <span className="payment-modal-spinner">
