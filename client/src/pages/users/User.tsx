@@ -1,14 +1,14 @@
 // ============================================================
-// User.tsx - Updated with profile image check and logout
+// User.tsx - Fetches unread notifications in parent
 // ============================================================
 
 import './user.css'
 import { CiHome } from "react-icons/ci";
-// import { RiMessage2Line } from "react-icons/ri";
 import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
 import { IoPerson } from "react-icons/io5";
 import { IoLogOutOutline } from "react-icons/io5";
+import { IoCheckmarkCircle } from "react-icons/io5"; // Green tick icon
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Submodalsuser from './Submodalsuser';
@@ -18,9 +18,9 @@ import Addprofileimguserpop from './Addprofileimguserpop';
 // Import components
 import Home from './Home';
 import Search from './Search';
-// import Messages from './Messages';
 import Notifications from './Notifications';
 import Profile from './Profile';
+import PaidConnections from './PaidConnections'; // Keep the same component
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { useAuthStore } from '../../store/authtokenstore';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -49,6 +49,10 @@ interface CurrentUserData {
   } | null;
 }
 
+interface UnreadNotificationsResponse {
+  has_unread: boolean;
+}
+
 // ============================================================
 // API HELPERS
 // ============================================================
@@ -70,6 +74,32 @@ const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUser
       throw new Error('Session expired. Please login again.');
     }
     throw new Error(`Failed to fetch user: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+// Fetch unread notifications status
+const fetchUnreadNotifications = async (accessToken: string | null): Promise<UnreadNotificationsResponse> => {
+  if (!accessToken) {
+    throw new Error('No access token found');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/notifications/has-unread/`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Session expired. Please login again.');
+    }
+    throw new Error(`Failed to check notifications: ${response.status}`);
   }
 
   return response.json();
@@ -114,6 +144,10 @@ function User() {
   const [hasPreference, setHasPreference] = useState(false);
   const [hasProfileImage, setHasProfileImage] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // State for successful connections count (can be fetched from API)
+  const [successfulConnectionsCount] = useState(0);
+
   const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
 
   // ---- Fetch current user data for profile icon ----
@@ -131,7 +165,32 @@ function User() {
     retry: 1,
   });
 
-  // Logout mutation
+  // ---- Fetch unread notifications status ----
+  const {
+    data: unreadData,
+    error: unreadError,
+  } = useQuery<UnreadNotificationsResponse>({
+    queryKey: ['unreadNotifications', accessToken],
+    queryFn: () => fetchUnreadNotifications(accessToken),
+    enabled: !!accessToken,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Poll every 30 seconds
+    retry: 2,
+  });
+
+  // Get the unread status from the query data
+  const hasUnreadNotifications = unreadData?.has_unread || false;
+
+  // Log any errors from unread notifications fetch
+  useEffect(() => {
+    if (unreadError) {
+      console.error('Error checking unread notifications:', unreadError);
+    }
+  }, [unreadError]);
+
+  // ---- Logout mutation ----
   const logoutMutation = useMutation({
     mutationFn: () => logoutUser(accessToken, refreshToken),
     onSuccess: () => {
@@ -262,7 +321,6 @@ function User() {
         setHasProfileImage(profileImageExists);
 
         // Show modals based on what's missing
-        // Priority: Profile > Preference > Profile Image
         if (!profileExists) {
           setShowProfileModal(true);
           setShowPreferenceModal(false);
@@ -293,11 +351,9 @@ function User() {
   // Handle profile completion
   const handleProfileComplete = async () => {
     setShowProfileModal(false);
-    // Re-check profile status
     const profileExists = await checkProfile();
     setHasProfile(profileExists);
     
-    // If profile is complete, check preference
     if (profileExists) {
       const preferenceExists = await checkPreference();
       setHasPreference(preferenceExists);
@@ -305,7 +361,6 @@ function User() {
       if (!preferenceExists) {
         setShowPreferenceModal(true);
       } else {
-        // If both profile and preference exist, check profile image
         const profileImageExists = await checkProfileImageStatus();
         setHasProfileImage(profileImageExists);
         if (!profileImageExists) {
@@ -318,11 +373,9 @@ function User() {
   // Handle preference completion
   const handlePreferenceComplete = async () => {
     setShowPreferenceModal(false);
-    // Re-check preference status
     const preferenceExists = await checkPreference();
     setHasPreference(preferenceExists);
     
-    // If preference is complete, check profile image
     if (preferenceExists) {
       const profileImageExists = await checkProfileImageStatus();
       setHasProfileImage(profileImageExists);
@@ -335,10 +388,8 @@ function User() {
   // Handle profile image completion
   const handleProfileImageComplete = async () => {
     setShowProfileImageModal(false);
-    // Re-check profile image status
     const profileImageExists = await checkProfileImageStatus();
     setHasProfileImage(profileImageExists);
-    // Refetch user data to update the profile icon
     await refetchUser();
   };
 
@@ -363,12 +414,14 @@ function User() {
     });
   };
 
-  // Close sidebar on mobile when clicking a link (optional)
+  // Handle navigation click
   const handleNavClick = (tab: string) => {
     setActiveTab(tab);
+    // IMPORTANT: Do NOT clear the notification dot here!
+    // The dot is controlled by the API response via useQuery
   };
 
-  // ---- Render profile avatar content with unique classes ----
+  // ---- Render profile avatar content ----
   const renderProfileAvatar = () => {
     if (isLoadingUser) {
       return (
@@ -390,7 +443,6 @@ function User() {
       );
     }
 
-    // Default: User icon
     return (
       <div className="user-profile-avatar-wrapper default-bg">
         <IoPerson className="user-profile-avatar-icon" />
@@ -400,7 +452,6 @@ function User() {
 
   // Render the appropriate component based on active tab
   const renderContent = () => {
-    // If checking, show loading
     if (isChecking) {
       return (
         <div style={{ 
@@ -415,7 +466,6 @@ function User() {
       );
     }
 
-    // If no profile, preference, or profile image, show overlay message
     if (!hasProfile || !hasPreference || !hasProfileImage) {
       return (
         <div style={{ 
@@ -457,16 +507,16 @@ function User() {
       );
     }
 
-    // Normal content rendering
     switch(activeTab) {
       case 'home':
         return <Home />;
       case 'search':
         return <Search />;
-      // case 'messages':
-      //   return <Messages />;
       case 'notifications':
-        return <Notifications />;
+        // Pass the navigation callback to Notifications
+        return <Notifications onNavigateToSuccessfulConnections={() => handleNavClick('successful-connections')} />;
+      case 'successful-connections':
+        return <PaidConnections />;
       case 'profile':
         return <Profile />;
       default:
@@ -490,99 +540,148 @@ function User() {
 
   return (
     <div className="overall-user-component-container">
-        {/* Sidebar / Navigation - Hidden when modals are shown */}
-        {!showProfileModal && !showPreferenceModal && !showProfileImageModal && (
-          <div className="user-account-header-container">
-              <div className="user-brand">
-                  <h3>Hookiefy</h3>
-              </div>
-              <ul>
-                  <li 
-                      className={activeTab === 'home' ? 'active-nav' : ''}
-                      onClick={() => handleNavClick('home')}
-                  >
-                      <div className="icon-fig"><CiHome /></div>
-                      <div className="nav-name">Home</div>
-                  </li>
-                  <li 
-                      className={activeTab === 'search' ? 'active-nav' : ''}
-                      onClick={() => handleNavClick('search')}
-                  >
-                      <div className="icon-fig"><IoSearch /></div>
-                      <div className="nav-name">Search</div>
-                  </li>
-                 
-                  <li 
-                      className={activeTab === 'notifications' ? 'active-nav' : ''}
-                      onClick={() => handleNavClick('notifications')}
-                  >
-                      <div className="icon-fig"><IoNotifications /></div>
-                      <div className="nav-name">Notifications</div>
-                  </li>
-                  <li 
-                      className={`profile-user-nav ${activeTab === 'profile' ? 'active-nav' : ''}`}
-                      onClick={() => handleNavClick('profile')}
-                  >
-                      {renderProfileAvatar()}
-                      <div className="nav-name">Profile</div>
-                  </li>
-              </ul>
-
-              {/* Logout Button */}
-              <div className="user-logout-section">
-                <button 
-                  className="user-logout-btn"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut || logoutMutation.isPending}
-                >
-                  <IoLogOutOutline className="user-logout-icon" />
-                  <span className="user-logout-text">
-                    {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                  </span>
-                </button>
-              </div>
-
-              <div className="user-sidebar-footer">
-                  <span>© 2026</span>
-              </div>
+      {/* Sidebar / Navigation */}
+      {!showProfileModal && !showPreferenceModal && !showProfileImageModal && (
+        <div className="user-account-header-container">
+          <div className="user-brand">
+            <h3>Hookiefy</h3>
           </div>
-        )}
+          <ul>
+            <li 
+              className={activeTab === 'home' ? 'active-nav' : ''}
+              onClick={() => handleNavClick('home')}
+            >
+              <div className="icon-fig"><CiHome /></div>
+              <div className="nav-name">Home</div>
+            </li>
+            <li 
+              className={activeTab === 'search' ? 'active-nav' : ''}
+              onClick={() => handleNavClick('search')}
+            >
+              <div className="icon-fig"><IoSearch /></div>
+              <div className="nav-name">Search</div>
+            </li>
+           
+            {/* Notifications with red dot indicator */}
+            <li 
+              className={`${activeTab === 'notifications' ? 'active-nav' : ''} notification-nav-item`}
+              onClick={() => handleNavClick('notifications')}
+              style={{ position: 'relative' }}
+            >
+              <div className="icon-fig" style={{ position: 'relative' }}>
+                <IoNotifications />
+                {hasUnreadNotifications && (
+                  <span className="notification-dot" style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: '#ef4444',
+                    borderRadius: '50%',
+                    border: '2px solid #1a1a2e',
+                    animation: 'pulse 2s infinite'
+                  }}></span>
+                )}
+              </div>
+              <div className="nav-name">Notifications</div>
+            </li>
 
-        {/* Main Body Content */}
-        <div className="overall-user-body-container">
-            <div className="actual-body-content-retainer-user">
-                {renderContent()}
-            </div>
-            <div className="statauses-user-container">
-                {/* Payment/Status Modals - Unchanged */}
-                <Submodalsuser/>
-                
-                {/* Profile Modal */}
-                {showProfileModal && (
-                  <Myprofile 
-                    onComplete={handleProfileComplete}
-                    onCancel={() => {}}
-                  />
+            {/* Successful Connections - HIDDEN but still accessible via navigation */}
+            {/* The link is hidden with display: none, but the component is still accessible via handleNavClick */}
+            <li 
+              className={`${activeTab === 'successful-connections' ? 'active-nav' : ''} successful-connections-nav-item`}
+              onClick={() => handleNavClick('successful-connections')}
+              style={{ position: 'relative', display: 'none' }} // HIDDEN
+            >
+              <div className="icon-fig" style={{ position: 'relative' }}>
+                <IoCheckmarkCircle style={{ color: '#22c55e' }} />
+                {successfulConnectionsCount > 0 && (
+                  <span className="successful-connections-badge" style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    backgroundColor: '#22c55e',
+                    color: '#ffffff',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid #1a1a2e',
+                  }}>
+                    {successfulConnectionsCount}
+                  </span>
                 )}
-                
-                {/* Preference Modal */}
-                {showPreferenceModal && (
-                  <Mypreference 
-                    onComplete={handlePreferenceComplete}
-                    onCancel={() => {}}
-                  />
-                )}
+              </div>
+              <div className="nav-name">Successful Connections</div>
+            </li>
 
-                {/* Profile Image Modal */}
-                {showProfileImageModal && (
-                  <Addprofileimguserpop 
-                    onComplete={handleProfileImageComplete}
-                  />
-                )}
-            </div>
+            <li 
+              className={`profile-user-nav ${activeTab === 'profile' ? 'active-nav' : ''}`}
+              onClick={() => handleNavClick('profile')}
+            >
+              {renderProfileAvatar()}
+              <div className="nav-name">Profile</div>
+            </li>
+          </ul>
+
+          {/* Logout Button */}
+          <div className="user-logout-section">
+            <button 
+              className="user-logout-btn"
+              onClick={handleLogout}
+              disabled={isLoggingOut || logoutMutation.isPending}
+            >
+              <IoLogOutOutline className="user-logout-icon" />
+              <span className="user-logout-text">
+                {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+              </span>
+            </button>
+          </div>
+
+          <div className="user-sidebar-footer">
+            <span>© 2026</span>
+          </div>
         </div>
+      )}
+
+      {/* Main Body Content */}
+      <div className="overall-user-body-container">
+        <div className="actual-body-content-retainer-user">
+          {renderContent()}
+        </div>
+        <div className="statauses-user-container">
+          <Submodalsuser/>
+          
+          {/* Profile Modal */}
+          {showProfileModal && (
+            <Myprofile 
+              onComplete={handleProfileComplete}
+              onCancel={() => {}}
+            />
+          )}
+          
+          {/* Preference Modal */}
+          {showPreferenceModal && (
+            <Mypreference 
+              onComplete={handlePreferenceComplete}
+              onCancel={() => {}}
+            />
+          )}
+
+          {/* Profile Image Modal */}
+          {showProfileImageModal && (
+            <Addprofileimguserpop 
+              onComplete={handleProfileImageComplete}
+            />
+          )}
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
 export default User;

@@ -1,60 +1,82 @@
-// Youractivitypreview.tsx
 import './youractivitypreview.css'
 import { usePaymentModalStore } from './store/modalstore'
 import type { Activity } from './Youractivity'
 
 interface YouractivitypreviewProps {
   activity: Activity;
+  onActivityClick?: () => void;
+  onNavigateToSuccessfulConnections?: () => void;
 }
 
-function Youractivitypreview({ activity }: YouractivitypreviewProps) {
+function Youractivitypreview({ 
+  activity, 
+  onActivityClick,
+  onNavigateToSuccessfulConnections 
+}: YouractivitypreviewProps) {
   // Add safety check for activity
   if (!activity) {
     console.warn('Activity is undefined or null');
     return null;
   }
 
-  const { senderName, senderAvatar, status, time, connection_id } = activity;
-  const { open: openPaymentModal, isMount, hookupId } = usePaymentModalStore();
+  const { senderName, senderAvatar, status, time, connection_id, is_read, connected_user_name, connected_user_avatar } = activity;
+  const { open: openPaymentModal } = usePaymentModalStore();
 
   // Debug log to verify connection_id
   console.log('🔍 Activity connection_id:', connection_id);
   console.log('📋 Full activity:', activity);
-  console.log('📂 Modal state - isMount:', isMount);
-  console.log('📂 Modal state - hookupId:', hookupId);
 
-  // Check if the activity is clickable (only accepted status is clickable)
-  const isClickable = status === 'accepted' && !!connection_id;
-  const isDisabled = status === 'rejected' || status === 'completed';
+  // Check if the activity is clickable for payment (only accepted status)
+  const isClickableForPayment = status === 'accepted' && !!connection_id;
+  const isDeclined = status === 'rejected';
+  const isCompleted = status === 'completed';
+
+  // For completed activities, use the connected user's name instead of sender
+  const displayName = isCompleted && connected_user_name 
+    ? connected_user_name 
+    : senderName || 'Unknown User';
+  
+  const displayAvatar = isCompleted && connected_user_avatar 
+    ? connected_user_avatar 
+    : senderAvatar || '';
 
   const handlePreviewClick = () => {
-    if (isClickable && connection_id) {
+    // Always mark as read if unread, regardless of status
+    if (!is_read && onActivityClick) {
+      onActivityClick();
+      console.log('📖 Marked activity as read:', displayName);
+    }
+
+    // If completed, navigate to Successful Connections tab
+    if (isCompleted) {
+      console.log('🔗 Navigating to Successful Connections tab for:', displayName);
+      if (onNavigateToSuccessfulConnections) {
+        onNavigateToSuccessfulConnections();
+      }
+      return;
+    }
+
+    // Only open payment modal if accepted and has connection_id
+    if (isClickableForPayment && connection_id) {
       try {
-        console.log('💳 Opening payment modal for:', senderName);
+        console.log('💳 Opening payment modal for:', displayName);
         console.log('🔑 Connection ID being passed:', connection_id);
         
         // Open the modal with the connection ID
         openPaymentModal(connection_id);
         
-        // Log the updated state
-        setTimeout(() => {
-          const currentState = usePaymentModalStore.getState();
-          console.log('📂 Updated modal state:', {
-            isMount: currentState.isMount,
-            hookupId: currentState.hookupId,
-          });
-        }, 100);
-        
         console.log('✅ Payment modal opened successfully');
       } catch (error) {
         console.error('❌ Error opening payment modal:', error);
-        // You could show a toast notification here
       }
+    } else if (isDeclined) {
+      console.log('📖 Declined activity marked as read:', displayName);
     } else {
-      console.log('⛔ Activity is not clickable:', {
-        isClickable,
+      console.log('⛔ Activity is not clickable for payment:', {
+        isClickableForPayment,
         hasConnectionId: !!connection_id,
-        status
+        status,
+        is_read
       });
     }
   };
@@ -100,13 +122,13 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
 
   const getStatusMessage = () => {
     if (status === 'accepted') {
-      return `Click to complete payment and connect with ${senderName || 'user'}`;
+      return `Click to complete payment and connect with ${displayName || 'user'}`;
     }
     if (status === 'rejected') {
-      return `${senderName || 'User'} declined your request`;
+      return `${displayName || 'User'} declined your request`;
     }
     if (status === 'completed') {
-      return `Completed with ${senderName || 'user'}`;
+      return `Completed with ${displayName || 'user'}`;
     }
     return 'Waiting for response';
   };
@@ -156,19 +178,15 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
     );
   };
 
-  // Safety check for missing data
-  const displayName = senderName || 'Unknown User';
-  const displayAvatar = senderAvatar || '';
-
   return (
     <div 
-      className={`overall-your-activity-preview ${!isClickable ? 'your-activity-disabled' : ''}`}
+      className={`overall-your-activity-preview ${isDeclined ? 'your-activity-disabled' : ''} ${!is_read ? 'your-activity-unread' : ''} ${isCompleted ? 'your-activity-completed' : ''}`}
       onClick={handlePreviewClick}
-      style={{ cursor: isClickable ? 'pointer' : 'default' }}
-      role={isClickable ? 'button' : 'none'}
-      tabIndex={isClickable ? 0 : -1}
+      style={{ cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
       onKeyDown={(e) => {
-        if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handlePreviewClick();
         }
@@ -181,7 +199,6 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
             alt={displayName} 
             className="your-activity-avatar" 
             onError={(e) => {
-              // Handle image loading errors
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
@@ -222,14 +239,19 @@ function Youractivitypreview({ activity }: YouractivitypreviewProps) {
             {getStatusText().toUpperCase()}
           </span>
         </div>
-        {isDisabled && (
+        {isDeclined && (
           <div className="your-activity-disabled-badge">
             <span>🔒</span>
           </div>
         )}
-        {isClickable && (
+        {isClickableForPayment && (
           <div className="your-activity-click-hint">
             <span>Click to pay 💳</span>
+          </div>
+        )}
+        {!is_read && (
+          <div className="your-activity-unread-badge">
+            <span>●</span>
           </div>
         )}
       </div>

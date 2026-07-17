@@ -1,0 +1,221 @@
+/* ============================================================
+   Paidconnectionpreview.css - One-line preview card
+   ============================================================ */
+
+.pcp-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  /* Glow animation */
+  animation: pcpGlowPulse 3s ease-in-out infinite;
+}
+
+/* Glow animation */
+@keyframes pcpGlowPulse {
+  0%, 100% {
+    border-color: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.02);
+  }
+  50% {
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.08);
+  }
+}
+
+.pcp-preview-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  transform: translateX(6px) scale(1.01);
+  box-shadow: 0 0 50px rgba(59, 130, 246, 0.12) !important;
+}
+
+.pcp-preview-card:active {
+  transform: scale(0.98);
+}
+
+/* Avatar */
+.pcp-preview-avatar {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.pcp-preview-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pcp-preview-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Content - Larger font sizes */
+.pcp-preview-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pcp-preview-name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pcp-preview-name strong {
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.pcp-preview-status-badge {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pcp-preview-message {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  margin-top: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Arrow */
+.pcp-preview-arrow {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 1.4rem;
+  transition: all 0.3s ease;
+}
+
+.pcp-preview-card:hover .pcp-preview-arrow {
+  color: rgba(59, 130, 246, 0.6);
+  transform: translateX(4px);
+}
+
+/* Status-specific glow colors when hovering */
+.pcp-preview-card:hover .pcp-preview-status-badge[style*="color: #22c55e"] + .pcp-preview-arrow {
+  color: rgba(34, 197, 94, 0.5);
+}
+
+/* Click hint - subtle indicator */
+.pcp-preview-card::after {
+  content: 'Click to view details';
+  position: absolute;
+  bottom: -2px;
+  right: 1.5rem;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.pcp-preview-card:hover::after {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablets */
+@media screen and (max-width: 48em) {
+  .pcp-preview-card {
+    padding: 0.85rem 1.2rem;
+    gap: 0.8rem;
+  }
+
+  .pcp-preview-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .pcp-preview-name strong {
+    font-size: 1.05rem;
+  }
+
+  .pcp-preview-status-badge {
+    font-size: 0.8rem;
+  }
+
+  .pcp-preview-message {
+    font-size: 0.9rem;
+  }
+
+  .pcp-preview-arrow {
+    font-size: 1.2rem;
+  }
+}
+
+/* Phones */
+@media screen and (max-width: 30em) {
+  .pcp-preview-card {
+    padding: 0.7rem 1rem;
+    gap: 0.6rem;
+    border-radius: 10px;
+  }
+
+  .pcp-preview-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pcp-preview-avatar-placeholder {
+    font-size: 0.85rem;
+  }
+
+  .pcp-preview-name {
+    gap: 0.4rem;
+  }
+
+  .pcp-preview-name strong {
+    font-size: 0.95rem;
+  }
+
+  .pcp-preview-status-badge {
+    font-size: 0.75rem;
+  }
+
+  .pcp-preview-message {
+    font-size: 0.8rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .pcp-preview-arrow {
+    font-size: 1rem;
+  }
+
+  .pcp-preview-card::after {
+    display: none;
+  }
+}

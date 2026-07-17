@@ -202,3 +202,55 @@
     border-radius: 25px;
   }
 }
+/* Unread state */
+.conn-req-unread {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+  position: relative;
+}
+
+.conn-req-unread:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.conn-req-unread-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.conn-req-unread-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: dotPulse 2s infinite;
+}
+
+.conn-req-new-badge {
+  background: #3b82f6;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes dotPulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

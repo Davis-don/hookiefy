@@ -18,4 +18,13 @@ urlpatterns = [
     
     # Mark ALL notifications as read (including non-pending)
     path('mark-all-read-all/', views.mark_all_notifications_read_all, name='mark_all_notifications_read_all'),
+    
+    # Check if user has unread notifications
+    path('has-unread/', views.has_unread_notifications, name='has_unread_notifications'),
+    
+    # Get all completed/paid connections (for the Successful Connections tab)
+    path('connections-paid/', views.get_paid_connections, name='get_paid_connections'),
+    
+    # Get specific connected user contact details
+    path('connected-user/<uuid:connection_id>/', views.get_connected_user_contact, name='get_connected_user_contact'),
 ]

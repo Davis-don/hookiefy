@@ -1,0 +1,424 @@
+/* ============================================================
+   Paidpreviewdetail.css - Detail modal
+   ============================================================ */
+
+/* Overlay */
+.pdd-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  animation: pddFadeIn 0.2s ease;
+}
+
+@keyframes pddFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal */
+.pdd-modal {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 2rem;
+  animation: pddSlideUp 0.3s ease;
+}
+
+@keyframes pddSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Scrollbar styling */
+.pdd-modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pdd-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 2px;
+}
+
+.pdd-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.pdd-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Close Button (top) */
+.pdd-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdd-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Header */
+.pdd-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pdd-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 0.75rem;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+}
+
+.pdd-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdd-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pdd-name {
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.pdd-role {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}
+
+.pdd-role strong {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pdd-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.8rem;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+/* Body */
+.pdd-body {
+  margin: 1.5rem 0;
+}
+
+/* Preview Section */
+.pdd-preview-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(59, 130, 246, 0.04);
+  border-radius: 10px;
+  border-left: 3px solid #3b82f6;
+  margin-bottom: 1.5rem;
+}
+
+.pdd-preview-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.pdd-preview-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Section Title */
+.pdd-section-title {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Contact Section */
+.pdd-contact-section {
+  margin-bottom: 1.5rem;
+}
+
+.pdd-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.pdd-contact-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.pdd-contact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pdd-contact-label {
+  display: block;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pdd-contact-value {
+  display: block;
+  color: #ffffff;
+  font-size: 0.95rem;
+  word-break: break-all;
+}
+
+.pdd-copy-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pdd-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Info Section */
+.pdd-info-section {
+  margin-bottom: 0.5rem;
+}
+
+.pdd-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.pdd-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.pdd-info-label {
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pdd-info-value {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Footer */
+.pdd-footer {
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pdd-close-btn-bottom {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.6rem 2.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.pdd-close-btn-bottom:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablets */
+@media screen and (max-width: 48em) {
+  .pdd-modal {
+    padding: 1.5rem;
+    max-width: 450px;
+  }
+
+  .pdd-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .pdd-avatar-placeholder {
+    font-size: 2rem;
+  }
+
+  .pdd-name {
+    font-size: 1.2rem;
+  }
+
+  .pdd-contact-value {
+    font-size: 0.85rem;
+  }
+
+  .pdd-info-grid {
+    gap: 0.4rem;
+  }
+
+  .pdd-info-item {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+/* Phones */
+@media screen and (max-width: 30em) {
+  .pdd-overlay {
+    padding: 0.75rem;
+  }
+
+  .pdd-modal {
+    padding: 1.25rem;
+    border-radius: 12px;
+    max-width: 100%;
+  }
+
+  .pdd-close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .pdd-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .pdd-avatar-placeholder {
+    font-size: 1.5rem;
+  }
+
+  .pdd-name {
+    font-size: 1.1rem;
+  }
+
+  .pdd-role {
+    font-size: 0.8rem;
+  }
+
+  .pdd-preview-text {
+    font-size: 0.85rem;
+  }
+
+  .pdd-contact-item {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .pdd-contact-value {
+    font-size: 0.8rem;
+  }
+
+  .pdd-info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
+  }
+
+  .pdd-info-item {
+    padding: 0.35rem 0.4rem;
+  }
+
+  .pdd-info-value {
+    font-size: 0.75rem;
+  }
+
+  .pdd-copy-btn {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.5rem;
+  }
+
+  .pdd-close-btn-bottom {
+    padding: 0.5rem 2rem;
+    font-size: 0.8rem;
+    width: 100%;
+  }
+}

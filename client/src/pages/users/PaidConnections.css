@@ -1,0 +1,287 @@
+/* ============================================================
+   PaidConnections.css
+   ============================================================ */
+
+.pc-wrapper {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 500px;
+}
+
+/* ============================================
+   LOADING
+   ============================================ */
+.pc-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+}
+
+.pc-big-wave-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pc-big-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 60px;
+}
+
+.pc-big-dot {
+  display: inline-block;
+  border-radius: 50%;
+  animation: pc-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes pc-bounce {
+  0%, 100% {
+    transform: translateY(0px) scale(0.6);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+  }
+}
+
+.pc-big-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+/* Mini Wave */
+.pc-mini-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+}
+
+.pc-mini-dot {
+  display: inline-block;
+  border-radius: 50%;
+  animation: pc-mini-bounce 1s ease-in-out infinite;
+}
+
+@keyframes pc-mini-bounce {
+  0%, 100% {
+    transform: translateY(0px) scale(0.6);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.2);
+  }
+}
+
+.pc-mini-wave-refreshing .pc-mini-dot {
+  animation: pc-mini-bounce 0.6s ease-in-out infinite;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pc-title {
+  color: #ffffff;
+  font-size: 1.6rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.pc-count-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.pc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pc-refreshing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pc-refreshing-label {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+}
+
+.pc-refresh-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.pc-refresh-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   LIST
+   ============================================ */
+.pc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.pc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.pc-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.pc-empty-state h3 {
+  color: #ffffff;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+
+.pc-empty-state p {
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.2rem 0;
+}
+
+/* ============================================
+   ERROR STATE
+   ============================================ */
+.pc-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.pc-error-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.pc-error-state h3 {
+  color: #ffffff;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+
+.pc-error-state p {
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 1.5rem;
+}
+
+.pc-retry-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.pc-retry-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .pc-wrapper {
+    padding: 1rem;
+  }
+  
+  .pc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .pc-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .pc-title {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pc-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .pc-header {
+    gap: 0.5rem;
+  }
+  
+  .pc-title {
+    font-size: 1.1rem;
+  }
+  
+  .pc-count-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.6rem;
+  }
+  
+  .pc-refresh-btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.8rem;
+  }
+}

@@ -6,11 +6,14 @@ import Connectionrequestdetail from "./Connectionrequestdetail";
 import Youractivitydetail from "./Youractivitydetail";
 import { usePreviewStore } from "./store/connectpreview";
 
-function Notifications() {
+interface NotificationsProps {
+  onNavigateToSuccessfulConnections?: () => void;
+}
+
+function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps) {
   const [activeTab, setActiveTab] = useState<"requests" | "activity">(
     "requests"
   );
-
   const { isMount, isActivityMount } = usePreviewStore();
 
   // Connection Request Preview
@@ -69,7 +72,7 @@ function Notifications() {
         {activeTab === "requests" ? (
           <Connectionrequest />
         ) : (
-          <Youractivity />
+          <Youractivity onNavigateToSuccessfulConnections={onNavigateToSuccessfulConnections} />
         )}
       </div>
     </div>

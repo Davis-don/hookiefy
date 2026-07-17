@@ -1,6 +1,6 @@
 import './youractivity.css'
 import { useState, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import { toast } from 'sonner'
 import Youractivitypreview from './Youractivitypreview'
@@ -53,6 +53,8 @@ export interface Activity {
   connection_id: string;
   is_read: boolean;
   created_at: string;
+  connected_user_name?: string;
+  connected_user_avatar?: string;
 }
 
 // API call to fetch all connection requests (excluding pending)
@@ -112,7 +114,7 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
       status = 'completed';
     }
 
-    return {
+    const activity: Activity = {
       id: item.notification_id,
       senderId: String(item.sender.id),
       senderName: item.sender.full_name,
@@ -129,13 +131,55 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
       is_read: item.is_read,
       created_at: item.created_at,
     };
+
+    // For completed connections, store the receiver's info as connected user
+    if (status === 'completed') {
+      activity.connected_user_name = item.receiver.full_name;
+      activity.connected_user_avatar = item.receiver.profile_image_url || '';
+    }
+
+    return activity;
   });
 
-  return transformedActivities;
+  // Filter out rejected/declined activities - only show accepted and completed
+  const filteredActivities = transformedActivities.filter(
+    activity => activity.status !== 'rejected'
+  );
+
+  return filteredActivities;
 };
 
-function Youractivity() {
+// API call to mark notification as read
+const markNotificationAsRead = async (accessToken: string | null, notificationId: string): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/notifications/mark-read/${notificationId}/`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to mark notification as read: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+interface YouractivityProps {
+  onNavigateToSuccessfulConnections?: () => void;
+}
+
+function Youractivity({ onNavigateToSuccessfulConnections }: YouractivityProps) {
   const { access: accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
   const [activities, setActivities] = useState<Activity[]>([]);
   const intervalRef = useRef<number | null>(null);
 
@@ -159,6 +203,20 @@ function Youractivity() {
     placeholderData: (previousData) => previousData,
   });
 
+  // Mark notification as read mutation
+  const markReadMutation = useMutation({
+    mutationFn: ({ notificationId }: { notificationId: string }) => 
+      markNotificationAsRead(accessToken, notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allConnectionRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotifications'] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      console.error('❌ Failed to mark notification as read:', error);
+    },
+  });
+
   // Update state when data changes
   useEffect(() => {
     if (data) {
@@ -166,7 +224,7 @@ function Youractivity() {
     }
   }, [data]);
 
-  // Auto-refresh every 30 seconds behind the scenes
+  // Auto-refresh every 30 seconds
   useEffect(() => {
     if (!accessToken) return;
 
@@ -205,6 +263,13 @@ function Youractivity() {
       });
     }
   }, [isError, error]);
+
+  // Handle activity click - mark as read if unread
+  const handleActivityClick = (activity: Activity) => {
+    if (!activity.is_read) {
+      markReadMutation.mutate({ notificationId: activity.notification_id });
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -264,7 +329,7 @@ function Youractivity() {
           <div className="your-activity-empty-icon">📋</div>
           <div className="your-activity-empty-title">No activity yet</div>
           <div className="your-activity-empty-sub">
-            When you accept or decline a hookup request, it will appear here
+            When you accept or complete a hookup request, it will appear here
           </div>
         </div>
       </div>
@@ -285,6 +350,8 @@ function Youractivity() {
           <Youractivitypreview 
             key={activity.id}
             activity={activity}
+            onActivityClick={() => handleActivityClick(activity)}
+            onNavigateToSuccessfulConnections={onNavigateToSuccessfulConnections}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 import './connectionrequest.css'
 import { useState, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authtokenstore'
 import { toast } from 'sonner'
 import Connectionrequestpreview from './Connectionrequestpreview'
@@ -37,6 +37,20 @@ interface ConnectionRequestData {
   };
 }
 
+// API Response wrapper
+interface ApiResponse {
+  message: string;
+  count: number;
+  total_count: number;
+  unread_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+  data: ConnectionRequestData[];
+}
+
 // Transformed interface for the preview component
 export interface ConnectionRequest {
   id: string;
@@ -55,18 +69,30 @@ export interface ConnectionRequest {
   created_at: string;
 }
 
+// Props
+interface ConnectionrequestProps {
+  onNotificationRead?: () => void;
+}
+
 // API call to fetch connection requests
-const fetchConnectionRequests = async (accessToken: string | null): Promise<ConnectionRequest[]> => {
+const fetchConnectionRequests = async (
+  accessToken: string | null,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<{ data: ConnectionRequest[]; pagination: any }> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/connection-requests/`, {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/notifications/connection-requests/?page=${page}&page_size=${pageSize}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -78,7 +104,7 @@ const fetchConnectionRequests = async (accessToken: string | null): Promise<Conn
     throw new Error(`Failed to fetch connection requests: ${response.status}`);
   }
 
-  const data = await response.json();
+  const data: ApiResponse = await response.json();
   
   // Transform the API data to match the ConnectionRequest interface
   const transformedRequests: ConnectionRequest[] = data.data.map((item: ConnectionRequestData) => {
@@ -119,13 +145,55 @@ const fetchConnectionRequests = async (accessToken: string | null): Promise<Conn
     };
   });
 
-  return transformedRequests;
+  return {
+    data: transformedRequests,
+    pagination: {
+      count: data.count,
+      total_count: data.total_count,
+      unread_count: data.unread_count,
+      page: data.page,
+      page_size: data.page_size,
+      total_pages: data.total_pages,
+      has_next: data.has_next,
+      has_previous: data.has_previous,
+    }
+  };
 };
 
-function Connectionrequest() {
+// Mark notification as read
+const markNotificationAsRead = async (
+  accessToken: string | null,
+  notificationId: string
+): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/notifications/mark-read/${notificationId}/`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to mark notification as read: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+function Connectionrequest({ onNotificationRead }: ConnectionrequestProps) {
   const { access: accessToken } = useAuthStore();
   const { openPreview } = usePreviewStore();
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
   const intervalRef = useRef<number | null>(null);
 
   // Fetch connection requests
@@ -137,8 +205,8 @@ function Connectionrequest() {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ['connectionRequests', accessToken],
-    queryFn: () => fetchConnectionRequests(accessToken),
+    queryKey: ['connectionRequests', accessToken, currentPage, pageSize],
+    queryFn: () => fetchConnectionRequests(accessToken, currentPage, pageSize),
     enabled: !!accessToken,
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
@@ -148,10 +216,28 @@ function Connectionrequest() {
     placeholderData: (previousData) => previousData,
   });
 
+  // Mark notification as read mutation
+  const markReadMutation = useMutation({
+    mutationFn: ({ notificationId }: { notificationId: string }) => 
+      markNotificationAsRead(accessToken, notificationId),
+    onSuccess: () => {
+      refetch();
+      if (onNotificationRead) {
+        onNotificationRead();
+      }
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to mark as read', {
+        description: error.message,
+      });
+    },
+  });
+
   // Update state when data changes
   useEffect(() => {
     if (data) {
-      setConnectionRequests(data);
+      setConnectionRequests(data.data);
+      setUnreadCount(data.pagination.unread_count || 0);
     }
   }, [data]);
 
@@ -179,12 +265,22 @@ function Connectionrequest() {
     };
   }, [accessToken, refetch, isFetching]);
 
-  // Handle preview click - pass the sender ID (the person who sent the request)
-  const handlePreviewClick = (senderId: string) => {
-    console.log('🔑 Opening preview for sender ID:', senderId);
-    const request = connectionRequests.find(r => r.senderId === senderId);
-    console.log('📌 Sender Name:', request?.senderName);
-    openPreview(senderId);  // ✅ Store the sender ID
+  // Handle preview click - mark as read and show detail
+  const handlePreviewClick = (request: ConnectionRequest) => {
+    console.log('🔑 Opening preview for sender ID:', request.senderId);
+    
+    // Mark as read if not already read
+    if (!request.is_read) {
+      markReadMutation.mutate({ notificationId: request.notification_id });
+    }
+    
+    openPreview(request.senderId);
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Show error toast if fetch fails
@@ -262,26 +358,52 @@ function Connectionrequest() {
     );
   }
 
+  const pagination = data?.pagination;
+
   return (
     <div className="ovrall-connection-request-container">
-      {/* Request count */}
+      {/* Header with counts */}
       <div className="conn-req-header">
-        <span className="conn-req-count">
-          {connectionRequests.length} {connectionRequests.length === 1 ? 'request' : 'requests'}
-        </span>
-        {isFetching && (
-          <span className="conn-req-updating">Updating...</span>
-        )}
+       
+        <div className="conn-req-header-right">
+          {isFetching && (
+            <span className="conn-req-updating">Updating...</span>
+          )}
+        </div>
       </div>
 
-      {/* List of requests - passing sender ID to show the sender's profile */}
+      {/* List of requests */}
       {connectionRequests.map((request) => (
         <Connectionrequestpreview 
           key={request.id}
           request={request}
-          onClick={() => handlePreviewClick(request.senderId)}  // ✅ Pass sender ID
+          onClick={() => handlePreviewClick(request)}
+          isUnread={!request.is_read}
         />
       ))}
+
+      {/* Pagination */}
+      {pagination && pagination.total_pages > 1 && (
+        <div className="conn-req-pagination">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={!pagination.has_previous}
+            className="conn-req-pagination-btn"
+          >
+            Previous
+          </button>
+          <span className="conn-req-pagination-info">
+            Page {pagination.page} of {pagination.total_pages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={!pagination.has_next}
+            className="conn-req-pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ import type { ConnectionRequest } from './Connectionrequest'
 interface ConnectionrequestpreviewProps {
   request: ConnectionRequest;
   onClick: () => void;
+  isUnread?: boolean;
 }
 
 // API call to accept connection request
@@ -53,15 +54,56 @@ const rejectConnection = async (accessToken: string | null, connectionId: string
   return response.json();
 };
 
-function Connectionrequestpreview({ request, onClick }: ConnectionrequestpreviewProps) {
-  const { senderName, senderAvatar, time, connection_id } = request;
+// API call to mark notification as read
+const markNotificationAsRead = async (accessToken: string | null, notificationId: string): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/notifications/mark-read/${notificationId}/`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to mark notification as read: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+function Connectionrequestpreview({ request, onClick, isUnread = false }: ConnectionrequestpreviewProps) {
+  const { senderName, senderAvatar, time, connection_id, notification_id } = request;
   const { access: accessToken } = useAuthStore();
   const queryClient = useQueryClient();
+
+  // Mark notification as read mutation
+  const markReadMutation = useMutation({
+    mutationFn: () => markNotificationAsRead(accessToken, notification_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connectionRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotifications'] });
+    },
+    onError: (error: Error) => {
+      console.error('❌ Failed to mark notification as read:', error);
+    },
+  });
 
   // Accept mutation
   const acceptMutation = useMutation({
     mutationFn: () => acceptConnection(accessToken, connection_id),
     onSuccess: (data) => {
+      // Mark notification as read when accepting
+      if (isUnread) {
+        markReadMutation.mutate();
+      }
+
       toast.success('Connection accepted! 🎉', {
         description: `You are now connected with ${senderName}`,
         duration: 5000,
@@ -97,6 +139,11 @@ function Connectionrequestpreview({ request, onClick }: Connectionrequestpreview
   const rejectMutation = useMutation({
     mutationFn: () => rejectConnection(accessToken, connection_id),
     onSuccess: (data) => {
+      // Mark notification as read when rejecting
+      if (isUnread) {
+        markReadMutation.mutate();
+      }
+
       toast.success('Connection declined', {
         description: `You have declined the request from ${senderName}`,
         duration: 5000,
@@ -168,10 +215,18 @@ function Connectionrequestpreview({ request, onClick }: Connectionrequestpreview
     });
   };
 
-  const isProcessing = acceptMutation.isPending || rejectMutation.isPending;
+  const handleCardClick = () => {
+    // If unread, mark as read when clicking the card
+    if (isUnread) {
+      markReadMutation.mutate();
+    }
+    onClick();
+  };
+
+  const isProcessing = acceptMutation.isPending || rejectMutation.isPending || markReadMutation.isPending;
 
   return (
-    <div className="overall-conection-requst-preview" onClick={onClick}>
+    <div className={`overall-conection-requst-preview ${isUnread ? 'conn-req-unread' : ''}`} onClick={handleCardClick}>
       <div className="conn-req-avatar-wrapper">
         {senderAvatar ? (
           <img 

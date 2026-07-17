@@ -466,7 +466,7 @@
     top: auto;
     width: 100%;
     height: auto;
-    padding: 0.4rem 0.3rem;
+    padding: 0.6rem 0.3rem 0.8rem 0.3rem;
     border-right: none;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     background: #000000;
@@ -496,7 +496,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.1rem;
-    padding: 0.3rem 0.4rem;
+    padding: 0.4rem 0.4rem;
     font-size: 0.6rem;
     border-radius: 8px;
     flex: 1;
@@ -504,9 +504,21 @@
     min-width: 0;
   }
 
+  /* INCREASED ICON SIZE FOR MOBILE - Twice the size */
   .icon-fig {
-    font-size: 1.8rem;
+    font-size: 3.2rem !important; /* Was 1.8rem, now 3.2rem (almost double) */
     min-width: auto;
+    line-height: 1;
+  }
+
+  /* Notification dot positioning for larger icons */
+  .icon-fig .notification-dot,
+  .icon-fig .connection-dot {
+    top: -2px !important;
+    right: -2px !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-width: 2px !important;
   }
 
   .nav-name {
@@ -519,26 +531,27 @@
     padding-top: 0;
   }
 
-  /* Mobile profile avatar sizes */
+  /* Mobile profile avatar sizes - increased */
   .user-profile-avatar-wrapper {
-    height: 1.8rem;
-    width: 1.8rem;
+    height: 3.2rem !important; /* Was 1.8rem */
+    width: 3.2rem !important; /* Was 1.8rem */
+    border-width: 2px;
   }
 
   .user-profile-avatar-icon {
-    font-size: 0.9rem;
+    font-size: 1.8rem !important; /* Was 0.9rem */
   }
 
   .user-profile-avatar-spinner {
-    width: 1rem;
-    height: 1rem;
+    width: 1.8rem !important; /* Was 1rem */
+    height: 1.8rem !important; /* Was 1rem */
   }
 
   /* Main body */
   .overall-user-body-container {
     padding: 1rem 0.8rem;
-    height: calc(100% - 65px);
-    margin-bottom: 65px;
+    height: calc(100% - 75px);
+    margin-bottom: 75px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -596,30 +609,35 @@
 ========================= */
 @media screen and (max-width: 30em) {
   .icon-fig {
-    font-size: 1.5rem;
+    font-size: 2.8rem !important; /* Slightly smaller for very small screens but still large */
+  }
+
+  .user-account-header-container {
+    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
   }
 
   .user-account-header-container ul li {
-    padding: 0.2rem 0.2rem;
+    padding: 0.3rem 0.2rem;
   }
 
   .user-profile-avatar-wrapper {
-    height: 1.6rem;
-    width: 1.6rem;
+    height: 2.8rem !important;
+    width: 2.8rem !important;
   }
 
   .user-profile-avatar-icon {
-    font-size: 0.8rem;
+    font-size: 1.5rem !important;
   }
 
   .user-profile-avatar-spinner {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
   }
 
   .overall-user-body-container {
     padding: 0.8rem 0.5rem;
-    margin-bottom: 60px;
+    margin-bottom: 70px;
+    height: calc(100% - 70px);
   }
 
   .post-image {
@@ -642,6 +660,15 @@
   .user-page-placeholder p {
     font-size: 0.9rem;
   }
+
+  /* Notification dot positioning for extra small screens */
+  .icon-fig .notification-dot,
+  .icon-fig .connection-dot {
+    width: 10px !important;
+    height: 10px !important;
+    top: -1px !important;
+    right: -1px !important;
+  }
 }
 
 /* =========================
@@ -650,14 +677,10 @@
 @supports (padding: max(0px)) {
   @media screen and (max-width: 46.875em) {
     .user-account-header-container {
-      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+      padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
     }
   }
 }
-
-
-
-/* Add to user.css - Logout button styles */
 
 /* =========================
    LOGOUT BUTTON
@@ -711,9 +734,33 @@
   white-space: nowrap;
 }
 
-/* Mobile responsive */
+/* Mobile responsive - hide logout on mobile */
 @media screen and (max-width: 46.875em) {
   .user-logout-section {
     display: none;
   }
+}
+
+/* =========================
+   PULSE ANIMATION FOR NOTIFICATION/CONNECTION DOTS
+========================= */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Dot base styles - can be used for both notification and connection dots */
+.notification-dot,
+.connection-dot {
+  animation: pulse 2s infinite;
 }
