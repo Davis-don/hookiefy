@@ -1,0 +1,52 @@
+.top-users-search-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+/* Remove gap when no cancel button */
+.top-users-search-container:not(:has(.cancel-button)) {
+  gap: 0;
+}
+
+/* Add gap when cancel button exists */
+.top-users-search-container:has(.cancel-button) {
+  gap: 1rem;
+}
+
+.search-cancel-button {
+  background-color: transparent;
+  border: none;
+  color: #fff;
+  padding: .5rem;
+  cursor: pointer;
+  font-weight: bold;
+  width: 5rem;
+  white-space: nowrap;
+}
+
+.serch-input-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-input {
+  background-color: #495057;
+  color: #fff;
+  border: none;
+  padding-block: .8rem;
+  width: 100%;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-input:focus {
+  background-color: #495057;
+  color: #fff;
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  outline: none;
+}

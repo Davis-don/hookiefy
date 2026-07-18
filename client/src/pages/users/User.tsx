@@ -149,6 +149,7 @@ function User() {
   const [successfulConnectionsCount] = useState(0);
 
   const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
+  
 
   // ---- Fetch current user data for profile icon ----
   const { 
@@ -452,6 +453,8 @@ function User() {
 
   // Render the appropriate component based on active tab
   const renderContent = () => {
+  
+
     if (isChecking) {
       return (
         <div style={{ 
@@ -538,6 +541,7 @@ function User() {
     );
   }
 
+
   return (
     <div className="overall-user-component-container">
       {/* Sidebar / Navigation */}
@@ -588,7 +592,6 @@ function User() {
             </li>
 
             {/* Successful Connections - HIDDEN but still accessible via navigation */}
-            {/* The link is hidden with display: none, but the component is still accessible via handleNavClick */}
             <li 
               className={`${activeTab === 'successful-connections' ? 'active-nav' : ''} successful-connections-nav-item`}
               onClick={() => handleNavClick('successful-connections')}

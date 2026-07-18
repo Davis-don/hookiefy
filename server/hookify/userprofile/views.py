@@ -356,3 +356,110 @@ def get_user_full_data_by_id(request, user_id):
     }
     
     return Response(response_data, status=status.HTTP_200_OK)
+
+# ============================================
+# SEARCH USERS BY NAME
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users_by_name(request):
+    """
+    Search for users by name (first_name, last_name, or full_name property).
+    Returns a list of users with id, profile_image_url, full_name, and location.
+    
+    Query Parameters:
+    - q: Search query string (required)
+    - limit: Maximum number of results (optional, default: 20)
+    """
+    
+    # Get the search query from request
+    search_query = request.query_params.get('q', '').strip()
+    
+    if not search_query:
+        return Response(
+            {"message": "Search query parameter 'q' is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Get limit from request (default: 20)
+    try:
+        limit = int(request.query_params.get('limit', 20))
+        limit = min(limit, 100)  # Cap at 100 max
+    except ValueError:
+        limit = 20
+    
+    from django.db import models
+    
+    # Split the search query into words
+    search_words = search_query.split()
+    
+    # Build the search query using Q objects
+    q_objects = models.Q()
+    
+    # For each word in the search query
+    for word in search_words:
+        # Search in first_name and last_name only (these are actual database fields)
+        q_objects |= models.Q(first_name__icontains=word)
+        q_objects |= models.Q(last_name__icontains=word)
+    
+    # If it's a single character or short word, also search for exact matches at start
+    if len(search_query) <= 2:
+        q_objects |= models.Q(first_name__istartswith=search_query)
+        q_objects |= models.Q(last_name__istartswith=search_query)
+    
+    # Execute the search
+    users = User.objects.filter(
+        q_objects
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        role='admin'
+    ).distinct()[:limit]
+    
+    # Build the response with only the needed fields
+    results = []
+    for user in users:
+        # Get location from profile if exists
+        location = None
+        city = None
+        county = None
+        country = None
+        
+        if user.role == 'user':
+            try:
+                profile = UserProfile.objects.get(user=user)
+                city = profile.city
+                county = profile.county
+                country = profile.country
+                
+                # Build location string
+                location_parts = []
+                if city:
+                    location_parts.append(city)
+                if county:
+                    location_parts.append(county)
+                if country:
+                    location_parts.append(country)
+                
+                location = ', '.join(location_parts) if location_parts else None
+            except UserProfile.DoesNotExist:
+                pass
+        
+        # Use the full_name property from the model
+        results.append({
+            "id": str(user.id),
+            "full_name": user.full_name,
+            "profile_image_url": user.profile_image_url,
+            "location": location,
+            "city": city,
+            "county": county,
+            "country": country,
+        })
+    
+    return Response({
+        "message": f"Found {len(results)} users matching '{search_query}'",
+        "count": len(results),
+        "query": search_query,
+        "results": results
+    }, status=status.HTTP_200_OK)

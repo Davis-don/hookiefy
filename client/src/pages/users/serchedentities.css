@@ -1,0 +1,238 @@
+.overall-serchedentities-container {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 200px;
+  padding: 0 0.5rem;
+}
+
+/* Loading state */
+.overall-serchedentities-container.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+/* Empty state */
+.overall-serchedentities-container.empty-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: rgba(26, 26, 46, 0.6);
+  border-radius: 16px;
+  border: 1px solid rgba(74, 74, 106, 0.3);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.search-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.search-empty-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.search-empty-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Error state */
+.overall-serchedentities-container.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+.search-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.search-error-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-error h3 {
+  color: #ffffff;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-error p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-retry-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+  padding: 0.7rem 2rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-retry-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Instagram-style search result cards */
+.search-result-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.search-result-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+}
+
+.search-result-card:active {
+  transform: scale(0.98);
+}
+
+.search-result-avatar-wrapper {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+}
+
+.search-result-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: #1a1a2e;
+}
+
+.search-result-avatar-fallback {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.search-result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* Full name - bold, bigger, very white */
+.search-result-name {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.3px;
+}
+
+/* Location - bigger but smaller than name */
+.search-result-location {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.3;
+}
+
+.search-result-location-icon {
+  font-size: 0.8rem;
+}
+
+/* Username - subtle */
+.search-result-username {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .overall-serchedentities-container {
+    padding: 0 0.25rem;
+  }
+
+  .search-result-card {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .search-result-avatar,
+  .search-result-avatar-fallback {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-result-avatar-fallback {
+    font-size: 1.1rem;
+  }
+
+  .search-result-name {
+    font-size: 0.95rem;
+  }
+
+  .search-result-location {
+    font-size: 0.75rem;
+  }
+
+  .search-result-username {
+    font-size: 0.65rem;
+  }
+}

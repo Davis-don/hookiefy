@@ -10,4 +10,8 @@ urlpatterns = [
     # Comprehensive user data endpoints
     path('current-user-full-data/', views.get_current_user_full_data, name='current_user_full_data'),
     path('user-full-data/<int:user_id>/', views.get_user_full_data_by_id, name='get_user_full_data_by_id'),
+    
+    # Search users by name
+    # Example: /profile/search/?q=john&limit=10
+    path('search/', views.search_users_by_name, name='search_users_by_name'),
 ]
