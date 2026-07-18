@@ -1,6 +1,4 @@
 import './superadmin.css'
-import { FaRegMessage } from "react-icons/fa6";
-import { MdNotificationsNone } from "react-icons/md";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { IoMdClose } from "react-icons/io";
 import { IoMdMenu } from "react-icons/io";
@@ -23,6 +21,7 @@ import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner';
 import Myclients from '../admin/Myclients';
 import Hookupfeesettings from './Hookupfeesettings';
+import UserBalance from './UserBalance';
 
 interface UserData {
   id: number;
@@ -155,7 +154,7 @@ function Superadmin() {
   const [profile, isprofile] = useState(false)
   const [adminCommissions, setAdminCommissions] = useState(false)
   const [clients, setClients] = useState(false)
-  const [hookupFeeSettings, setHookupFeeSettings] = useState(false) // New state for hookup fee
+  const [hookupFeeSettings, setHookupFeeSettings] = useState(false)
 
   useEffect(() => {
     const checkScreen = () => {
@@ -177,7 +176,7 @@ function Superadmin() {
     isprofile(false)
     setAdminCommissions(false)
     setClients(false)
-    setHookupFeeSettings(false) // Clear hookup fee state
+    setHookupFeeSettings(false)
   }
 
   const handleSettingsClick = () => {
@@ -328,7 +327,6 @@ function Superadmin() {
                     <span className="sub-link-dot"></span>
                     Commissions
                   </div>
-                  {/* Hookup Fee Settings - Added below Commissions */}
                   <div 
                     onClick={() => {clearAllStates(); setHookupFeeSettings(true); ismounted(!mount)}}
                     className={`sidebar_sub_link ${hookupFeeSettings ? 'active-sidebar-sub' : ''}`}
@@ -375,8 +373,12 @@ function Superadmin() {
 
           <div className="right-side-header-body-container">
             <ul>
-              <li><FaRegMessage /></li>
-              <li><MdNotificationsNone className='fs-1' /></li>
+              {/* Message and Notification icons removed */}
+              
+              {/* User Balance - placed at the top */}
+              <li className="user-balance-nav-item">
+                <UserBalance />
+              </li>
 
               <li className="current-user">
                 <div className="icon-image-holder rounded-circle">

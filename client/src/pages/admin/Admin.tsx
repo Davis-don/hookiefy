@@ -1,5 +1,3 @@
-import { FaRegMessage } from "react-icons/fa6";
-import { MdNotificationsNone } from "react-icons/md";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { IoMdClose } from "react-icons/io";
 import { IoMdMenu } from "react-icons/io";
@@ -18,6 +16,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import Loadingcomponent from "../../components/superadmin/Loadingcomponent";
 import { toast } from 'sonner';
+import UserBalance from "../superadmin/UserBalance";
 
 interface UserData {
   id: number;
@@ -315,8 +314,12 @@ function Admin() {
 
           <div className="right-side-header-body-container">
             <ul>
-              <li><FaRegMessage /></li>
-              <li><MdNotificationsNone className='fs-1' /></li>
+              {/* Message and Notification icons removed */}
+              
+              {/* User Balance - placed at the top */}
+              <li className="user-balance-nav-item">
+                <UserBalance />
+              </li>
 
               <li className="current-user">
                 <div className="icon-image-holder rounded-circle">

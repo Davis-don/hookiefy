@@ -15,6 +15,7 @@ from .serializers import MyTokenObtainPairSerializer, CreateNewUserSerializer
 from assignments.models import ClientAssignment
 from userprofile.models import UserProfile
 from userpreference.models import Preference
+from UserBalance.models import UserBalance  # Import the UserBalance model
 from .controllers.cloudinary_utils import (
     upload_image_to_cloudinary, 
     delete_image_from_cloudinary, 
@@ -24,6 +25,59 @@ from .controllers.cloudinary_utils import (
 import time
 
 User = get_user_model()
+
+# ============================================
+# HELPER: Create user balance
+# ============================================
+
+def create_user_balance(user):
+    """
+    Create a UserBalance record for a newly created user.
+    Balance is initialized to 0.00 by default.
+    Only for admin and superadmin roles.
+    """
+    # Only create balance for admin and superadmin
+    if user.role not in ['admin', 'superadmin']:
+        print(f"ℹ️ Balance not created for {user.role}: {user.email}")
+        return None
+    
+    try:
+        balance = UserBalance.objects.create(
+            user=user,
+            balance=0.00,
+            pending_balance=0.00,
+            total_earned=0.00,
+            total_withdrawn=0.00,
+            currency="KES"
+        )
+        print(f"💰 Balance created for {user.role}: {user.email} (ID: {user.id})")
+        return balance
+    except Exception as e:
+        print(f"❌ Error creating balance for user {user.email}: {str(e)}")
+        raise
+
+
+def get_user_balance(user):
+    """
+    Get balance info for a user.
+    Returns None for regular users (role 'user').
+    """
+    # Regular users don't have balances
+    if user.role == 'user':
+        return None
+    
+    try:
+        balance = UserBalance.objects.get(user=user)
+        return {
+            'balance': str(balance.balance),
+            'pending_balance': str(balance.pending_balance),
+            'total_earned': str(balance.total_earned),
+            'total_withdrawn': str(balance.total_withdrawn),
+            'currency': balance.currency,
+        }
+    except UserBalance.DoesNotExist:
+        return None
+
 
 # ============================================
 # HEALTH CHECK
@@ -74,6 +128,9 @@ def login_view(request):
                     'assigned_at': None
                 }
 
+        # Get balance info - only for admin and superadmin
+        balance_info = get_user_balance(user)
+
         return Response({
             "message": "Login successful",
             "access": access,
@@ -88,6 +145,7 @@ def login_view(request):
                 "profile_image_url": user.profile_image_url,
                 "has_profile_image": user.has_profile_image,
                 "assignment": assignment_info if user.role == 'user' else None,
+                "balance": balance_info,
             }
         }, status=status.HTTP_200_OK)
 
@@ -169,6 +227,9 @@ def auth_check(request):
         except ClientAssignment.DoesNotExist:
             assignment_info = None
     
+    # Get balance info - only for admin and superadmin
+    balance_info = get_user_balance(user)
+    
     return Response({
         "authenticated": True,
         "user": {
@@ -181,6 +242,7 @@ def auth_check(request):
             "profile_image_url": user.profile_image_url,
             "has_profile_image": user.has_profile_image,
             "assignment": assignment_info if user.role == 'user' else None,
+            "balance": balance_info,
         }
     })
 
@@ -193,7 +255,7 @@ def auth_check(request):
 @permission_classes([IsAuthenticated])
 def get_current_logged_in_user(request):
     """
-    Get current user details including profile image
+    Get current user details including profile image and balance
     """
     user = request.user
     
@@ -210,6 +272,9 @@ def get_current_logged_in_user(request):
         except ClientAssignment.DoesNotExist:
             assignment_info = None
     
+    # Get balance info - only for admin and superadmin
+    balance_info = get_user_balance(user)
+    
     return Response({
         "id": user.id,
         "email": user.email,
@@ -223,6 +288,7 @@ def get_current_logged_in_user(request):
         "profile_image_public_id": user.profile_image_public_id,
         "has_profile_image": bool(user.profile_image_url),
         "assignment": assignment_info if user.role == 'user' else None,
+        "balance": balance_info,
     })
 
 
@@ -251,10 +317,11 @@ def has_profile_image(request):
 @transaction.atomic
 def create_new_user(request):
     """
-    Create a new user with assignment
+    Create a new user with assignment and balance
     - Superadmin can create admin and user accounts
     - Admin can only create user accounts (assigned to them)
     - Only one superadmin can exist
+    - Balance is automatically created for admin and superadmin only
     """
     target_role = request.data.get("role", "user")
     current_user = request.user
@@ -279,6 +346,10 @@ def create_new_user(request):
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            
+            # Create balance for the superadmin
+            create_user_balance(user)
+            
             return Response(
                 {
                     "message": "Superadmin created successfully",
@@ -301,6 +372,10 @@ def create_new_user(request):
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            
+            # Create balance for the admin
+            create_user_balance(user)
+            
             return Response(
                 {
                     "message": "Admin created successfully",
@@ -323,6 +398,9 @@ def create_new_user(request):
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            
+            # DO NOT create balance for regular users
+            # Only admin and superadmin have balances
             
             # Assign the user to the current admin/superadmin
             try:
@@ -385,6 +463,9 @@ def update_user_details(request):
     user.gender = request.data.get("gender", user.gender)
     user.save()
 
+    # Get updated balance info - only for admin and superadmin
+    balance_info = get_user_balance(user)
+
     return Response({
         "message": "User updated successfully",
         "user": {
@@ -398,6 +479,7 @@ def update_user_details(request):
             "full_name": user.full_name,
             "profile_image_url": user.profile_image_url,
             "has_profile_image": user.has_profile_image,
+            "balance": balance_info,
         }
     })
 
@@ -437,6 +519,7 @@ def delete_user_completely(user, reassign_admin=None):
     - Cloudinary images
     - Profile
     - Preferences
+    - Balance (only for admin/superadmin)
     - Assignments
     - Account
     
@@ -503,7 +586,21 @@ def delete_user_completely(user, reassign_admin=None):
         except Exception as e:
             print(f"⚠️ Error deleting preferences: {str(e)}")
         
-        # --- 4. HANDLE ASSIGNMENTS ---
+        # --- 4. DELETE BALANCE (only for admin and superadmin) ---
+        if user.role in ['admin', 'superadmin']:
+            print("\n💰 Deleting user balance...")
+            try:
+                balance = UserBalance.objects.get(user=user)
+                balance.delete()
+                print("✅ Balance deleted successfully")
+            except UserBalance.DoesNotExist:
+                print("ℹ️ No balance found")
+            except Exception as e:
+                print(f"⚠️ Error deleting balance: {str(e)}")
+        else:
+            print("\nℹ️ No balance to delete for regular user")
+        
+        # --- 5. HANDLE ASSIGNMENTS ---
         print("\n📋 Handling assignments...")
         if user.role == 'admin' and reassign_admin:
             # Reassign clients from this admin to the new admin
@@ -520,7 +617,7 @@ def delete_user_completely(user, reassign_admin=None):
             except ClientAssignment.DoesNotExist:
                 print("ℹ️ No assignment found")
         
-        # --- 5. DELETE THE ACCOUNT ---
+        # --- 6. DELETE THE ACCOUNT ---
         print("\n🗑️ Deleting user account...")
         user.delete()
         deleted = True
@@ -581,6 +678,21 @@ def manage_user_by_id(request, id):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
+        # Get balance info - only for admin and superadmin
+        balance_info = None
+        if user.role in ['admin', 'superadmin']:
+            try:
+                balance = UserBalance.objects.get(user=user)
+                balance_info = {
+                    'balance': str(balance.balance),
+                    'pending_balance': str(balance.pending_balance),
+                    'total_earned': str(balance.total_earned),
+                    'total_withdrawn': str(balance.total_withdrawn),
+                    'currency': balance.currency,
+                }
+            except UserBalance.DoesNotExist:
+                balance_info = None
+        
         return Response({
             "id": user.id,
             "email": user.email,
@@ -599,6 +711,7 @@ def manage_user_by_id(request, id):
             "date_joined": user.date_joined,
             "last_login": user.last_login,
             "assignment": assignment_info if user.role == 'user' else None,
+            "balance": balance_info,
         })
 
     # PUT - Update user
@@ -649,6 +762,13 @@ def manage_user_by_id(request, id):
                     # Reassign all clients of this admin to superadmin
                     superadmin = Accounts.objects.get(role='superadmin')
                     ClientAssignment.objects.filter(assigned_admin=user).update(assigned_admin=superadmin)
+                    # Delete the admin's balance
+                    try:
+                        balance = UserBalance.objects.get(user=user)
+                        balance.delete()
+                        print(f"💰 Balance deleted for {user.email} (changed to user)")
+                    except UserBalance.DoesNotExist:
+                        pass
                 
                 user.role = role
                 
@@ -663,6 +783,8 @@ def manage_user_by_id(request, id):
                 else:
                     # Remove assignment if becoming admin
                     ClientAssignment.objects.filter(user=user).delete()
+                    # Create balance for new admin
+                    create_user_balance(user)
         
         if is_active is not None:
             user.is_active = is_active
@@ -694,6 +816,21 @@ def manage_user_by_id(request, id):
                 }
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
+        
+        # Get balance info - only for admin and superadmin
+        balance_info = None
+        if user.role in ['admin', 'superadmin']:
+            try:
+                balance = UserBalance.objects.get(user=user)
+                balance_info = {
+                    'balance': str(balance.balance),
+                    'pending_balance': str(balance.pending_balance),
+                    'total_earned': str(balance.total_earned),
+                    'total_withdrawn': str(balance.total_withdrawn),
+                    'currency': balance.currency,
+                }
+            except UserBalance.DoesNotExist:
+                balance_info = None
 
         return Response({
             "message": "User updated successfully",
@@ -712,6 +849,7 @@ def manage_user_by_id(request, id):
                 "is_staff": user.is_staff,
                 "is_superuser": user.is_superuser,
                 "assignment": assignment_info if user.role == 'user' else None,
+                "balance": balance_info,
             }
         })
 
@@ -828,6 +966,21 @@ def get_users_by_role_or_all(request, role=None):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
+        # Get balance info - only for admin and superadmin
+        balance_info = None
+        if u.role in ['admin', 'superadmin']:
+            try:
+                balance = UserBalance.objects.get(user=u)
+                balance_info = {
+                    'balance': str(balance.balance),
+                    'pending_balance': str(balance.pending_balance),
+                    'total_earned': str(balance.total_earned),
+                    'total_withdrawn': str(balance.total_withdrawn),
+                    'currency': balance.currency,
+                }
+            except UserBalance.DoesNotExist:
+                balance_info = None
+        
         data.append({
             "id": u.id,
             "email": u.email,
@@ -846,6 +999,7 @@ def get_users_by_role_or_all(request, role=None):
             "date_joined": u.date_joined,
             "last_login": u.last_login,
             "assignment": assignment_info if u.role == 'user' else None,
+            "balance": balance_info,
         })
 
     return Response({
@@ -915,6 +1069,21 @@ def get_all_users_paginated(request):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
+        # Get balance info - only for admin and superadmin
+        balance_info = None
+        if u.role in ['admin', 'superadmin']:
+            try:
+                balance = UserBalance.objects.get(user=u)
+                balance_info = {
+                    'balance': str(balance.balance),
+                    'pending_balance': str(balance.pending_balance),
+                    'total_earned': str(balance.total_earned),
+                    'total_withdrawn': str(balance.total_withdrawn),
+                    'currency': balance.currency,
+                }
+            except UserBalance.DoesNotExist:
+                balance_info = None
+        
         data.append({
             "id": u.id,
             "email": u.email,
@@ -933,6 +1102,7 @@ def get_all_users_paginated(request):
             "date_joined": u.date_joined,
             "last_login": u.last_login,
             "assignment": assignment_info if u.role == 'user' else None,
+            "balance": balance_info,
         })
 
     return Response({
@@ -954,7 +1124,7 @@ def delete_current_user(request):
     """
     Delete the currently logged in user account
     Superadmin cannot be deleted
-    Also deletes Cloudinary images, profile, preferences, and assignments
+    Also deletes Cloudinary images, profile, preferences, balance, and assignments
     """
     user = request.user
     

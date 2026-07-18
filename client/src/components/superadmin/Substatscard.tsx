@@ -5,11 +5,11 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 interface StatData {
   icon: IconType;
   title: string;
-  value: number;
+  value: string | number; // Changed to accept both string and number
   percentage: number;
   trendIcon: IconType;
   color: string;
-  trendcolor:string
+  trendcolor: string;
 }
 
 interface SubstatscardProps {
@@ -41,8 +41,8 @@ function Substatscard({ data }: SubstatscardProps) {
         </div>
 
         <div className="right-side-sub-footer-card">
-          <p style={{color:data.trendcolor}}>
-            <span>{data.percentage}</span>
+          <p style={{ color: data.trendcolor }}>
+            <span>{Math.abs(data.percentage)}%</span>
             <span><TrendIcon /></span>
           </p>
         </div>

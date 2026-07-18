@@ -44,4 +44,8 @@ urlpatterns = [
     path("administration/", include("administration.urls")),
     # Payments APIs
     path("payments/", include("payments.urls")),
+    # User Balance APIs
+    path("balance/", include("UserBalance.urls")),
+    # Stats APIs
+    path("stats/", include("stats.urls")),
 ]
