@@ -115,6 +115,80 @@ const countriesData: Record<string, string[]> = {
   ]
 };
 
+// Bio placeholders
+const bioPlaceholders = [
+  "Looking for fun and exciting hookups. Let's keep it casual and see where things go! 🔥",
+  "I'm here for good vibes and great connections. Not looking for anything serious, just fun! 💕",
+  "Life's too short for boring moments. I'm looking for someone adventurous and fun to vibe with! ✨",
+  "I know what I want and I'm not afraid to go after it. Looking for someone who's equally confident and fun! 😈",
+  "Night owl looking for someone to share late night conversations and spontaneous adventures. 🌙",
+  "I believe in living in the moment. Looking for someone who's down for anything and everything! 💫",
+  "Just a fun-loving person looking for someone to vibe with. Let's get to know each other and see where it goes! 🌟",
+  "I'm looking for a real connection — someone who's honest, fun, and ready to create amazing memories together! 🎯",
+  "Looking for someone who can handle my energy and keep up with me. Let's make some unforgettable moments! 💋",
+  "I'm all about that spark — looking for someone who makes my heart race and keeps me on my toes! 🔥",
+  "Here for a good time, not a long time. Let's make the most of every moment and enjoy the ride! 🎉",
+  "Looking for something real, something fun, something unforgettable. Let's see where this takes us! 💞"
+];
+
+// Helper function to generate days
+const getDays = (): number[] => {
+  return Array.from({ length: 31 }, (_, i) => i + 1);
+};
+
+// Helper function to generate months
+const getMonths = (): { value: number; label: string }[] => {
+  return [
+    { value: 1, label: 'January' },
+    { value: 2, label: 'February' },
+    { value: 3, label: 'March' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'June' },
+    { value: 7, label: 'July' },
+    { value: 8, label: 'August' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'October' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' }
+  ];
+};
+
+// Helper function to generate years (from 1900 to current year)
+const getYears = (): number[] => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = currentYear - 100; year <= currentYear; year++) {
+    years.push(year);
+  }
+  return years.reverse();
+};
+
+// Format date to YYYY-MM-DD
+const formatDate = (day: number, month: number, year: number): string => {
+  if (!day || !month || !year) return '';
+  const monthStr = String(month).padStart(2, '0');
+  const dayStr = String(day).padStart(2, '0');
+  return `${year}-${monthStr}-${dayStr}`;
+};
+
+// Parse date string to day, month, year
+const parseDate = (dateStr: string): { day: number; month: number; year: number } => {
+  if (!dateStr) return { day: 0, month: 0, year: 0 };
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return { day: 0, month: 0, year: 0 };
+  return {
+    year: parseInt(parts[0]),
+    month: parseInt(parts[1]),
+    day: parseInt(parts[2])
+  };
+};
+
+// Get random bio placeholder
+const getRandomBioPlaceholder = (): string => {
+  return bioPlaceholders[Math.floor(Math.random() * bioPlaceholders.length)];
+};
+
 // Fetch profile
 const fetchProfile = async (accessToken: string | null): Promise<ProfileResponse | null> => {
   if (!accessToken) {
@@ -161,23 +235,6 @@ const createOrUpdateProfile = async (profileData: ProfileData, accessToken: stri
   return response.json();
 };
 
-// Get random bio placeholder
-const getRandomBioPlaceholder = (): string => {
-  const placeholders = [
-    "Hey there! I'm looking for fun and meaningful connections. Life's too short to be boring — let's make some memories together! 😉✨",
-    "Looking for someone to share adventures with. I believe in living life to the fullest and enjoying every moment. Let's connect and see where it goes! 🌟",
-    "I'm all about good vibes and great conversations. Looking for someone genuine to share laughs, fun times, and maybe something more... 😏",
-    "Life is an adventure, and I'm looking for a partner in crime! Let's explore, laugh, and create unforgettable moments together. 🎉",
-    "I'm looking for someone who's up for anything — from deep conversations to spontaneous fun. Let's see where this journey takes us! 💫",
-    "Just a fun-loving person looking for someone to vibe with. Let's get to know each other and create our own story. ❤️",
-    "I believe in living in the moment and making every second count. Looking for someone to share the good times with. Let's talk! 😊",
-    "Looking for a spark — someone who can keep up with my energy and passion for life. Let's make magic happen! 🔥",
-    "I'm a firm believer that the best things in life are shared. Looking for someone to share adventures, laughter, and good times with. 🌈",
-    "Let's skip the small talk and get to the good stuff. I'm looking for real connections and unforgettable experiences. Who's with me? 🚀"
-  ];
-  return placeholders[Math.floor(Math.random() * placeholders.length)];
-};
-
 function Myprofile({ onComplete, onCancel }: MyprofileProps) {
   const { access: accessToken } = useAuthStore();
   const [formData, setFormData] = useState<ProfileData>({
@@ -190,6 +247,15 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
   const [isExistingProfile, setIsExistingProfile] = useState(false);
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [bioPlaceholder, setBioPlaceholder] = useState<string>('');
+  
+  // Date of birth separate fields
+  const [dobDay, setDobDay] = useState<number>(0);
+  const [dobMonth, setDobMonth] = useState<number>(0);
+  const [dobYear, setDobYear] = useState<number>(0);
+
+  const days = getDays();
+  const months = getMonths();
+  const years = getYears();
 
   // Set bio placeholder on mount
   useEffect(() => {
@@ -226,6 +292,13 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
           if (profile.country && countriesData[profile.country]) {
             setAvailableCounties(countriesData[profile.country]);
           }
+          // Parse date of birth
+          if (profile.date_of_birth) {
+            const parsed = parseDate(profile.date_of_birth);
+            setDobDay(parsed.day);
+            setDobMonth(parsed.month);
+            setDobYear(parsed.year);
+          }
         } else {
           setIsExistingProfile(false);
         }
@@ -252,6 +325,14 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
       setFormData(prev => ({ ...prev, county: '' }));
     }
   }, [formData.country]);
+
+  // Update formData.date_of_birth when DOB fields change
+  useEffect(() => {
+    if (dobDay && dobMonth && dobYear) {
+      const formattedDate = formatDate(dobDay, dobMonth, dobYear);
+      setFormData(prev => ({ ...prev, date_of_birth: formattedDate }));
+    }
+  }, [dobDay, dobMonth, dobYear]);
 
   const mutation = useMutation({
     mutationFn: (data: ProfileData) => createOrUpdateProfile(data, accessToken),
@@ -291,6 +372,13 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleDobChange = (type: 'day' | 'month' | 'year', value: string) => {
+    const numValue = parseInt(value);
+    if (type === 'day') setDobDay(numValue);
+    else if (type === 'month') setDobMonth(numValue);
+    else if (type === 'year') setDobYear(numValue);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -434,18 +522,21 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
 
         <div className="mpf-form-container">
           <form className="mpf-form" onSubmit={handleSubmit}>
+            {/* Bio Section */}
             <div className="mpf-form-group">
               <label className="mpf-label">Bio</label>
-              <textarea
-                name="bio"
-                placeholder={bioPlaceholder}
-                className="mpf-textarea"
-                value={formData.bio}
-                onChange={handleChange}
-                rows={4}
-                required
-              />
-              <span className="mpf-bio-hint">Let others know who you are and what you're looking for 😊</span>
+              <div className="mpf-bio-wrapper">
+                <textarea
+                  name="bio"
+                  placeholder={bioPlaceholder}
+                  className="mpf-textarea"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  rows={4}
+                  required
+                />
+              </div>
+              <span className="mpf-bio-hint">Write your own bio or use the placeholder as inspiration 😊</span>
             </div>
 
             <div className="mpf-form-row">
@@ -505,14 +596,42 @@ function Myprofile({ onComplete, onCancel }: MyprofileProps) {
 
               <div className="mpf-form-group">
                 <label className="mpf-label">Date of Birth</label>
-                <input
-                  type="date"
-                  name="date_of_birth"
-                  className="mpf-input"
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="mpf-dob-wrapper">
+                  <select
+                    className="mpf-dob-select"
+                    value={dobDay || ''}
+                    onChange={(e) => handleDobChange('day', e.target.value)}
+                    required
+                  >
+                    <option value="">Day</option>
+                    {days.map((day) => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="mpf-dob-select"
+                    value={dobMonth || ''}
+                    onChange={(e) => handleDobChange('month', e.target.value)}
+                    required
+                  >
+                    <option value="">Month</option>
+                    {months.map((month) => (
+                      <option key={month.value} value={month.value}>{month.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="mpf-dob-select"
+                    value={dobYear || ''}
+                    onChange={(e) => handleDobChange('year', e.target.value)}
+                    required
+                  >
+                    <option value="">Year</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <span className="mpf-dob-hint">Select your date of birth (You must be 18+)</span>
               </div>
             </div>
 
