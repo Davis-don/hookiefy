@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
+from django.db import models  # Add this import for Q objects
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,7 @@ from django.utils import timezone
 
 from .models import Connection
 from notification.models import Notification
+from assignments.models import ClientAssignment  # Add this import
 
 User = get_user_model()
 
@@ -347,3 +349,248 @@ def reject_connection(request, connection_id):
             "error": str(e),
             "status": "failed"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================
+# GET ADMIN HOOKUPS (For Admin Dashboard)
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_admin_hookups(request):
+    """
+    Get all hookups (connections) for clients assigned to the current admin.
+    Only accessible by admin and superadmin.
+    Returns the most recent hookups first.
+    """
+    user = request.user
+    
+    # Check if user is admin or superadmin
+    if user.role not in ['admin', 'superadmin']:
+        return Response({
+            "message": "Access denied. Only admin and superadmin can view hookups.",
+            "status": "failed"
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    # Get all client IDs assigned to this admin
+    if user.role == 'superadmin':
+        # Superadmin: get all users with role 'user'
+        client_user_ids = User.objects.filter(role='user').values_list('id', flat=True)
+    else:
+        # Admin: get only assigned clients
+        client_user_ids = ClientAssignment.objects.filter(
+            assigned_admin=user
+        ).values_list('user_id', flat=True)
+    
+    # If no clients, return empty list
+    if not client_user_ids:
+        return Response({
+            "message": "No clients found",
+            "data": [],
+            "count": 0,
+            "status": "success"
+        }, status=status.HTTP_200_OK)
+    
+    # Get all connections where sender OR receiver is one of the clients
+    # Also include connections where the admin themselves is involved
+    connections = Connection.objects.filter(
+        models.Q(sender_id__in=client_user_ids) |
+        models.Q(receiver_id__in=client_user_ids) |
+        models.Q(sender=user) |
+        models.Q(receiver=user)
+    ).select_related('sender', 'receiver').order_by('-created_at')
+    
+    # Build response data
+    hookup_data = []
+    for conn in connections:
+        # Determine if this is a completed payment (check if connection has payment)
+        # You can add payment check here if you have a Payment model
+        payment_status = "pending"  # Default
+        amount_paid = "0.00"
+        
+        # If connection is ACCEPTED or COMPLETED, consider it as completed
+        if conn.status == Connection.Status.COMPLETED:
+            payment_status = "completed"
+        elif conn.status == Connection.Status.ACCEPTED:
+            payment_status = "accepted"
+        else:
+            payment_status = conn.status
+        
+        hookup_data.append({
+            "hookup_id": str(conn.connection_id),
+            "sender_id": conn.sender.id,
+            "sender_name": conn.sender.full_name,
+            "sender_email": conn.sender.email,
+            "sender_profile_image": conn.sender.profile_image_url,
+            "receiver_id": conn.receiver.id,
+            "receiver_name": conn.receiver.full_name,
+            "receiver_email": conn.receiver.email,
+            "receiver_profile_image": conn.receiver.profile_image_url,
+            "status": conn.status,
+            "status_display": conn.get_status_display(),
+            "payment_status": payment_status,
+            "amount_paid": amount_paid,
+            "created_at": conn.created_at,
+            "updated_at": conn.updated_at,
+        })
+    
+    return Response({
+        "message": f"Found {len(hookup_data)} hookups",
+        "data": hookup_data,
+        "count": len(hookup_data),
+        "status": "success"
+    }, status=status.HTTP_200_OK)
+
+# ============================================
+# GET REVENUE BY LOCATION
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_revenue_by_location(request):
+    """
+    Get revenue breakdown by location (city, county, country) for the current admin's clients.
+    Only accessible by admin and superadmin.
+    Returns top locations with highest revenue.
+    """
+    user = request.user
+    
+    # Check if user is admin or superadmin
+    if user.role not in ['admin', 'superadmin']:
+        return Response({
+            "message": "Access denied. Only admin and superadmin can view revenue by location.",
+            "status": "failed"
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    from django.db.models import Sum, Q, F, Value, CharField
+    from django.db.models.functions import Coalesce, Concat
+    
+    # Get all client IDs assigned to this admin
+    if user.role == 'superadmin':
+        # Superadmin: get all users with role 'user'
+        client_user_ids = list(User.objects.filter(role='user').values_list('id', flat=True))
+    else:
+        # Admin: get only assigned clients
+        client_user_ids = list(ClientAssignment.objects.filter(
+            assigned_admin=user
+        ).values_list('user_id', flat=True))
+    
+    # If no clients, return empty list
+    if not client_user_ids:
+        return Response({
+            "message": "No clients found",
+            "data": [],
+            "status": "success"
+        }, status=status.HTTP_200_OK)
+    
+    # Get all connections that are COMPLETED (paid) involving these clients
+    # Include both sender and receiver roles
+    completed_connections = Connection.objects.filter(
+        models.Q(sender_id__in=client_user_ids) | 
+        models.Q(receiver_id__in=client_user_ids)
+    ).filter(
+        status=Connection.Status.COMPLETED
+    ).select_related('sender', 'receiver')
+    
+    # If no completed connections, return empty
+    if not completed_connections.exists():
+        return Response({
+            "message": "No completed connections found",
+            "data": [],
+            "status": "success"
+        }, status=status.HTTP_200_OK)
+    
+    # Get UserBalance for each user involved in completed connections
+    # We need to get the total_earned for each user
+    user_ids = set()
+    for conn in completed_connections:
+        user_ids.add(conn.sender_id)
+        user_ids.add(conn.receiver_id)
+    
+    # Get balances for these users
+    balances = UserBalance.objects.filter(
+        user_id__in=user_ids
+    ).select_related('user')
+    
+    # Create a map of user_id -> total_earned
+    user_earnings = {}
+    for balance in balances:
+        user_earnings[balance.user_id] = float(balance.total_earned)
+    
+    # Now we need to get location data for each user
+    # We'll use the profile data from the UserProfile model
+    from userprofile.models import UserProfile
+    
+    # Get all profiles for these users
+    profiles = UserProfile.objects.filter(
+        user_id__in=user_ids
+    ).select_related('user')
+    
+    # Create a map of user_id -> location string
+    user_locations = {}
+    for profile in profiles:
+        location_parts = []
+        if profile.city:
+            location_parts.append(profile.city)
+        if profile.county:
+            location_parts.append(profile.county)
+        if profile.country:
+            location_parts.append(profile.country)
+        
+        # Use city if available, otherwise county, otherwise country
+        if profile.city:
+            location_key = profile.city
+        elif profile.county:
+            location_key = profile.county
+        elif profile.country:
+            location_key = profile.country
+        else:
+            location_key = "Unknown"
+        
+        user_locations[profile.user_id] = {
+            'location': location_key,
+            'full_location': ', '.join(location_parts) if location_parts else "Unknown"
+        }
+    
+    # Aggregate revenue by location
+    location_revenue = {}
+    
+    for user_id, earnings in user_earnings.items():
+        if user_id in user_locations:
+            location = user_locations[user_id]['location']
+            location_revenue[location] = location_revenue.get(location, 0) + earnings
+    
+    # If no revenue data, return empty
+    if not location_revenue:
+        return Response({
+            "message": "No revenue data found",
+            "data": [],
+            "status": "success"
+        }, status=status.HTTP_200_OK)
+    
+    # Find the maximum revenue for percentage calculation
+    max_revenue = max(location_revenue.values()) if location_revenue else 1
+    
+    # Sort locations by revenue (highest first) and get top 5
+    sorted_locations = sorted(
+        location_revenue.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:5]
+    
+    # Build response data
+    result = []
+    for location, revenue in sorted_locations:
+        percentage = round((revenue / max_revenue) * 100)
+        result.append({
+            "location": location,
+            "revenue": int(revenue),
+            "percentage": percentage,
+        })
+    
+    return Response({
+        "message": f"Found revenue data for {len(result)} locations",
+        "data": result,
+        "count": len(result),
+        "status": "success"
+    }, status=status.HTTP_200_OK)

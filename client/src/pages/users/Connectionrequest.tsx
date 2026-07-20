@@ -364,7 +364,14 @@ function Connectionrequest({ onNotificationRead }: ConnectionrequestProps) {
     <div className="ovrall-connection-request-container">
       {/* Header with counts */}
       <div className="conn-req-header">
-       
+        <div className="conn-req-header-left">
+          <h2 className="conn-req-title">Connection Requests</h2>
+          {unreadCount > 0 && (
+            <span className="conn-req-unread-badge">
+              {unreadCount} new{unreadCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
         <div className="conn-req-header-right">
           {isFetching && (
             <span className="conn-req-updating">Updating...</span>

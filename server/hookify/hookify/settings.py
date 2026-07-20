@@ -9,6 +9,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 from decouple import config
+import dj_database_url
 
 # ---------------------------------------------------
 # CORE SECURITY SETTINGS
@@ -97,15 +98,22 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 # DATABASE
 # ---------------------------------------------------
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.environ.get("DB_NAME", "hookifydb"),
+#         "USER": os.environ.get("DB_USER", "hooker"),
+#         "PASSWORD": os.environ.get("DB_PASSWORD", "0000000000"),
+#         "HOST": os.environ.get("DB_HOST", "localhost"),
+#         "PORT": os.environ.get("DB_PORT", "5432"),
+#     }
+# }
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "hookifydb"),
-        "USER": os.environ.get("DB_USER", "hooker"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "0000000000"),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-    }
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True,
+    )
 }
 
 # ---------------------------------------------------

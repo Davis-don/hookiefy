@@ -12,4 +12,8 @@ urlpatterns = [
     
     # Reject connection request
     path('reject/<uuid:connection_id>/', views.reject_connection, name='reject_connection'),
+     # Admin hookups endpoint
+    path('admin-hookups/', views.get_admin_hookups, name='get_admin_hookups'),
+      # Revenue by location endpoint
+    path('revenue-by-location/', views.get_revenue_by_location, name='revenue_by_location'),
 ]
