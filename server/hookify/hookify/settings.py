@@ -2,7 +2,6 @@
 Django settings for hookify project.
 """
 
-
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -22,14 +21,16 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
+# Updated ALLOWED_HOSTS to include Netlify frontend
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,hookiefy-server.onrender.com",
+    "localhost,127.0.0.1,hookiefy-server.onrender.com,hookiefy.netlify.app"
 ).split(",")
 
+# Updated CSRF_TRUSTED_ORIGINS to include Netlify frontend
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://hookiefy-server.onrender.com",
+    "https://hookiefy-server.onrender.com,https://hookiefy.netlify.app"
 ).split(",")
 
 # ---------------------------------------------------
@@ -65,7 +66,7 @@ INSTALLED_APPS = [
 # ---------------------------------------------------
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # Must be at the top
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -98,16 +99,6 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 # DATABASE
 # ---------------------------------------------------
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.environ.get("DB_NAME", "hookifydb"),
-#         "USER": os.environ.get("DB_USER", "hooker"),
-#         "PASSWORD": os.environ.get("DB_PASSWORD", "0000000000"),
-#         "HOST": os.environ.get("DB_HOST", "localhost"),
-#         "PORT": os.environ.get("DB_PORT", "5432"),
-#     }
-# }
 DATABASES = {
     "default": dj_database_url.config(
         default=config("DATABASE_URL"),
@@ -140,15 +131,52 @@ SIMPLE_JWT = {
 }
 
 # ---------------------------------------------------
-# CORS
+# CORS - COMPLETE FIX FOR PRODUCTION
 # ---------------------------------------------------
 
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
-).split(",")
+# Get origins from environment variable or use defaults
+default_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://hookiefy.netlify.app",
+    "https://hookiefy-server.onrender.com",
+]
+
+# Parse CORS origins from environment
+cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+if cors_env:
+    cors_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+else:
+    cors_origins = default_origins
+
+# Ensure both frontend and backend URLs are included
+backend_url = "https://hookiefy-server.onrender.com"
+frontend_url = "https://hookiefy.netlify.app"
+
+if backend_url not in cors_origins:
+    cors_origins.append(backend_url)
+if frontend_url not in cors_origins:
+    cors_origins.append(frontend_url)
+
+CORS_ALLOWED_ORIGINS = cors_origins
+
+# For development, allow all origins when DEBUG=True
+# WARNING: Never set this to True in production!
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 
 CORS_ALLOW_HEADERS = [
     "accept",
@@ -160,7 +188,38 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "x-custom-header",
 ]
+
+# Additional CORS settings for preflight requests
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+# ---------------------------------------------------
+# CSRF CONFIGURATION
+# ---------------------------------------------------
+
+# Parse CSRF trusted origins from environment
+csrf_env = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if csrf_env:
+    csrf_origins = [origin.strip() for origin in csrf_env.split(",") if origin.strip()]
+else:
+    csrf_origins = [
+        "https://hookiefy-server.onrender.com",
+        "https://hookiefy.netlify.app",
+    ]
+
+CSRF_TRUSTED_ORIGINS = csrf_origins
+
+# ---------------------------------------------------
+# SESSION AND CSRF COOKIE SETTINGS
+# ---------------------------------------------------
+
+SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # ---------------------------------------------------
 # INTERNATIONALIZATION
@@ -267,21 +326,40 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'ERROR',
             'propagate': True,
         },
+        'django.security.csrf': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True,
+        },
     },
 }
 
 # ============================================================
-# DEBUG LOGGING FOR PESAPAL (only in development)
+# DEBUG LOGGING FOR CONFIGURATION (only in development)
 # ============================================================
 
 if DEBUG:
-    print("=" * 60)
-    print("PESAPAL CONFIGURATION")
-    print(f"Consumer Key: {'Set' if PESAPAL_CONSUMER_KEY else 'NOT SET'}")
-    print(f"Consumer Secret: {'Set' if PESAPAL_CONSUMER_SECRET else 'NOT SET'}")
-    print(f"Base URL: {PESAPAL_BASE_URL}")
-    print(f"BASE_DOMAIN: {BASE_DOMAIN}")
-    print(f"Callback URL: {PESAPAL_CALLBACK_URL}")
-    print(f"Cancellation URL: {PESAPAL_CANCELLATION_URL}")
-    print(f"IPN URL: {PESAPAL_IPN_URL}")
-    print("=" * 60)
+    print("\n" + "="*70)
+    print("🚀 DJANGO CONFIGURATION LOG")
+    print("="*70)
+    print("🔒 SECURITY SETTINGS:")
+    print(f"  DEBUG: {DEBUG}")
+    print(f"  ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+    print(f"  CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+    print("\n🌐 CORS SETTINGS:")
+    print(f"  CORS_ALLOW_ALL_ORIGINS: {CORS_ALLOW_ALL_ORIGINS}")
+    print(f"  CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
+    print(f"  CORS_ALLOW_CREDENTIALS: {CORS_ALLOW_CREDENTIALS}")
+    print(f"  CORS_ALLOW_METHODS: {CORS_ALLOW_METHODS}")
+    print(f"  CORS_ALLOW_HEADERS: {CORS_ALLOW_HEADERS}")
+    print("\n💳 PESAPAL CONFIGURATION:")
+    print(f"  Consumer Key: {'✅ Set' if PESAPAL_CONSUMER_KEY else '❌ NOT SET'}")
+    print(f"  Consumer Secret: {'✅ Set' if PESAPAL_CONSUMER_SECRET else '❌ NOT SET'}")
+    print(f"  Base URL: {PESAPAL_BASE_URL}")
+    print(f"  BASE_DOMAIN: {BASE_DOMAIN}")
+    print(f"  Callback URL: {PESAPAL_CALLBACK_URL}")
+    print(f"  Cancellation URL: {PESAPAL_CANCELLATION_URL}")
+    print(f"  IPN URL: {PESAPAL_IPN_URL}")
+    print("\n🗄️ DATABASE:")
+    print(f"  DATABASE_URL: {'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}")
+    print("="*70 + "\n")
