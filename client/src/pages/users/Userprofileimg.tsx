@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState, useRef } from 'react';
-import { FiCamera, FiUser, FiCheck, FiX, FiEye } from 'react-icons/fi';
+import { FiCamera, FiUser, FiCheck, FiX, FiEye, FiInfo } from 'react-icons/fi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import { toast } from 'sonner';
@@ -143,16 +143,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB');
-      toast.error('File too large', {
-        description: 'Image must be less than 5MB.',
-        duration: 3000,
-        icon: '⚠️',
-        style: { background: '#1a1a2e', border: '1px solid #ef4444', color: '#ffffff' },
-      });
-      return;
-    }
+    // File size limit removed - no validation for file size
 
     setError('');
     setSelectedFile(file);
@@ -246,6 +237,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
         <div className="image-avatar-user-container rounded-circle">
           <div className="pimg-loading-spinner"></div>
         </div>
+        <div className="pimg-loading-text">Loading your profile...</div>
       </div>
     );
   }
@@ -256,6 +248,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
         <div className="image-avatar-user-container rounded-circle">
           <FiUser className="pimg-avatar-icon" />
         </div>
+        <div className="pimg-error-text">Failed to load profile</div>
       </div>
     );
   }
@@ -263,6 +256,14 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
   // ---- Render ----
   return (
     <div className="overall-user-image-container">
+      {/* Info Banner - Creative prompt to change image */}
+      <div className="pimg-info-banner">
+        <FiInfo className="pimg-info-icon" />
+        <span className="pimg-info-text">
+          {hasImage ? 'Tap the avatar below to update your profile picture' : 'No profile image set. Tap the avatar to add one!'}
+        </span>
+      </div>
+
       {/* Avatar Circle - clickable */}
       <div 
         className="image-avatar-user-container rounded-circle" 
@@ -279,8 +280,16 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
         {/* Overlay - shows on hover */}
         <div className="pimg-avatar-overlay">
           <FiCamera className="pimg-camera-icon" />
-          <span className="pimg-overlay-text">Change Photo</span>
+          <span className="pimg-overlay-text">
+            {hasImage ? 'Change Photo' : 'Add Photo'}
+          </span>
         </div>
+      </div>
+
+      {/* Avatar Label */}
+      <div className="pimg-avatar-label">
+        <span className="pimg-avatar-name">{user?.full_name || 'User'}</span>
+        <span className="pimg-avatar-hint">Click to upload</span>
       </div>
 
       {/* Hidden file input */}
@@ -298,7 +307,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
         {currentProfileImage && !previewUrl && !uploadMutation.isPending && (
           <button className="pimg-preview-btn" onClick={handlePreviewCurrent}>
             <FiEye className="pimg-preview-icon" />
-            Preview
+            Preview Current
           </button>
         )}
         {previewUrl && !uploadMutation.isPending && (
@@ -313,7 +322,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
       {uploadMutation.isPending && (
         <div className="pimg-uploading">
           <span className="pimg-spinner"></span>
-          <span>Uploading...</span>
+          <span>Uploading your new photo...</span>
         </div>
       )}
 
@@ -328,7 +337,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
                 <FiCamera className="pimg-file-icon" />
               )}
             </div>
-            <div>
+            <div className="pimg-file-meta">
               <p className="pimg-file-name">{selectedFile.name}</p>
               <p className="pimg-file-size">{(selectedFile.size / 1024).toFixed(1)} KB</p>
             </div>
@@ -355,7 +364,7 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
         <div className="image-handle-buttons">
           <button className="pimg-save-btn" onClick={handleSave}>
             <FiCheck className="pimg-btn-icon" />
-            Save
+            Save Photo
           </button>
           <button className="pimg-cancel-btn" onClick={handleRemove}>
             <FiX className="pimg-btn-icon" />
@@ -373,6 +382,15 @@ function Userprofileimg({ onClose }: UserprofileimgProps) {
           </button>
         </div>
       )}
+
+      {/* Supported formats hint - Removed size limit text */}
+      <div className="pimg-supported-formats">
+        <span className="pimg-format-label">Supported formats:</span>
+        <span className="pimg-format-tag">JPEG</span>
+        <span className="pimg-format-tag">PNG</span>
+        <span className="pimg-format-tag">GIF</span>
+        <span className="pimg-format-tag">WEBP</span>
+      </div>
 
       {/* Full Preview Modal */}
       {showFullPreview && previewImageUrl && (
