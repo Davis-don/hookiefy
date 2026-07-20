@@ -1,5 +1,4 @@
-/* postcard.css */
-
+/* Overall Card Container - Instagram style */
 .overall-post-card-container {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
@@ -8,6 +7,9 @@
   transition: all 0.3s ease;
   overflow: hidden;
   margin-bottom: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .overall-post-card-container:hover {
@@ -31,6 +33,7 @@
   border-radius: 50%;
   overflow: hidden;
   background: #1a1a2e;
+  border: 2px solid rgba(102, 126, 234, 0.3);
 }
 
 .post-avatar-img {
@@ -84,29 +87,74 @@
   font-size: 0.4rem;
 }
 
-/* Post Image Section */
+/* Post Image Wrapper - Consistent square aspect ratio */
 .post-image-wrapper {
   position: relative;
   cursor: pointer;
   overflow: hidden;
   margin: 0 0 12px 0;
-  background: #1a1a2e;
-  min-height: 200px;
+  background: #0a0a1a;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1 / 1;
+  /* Square like Instagram feed - consistent across all screens */
 }
 
+/* Image Loader */
+.post-image-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.post-image-loader.hidden {
+  display: none;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Post Image Content - Show full image without cropping */
 .post-image-content {
   width: 100%;
-  max-height: 500px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+  /* contain shows the ENTIRE image without cropping */
   display: block;
-  transition: transform 0.3s ease;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+  opacity: 0;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: scale(1);
+  background: #0a0a1a;
+}
+
+.post-image-content.loaded {
+  opacity: 1;
 }
 
 .post-image-wrapper:hover .post-image-content {
-  transform: scale(1.01);
+  transform: scale(1.02);
 }
 
 .post-image-overlay {
@@ -114,12 +162,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+  padding: 30px 20px 20px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
   opacity: 0;
   transition: opacity 0.3s ease;
   display: flex;
   justify-content: center;
+  pointer-events: none;
 }
 
 .post-image-wrapper:hover .post-image-overlay {
@@ -129,10 +178,11 @@
 .post-image-overlay span {
   color: #fff;
   font-size: 0.85rem;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 20px;
   border-radius: 20px;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Post Image Fallback - User Icon */
@@ -142,8 +192,8 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 200px;
-  background: #1a1a2e;
+  aspect-ratio: 1 / 1;
+  background: #0a0a1a;
   padding: 40px 20px;
   gap: 16px;
 }
@@ -176,194 +226,6 @@
   font-weight: 600;
   margin-right: 6px;
 }
-
-/* Comment Input */
-.post-comment-input {
-  padding: 12px 20px 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  gap: 10px;
-}
-
-.post-comment-input input {
-  flex: 1;
-  padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  font-size: 0.85rem;
-  transition: all 0.3s ease;
-}
-
-.post-comment-input input:focus {
-  outline: none;
-  border-color: #667eea;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.post-comment-input input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.post-comment-input button {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 24px;
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.post-comment-input button:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.post-comment-input button:active {
-  transform: scale(0.98);
-}
-
-/* Full Screen Image Modal */
-.full-image-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.full-image-container {
-  position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.full-image-content {
-  max-width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.close-full-image {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.close-full-image:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-}
-
-.full-image-caption {
-  color: #fff;
-  padding: 16px 0 0 0;
-  font-size: 0.95rem;
-  text-align: center;
-  max-width: 600px;
-}
-
-.full-image-caption strong {
-  color: #fff;
-  font-weight: 600;
-  margin-right: 6px;
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .post-header {
-    padding: 12px 16px 10px 16px;
-  }
-  
-  .post-avatar-container {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .post-avatar-icon {
-    font-size: 22px;
-  }
-  
-  .post-image-wrapper {
-    min-height: 150px;
-  }
-  
-  .post-image-icon {
-    font-size: 60px;
-  }
-  
-  .post-image-fallback {
-    min-height: 150px;
-    padding: 30px 16px;
-  }
-  
-  .post-caption {
-    padding: 0 16px 10px 16px;
-    font-size: 0.9rem;
-  }
-  
-  .post-comment-input {
-    padding: 10px 16px 14px 16px;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .post-comment-input button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .post-image-content {
-    max-height: 300px;
-  }
-  
-  .full-image-content {
-    max-height: 70vh;
-  }
-  
-  .full-image-caption {
-    font-size: 0.85rem;
-    padding: 12px 0 0 0;
-  }
-  
-  .post-image-fallback-text {
-    font-size: 0.8rem;
-  }
-}
-/* Add to postcard.css */
 
 /* See More Button */
 .post-see-more {
@@ -456,28 +318,6 @@
   word-break: break-word;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .details-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 10px 14px;
-  }
-  
-  .post-additional-details {
-    padding: 6px 16px 10px 16px;
-  }
-  
-  .post-see-more {
-    padding: 2px 16px 6px 16px;
-  }
-  
-  .detail-value {
-    font-size: 0.8rem;
-  }
-}
-/* Add to postcard.css - Replace the comment input styles with connect button styles */
-
 /* Connect Button Section */
 .post-connect-section {
   padding: 12px 20px 16px 20px;
@@ -500,29 +340,317 @@
   max-width: 300px;
 }
 
-.connect-btn:hover {
+.connect-btn:hover:not(:disabled) {
   transform: scale(1.02);
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
 }
 
-.connect-btn:active {
+.connect-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-/* Remove old comment input styles */
-.post-comment-input {
-  display: none;
+.connect-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-/* Update responsive */
-@media (max-width: 640px) {
+/* Full Screen Image Modal - Instagram style */
+.full-image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.full-image-container {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.full-image-content {
+  max-width: 95vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+  image-rendering: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.close-full-image {
+  position: absolute;
+  top: -50px;
+  right: -10px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.close-full-image:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg) scale(1.1);
+}
+
+.full-image-caption {
+  color: #fff;
+  padding: 16px 0 0 0;
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: 600px;
+  opacity: 0.9;
+}
+
+.full-image-caption strong {
+  color: #fff;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* Responsive - Consistent across all screens */
+@media (max-width: 768px) {
+  .overall-post-card-container {
+    border-radius: 0;
+    margin-bottom: 12px;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    max-width: 100%;
+  }
+
+  .post-image-wrapper {
+    aspect-ratio: 1 / 1;
+    margin: 0 -20px 12px -20px;
+    border-radius: 0;
+  }
+
+  .post-image-content {
+    object-fit: contain;
+    /* contain shows entire image without cropping */
+    width: 100%;
+    height: 100%;
+  }
+
+  .post-image-fallback {
+    aspect-ratio: 1 / 1;
+    margin: 0 -20px 12px -20px;
+    border-radius: 0;
+  }
+
+  .post-image-icon {
+    font-size: 100px;
+  }
+
+  .post-image-overlay span {
+    font-size: 0.75rem;
+    padding: 6px 16px;
+  }
+
+  .post-header {
+    padding: 12px 16px 10px 16px;
+  }
+
+  .post-avatar-container {
+    width: 40px;
+    height: 40px;
+  }
+
+  .post-avatar-icon {
+    font-size: 22px;
+  }
+
+  .post-caption {
+    padding: 0 16px 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .post-see-more {
+    padding: 2px 16px 6px 16px;
+  }
+
+  .post-additional-details {
+    padding: 6px 16px 10px 16px;
+  }
+
   .post-connect-section {
     padding: 10px 16px 14px 16px;
   }
-  
+
   .connect-btn {
     padding: 10px 30px;
     font-size: 0.9rem;
     max-width: 100%;
   }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px 14px;
+  }
+
+  .full-image-content {
+    max-height: 90vh;
+    border-radius: 0;
+  }
+
+  .full-image-modal {
+    padding: 0;
+  }
+
+  .close-full-image {
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .post-image-fallback-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra Small Screens */
+@media (max-width: 480px) {
+  .post-image-icon {
+    font-size: 80px;
+  }
+}
+
+/* Tablet and Large Screens - Same aspect ratio */
+@media (min-width: 769px) {
+  .post-image-wrapper {
+    aspect-ratio: 1 / 1;
+    /* SAME square aspect ratio as mobile */
+    border-radius: 8px;
+    margin: 0 4px 12px 4px;
+  }
+
+  .post-image-content {
+    object-fit: contain;
+    /* contain shows entire image without cropping */
+    border-radius: 8px;
+  }
+
+  .post-image-fallback {
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .overall-post-card-container {
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 0 auto 24px auto;
+  }
+
+  .post-image-overlay span {
+    font-size: 0.9rem;
+    padding: 8px 24px;
+  }
+}
+
+/* Large Desktop Screens */
+@media (min-width: 1025px) {
+  .post-image-wrapper {
+    aspect-ratio: 1 / 1;
+    /* SAME square aspect ratio across ALL screens */
+    border-radius: 12px;
+    margin: 0 8px 12px 8px;
+  }
+
+  .post-image-content {
+    object-fit: contain;
+    /* contain shows ENTIRE image, no cropping */
+    border-radius: 12px;
+  }
+
+  .post-image-fallback {
+    border-radius: 12px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .overall-post-card-container {
+    border-radius: 24px;
+    max-width: 650px;
+  }
+}
+
+/* High DPI Screens - Maintain Image Quality */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .post-image-content {
+    image-rendering: auto;
+    -webkit-optimize-contrast: auto;
+  }
+
+  .full-image-content {
+    image-rendering: auto;
+    -webkit-optimize-contrast: auto;
+  }
+}
+
+/* Smooth loading transition */
+@keyframes imageFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.post-image-content.loaded {
+  animation: imageFadeIn 0.5s ease forwards;
+}
+
+/* Instagram-style story ring on avatar */
+.post-avatar-container::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.post-avatar-container:hover::after {
+  opacity: 1;
 }

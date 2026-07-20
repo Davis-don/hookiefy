@@ -60,6 +60,7 @@ function Postcard({
 }: PostcardProps) {
   const [showFullImage, setShowFullImage] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { access: accessToken } = useAuthStore();
 
   const fullName = `${firstName} ${lastName}`;
@@ -69,7 +70,6 @@ function Postcard({
   const connectionMutation = useMutation({
     mutationFn: () => sendConnectionRequest(id, accessToken),
     onSuccess: (data) => {
-      // Show success message from server or custom message
       toast.success(data.message || 'Connection request sent successfully!', {
         description: `You have connected with ${fullName}`,
         duration: 5000,
@@ -100,7 +100,6 @@ function Postcard({
   const handleConnect = () => {
     console.log(`Connect request sent to ${fullName} (ID: ${id})`);
     
-    // Show loading toast
     const loadingToast = toast.loading('Sending connection request...', {
       description: `Connecting with ${fullName}`,
       style: {
@@ -110,7 +109,6 @@ function Postcard({
       },
     });
 
-    // Execute mutation
     connectionMutation.mutate(undefined, {
       onSettled: () => {
         toast.dismiss(loadingToast);
@@ -130,6 +128,10 @@ function Postcard({
 
   const toggleShowMore = () => {
     setShowMore(!showMore);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
   };
 
   // Get gender display
@@ -172,6 +174,7 @@ function Postcard({
                 src={avatarUrl} 
                 alt={fullName} 
                 className="post-avatar-img" 
+                loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).parentElement?.querySelector('.post-avatar-fallback')?.classList.add('show');
@@ -194,15 +197,19 @@ function Postcard({
           </div>
         </div>
 
-        {/* Post Image Section - Shows user icon if no image */}
+        {/* Post Image Section */}
         <div className="post-image-wrapper" onClick={handleImageClick}>
           {image ? (
             <>
+              <div className={`post-image-loader ${imageLoaded ? 'hidden' : ''}`}>
+                <div className="loader-spinner"></div>
+              </div>
               <img 
                 src={image} 
                 alt={caption} 
-                className="post-image-content" 
+                className={`post-image-content ${imageLoaded ? 'loaded' : ''}`}
                 loading="lazy"
+                onLoad={handleImageLoad}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
@@ -210,6 +217,10 @@ function Postcard({
                     const fallback = parent.querySelector('.post-image-fallback');
                     if (fallback) {
                       fallback.classList.add('show');
+                    }
+                    const loader = parent.querySelector('.post-image-loader');
+                    if (loader) {
+                      loader.classList.add('hidden');
                     }
                   }
                 }}
@@ -246,7 +257,7 @@ function Postcard({
           </button>
         </div>
 
-        {/* Additional Details - Shown when "See more" is clicked */}
+        {/* Additional Details */}
         {showMore && (
           <div className="post-additional-details">
             <div className="details-grid">
@@ -295,7 +306,7 @@ function Postcard({
           </div>
         )}
 
-        {/* Connect Button Only */}
+        {/* Connect Button */}
         <div className="post-connect-section">
           <button 
             className="connect-btn" 
@@ -307,11 +318,16 @@ function Postcard({
         </div>
       </div>
 
-      {/* Full Screen Image Modal - Only if image exists */}
+      {/* Full Screen Image Modal */}
       {showFullImage && image && (
         <div className="full-image-modal" onClick={handleCloseFullImage}>
           <div className="full-image-container">
-            <img src={image} alt={caption} className="full-image-content" />
+            <img 
+              src={image} 
+              alt={caption} 
+              className="full-image-content"
+              loading="eager"
+            />
             <button className="close-full-image" onClick={handleCloseFullImage}>
               ✕
             </button>
