@@ -89,17 +89,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
   const [error, setError] = useState('');
   const [showFullPreview, setShowFullPreview] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  const [showCrop, setShowCrop] = useState(false);
-  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
-  const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [cropSize, setCropSize] = useState(250); // Bigger default crop size
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, size: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cropContainerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
 
   // Fetch current user data
   const { 
@@ -135,8 +125,6 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
       
       setSelectedFile(null);
       setPreviewUrl(null);
-      setShowCrop(false);
-      setCropImageUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -186,144 +174,12 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
 
     setError('');
     setSelectedFile(file);
-    setCropSize(250); // Reset crop size when new image is selected
     
     const reader = new FileReader();
     reader.onloadend = () => {
-      const imageUrl = reader.result as string;
-      setPreviewUrl(imageUrl);
-      setCropImageUrl(imageUrl);
-      setShowCrop(true);
+      setPreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleCropImage = () => {
-    if (!cropImageUrl || !imageRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = imageRef.current;
-    const containerRect = cropContainerRef.current?.getBoundingClientRect();
-    if (!containerRect) return;
-
-    const cropSizePx = cropSize;
-    const imageNaturalWidth = img.naturalWidth;
-    const imageNaturalHeight = img.naturalHeight;
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-
-    // Calculate crop coordinates
-    const cropX = (cropPosition.x / containerWidth) * imageNaturalWidth;
-    const cropY = (cropPosition.y / containerHeight) * imageNaturalHeight;
-    const cropWidth = (cropSizePx / containerWidth) * imageNaturalWidth;
-    const cropHeight = (cropSizePx / containerHeight) * imageNaturalHeight;
-
-    // Set canvas size to crop size
-    canvas.width = cropSizePx;
-    canvas.height = cropSizePx;
-
-    // Draw cropped image
-    ctx.drawImage(
-      img,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      cropSizePx,
-      cropSizePx
-    );
-
-    // Convert to blob and create file
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const croppedFile = new File([blob], selectedFile?.name || 'cropped-image.jpg', {
-          type: 'image/jpeg',
-        });
-        setSelectedFile(croppedFile);
-        const croppedUrl = URL.createObjectURL(blob);
-        setPreviewUrl(croppedUrl);
-        setShowCrop(false);
-        setCropImageUrl(null);
-        toast.success('Image cropped successfully!', {
-          duration: 2000,
-          icon: '✂️',
-          style: {
-            background: '#1a1a2e',
-            border: '1px solid #22c55e',
-            color: '#ffffff',
-          },
-        });
-      }
-    }, 'image/jpeg', 0.95);
-  };
-
-  const handleCancelCrop = () => {
-    setShowCrop(false);
-    setCropImageUrl(null);
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - cropPosition.x, y: e.clientY - cropPosition.y });
-  };
-
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setIsResizing(true);
-    setResizeStart({ x: e.clientX, y: e.clientY, size: cropSize });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cropContainerRef.current) return;
-    
-    const containerRect = cropContainerRef.current.getBoundingClientRect();
-    
-    // Handle dragging
-    if (isDragging) {
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
-      
-      const maxX = containerRect.width - cropSize;
-      const maxY = containerRect.height - cropSize;
-      
-      setCropPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY)),
-      });
-    }
-    
-    // Handle resizing
-    if (isResizing) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-      const delta = Math.max(deltaX, deltaY);
-      const newSize = Math.max(100, Math.min(400, resizeStart.size + delta));
-      
-      // Adjust position to keep crop box centered on the same area
-      const sizeDiff = newSize - cropSize;
-      setCropSize(newSize);
-      setCropPosition(prev => ({
-        x: Math.max(0, Math.min(containerRect.width - newSize, prev.x - sizeDiff / 2)),
-        y: Math.max(0, Math.min(containerRect.height - newSize, prev.y - sizeDiff / 2)),
-      }));
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(false);
   };
 
   const handleUpload = async () => {
@@ -350,15 +206,13 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
     setError('');
     setShowFullPreview(false);
     setPreviewImageUrl(null);
-    setShowCrop(false);
-    setCropImageUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleClickUpload = () => {
-    if (!showCrop) {
+    if (!uploadMutation.isPending) {
       fileInputRef.current?.click();
     }
   };
@@ -403,6 +257,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
 
   // Current profile image URL
   const currentProfileImage = user?.profile_image_url || null;
+  const hasImage = currentProfileImage !== null && currentProfileImage !== '';
 
   // Loading state
   if (isLoading) {
@@ -437,111 +292,6 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
     );
   }
 
-  // Crop UI
-  if (showCrop && cropImageUrl) {
-    return (
-      <div className="apip-overlay">
-        <div className="apip-modal-content">
-          <div className="apip-header">
-            <div className="apip-header-left">
-              <h3>Crop Image</h3>
-              <p className="apip-header-subtitle">Drag to move • Drag corner to resize</p>
-            </div>
-          </div>
-
-          <div className="apip-content-container">
-            <div className="apip-crop-container">
-              <div 
-                className="apip-crop-wrapper"
-                ref={cropContainerRef}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
-                <img 
-                  ref={imageRef}
-                  src={cropImageUrl} 
-                  alt="Crop preview" 
-                  className="apip-crop-image"
-                  draggable="false"
-                  onLoad={() => {
-                    if (cropContainerRef.current && imageRef.current) {
-                      const containerRect = cropContainerRef.current.getBoundingClientRect();
-                      // Center the crop area
-                      const centeredX = (containerRect.width - cropSize) / 2;
-                      const centeredY = (containerRect.height - cropSize) / 2;
-                      setCropPosition({
-                        x: Math.max(0, centeredX),
-                        y: Math.max(0, centeredY),
-                      });
-                    }
-                  }}
-                />
-                <div 
-                  className="apip-crop-box"
-                  style={{
-                    left: cropPosition.x,
-                    top: cropPosition.y,
-                    width: cropSize,
-                    height: cropSize,
-                  }}
-                >
-                  <div 
-                    className="apip-crop-drag-area"
-                    onMouseDown={handleMouseDown}
-                  />
-                  <div className="apip-crop-grid">
-                    <div className="apip-crop-grid-line apip-crop-grid-horizontal" style={{ top: '33.33%' }}></div>
-                    <div className="apip-crop-grid-line apip-crop-grid-horizontal" style={{ top: '66.66%' }}></div>
-                    <div className="apip-crop-grid-line apip-crop-grid-vertical" style={{ left: '33.33%' }}></div>
-                    <div className="apip-crop-grid-line apip-crop-grid-vertical" style={{ left: '66.66%' }}></div>
-                  </div>
-                  <div 
-                    className="apip-crop-resize-handle"
-                    onMouseDown={handleResizeStart}
-                  />
-                </div>
-              </div>
-
-              <div className="apip-crop-controls">
-                <div className="apip-crop-size-control">
-                  <span className="apip-crop-size-label">Crop Size: {cropSize}px</span>
-                  <input
-                    type="range"
-                    min="100"
-                    max="400"
-                    value={cropSize}
-                    onChange={(e) => {
-                      const newSize = parseInt(e.target.value);
-                      setCropSize(newSize);
-                      if (cropContainerRef.current) {
-                        const containerRect = cropContainerRef.current.getBoundingClientRect();
-                        setCropPosition(prev => ({
-                          x: Math.max(0, Math.min(containerRect.width - newSize, prev.x)),
-                          y: Math.max(0, Math.min(containerRect.height - newSize, prev.y)),
-                        }));
-                      }
-                    }}
-                    className="apip-crop-slider"
-                  />
-                </div>
-              </div>
-
-              <div className="apip-crop-actions">
-                <button className="apip-crop-cancel-btn" onClick={handleCancelCrop}>
-                  <FiX /> Cancel
-                </button>
-                <button className="apip-crop-confirm-btn" onClick={handleCropImage}>
-                  <FiCheck /> Apply Crop
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="apip-overlay">
       <div className="apip-modal-content">
@@ -553,13 +303,15 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
         </div>
 
         <div className="apip-content-container">
+          {/* Friendly Message - Creative prompt */}
           <div className="apip-friendly-message">
             <div className="apip-message-icon">✨</div>
             <div className="apip-message-text">
               <p className="apip-message-title">Make your profile stand out!</p>
               <p className="apip-message-description">
-                A profile picture helps others connect with you better. 
-                Choose a photo that shows your personality — it makes the experience more personal and fun!
+                {hasImage 
+                  ? 'Tap the avatar below to update your profile picture and make it even more you!' 
+                  : 'A profile picture helps others connect with you better. Choose a photo that shows your personality — it makes the experience more personal and fun!'}
               </p>
             </div>
           </div>
@@ -569,7 +321,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
               <div 
                 className="apip-avatar-circle"
                 onClick={handleClickUpload}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: uploadMutation.isPending ? 'default' : 'pointer' }}
               >
                 {previewUrl ? (
                   <img 
@@ -591,12 +343,20 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
                 
                 <div className="apip-avatar-overlay">
                   <FiCamera className="apip-camera-icon" />
-                  <span className="apip-overlay-text">Change Photo</span>
+                  <span className="apip-overlay-text">
+                    {hasImage ? 'Change Photo' : 'Add Photo'}
+                  </span>
                 </div>
               </div>
 
+              {/* Avatar Label */}
+              <div className="apip-avatar-label">
+                <span className="apip-avatar-name">{user?.full_name || 'User'}</span>
+                <span className="apip-avatar-hint">Click to upload</span>
+              </div>
+
               <div className="apip-preview-buttons">
-                {currentProfileImage && !previewUrl && (
+                {currentProfileImage && !previewUrl && !uploadMutation.isPending && (
                   <button 
                     className="apip-preview-btn"
                     onClick={handlePreviewCurrentImage}
@@ -619,7 +379,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
               {uploadMutation.isPending && (
                 <div className="apip-uploading">
                   <span className="apip-spinner"></span>
-                  <span>Uploading...</span>
+                  <span>Uploading your new photo...</span>
                 </div>
               )}
             </div>
@@ -636,8 +396,14 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
             {selectedFile && !uploadMutation.isPending && (
               <div className="apip-file-info">
                 <div className="apip-file-details">
-                  <FiUpload className="apip-file-icon" />
-                  <div>
+                  <div className="apip-file-thumbnail">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="apip-file-thumb-img" />
+                    ) : (
+                      <FiCamera className="apip-file-icon" />
+                    )}
+                  </div>
+                  <div className="apip-file-meta">
                     <p className="apip-file-name">{selectedFile.name}</p>
                     <p className="apip-file-size">
                       {(selectedFile.size / 1024).toFixed(1)} KB
@@ -649,7 +415,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
                   onClick={handleRemove}
                   disabled={uploadMutation.isPending}
                 >
-                  <FiXCircle />
+                  <FiX />
                 </button>
               </div>
             )}
@@ -700,6 +466,15 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Supported formats hint */}
+          <div className="apip-supported-formats">
+            <span className="apip-format-label">Supported formats:</span>
+            <span className="apip-format-tag">JPEG</span>
+            <span className="apip-format-tag">PNG</span>
+            <span className="apip-format-tag">GIF</span>
+            <span className="apip-format-tag">WEBP</span>
           </div>
         </div>
 
