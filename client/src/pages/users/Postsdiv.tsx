@@ -17,15 +17,21 @@ interface Post {
   profile_image_url: string | null;
   profile_image_public_id: string | null;
   profile: {
+    bio: string | null;      // This is the user's bio
     city: string;
     county: string;
     country: string;
-  };
+    age: number | null;
+    date_of_birth: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
   preference: {
     interested_in_gender: string;
     minimum_age: number;
     maximum_age: number;
   };
+  location_score?: number;
 }
 
 // Extended interface for display purposes
@@ -34,8 +40,8 @@ interface DisplayPost extends Post {
   lastName: string;
   time: string;
   location: string;
-  image: string;
-  caption: string;
+  image: string | null;
+  bio: string; // This is the user's bio from profile
 }
 
 // Simple in-memory cache
@@ -75,10 +81,14 @@ const fetchFeed = async (accessToken: string | null, forceRefresh = false): Prom
     throw new Error(`Failed to fetch feed: ${response.status}`);
   }
 
-  const data = await response.json();
+  const result = await response.json();
+  console.log('📊 Full API Response: postdiv', result);
+  
+  // Handle both paginated and non-paginated responses
+  const users = result.data || result;
   
   // Transform the API data to match the expected Postcard props
-  const transformedPosts: DisplayPost[] = data.map((user: Post) => {
+  const transformedPosts: DisplayPost[] = users.map((user: Post) => {
     // Extract first and last name from full_name
     const nameParts = user.full_name?.split(' ') || ['User', ''];
     const firstName = nameParts[0] || 'User';
@@ -89,20 +99,17 @@ const fetchFeed = async (accessToken: string | null, forceRefresh = false): Prom
       .filter(Boolean)
       .join(', ') || 'Unknown Location';
     
-    // Generate a caption based on user data
-    const captions = [
-      `Enjoying my day in ${user.profile?.city || 'the city'}! 🌟`,
-      `Life is beautiful! 🌸 #${user.profile?.country || 'vibes'}`,
-      `Having a great time exploring ${user.profile?.city || 'new places'}! 🗺️`,
-      `Feeling grateful today! 🙏 #${user.profile?.county || 'blessed'}`,
-      `Making memories in ${user.profile?.city || 'wonderful places'}! ✨`,
-    ];
-    const randomCaption = captions[Math.floor(Math.random() * captions.length)];
+    // ✅ CRITICAL FIX: Get the bio from the profile
+    // The bio is in user.profile.bio
+    const bio = user.profile?.bio || 'No bio available';
+    
+    console.log(`📝 User: ${firstName}, Bio: "${bio}"`);
+    console.log(`🔍 Full profile data:`, user.profile);
     
     // Use the profile image URL from the API
     const imageUrl = user.profile_image_url || null;
     
-    // Generate a random time string
+    // Generate a time string (you can replace with actual timestamp from API if available)
     const timeOptions = ['2 hours ago', '3 hours ago', '5 hours ago', '7 hours ago', '12 hours ago', '1 day ago', '2 days ago'];
     const randomTime = timeOptions[Math.floor(Math.random() * timeOptions.length)];
     
@@ -113,7 +120,7 @@ const fetchFeed = async (accessToken: string | null, forceRefresh = false): Prom
       time: randomTime,
       location,
       image: imageUrl,
-      caption: randomCaption,
+      bio: bio, // ✅ This is the bio from the profile
     };
   });
 
@@ -148,33 +155,30 @@ function Postsdiv() {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 1,
-    // Don't show loading on refetch
     placeholderData: (previousData) => previousData,
   });
 
   // Update posts when data changes
   useEffect(() => {
     if (data) {
+      console.log('📦 Setting posts with data:', data);
       setPosts(data);
       isFirstLoad.current = false;
     }
   }, [data]);
 
-  // Background refresh every 30 seconds (only if not fetching)
+  // Background refresh every 30 seconds
   useEffect(() => {
     if (!accessToken) return;
 
-    // Clear existing interval
     if (intervalRef.current !== null) {
       window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
-    // Set up background refresh interval
     intervalRef.current = window.setInterval(() => {
       if (!isFetching && !isRefetching) {
         console.log('🔄 Background refresh triggered');
-        // Force refresh with cache bypass
         fetchFeed(accessToken, true)
           .then((freshData) => {
             setPosts(freshData);
@@ -184,9 +188,8 @@ function Postsdiv() {
             console.warn('⚠️ Background refresh failed:', err);
           });
       }
-    }, 30000); // 30 seconds
+    }, 30000);
 
-    // Cleanup interval on unmount
     return () => {
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
@@ -277,7 +280,6 @@ function Postsdiv() {
 
   return (
     <div className="overall-posts-container">
-      {/* Show refresh indicator when fetching - subtle and small */}
       {isFetching && posts.length > 0 && (
         <div className="feed-refreshing-indicator">
           <span className="feed-refreshing-dot"></span>
@@ -288,7 +290,14 @@ function Postsdiv() {
       {posts.map((post) => (
         <Postcard 
           key={post.id} 
-          {...post}
+          id={post.id}
+          firstName={post.firstName}
+          lastName={post.lastName}
+          time={post.time}
+          location={post.location}
+          image={post.image}
+          bio={post.bio}  // ✅ Pass the bio directly
+          profile_image_url={post.profile_image_url}
           preference={post.preference}
           gender={post.gender}
           email={post.email}
@@ -299,4 +308,4 @@ function Postsdiv() {
   );
 }
 
-export default Postsdiv
+export default Postsdiv;

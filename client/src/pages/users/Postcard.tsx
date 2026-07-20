@@ -12,7 +12,7 @@ interface PostcardProps {
   time: string;
   location: string;
   image: string | null;
-  caption: string;
+  bio: string; // ✅ This is the user's bio
   profile_image_url?: string | null;
   preference?: {
     interested_in_gender: string;
@@ -53,7 +53,7 @@ function Postcard({
   time, 
   location, 
   image, 
-  caption, 
+  bio, // ✅ This is the user's bio
   profile_image_url,
   preference,
   gender,
@@ -61,10 +61,20 @@ function Postcard({
   const [showFullImage, setShowFullImage] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(false);
   const { access: accessToken } = useAuthStore();
 
   const fullName = `${firstName} ${lastName}`;
   const avatarUrl = profile_image_url || null;
+
+  // Check if bio is too long and needs truncation
+  const BIO_MAX_LENGTH = 120;
+  const needsTruncation = bio && bio.length > BIO_MAX_LENGTH;
+  const displayBio = needsTruncation && !bioExpanded 
+    ? bio.slice(0, BIO_MAX_LENGTH) + '...' 
+    : bio;
+
+  console.log(`🖼️ Rendering Postcard for ${fullName}, Bio: "${bio}"`);
 
   // Mutation for sending connection request
   const connectionMutation = useMutation({
@@ -132,6 +142,10 @@ function Postcard({
 
   const handleImageLoad = () => {
     setImageLoaded(true);
+  };
+
+  const toggleBio = () => {
+    setBioExpanded(!bioExpanded);
   };
 
   // Get gender display
@@ -206,7 +220,7 @@ function Postcard({
               </div>
               <img 
                 src={image} 
-                alt={caption} 
+                alt={bio || `${fullName}'s profile`} 
                 className={`post-image-content ${imageLoaded ? 'loaded' : ''}`}
                 loading="lazy"
                 onLoad={handleImageLoad}
@@ -237,12 +251,17 @@ function Postcard({
           )}
         </div>
 
-        {/* Post Caption */}
+        {/* ✅ POST BIO - This displays the user's bio below the image */}
         <div className="post-caption">
-          <strong>{fullName}</strong> {caption}
+          <span className="caption-text">{displayBio || 'No bio available'}</span>
+          {needsTruncation && (
+            <button className="caption-expand-btn" onClick={toggleBio}>
+              {bioExpanded ? ' Show less' : ' Show more'}
+            </button>
+          )}
         </div>
 
-        {/* See More Button */}
+        {/* See More Button - Shows additional details */}
         <div className="post-see-more">
           <button className="see-more-btn" onClick={toggleShowMore}>
             {showMore ? (
@@ -251,7 +270,7 @@ function Postcard({
               </>
             ) : (
               <>
-                <FaChevronDown /> See more
+                <FaChevronDown /> See more details
               </>
             )}
           </button>
@@ -324,7 +343,7 @@ function Postcard({
           <div className="full-image-container">
             <img 
               src={image} 
-              alt={caption} 
+              alt={bio || `${fullName}'s profile`} 
               className="full-image-content"
               loading="eager"
             />
@@ -332,7 +351,7 @@ function Postcard({
               ✕
             </button>
             <div className="full-image-caption">
-              <strong>{fullName}</strong> {caption}
+              <strong>{fullName}</strong> {bio || 'No bio available'}
             </div>
           </div>
         </div>
@@ -341,4 +360,4 @@ function Postcard({
   )
 }
 
-export default Postcard
+export default Postcard;
