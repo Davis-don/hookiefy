@@ -436,7 +436,7 @@
   margin-right: 6px;
 }
 
-/* Responsive - Consistent across all screens */
+/* Responsive - Small Screens (Mobile) - 3/4 of device height */
 @media (max-width: 768px) {
   .overall-post-card-container {
     border-radius: 0;
@@ -452,6 +452,11 @@
     aspect-ratio: 1 / 1;
     margin: 0 -20px 12px -20px;
     border-radius: 0;
+    /* Make it take 75% of device height */
+    height: 75vh;
+    min-height: 75vh;
+    max-height: 75vh;
+    width: 100%;
   }
 
   .post-image-content {
@@ -465,6 +470,10 @@
     aspect-ratio: 1 / 1;
     margin: 0 -20px 12px -20px;
     border-radius: 0;
+    height: 75vh;
+    min-height: 75vh;
+    max-height: 75vh;
+    width: 100%;
   }
 
   .post-image-icon {
@@ -542,20 +551,50 @@
   }
 }
 
-/* Extra Small Screens */
+/* Extra Small Screens - Increase height even more */
 @media (max-width: 480px) {
+  .post-image-wrapper {
+    height: 80vh;
+    min-height: 80vh;
+    max-height: 80vh;
+  }
+
+  .post-image-fallback {
+    height: 80vh;
+    min-height: 80vh;
+    max-height: 80vh;
+  }
+
   .post-image-icon {
     font-size: 80px;
   }
 }
 
-/* Tablet and Large Screens - Same aspect ratio */
+/* Very Small Screens */
+@media (max-width: 380px) {
+  .post-image-wrapper {
+    height: 85vh;
+    min-height: 85vh;
+    max-height: 85vh;
+  }
+
+  .post-image-fallback {
+    height: 85vh;
+    min-height: 85vh;
+    max-height: 85vh;
+  }
+}
+
+/* Tablet and Large Screens - Normal size */
 @media (min-width: 769px) {
   .post-image-wrapper {
     aspect-ratio: 1 / 1;
     /* SAME square aspect ratio as mobile */
     border-radius: 8px;
     margin: 0 4px 12px 4px;
+    height: auto;
+    min-height: auto;
+    max-height: none;
   }
 
   .post-image-content {
@@ -567,6 +606,9 @@
   .post-image-fallback {
     border-radius: 8px;
     aspect-ratio: 1 / 1;
+    height: auto;
+    min-height: auto;
+    max-height: none;
   }
 
   .overall-post-card-container {
@@ -588,6 +630,9 @@
     /* SAME square aspect ratio across ALL screens */
     border-radius: 12px;
     margin: 0 8px 12px 8px;
+    height: auto;
+    min-height: auto;
+    max-height: none;
   }
 
   .post-image-content {
@@ -599,6 +644,9 @@
   .post-image-fallback {
     border-radius: 12px;
     aspect-ratio: 1 / 1;
+    height: auto;
+    min-height: auto;
+    max-height: none;
   }
 
   .overall-post-card-container {
