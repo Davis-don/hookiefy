@@ -89,6 +89,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
   const [error, setError] = useState('');
   const [showFullPreview, setShowFullPreview] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [showFileActions, setShowFileActions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch current user data
@@ -125,6 +126,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
       
       setSelectedFile(null);
       setPreviewUrl(null);
+      setShowFileActions(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -174,6 +176,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
 
     setError('');
     setSelectedFile(file);
+    setShowFileActions(true);
     
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -206,6 +209,7 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
     setError('');
     setShowFullPreview(false);
     setPreviewImageUrl(null);
+    setShowFileActions(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -355,8 +359,9 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
                 <span className="apip-avatar-hint">Click to upload</span>
               </div>
 
+              {/* PREVIEW BUTTONS - Now visible! */}
               <div className="apip-preview-buttons">
-                {currentProfileImage && !previewUrl && !uploadMutation.isPending && (
+                {currentProfileImage && !uploadMutation.isPending && (
                   <button 
                     className="apip-preview-btn"
                     onClick={handlePreviewCurrentImage}
@@ -376,6 +381,28 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
                 )}
               </div>
 
+              {/* Show file actions when file is selected */}
+              {showFileActions && selectedFile && !uploadMutation.isPending && (
+                <div className="apip-file-actions">
+                  <button 
+                    className="apip-upload-btn"
+                    onClick={handleUpload}
+                    disabled={uploadMutation.isPending}
+                  >
+                    <FiUpload className="apip-btn-icon" />
+                    Upload Photo
+                  </button>
+                  <button 
+                    className="apip-cancel-btn"
+                    onClick={handleRemove}
+                    disabled={uploadMutation.isPending}
+                  >
+                    <FiXCircle className="apip-btn-icon" />
+                    Cancel
+                  </button>
+                </div>
+              )}
+
               {uploadMutation.isPending && (
                 <div className="apip-uploading">
                   <span className="apip-spinner"></span>
@@ -393,67 +420,10 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
               disabled={uploadMutation.isPending}
             />
 
-            {selectedFile && !uploadMutation.isPending && (
-              <div className="apip-file-info">
-                <div className="apip-file-details">
-                  <div className="apip-file-thumbnail">
-                    {previewUrl ? (
-                      <img src={previewUrl} alt="Preview" className="apip-file-thumb-img" />
-                    ) : (
-                      <FiCamera className="apip-file-icon" />
-                    )}
-                  </div>
-                  <div className="apip-file-meta">
-                    <p className="apip-file-name">{selectedFile.name}</p>
-                    <p className="apip-file-size">
-                      {(selectedFile.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  className="apip-remove-file-btn"
-                  onClick={handleRemove}
-                  disabled={uploadMutation.isPending}
-                >
-                  <FiX />
-                </button>
-              </div>
-            )}
-
             {error && (
               <div className="apip-error-message">
                 <span className="apip-error-icon">❌</span>
                 {error}
-              </div>
-            )}
-
-            {selectedFile && !uploadMutation.isPending && (
-              <div className="apip-action-buttons">
-                <button 
-                  className="apip-upload-btn"
-                  onClick={handleUpload}
-                  disabled={uploadMutation.isPending}
-                >
-                  {uploadMutation.isPending ? (
-                    <>
-                      <span className="apip-spinner-small"></span>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <FiUpload className="apip-btn-icon" />
-                      Upload Photo
-                    </>
-                  )}
-                </button>
-                <button 
-                  className="apip-cancel-btn"
-                  onClick={handleRemove}
-                  disabled={uploadMutation.isPending}
-                >
-                  <FiXCircle className="apip-btn-icon" />
-                  Remove
-                </button>
               </div>
             )}
 
@@ -468,14 +438,16 @@ function Addprofileimguserpop({ onComplete }: AddprofileimguserpopProps) {
             )}
           </div>
 
-          {/* Supported formats hint */}
-          <div className="apip-supported-formats">
-            <span className="apip-format-label">Supported formats:</span>
-            <span className="apip-format-tag">JPEG</span>
-            <span className="apip-format-tag">PNG</span>
-            <span className="apip-format-tag">GIF</span>
-            <span className="apip-format-tag">WEBP</span>
-          </div>
+          {/* Supported formats hint - Only show when no file is selected */}
+          {!selectedFile && (
+            <div className="apip-supported-formats">
+              <span className="apip-format-label">Supported formats:</span>
+              <span className="apip-format-tag">JPEG</span>
+              <span className="apip-format-tag">PNG</span>
+              <span className="apip-format-tag">GIF</span>
+              <span className="apip-format-tag">WEBP</span>
+            </div>
+          )}
         </div>
 
         {showFullPreview && previewImageUrl && (
