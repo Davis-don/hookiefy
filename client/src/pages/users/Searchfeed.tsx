@@ -54,7 +54,7 @@ const fetchSearchFeed = async (accessToken: string | null, forceRefresh = false)
 
   console.log('🌐 Fetching fresh search feed data');
   
-  const response = await fetch('http://localhost:8000/feed/info/', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/feed/info/`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
