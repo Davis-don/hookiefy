@@ -48,4 +48,6 @@ urlpatterns = [
     path("balance/", include("UserBalance.urls")),
     # Stats APIs
     path("stats/", include("stats.urls")),
+    # Commissions APIs
+    path("commissions/", include("commisions.urls")),
 ]

@@ -1,3 +1,4 @@
+# account/views.py
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -15,7 +16,8 @@ from .serializers import MyTokenObtainPairSerializer, CreateNewUserSerializer
 from assignments.models import ClientAssignment
 from userprofile.models import UserProfile
 from userpreference.models import Preference
-from UserBalance.models import UserBalance  # Import the UserBalance model
+from UserBalance.models import UserBalance
+from commisions.models import Commission  # Import the Commission model
 from .controllers.cloudinary_utils import (
     upload_image_to_cloudinary, 
     delete_image_from_cloudinary, 
@@ -57,6 +59,41 @@ def create_user_balance(user):
         raise
 
 
+# ============================================
+# HELPER: Create commission for admin
+# ============================================
+
+def create_admin_commission(user):
+    """
+    Create a Commission record for a newly created admin.
+    Commission percentage is set to default 20%.
+    Only for admin and superadmin roles.
+    """
+    # Only create commission for admin and superadmin
+    if user.role not in ['admin', 'superadmin']:
+        print(f"ℹ️ Commission not created for {user.role}: {user.email}")
+        return None
+    
+    try:
+        # Check if commission already exists
+        commission, created = Commission.objects.get_or_create(
+            admin=user,
+            defaults={
+                'percentage': 20.00  # Default 20% commission for admin
+            }
+        )
+        
+        if created:
+            print(f"💰 Commission created for {user.role}: {user.email} (ID: {user.id}) with 20% default")
+        else:
+            print(f"ℹ️ Commission already exists for {user.role}: {user.email}")
+        
+        return commission
+    except Exception as e:
+        print(f"❌ Error creating commission for user {user.email}: {str(e)}")
+        raise
+
+
 def get_user_balance(user):
     """
     Get balance info for a user.
@@ -76,6 +113,27 @@ def get_user_balance(user):
             'currency': balance.currency,
         }
     except UserBalance.DoesNotExist:
+        return None
+
+
+def get_user_commission(user):
+    """
+    Get commission info for a user.
+    Returns None for regular users (role 'user').
+    """
+    # Regular users don't have commissions
+    if user.role == 'user':
+        return None
+    
+    try:
+        commission = Commission.objects.get(admin=user)
+        return {
+            'percentage': float(commission.percentage),
+            'platform_percentage': float(commission.platform_percentage),
+            'created_at': commission.created_at,
+            'updated_at': commission.updated_at,
+        }
+    except Commission.DoesNotExist:
         return None
 
 
@@ -130,6 +188,9 @@ def login_view(request):
 
         # Get balance info - only for admin and superadmin
         balance_info = get_user_balance(user)
+        
+        # Get commission info - only for admin and superadmin
+        commission_info = get_user_commission(user)
 
         return Response({
             "message": "Login successful",
@@ -146,6 +207,7 @@ def login_view(request):
                 "has_profile_image": user.has_profile_image,
                 "assignment": assignment_info if user.role == 'user' else None,
                 "balance": balance_info,
+                "commission": commission_info,
             }
         }, status=status.HTTP_200_OK)
 
@@ -230,6 +292,9 @@ def auth_check(request):
     # Get balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
     
+    # Get commission info - only for admin and superadmin
+    commission_info = get_user_commission(user)
+    
     return Response({
         "authenticated": True,
         "user": {
@@ -243,6 +308,7 @@ def auth_check(request):
             "has_profile_image": user.has_profile_image,
             "assignment": assignment_info if user.role == 'user' else None,
             "balance": balance_info,
+            "commission": commission_info,
         }
     })
 
@@ -275,6 +341,9 @@ def get_current_logged_in_user(request):
     # Get balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
     
+    # Get commission info - only for admin and superadmin
+    commission_info = get_user_commission(user)
+    
     return Response({
         "id": user.id,
         "email": user.email,
@@ -289,6 +358,7 @@ def get_current_logged_in_user(request):
         "has_profile_image": bool(user.profile_image_url),
         "assignment": assignment_info if user.role == 'user' else None,
         "balance": balance_info,
+        "commission": commission_info,
     })
 
 
@@ -317,11 +387,12 @@ def has_profile_image(request):
 @transaction.atomic
 def create_new_user(request):
     """
-    Create a new user with assignment and balance
+    Create a new user with assignment, balance, and commission
     - Superadmin can create admin and user accounts
     - Admin can only create user accounts (assigned to them)
     - Only one superadmin can exist
     - Balance is automatically created for admin and superadmin only
+    - Commission is automatically created for admin and superadmin only (default 20%)
     """
     target_role = request.data.get("role", "user")
     current_user = request.user
@@ -350,6 +421,9 @@ def create_new_user(request):
             # Create balance for the superadmin
             create_user_balance(user)
             
+            # Create commission for the superadmin
+            create_admin_commission(user)
+            
             return Response(
                 {
                     "message": "Superadmin created successfully",
@@ -376,6 +450,9 @@ def create_new_user(request):
             # Create balance for the admin
             create_user_balance(user)
             
+            # Create commission for the admin (default 20%)
+            create_admin_commission(user)
+            
             return Response(
                 {
                     "message": "Admin created successfully",
@@ -401,6 +478,9 @@ def create_new_user(request):
             
             # DO NOT create balance for regular users
             # Only admin and superadmin have balances
+            
+            # DO NOT create commission for regular users
+            # Only admin and superadmin have commissions
             
             # Assign the user to the current admin/superadmin
             try:
@@ -465,6 +545,9 @@ def update_user_details(request):
 
     # Get updated balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
+    
+    # Get updated commission info - only for admin and superadmin
+    commission_info = get_user_commission(user)
 
     return Response({
         "message": "User updated successfully",
@@ -480,6 +563,7 @@ def update_user_details(request):
             "profile_image_url": user.profile_image_url,
             "has_profile_image": user.has_profile_image,
             "balance": balance_info,
+            "commission": commission_info,
         }
     })
 
@@ -520,6 +604,7 @@ def delete_user_completely(user, reassign_admin=None):
     - Profile
     - Preferences
     - Balance (only for admin/superadmin)
+    - Commission (only for admin/superadmin)
     - Assignments
     - Account
     
@@ -597,10 +682,21 @@ def delete_user_completely(user, reassign_admin=None):
                 print("ℹ️ No balance found")
             except Exception as e:
                 print(f"⚠️ Error deleting balance: {str(e)}")
+            
+            # --- 5. DELETE COMMISSION (only for admin and superadmin) ---
+            print("\n📊 Deleting user commission...")
+            try:
+                commission = Commission.objects.get(admin=user)
+                commission.delete()
+                print("✅ Commission deleted successfully")
+            except Commission.DoesNotExist:
+                print("ℹ️ No commission found")
+            except Exception as e:
+                print(f"⚠️ Error deleting commission: {str(e)}")
         else:
-            print("\nℹ️ No balance to delete for regular user")
+            print("\nℹ️ No balance/commission to delete for regular user")
         
-        # --- 5. HANDLE ASSIGNMENTS ---
+        # --- 6. HANDLE ASSIGNMENTS ---
         print("\n📋 Handling assignments...")
         if user.role == 'admin' and reassign_admin:
             # Reassign clients from this admin to the new admin
@@ -617,7 +713,7 @@ def delete_user_completely(user, reassign_admin=None):
             except ClientAssignment.DoesNotExist:
                 print("ℹ️ No assignment found")
         
-        # --- 6. DELETE THE ACCOUNT ---
+        # --- 7. DELETE THE ACCOUNT ---
         print("\n🗑️ Deleting user account...")
         user.delete()
         deleted = True
@@ -693,6 +789,20 @@ def manage_user_by_id(request, id):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
+        # Get commission info - only for admin and superadmin
+        commission_info = None
+        if user.role in ['admin', 'superadmin']:
+            try:
+                commission = Commission.objects.get(admin=user)
+                commission_info = {
+                    'percentage': float(commission.percentage),
+                    'platform_percentage': float(commission.platform_percentage),
+                    'created_at': commission.created_at,
+                    'updated_at': commission.updated_at,
+                }
+            except Commission.DoesNotExist:
+                commission_info = None
+        
         return Response({
             "id": user.id,
             "email": user.email,
@@ -712,6 +822,7 @@ def manage_user_by_id(request, id):
             "last_login": user.last_login,
             "assignment": assignment_info if user.role == 'user' else None,
             "balance": balance_info,
+            "commission": commission_info,
         })
 
     # PUT - Update user
@@ -757,7 +868,7 @@ def manage_user_by_id(request, id):
         # Handle role changes
         if role and role in ['user', 'admin']:
             if user.role != role:
-                # If user is being changed from admin to user or vice versa
+                # If user is being changed from admin to user
                 if user.role == 'admin' and role == 'user':
                     # Reassign all clients of this admin to superadmin
                     superadmin = Accounts.objects.get(role='superadmin')
@@ -769,6 +880,22 @@ def manage_user_by_id(request, id):
                         print(f"💰 Balance deleted for {user.email} (changed to user)")
                     except UserBalance.DoesNotExist:
                         pass
+                    # Delete the admin's commission
+                    try:
+                        commission = Commission.objects.get(admin=user)
+                        commission.delete()
+                        print(f"📊 Commission deleted for {user.email} (changed to user)")
+                    except Commission.DoesNotExist:
+                        pass
+                
+                # If user is being changed from user to admin
+                if user.role == 'user' and role == 'admin':
+                    # Create balance for the new admin
+                    create_user_balance(user)
+                    # Create commission for the new admin (default 20%)
+                    create_admin_commission(user)
+                    # Remove assignment
+                    ClientAssignment.objects.filter(user=user).delete()
                 
                 user.role = role
                 
@@ -780,11 +907,6 @@ def manage_user_by_id(request, id):
                         user=user,
                         defaults={'assigned_admin': superadmin}
                     )
-                else:
-                    # Remove assignment if becoming admin
-                    ClientAssignment.objects.filter(user=user).delete()
-                    # Create balance for new admin
-                    create_user_balance(user)
         
         if is_active is not None:
             user.is_active = is_active
@@ -831,6 +953,20 @@ def manage_user_by_id(request, id):
                 }
             except UserBalance.DoesNotExist:
                 balance_info = None
+        
+        # Get commission info - only for admin and superadmin
+        commission_info = None
+        if user.role in ['admin', 'superadmin']:
+            try:
+                commission = Commission.objects.get(admin=user)
+                commission_info = {
+                    'percentage': float(commission.percentage),
+                    'platform_percentage': float(commission.platform_percentage),
+                    'created_at': commission.created_at,
+                    'updated_at': commission.updated_at,
+                }
+            except Commission.DoesNotExist:
+                commission_info = None
 
         return Response({
             "message": "User updated successfully",
@@ -850,6 +986,7 @@ def manage_user_by_id(request, id):
                 "is_superuser": user.is_superuser,
                 "assignment": assignment_info if user.role == 'user' else None,
                 "balance": balance_info,
+                "commission": commission_info,
             }
         })
 
@@ -981,6 +1118,18 @@ def get_users_by_role_or_all(request, role=None):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
+        # Get commission info - only for admin and superadmin
+        commission_info = None
+        if u.role in ['admin', 'superadmin']:
+            try:
+                commission = Commission.objects.get(admin=u)
+                commission_info = {
+                    'percentage': float(commission.percentage),
+                    'platform_percentage': float(commission.platform_percentage),
+                }
+            except Commission.DoesNotExist:
+                commission_info = None
+        
         data.append({
             "id": u.id,
             "email": u.email,
@@ -1000,6 +1149,7 @@ def get_users_by_role_or_all(request, role=None):
             "last_login": u.last_login,
             "assignment": assignment_info if u.role == 'user' else None,
             "balance": balance_info,
+            "commission": commission_info,
         })
 
     return Response({
@@ -1084,6 +1234,18 @@ def get_all_users_paginated(request):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
+        # Get commission info - only for admin and superadmin
+        commission_info = None
+        if u.role in ['admin', 'superadmin']:
+            try:
+                commission = Commission.objects.get(admin=u)
+                commission_info = {
+                    'percentage': float(commission.percentage),
+                    'platform_percentage': float(commission.platform_percentage),
+                }
+            except Commission.DoesNotExist:
+                commission_info = None
+        
         data.append({
             "id": u.id,
             "email": u.email,
@@ -1103,6 +1265,7 @@ def get_all_users_paginated(request):
             "last_login": u.last_login,
             "assignment": assignment_info if u.role == 'user' else None,
             "balance": balance_info,
+            "commission": commission_info,
         })
 
     return Response({
@@ -1124,7 +1287,7 @@ def delete_current_user(request):
     """
     Delete the currently logged in user account
     Superadmin cannot be deleted
-    Also deletes Cloudinary images, profile, preferences, balance, and assignments
+    Also deletes Cloudinary images, profile, preferences, balance, commission, and assignments
     """
     user = request.user
     
