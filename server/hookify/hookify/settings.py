@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "paymentconfigurations",
     "UserBalance",
     "stats",
+    "commisions",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]

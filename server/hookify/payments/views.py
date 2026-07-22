@@ -1,4 +1,4 @@
-# payments/views.py
+# payments/views.py - Complete corrected version with proper imports
 from decimal import Decimal
 import uuid
 import logging
@@ -11,7 +11,7 @@ from rest_framework import status
 
 from django.utils import timezone
 from django.shortcuts import redirect
-from django.db import connection, close_old_connections
+from django.db import connection, close_old_connections, transaction
 from django.db.utils import OperationalError, InterfaceError
 
 from assignments.models import ClientAssignment
@@ -20,10 +20,16 @@ from paymentconfigurations.models import PaymentConfiguration
 from connections.models import Connection
 from payments.models import Payment
 from notification.models import Notification
+from account.models import Accounts
+
+# Fix: Import UserBalance from the correct app (UserBalance)
+from UserBalance.models import UserBalance
 
 from .services.register_ipn import register_ipn_url
 from .services.submit_order import submit_order
 from .services.get_transaction_status import get_transaction_status
+from .services.check_superadmin import SuperAdminValidator
+from .services.commission_service import CommissionService, CommissionDistributionError
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -169,6 +175,52 @@ def database_health_check(request):
 
 
 # =====================================================
+# CHECK SUPERADMIN STATUS ENDPOINT
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_superadmin_status(request):
+    """
+    Check the status of superadmin configuration.
+    Returns whether payment can be initiated.
+    """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        return Response(
+            {
+                "success": False,
+                "message": "Service temporarily unavailable. Please try again.",
+                "error_code": "DB_CONNECTION_ERROR"
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Get superadmin status using the service
+    status_data = SuperAdminValidator.get_superadmin_status()
+    
+    # Return user-friendly response
+    if status_data.get('can_initiate_payment'):
+        return Response(
+            {
+                "success": True,
+                "message": "Payment service is ready.",
+                "can_initiate": True
+            },
+            status=status.HTTP_200_OK
+        )
+    else:
+        return Response(
+            {
+                "success": False,
+                "message": "Payment service is currently unavailable. Please try again later.",
+                "can_initiate": False
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+# =====================================================
 # INITIATE PAYMENT
 # =====================================================
 
@@ -177,13 +229,14 @@ def database_health_check(request):
 def initiate_payment(request):
     """
     Initiate a payment for a connection.
+    Validates superadmin configuration before initiating payment.
     """
     # Ensure database connection is healthy
     if not ensure_db_connection():
         return Response(
             {
                 "success": False,
-                "message": "Database connection error. Please try again.",
+                "message": "Service temporarily unavailable. Please try again.",
                 "error_code": "DB_CONNECTION_ERROR"
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -198,7 +251,7 @@ def initiate_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "connection_id is required."
+                "message": "Invalid request. Missing required fields."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -207,7 +260,27 @@ def initiate_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "phone_number is required."
+                "message": "Invalid request. Missing required fields."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # ============================================================
+    # VALIDATE SUPERADMIN CONFIGURATION BEFORE PROCEEDING
+    # ============================================================
+    eligible, message, data = SuperAdminValidator.check_payment_eligibility()
+    
+    if not eligible:
+        # Log the detailed error for debugging
+        logger.error(f"❌ Payment blocked: {message}")
+        if data and data.get('count', 0) > 1:
+            logger.error(f"   Multiple superadmins found: {data.get('superadmins', [])}")
+        
+        # Return generic message to client
+        return Response(
+            {
+                "success": False,
+                "message": "Payment service is currently unavailable. Please try again later."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -220,10 +293,11 @@ def initiate_payment(request):
             connection_id=connection_id
         )
     except Connection.DoesNotExist:
+        logger.warning(f"Connection not found: {connection_id}")
         return Response(
             {
                 "success": False,
-                "message": "Connection not found."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_404_NOT_FOUND
         )
@@ -232,10 +306,11 @@ def initiate_payment(request):
     # Check ownership
     # ---------------------------------------------
     if connection.sender != user:
+        logger.warning(f"User {user.email} attempted to pay for connection they don't own")
         return Response(
             {
                 "success": False,
-                "message": "You cannot pay for this connection."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_403_FORBIDDEN
         )
@@ -250,7 +325,7 @@ def initiate_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "This connection is already paid."
+                "message": "Payment initiation failed. This connection has already been paid for."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -262,11 +337,13 @@ def initiate_payment(request):
         assignment = ClientAssignment.objects.get(
             user=user
         )
+        assigned_admin = assignment.assigned_admin
     except ClientAssignment.DoesNotExist:
+        logger.warning(f"No assignment found for user: {user.email}")
         return Response(
             {
                 "success": False,
-                "message": "You are not assigned to any admin."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -276,13 +353,15 @@ def initiate_payment(request):
     # ---------------------------------------------
     try:
         platform_config = PlatformConfig.objects.get(
-            owner=assignment.assigned_admin
+            owner=assigned_admin
         )
+        hookup_fee = Decimal(platform_config.hookup_fee)
     except PlatformConfig.DoesNotExist:
+        logger.warning(f"No platform config for admin: {assigned_admin.email}")
         return Response(
             {
                 "success": False,
-                "message": "Admin has not configured hookup fee."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -296,10 +375,11 @@ def initiate_payment(request):
             is_active=True
         )
     except PaymentConfiguration.DoesNotExist:
+        logger.error("Pesapal configuration missing")
         return Response(
             {
                 "success": False,
-                "message": "Pesapal configuration missing."
+                "message": "Payment initiation failed. Please try again later."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -316,7 +396,7 @@ def initiate_payment(request):
         user=user,
         connection=connection,
         merchant_reference=merchant_reference,
-        amount=Decimal(platform_config.hookup_fee),
+        amount=hookup_fee,
         phone_number=phone_number,
         status="pending"
     )
@@ -338,8 +418,7 @@ def initiate_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "Pesapal payment initialization failed.",
-                "error": str(e)
+                "message": "Payment initiation failed. Please try again."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -351,8 +430,7 @@ def initiate_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "Pesapal payment initialization failed.",
-                "error": pesapal_response
+                "message": "Payment initiation failed. Please try again."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -366,7 +444,7 @@ def initiate_payment(request):
     return Response(
         {
             "success": True,
-            "message": "Payment initialized.",
+            "message": "Payment initiated successfully.",
             "payment": {
                 "id": payment.id,
                 "merchant_reference": payment.merchant_reference,
@@ -388,6 +466,7 @@ def initiate_payment(request):
 def ipn_callback(request):
     """
     Handle PesaPal IPN (Instant Payment Notification) callbacks.
+    Now with commission distribution on successful payment.
     """
     # Ensure database connection is healthy
     if not ensure_db_connection():
@@ -395,7 +474,7 @@ def ipn_callback(request):
         return Response(
             {
                 "success": False,
-                "message": "Database connection error."
+                "message": "Service temporarily unavailable."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -418,10 +497,11 @@ def ipn_callback(request):
     )
 
     if not order_tracking_id:
+        logger.error("Missing order tracking id in IPN")
         return Response(
             {
                 "success": False,
-                "message": "Missing order tracking id."
+                "message": "Invalid IPN notification."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -445,6 +525,8 @@ def ipn_callback(request):
         payment_status = verification.get("payment_status_description")
         logger.info(f"Verified payment status: {payment_status}")
 
+        commission_result = None
+
         if payment_status == "Completed":
             # Update payment
             payment.status = "completed"
@@ -458,6 +540,19 @@ def ipn_callback(request):
 
             logger.info(f"✅ Payment {order_tracking_id} marked as completed")
             logger.info(f"✅ Connection {connection.connection_id} marked as completed")
+
+            # ============================================================
+            # DISTRIBUTE COMMISSION USING COMMISSION SERVICE
+            # ============================================================
+            try:
+                commission_result = CommissionService.distribute_commission_for_payment(payment)
+                logger.info(f"✅ Commission distributed successfully: {commission_result}")
+            except CommissionDistributionError as e:
+                logger.error(f"❌ Commission distribution failed: {str(e)}")
+                commission_result = {
+                    "success": False,
+                    "error": str(e)
+                }
 
             # ============================================================
             # CREATE NOTIFICATIONS FOR IPN
@@ -474,16 +569,40 @@ def ipn_callback(request):
             )
 
             # 2. Notification for the RECEIVER (admin)
+            admin_amount = commission_result.get('admin_amount', 0) if commission_result and commission_result.get('success') else 0
+            admin_message = (
+                f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"You have received KES {admin_amount:.2f} as your commission." 
+                if admin_amount > 0 
+                else f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"The connection is now ready for service."
+            )
+            
             Notification.objects.create(
                 user=connection.receiver,
                 connection=connection,
                 title="New Completed Connection! 🎉",
-                message=f"{connection.sender.full_name} has completed payment for their hookup. The connection is now ready for service.",
+                message=admin_message,
                 notification_type=Notification.NotificationType.CONNECTION_COMPLETED,
                 is_read=False,
             )
 
-            # 3. Mark pending notifications as read
+            # 3. Notification for Superadmin (if commission was distributed)
+            if commission_result and commission_result.get('success'):
+                superadmin_amount = commission_result.get('superadmin_amount', 0)
+                if superadmin_amount > 0:
+                    superadmin = Accounts.objects.filter(role='superadmin', is_active=True).first()
+                    if superadmin:
+                        Notification.objects.create(
+                            user=superadmin,
+                            connection=connection,
+                            title="💰 Platform Commission Received!",
+                            message=f"Platform received KES {superadmin_amount:.2f} from {connection.sender.full_name}'s payment.",
+                            notification_type=Notification.NotificationType.PAYMENT_SUCCESS,
+                            is_read=False,
+                        )
+
+            # 4. Mark pending notifications as read
             Notification.objects.filter(
                 connection=connection,
                 user=connection.sender,
@@ -526,7 +645,8 @@ def ipn_callback(request):
                 "success": True,
                 "message": "IPN processed.",
                 "payment_status": payment.status,
-                "connection_status": payment.connection.status
+                "connection_status": payment.connection.status,
+                "commission_distribution": commission_result if commission_result else None
             },
             status=status.HTTP_200_OK
         )
@@ -536,7 +656,7 @@ def ipn_callback(request):
         return Response(
             {
                 "success": False,
-                "message": f"IPN processing error: {str(e)}"
+                "message": "IPN processing failed."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -559,8 +679,7 @@ def register_ipn(request):
             return Response(
                 {
                     "success": False,
-                    "message": "Pesapal IPN registration failed.",
-                    "error": response
+                    "message": "IPN registration failed. Please try again."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -591,7 +710,7 @@ def register_ipn(request):
         return Response(
             {
                 "success": False,
-                "message": str(e)
+                "message": "IPN registration failed. Please try again."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -610,7 +729,7 @@ def payment_success(request):
     # Ensure database connection is healthy
     if not ensure_db_connection():
         logger.error("❌ Database connection error in payment success")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Database+connection+error"
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
         return redirect(error_url)
 
     # Get the tracking ID and merchant reference from the URL
@@ -624,7 +743,7 @@ def payment_success(request):
     logger.info("=" * 60)
 
     if not order_tracking_id:
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Missing+OrderTrackingId"
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
         return redirect(error_url)
 
     try:
@@ -638,6 +757,8 @@ def payment_success(request):
         payment_status = verification.get("payment_status_description")
 
         logger.info(f"Verified payment status: {payment_status}")
+
+        commission_result = None
 
         # Update payment status if needed
         if payment_status == "Completed" and payment.status != "completed":
@@ -655,6 +776,19 @@ def payment_success(request):
             logger.info(f"✅ Connection {connection.connection_id} marked as completed")
 
             # ============================================================
+            # DISTRIBUTE COMMISSION USING COMMISSION SERVICE
+            # ============================================================
+            try:
+                commission_result = CommissionService.distribute_commission_for_payment(payment)
+                logger.info(f"✅ Commission distributed successfully: {commission_result}")
+            except CommissionDistributionError as e:
+                logger.error(f"❌ Commission distribution failed: {str(e)}")
+                commission_result = {
+                    "success": False,
+                    "error": str(e)
+                }
+
+            # ============================================================
             # CREATE NOTIFICATIONS FOR SUCCESS REDIRECT
             # ============================================================
 
@@ -668,12 +802,21 @@ def payment_success(request):
                 is_read=False,
             )
 
-            # 2. Notification for the RECEIVER (admin who will provide the service)
+            # 2. Notification for the RECEIVER (admin)
+            admin_amount = commission_result.get('admin_amount', 0) if commission_result and commission_result.get('success') else 0
+            admin_message = (
+                f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"You have received KES {admin_amount:.2f} as your commission." 
+                if admin_amount > 0 
+                else f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"The connection is now ready for service."
+            )
+            
             Notification.objects.create(
                 user=connection.receiver,
                 connection=connection,
                 title="New Completed Connection! 🎉",
-                message=f"{connection.sender.full_name} has completed payment for their hookup. The connection is now ready for service.",
+                message=admin_message,
                 notification_type=Notification.NotificationType.CONNECTION_COMPLETED,
                 is_read=False,
             )
@@ -691,10 +834,6 @@ def payment_success(request):
 
             logger.info(f"✅ Notifications created for both parties")
             logger.info(f"🎉 Payment and connection completed successfully!")
-            logger.info(f"   Sender: {connection.sender.full_name}")
-            logger.info(f"   Receiver: {connection.receiver.full_name}")
-            logger.info(f"   Amount: KES {payment.amount}")
-            logger.info(f"   Connection ID: {connection.connection_id}")
 
         # ============================================================
         # REDIRECT TO FRONTEND SUCCESS PAGE
@@ -711,18 +850,24 @@ def payment_success(request):
             f"&connection_id={payment.connection.connection_id}"
         )
 
+        # Add commission info if available
+        if commission_result and commission_result.get('success'):
+            redirect_url += f"&admin_amount={commission_result.get('admin_amount', 0)}"
+            redirect_url += f"&superadmin_amount={commission_result.get('superadmin_amount', 0)}"
+            redirect_url += f"&commission_percentage={commission_result.get('commission_percentage', 0)}"
+
         logger.info(f"🔀 Redirecting to: {redirect_url}")
 
         return redirect(redirect_url)
 
     except Payment.DoesNotExist:
         logger.error(f"❌ Payment not found for tracking ID: {order_tracking_id}")
-        error_url = f"https://hookiefy.netlify.app/payment-error?message=Payment+not+found"
+        error_url = f"https://hookiefy.netlify.app/payment-error?message=Payment+failed"
         return redirect(error_url)
 
     except Exception as e:
         logger.error(f"❌ Error processing payment success: {e}", exc_info=True)
-        error_url = f"https://hookiefy.netlify.app/payment-error?message={str(e)}"
+        error_url = f"https://hookiefy.netlify.app/payment-error?message=Payment+failed"
         return redirect(error_url)
 
 
@@ -739,7 +884,7 @@ def payment_failure(request):
     # Ensure database connection is healthy
     if not ensure_db_connection():
         logger.error("❌ Database connection error in payment failure")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Database+connection+error"
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
         return redirect(error_url)
 
     order_tracking_id = request.query_params.get("OrderTrackingId")
@@ -802,7 +947,7 @@ def get_payment_status(request, payment_id):
         return Response(
             {
                 "success": False,
-                "message": "Database connection error. Please try again."
+                "message": "Service temporarily unavailable. Please try again."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -864,7 +1009,7 @@ def get_payment_status(request, payment_id):
         return Response(
             {
                 "success": False,
-                "message": f"Error getting payment status: {str(e)}"
+                "message": "Unable to retrieve payment status. Please try again."
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
