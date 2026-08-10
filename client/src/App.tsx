@@ -8,11 +8,6 @@ import Unauthorized from "./pages/common/Unauthorized";
 import CenteredSpinner from "./pages/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/common/Homepage";
-import Mainlayout from "./layouts/Mainlayout";
-import About from "./pages/common/About";
-import Contact from "./pages/contact/Contact";
-import Privacy from "./pages/common/Privacy";
-import Terms from "./pages/common/Terms";
 import Protectedroute from "./components/protected/Protectedroute";
 // ============================================================
 // IMPORT PAYMENT PAGES
@@ -29,15 +24,7 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={
-            <Mainlayout><Homepage /></Mainlayout>} />
-          <Route path="/about" element={
-            <Mainlayout><About /></Mainlayout>} />
-          <Route path="/contact" element={
-            <Mainlayout><Contact /></Mainlayout>} />
-          <Route path="/privacy" element={
-            <Mainlayout><Privacy /></Mainlayout>} />
-          <Route path="/terms" element={
-            <Mainlayout><Terms /></Mainlayout>} />
+            <Homepage />} />
               
           <Route path="/signin" element={
             <Toastlayout>
@@ -51,19 +38,13 @@ function App() {
           // PAYMENT ROUTES - Public (no authentication required)
           // ============================================================
           <Route path="/payment-success" element={
-            <Mainlayout>
               <PaymentSuccess />
-            </Mainlayout>
           } />
           <Route path="/payment-failure" element={
-            <Mainlayout>
               <PaymentFailure />
-            </Mainlayout>
           } />
           <Route path="/payment-error" element={
-            <Mainlayout>
               <PaymentError />
-            </Mainlayout>
           } />
 
           {/* Protected routes - Superadmin only */}
