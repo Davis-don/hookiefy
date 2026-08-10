@@ -1,0 +1,30 @@
+/* ============================================================
+   defaultpostsdiv.css — Posts Container for Non-Authenticated Users
+   ============================================================ */
+
+.overall-default-posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0 2rem 0;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media screen and (max-width: 46.875em) {
+  .overall-default-posts-container {
+    padding: 0.5rem 0 1rem 0;
+    gap: 1.2rem;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .overall-default-posts-container {
+    gap: 1rem;
+    padding: 0.3rem 0 0.8rem 0;
+  }
+}

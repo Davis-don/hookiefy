@@ -40,6 +40,11 @@ function Homepage() {
     setIsLoginModalOpen(true);
   };
 
+  // Handle connect button click from posts
+  const handleConnectClick = () => {
+    setIsLoginModalOpen(true);
+  };
+
   // Handle modal close
   const handleModalClose = () => {
     setIsLoginModalOpen(false);
@@ -119,7 +124,7 @@ function Homepage() {
       {/* Main Body Content */}
       <div className="overall-homepage-body-container">
         <div className="actual-body-content-retainer-homepage">
-          <DefaultFeed />
+          <DefaultFeed onConnectClick={handleConnectClick} />
         </div>
         <div className="homepage-statuses-container">
           {/* Status indicators can go here */}
