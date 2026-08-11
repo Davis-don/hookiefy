@@ -65,10 +65,16 @@ function DefaultPostsdiv({ onConnectClick }: DefaultPostsdivProps) {
     <div className="overall-default-posts-container">
       {loading ? (
         <div className="spinner-load-container">
-          <div className="spinner-border text-info spinner-big" role="status">
-            <span className="visually-hidden">Loading...</span>
+          {/* Custom Loader - True Dark Black Theme */}
+          <div className="custom-loader-wrapper">
+            <div className="custom-loader">
+              <div className="loader-ring"></div>
+              <div className="loader-ring"></div>
+              <div className="loader-ring"></div>
+              <div className="loader-ring"></div>
+            </div>
           </div>
-          <p className="mt-4 loading-text">Loading posts...</p>
+          <p className="loading-text">Loading posts...</p>
           <div className="loading-progress-bar-container">
             <div 
               className="loading-progress-bar" 
