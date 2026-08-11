@@ -47,7 +47,6 @@ interface LoginResponse {
 function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) {
   const navigate = useNavigate();
   
-  // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
   // Form state
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
@@ -56,28 +55,63 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
   
   // UI state
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Auth store
   const { setTokens } = useAuthStore();
 
   // API URL
-  const API_URL = import.meta.env.VITE_API_URL 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-  // ✅ useMutation MUST be called unconditionally
+  // ✅ LOGIN MUTATION with proper error handling
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
+      // ✅ Try both possible field names that Django might expect
+      const requestBody = {
+        // Try with both username and email fields
+        username: data.email,
+        email: data.email,
+        password: data.password,
+      };
+
+      console.log("📤 Sending login request to:", `${API_URL}/account/login/`);
+      console.log("📤 Request body:", requestBody);
+
       const response = await fetch(`${API_URL}/account/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Response headers:", Object.fromEntries(response.headers.entries()));
+
+      // ✅ Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        // Get the raw text for debugging
+        const text = await response.text();
+        console.error("❌ Non-JSON response:", text.substring(0, 500));
+        
+        // Check if it's an HTML error page
+        if (text.includes("<!doctype") || text.includes("<html")) {
+          throw new Error("Server returned an HTML page. The endpoint might be incorrect or the server is down.");
+        }
+        
+        throw new Error(`Server returned unexpected response (${response.status}). Please try again.`);
+      }
+
       const result = await response.json();
+      console.log("📥 Response data:", result);
 
       if (!response.ok) {
-        throw new Error(result.message || "Login failed");
+        // ✅ Handle Django's error format
+        const errorMsg = result.message || result.error || result.detail || result.non_field_errors?.[0] || "Login failed";
+        throw new Error(errorMsg);
       }
 
       return result as LoginResponse;
@@ -91,6 +125,7 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
 
       console.log("✅ Login successful, tokens stored in auth store");
 
+      setErrorMessage(null);
       onClose();
 
       if (data.user?.role === "superadmin") {
@@ -106,10 +141,11 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
 
     onError: (error: any) => {
       console.error("❌ Login error:", error.message);
+      setErrorMessage(error.message || "Login failed. Please check your credentials.");
     },
   });
 
-  // ✅ NOW we can do the conditional return AFTER all hooks
+  // ✅ Conditional return AFTER all hooks
   if (!isOpen) return null;
 
   // ============================================================
@@ -122,6 +158,7 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
       ...prev,
       [name]: value,
     }));
+    if (errorMessage) setErrorMessage(null);
   };
 
   const togglePasswordVisibility = () => {
@@ -139,6 +176,7 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage(null);
     loginMutation.mutate(loginData);
   };
 
@@ -164,22 +202,10 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
         </div>
 
         {/* Error Message */}
-        {loginMutation.isError && (
+        {errorMessage && (
           <div className="default-login-error">
             <span className="default-login-error-icon">⚠️</span>
-            <span className="default-login-error-text">
-              {(loginMutation.error as Error).message}
-            </span>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {loginMutation.isSuccess && (
-          <div className="default-login-success">
-            <span className="default-login-success-icon">✅</span>
-            <span className="default-login-success-text">
-              {loginMutation.data?.message || "Login successful!"}
-            </span>
+            <span className="default-login-error-text">{errorMessage}</span>
           </div>
         )}
 
@@ -192,7 +218,7 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
             <input
               type="email"
               name="email"
-              className={`default-login-input ${loginMutation.isError ? 'error' : ''}`}
+              className={`default-login-input ${errorMessage ? 'error' : ''}`}
               placeholder="Email Address"
               value={loginData.email}
               onChange={handleChange}
@@ -208,12 +234,13 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
             <input
               type={showPassword ? 'text' : 'password'}
               name="password"
-              className={`default-login-input ${loginMutation.isError ? 'error' : ''}`}
+              className={`default-login-input ${errorMessage ? 'error' : ''}`}
               placeholder="Password"
               value={loginData.password}
               onChange={handleChange}
               disabled={loginMutation.isPending}
               required
+              minLength={6}
             />
             <button
               type="button"
