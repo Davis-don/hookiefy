@@ -17,6 +17,19 @@ interface DefaultPostsdivProps {
 }
 
 // ============================================================
+// SHUFFLE FUNCTION
+// ============================================================
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
@@ -25,7 +38,11 @@ function DefaultPostsdiv({ onConnectClick }: DefaultPostsdivProps) {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [users, setUsers] = useState<typeof defaultUsers>([])
 
+  // Shuffle users ONCE when component mounts
   useEffect(() => {
+    // Shuffle the default users
+    const shuffledUsers = shuffleArray(defaultUsers)
+    
     // Simulate loading data and images
     let progress = 0
     const interval = setInterval(() => {
@@ -34,7 +51,7 @@ function DefaultPostsdiv({ onConnectClick }: DefaultPostsdivProps) {
         progress = 100
         clearInterval(interval)
         setTimeout(() => {
-          setUsers(defaultUsers)
+          setUsers(shuffledUsers)
           setLoading(false)
         }, 500)
       }
@@ -42,7 +59,7 @@ function DefaultPostsdiv({ onConnectClick }: DefaultPostsdivProps) {
     }, 300)
 
     return () => clearInterval(interval)
-  }, [])
+  }, []) // Empty dependency array = runs once on mount
 
   return (
     <div className="overall-default-posts-container">
