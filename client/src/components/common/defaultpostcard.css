@@ -10,7 +10,24 @@
   margin: 0 auto;
   max-width: 600px;
   width: 100%;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.4s ease;
+  animation: defaultCardFadeIn 0.5s ease forwards;
+  opacity: 0;
+}
+
+.overall-default-post-card-container[data-rendered="true"] {
+  opacity: 1;
+}
+
+@keyframes defaultCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .overall-default-post-card-container:hover {
@@ -53,7 +70,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -65,14 +82,14 @@
 }
 
 .default-post-avatar-blur-overlay:hover {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .default-post-avatar-blur-icon {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   animation: defaultAvatarBlurPulse 2s ease-in-out infinite;
 }
 
@@ -153,7 +170,7 @@
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
 .default-post-image-content.loaded {
@@ -218,30 +235,44 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
+/* Image Loader */
 .default-post-image-loader {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.default-post-image-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .default-loader-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(59, 130, 246, 0.1);
+  border: 3px solid rgba(59, 130, 246, 0.15);
   border-top: 3px solid #3b82f6;
   border-radius: 50%;
   animation: defaultSpin 0.8s linear infinite;
 }
 
+.default-loader-text {
+  color: #8b8ba7;
+  font-size: 11px;
+  font-weight: 400;
+}
+
 @keyframes defaultSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.default-post-image-loader.hidden {
-  display: none;
 }
 
 .default-post-image-fallback {
@@ -515,6 +546,16 @@
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
+
+  .default-loader-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 2.5px;
+  }
+
+  .default-loader-text {
+    font-size: 10px;
+  }
 }
 
 /* Small mobile devices */
@@ -591,6 +632,16 @@
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
   }
+
+  .default-loader-spinner {
+    width: 28px;
+    height: 28px;
+    border-width: 2px;
+  }
+
+  .default-loader-text {
+    font-size: 9px;
+  }
 }
 
 /* Landscape orientation for mobile */
@@ -623,5 +674,64 @@
 
   .default-post-blur-text {
     font-size: 0.75rem;
+  }
+
+  .default-loader-spinner {
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+  }
+
+  .default-loader-text {
+    font-size: 8px;
+  }
+}
+
+/* Dark mode specific overrides */
+@media (prefers-color-scheme: dark) {
+  .default-post-avatar-blur-overlay {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .default-post-avatar-blur-overlay:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .default-post-image-blur-overlay {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .default-post-image-blur-overlay:hover {
+    background: rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .overall-default-post-card-container {
+    animation: none;
+    opacity: 1;
+  }
+
+  .overall-default-post-card-container:hover {
+    transform: none;
+  }
+
+  .default-post-avatar-blur-icon,
+  .default-post-blur-icon {
+    animation: none;
+  }
+
+  .default-loader-spinner {
+    animation: none;
+    border-color: #3b82f6;
+  }
+
+  .default-post-additional-details {
+    animation: none;
+  }
+
+  .default-connect-btn::before {
+    display: none;
   }
 }
