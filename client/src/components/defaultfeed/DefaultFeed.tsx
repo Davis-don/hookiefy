@@ -21,7 +21,6 @@ function DefaultFeed({ onConnectClick }: DefaultFeedProps) {
   return (
     <div className="default-feed-container">
       <div className="default-feed-header">
-        <h4>Feed</h4>
       </div>
       <div className="default-feed-posts-data">
         <DefaultPostsdiv onConnectClick={onConnectClick} />
