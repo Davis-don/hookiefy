@@ -402,7 +402,7 @@
   font-size: 1.4rem;
 }
 
-/* Spinner for loading state */
+/* ✅ BOOTSTRAP-STYLED SPINNER - Matching DefaultPostsdiv */
 .default-login-spinner {
   width: 1.6rem;
   height: 1.6rem;
@@ -411,6 +411,7 @@
   border-radius: 50%;
   animation: defaultLoginSpin 0.8s linear infinite;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 @keyframes defaultLoginSpin {
@@ -621,6 +622,7 @@
     font-size: 1rem;
   }
 
+  /* ✅ Bigger spinner on mobile */
   .default-login-spinner {
     width: 2rem;
     height: 2rem;
@@ -757,4 +759,30 @@
 
 .default-login-modal::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* =========================
+   REDUCED MOTION PREFERENCES
+========================= */
+@media (prefers-reduced-motion: reduce) {
+  .default-login-overlay {
+    animation: none;
+  }
+  
+  .default-login-modal {
+    animation: none;
+  }
+  
+  .default-login-accent-bar {
+    animation: none;
+  }
+  
+  .default-login-spinner {
+    animation: none;
+    border: 3px solid #ffffff;
+  }
+  
+  .default-login-error {
+    animation: none;
+  }
 }

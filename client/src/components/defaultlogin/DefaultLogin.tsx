@@ -60,58 +60,37 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
   // Auth store
   const { setTokens } = useAuthStore();
 
-  // API URL
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  // ✅ API URL with proper fallback
+  const API_URL = import.meta.env.VITE_API_URL || "https://hookiefy-server-7d6d.onrender.com";
 
   // ✅ LOGIN MUTATION with proper error handling
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      // ✅ Try both possible field names that Django might expect
-      const requestBody = {
-        // Try with both username and email fields
-        username: data.email,
-        email: data.email,
-        password: data.password,
-      };
-
-      console.log("📤 Sending login request to:", `${API_URL}/account/login/`);
-      console.log("📤 Request body:", requestBody);
-
-      const response = await fetch(`${API_URL}/account/login/`, {
+      const url = `${API_URL}/account/login/`;
+      console.log("📤 Sending login request to:", url);
+      
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(data),
       });
-
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response headers:", Object.fromEntries(response.headers.entries()));
 
       // ✅ Check if response is JSON
       const contentType = response.headers.get("content-type");
       
       if (!contentType || !contentType.includes("application/json")) {
-        // Get the raw text for debugging
         const text = await response.text();
-        console.error("❌ Non-JSON response:", text.substring(0, 500));
-        
-        // Check if it's an HTML error page
-        if (text.includes("<!doctype") || text.includes("<html")) {
-          throw new Error("Server returned an HTML page. The endpoint might be incorrect or the server is down.");
-        }
-        
-        throw new Error(`Server returned unexpected response (${response.status}). Please try again.`);
+        console.error("❌ Non-JSON response:", text.substring(0, 200));
+        throw new Error("Server returned unexpected response. Please try again.");
       }
 
       const result = await response.json();
-      console.log("📥 Response data:", result);
 
       if (!response.ok) {
-        // ✅ Handle Django's error format
-        const errorMsg = result.message || result.error || result.detail || result.non_field_errors?.[0] || "Login failed";
-        throw new Error(errorMsg);
+        throw new Error(result.message || result.error || result.detail || "Login failed");
       }
 
       return result as LoginResponse;
@@ -206,6 +185,16 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
           <div className="default-login-error">
             <span className="default-login-error-icon">⚠️</span>
             <span className="default-login-error-text">{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {loginMutation.isSuccess && (
+          <div className="default-login-success">
+            <span className="default-login-success-icon">✅</span>
+            <span className="default-login-success-text">
+              {loginMutation.data?.message || "Login successful!"}
+            </span>
           </div>
         )}
 
