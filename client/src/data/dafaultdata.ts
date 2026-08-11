@@ -3,97 +3,95 @@
 // ============================================================
 
 // ============================================================
-// KENYAN FIRST NAMES (All female names from various communities)
+// KIKUYU FIRST NAMES (All female names)
 // ============================================================
 
 export const firstNames = [
-  // Luo names
-  'Akinyi', 'Atieno', 'Auma', 'Awino', 'Adhiambo',
-  'Anyango', 'Achieng', 'Akoth', 'Amondi', 'Apiyo',
-  
-  // Kikuyu names
   'Njeri', 'Wanjiru', 'Muthoni', 'Nyambura', 'Wambui',
-  'Wairimu', 'Wangari', 'Njuguna', 'Mwangi', 'Kamau',
-  
-  // Luhya names
-  'Nekesa', 'Nasimiyu', 'Weche', 'Khadija', 'Fatuma',
-  'Kiptoo', 'Chepchumba', 'Chelangat', 'Kosgei', 'Jepchumba',
-  
-  // Kamba names
-  'Kaluki', 'Mawia', 'Ndanu', 'Mutheu', 'Syombua',
-  'Kanini', 'Kanyua', 'Zawadi', 'Baraka', 'Amani'
+  'Wairimu', 'Wangari', 'Wanjiku', 'Nyokabi', 'Wangui',
+  'Waithira', 'Wanja', 'Wangeci', 'Nyakio', 'Nyaguthii',
+  'Wamuyu', 'Wanjugu', 'Nyawira', 'Wachera', 'Waithera'
 ]
 
 // ============================================================
-// KENYAN LAST NAMES (Common surnames)
+// KIKUYU LAST NAMES (Pure Kikuyu surnames for first 7 users)
 // ============================================================
 
-export const lastNames = [
-  // Luo surnames
+export const kikuyuLastNames = [
+  'Mwangi', 'Njoroge', 'Kariuki', 'Kamau', 'Maina',
+  'Kinyanjui', 'Njuguna', 'Gitau', 'Kimani', 'Waweru',
+  'Chege', 'Gichuki', 'Ngugi', 'Mwai', 'Kibicho',
+  'Macharia', 'Muiruri', 'Thuo', 'Mburu', 'Njenga'
+]
+
+// ============================================================
+// MIXED KENYAN LAST NAMES (For remaining users)
+// ============================================================
+
+export const mixedLastNames = [
+  // Luo
   'Ochieng', 'Odhiambo', 'Omondi', 'Otieno', 'Onyango',
   'Okoth', 'Ouma', 'Oduor', 'Odero', 'Opondo',
-  
-  // Kikuyu surnames
-  'Mwangi', 'Njoroge', 'Kariuki', 'Kamau', 'Maina',
-  'Muthoni', 'Wanjiru', 'Njeri', 'Wambui', 'Wangari',
-  
-  // Luhya surnames
+  // Luhya
   'Weche', 'Wanyonyi', 'Masinde', 'Mukhwana', 'Khaemba',
   'Kiptoo', 'Kiprop', 'Kipchumba', 'Kosgei', 'Chepkwony',
-  
-  // Kamba surnames
+  // Kamba
   'Ndeti', 'Muoki', 'Kithuka', 'Kyalo', 'Mwololo',
-  
-  // Swahili/Arabic surnames
+  // Swahili/Arabic
   'Ali', 'Hassan', 'Mohammed', 'Bakari', 'Juma'
 ]
 
 // ============================================================
-// KENYAN LOCATIONS (Counties and cities)
+// POPULAR LOCATIONS (Nairobi estates + major towns)
 // ============================================================
 
 export const locations = [
-  'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret',
-  'Thika', 'Malindi', 'Kitale', 'Garissa', 'Nyeri',
-  'Meru', 'Embu', 'Kakamega', 'Bungoma', 'Busia',
-  'Homa Bay', 'Migori', 'Kisii', 'Nyamira', 'Siaya',
-  'Vihiga', 'Kitui', 'Machakos', 'Makueni', 'Kajiado',
-  'Narok', 'Bomet', 'Kericho', 'Uasin Gishu', 'Trans Nzoia',
-  'Lamu', 'Kwale', 'Kilifi', 'Tana River', 'Isiolo',
-  'Samburu', 'Turkana', 'Marsabit', 'Wajir', 'Mandera',
-  'Diani', 'Watamu', 'Naivasha', 'Nanyuki', 'Nyahururu'
+  // Nairobi estates
+  'Pipeline, Nairobi', 'Kawangware, Nairobi', 'Eastleigh, Nairobi',
+  'Kasarani, Nairobi', 'Ruiru, Nairobi', 'Thika Road, Nairobi',
+  'Westlands, Nairobi', 'Kilimani, Nairobi', 'Langata, Nairobi',
+  'Karen, Nairobi', 'Parklands, Nairobi', 'South B, Nairobi',
+  'South C, Nairobi', 'Umoja, Nairobi', 'Donholm, Nairobi',
+  'Buruburu, Nairobi', 'Komarock, Nairobi', 'Embakasi, Nairobi',
+  'Syokimau, Nairobi', 'Kitengela, Nairobi',
+  
+  // Major towns
+  'Nyeri', 'Nakuru', 'Mombasa', 'Kisumu', 'Eldoret',
+  'Thika', 'Malindi', 'Kitale', 'Nanyuki', 'Naivasha',
+  'Meru', 'Embu', 'Kakamega', 'Bungoma', 'Homa Bay',
+  'Kisii', 'Machakos', 'Kitui', 'Kericho', 'Diani'
 ]
 
 // ============================================================
-// SEDUCTIVE BIOS - Fun, flirty, inviting with Kenyan flavor
+// REALISTIC BIOS - Natural, unscripted, authentic Kenyan vibe
 // ============================================================
 
 export const bios = [
-  'Nairobi girl looking for someone fun tonight 😏 Let\'s make it memorable 💋',
-  'Bored and lonely in Kisumu... come keep me company tonight 🔥',
-  'Feeling naughty in Mombasa 😈 Who\'s down to vibe?',
-  'Just a sexy Kenyan queen looking for her king tonight 👑',
-  'Your place or mine? 😘 Let\'s have some fun in Nairobi',
-  'Ready to misbehave tonight 😏 Show me what you got',
-  'Looking for a real man to handle all of this 🔥 Ni mimi?',
-  'Sexy and single in Nakuru... looking for a good time tonight 💋',
-  'Come take me out and see where the night goes 🌙 Sherehe!',
-  'Feeling freaky tonight in Eldoret... who\'s brave enough? 😈',
-  'Just a bad girl from Kisii looking for a good time 🔥',
-  'Your dream girl is waiting in Thika... don\'t keep me waiting 💋',
-  'Ready to get wild and crazy tonight in Malindi 😏 Who\'s with me?',
-  'Looking for someone to make me smile... and more in Mombasa 😘',
-  'Kenya\'s finest 🔥 Come get a taste of paradise at the coast',
-  'Feeling lonely in Kitale... need a real man tonight 💋',
-  'Let\'s skip the small talk and get straight to the fun in Nairobi 😏',
-  'Just a naughty girl with a good heart ❤️‍🔥 Come play with me in Kisumu',
-  'Ready for an adventure tonight in Diani 🌙 Who\'s taking me out?',
-  'Looking for a good time and great company 🍷 Let\'s vibe in Westlands',
-  'Nakuru girl with a wild side 🔥 Come find me tonight',
-  'Mombasa beaches got me feeling some type of way 😏',
-  'Eldoret darling ready to paint the town red tonight 💋',
-  'Thika beauty looking for someone to spoil me 😘',
-  'Kisumu queen with a taste for adventure and good times 🌙'
+  'Just a Nairobi girl tryna find someone real 😅 Let\'s vibe and see where it goes',
+  'Bored in the house... someone come save me from this boredom 🥲',
+  'Not looking for anything serious but who knows? 👀 Mombasa girl',
+  'Just finished work and I\'m exhausted 🥱 Anyone down for a drink?',
+  'Nakuru is so cold today... need someone to keep me warm 🌧️',
+  'Who\'s taking me out this weekend? I\'m free and ready 🥳',
+  'New in town, don\'t know anyone... show me around? 😊',
+  'Honestly just here for the vibes and good conversations 💬',
+  'Kisumu girl living in Nairobi... missing the lake life 😩',
+  'Looking for someone who can handle my energy ⚡ Don\'t be boring',
+  'Late night thoughts... anyone else awake? 🌙',
+  'I\'m a whole meal but can you handle the spice? 🌶️😂',
+  'Just a simple girl with expensive taste 💅 Don\'t judge',
+  'Working hard or hardly working? Definitely the second one 😂',
+  'Need someone to laugh with and share good food with 🍕',
+  'Life is short, let\'s make some memories together ✨',
+  'Not your average girl next door... I\'m the whole neighborhood 😉',
+  'Looking for genuine connections, not games 🎯',
+  'I love sherehe but I also love my peace ✌️ Balance is key',
+  'I\'ll probably roast you but it\'s all love 💕 Don\'t be soft',
+  'Here for a good time, not a long time ⏰ Let\'s make it count',
+  'Nairobi nights hit different when you\'re with the right person 🌃',
+  'I don\'t chase, I attract... if you want me, come get me 😏',
+  'My friends say I\'m too much... are you ready for that? 😂',
+  'Let\'s skip the small talk and see if we click 🔥'
 ]
 
 // ============================================================
@@ -112,42 +110,41 @@ export const genders = [
 // ============================================================
 
 export const timeOptions = [
-  '2 hours ago', '3 hours ago', '5 hours ago', '7 hours ago',
-  '12 hours ago', '1 day ago', '2 days ago', '3 days ago',
-  '5 days ago', '1 week ago', '2 weeks ago'
+  'Just now', '5 mins ago', '15 mins ago', '30 mins ago',
+  '1 hour ago', '2 hours ago', '3 hours ago', '5 hours ago',
+  '7 hours ago', '12 hours ago', '1 day ago', '2 days ago',
+  '3 days ago', '5 days ago', '1 week ago', '2 weeks ago'
 ]
 
 // ============================================================
-// KENYAN WOMEN IMAGES - Using reliable African model images
-// These are hosted on reliable CDN services
+// KENYAN WOMEN IMAGES
 // ============================================================
 
 export const imageUrls = [
-  // Using images from reliable sources
-  'https://cdn.pixabay.com/photo/2016/11/21/14/52/woman-1845886_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2015/01/08/18/25/woman-593373_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2014/11/13/17/04/woman-529613_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/18/19/07/happy-1836445_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/06/02/22/32/woman-1431175_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2015/10/13/15/48/woman-986406_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2017/02/16/23/10/smile-2072908_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2017/07/31/11/21/people-2557396_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/29/13/14/attractive-1869761_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2015/07/09/22/55/woman-838700_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/08/23/08/36/woman-1613630_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/14/03/10/beautiful-1822515_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2014/12/05/18/45/woman-558102_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/04/05/18/30/woman-1309798_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/01/26/07/01/woman-1160638_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/22/19/12/woman-1850134_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2015/07/19/08/45/woman-851383_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/29/13/14/attractive-1869760_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/18/17/46/woman-1836133_960_720.jpg',
-  'https://cdn.pixabay.com/photo/2016/11/14/04/08/woman-1822541_960_720.jpg'
+  'https://images.unsplash.com/photo-1643662982684-f790df16b9c4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8YWZyaWNhbiUyMGxhZHklMjBiaWclMjBidXR0b2NrcyUyMGZ1bGwlMjBwaWN8ZW58MHx8MHx8fDA%3D',
+  'https://images.unsplash.com/photo-1741699693215-f8e61e4b481b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YWZyaWNhbiUyMGxhZHklMjBiaWclMjBidXR0b2NrcyUyMGZ1bGwlMjBwaWN8ZW58MHx8MHx8fDA%3D',
+  'https://images.unsplash.com/photo-1718168822868-19f8e3aab169?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWZyaWNhbiUyMGxhZHklMjBiaWclMjBidXR0b2NrcyUyMGZ1bGwlMjBwaWN8ZW58MHx8MHx8fDA%3D',
+  'https://images.unsplash.com/photo-1566226751542-a32977fdb3f3?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1566512634088-aa672904db3a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1656846944479-5c8c082f062c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1780541248295-a0b201434103?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://plus.unsplash.com/premium_photo-1661893008360-178a37a54307?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1580404260441-f3337c711f7c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1780541249187-b46a9b3dc04a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1611088577735-9d83bdfa7d8e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1765560219977-33ee2f1dfcc9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjh8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1730140322846-e6be13da2ce1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1764867506966-9e6d3855f9db?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzh8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1663376001237-76680fb35712?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDR8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1696525140315-27878311d8de?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDd8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1765560219987-cae7e71ef1c8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTR8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1783013953180-14bff99f9ac4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Njh8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1785698548809-3578fd5f6465?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NzZ8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww',
+  'https://images.unsplash.com/photo-1780541246456-4f746a500a82?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nzl8fGFmcmljYW4lMjBsYWR5JTIwYmlnJTIwYnV0dG9ja3MlMjBmdWxsJTIwcGljfGVufDB8fDB8fHww'
 ]
 
 // ============================================================
-// AVATAR IMAGES (Smaller versions of the same images)
+// AVATAR IMAGES
 // ============================================================
 
 export const avatarUrls = [
@@ -174,7 +171,7 @@ export const avatarUrls = [
 ]
 
 // ============================================================
-// INTEREST OPTIONS (All interested in Men)
+// INTEREST OPTIONS
 // ============================================================
 
 export const interestedOptions = ['Men', 'Men', 'Men', 'Men', 'Men', 'Men', 'Men', 'Men', 'Men', 'Men']
@@ -204,10 +201,41 @@ export interface DefaultUser {
 
 export function generateRandomUsers(count: number = 20): DefaultUser[] {
   const users: DefaultUser[] = []
-  for (let i = 0; i < count; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]
-    const gender = genders[Math.floor(Math.random() * genders.length)]
+  
+  // Pre-defined realistic user data for first 7 (Pure Kikuyu)
+  const first7Users = [
+    { firstName: 'Njeri', lastName: 'Mwangi', location: 'Pipeline, Nairobi', bio: 'Just a Nairobi girl tryna find someone real 😅 Let\'s vibe and see where it goes', time: '2 hours ago' },
+    { firstName: 'Wanjiru', lastName: 'Njoroge', location: 'Kawangware, Nairobi', bio: 'Bored in the house... someone come save me from this boredom 🥲', time: '5 hours ago' },
+    { firstName: 'Muthoni', lastName: 'Kamau', location: 'Eastleigh, Nairobi', bio: 'Not looking for anything serious but who knows? 👀', time: '1 day ago' },
+    { firstName: 'Nyambura', lastName: 'Maina', location: 'Nyeri', bio: 'Nyeri is so cold today... need someone to keep me warm 🌧️', time: '3 hours ago' },
+    { firstName: 'Wambui', lastName: 'Kariuki', location: 'Kasarani, Nairobi', bio: 'Who\'s taking me out this weekend? I\'m free and ready 🥳', time: '7 hours ago' },
+    { firstName: 'Wairimu', lastName: 'Gitau', location: 'Nakuru', bio: 'Nakuru girl living in Nairobi... missing the fresh air 😩', time: '2 days ago' },
+    { firstName: 'Wangari', lastName: 'Kimani', location: 'Ruiru, Nairobi', bio: 'Just finished work and I\'m exhausted 🥱 Anyone down for a drink?', time: '30 mins ago' }
+  ]
+
+  // First 7 users - Pure Kikuyu
+  for (let i = 0; i < 7 && i < count; i++) {
+    const user = first7Users[i]
+    users.push({
+      id: `user-${i + 1}`,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      time: user.time,
+      location: user.location,
+      image: imageUrls[i % imageUrls.length],
+      avatar: avatarUrls[i % avatarUrls.length],
+      bio: user.bio,
+      gender: 'F',
+      interested_in: 'Men',
+      min_age: Math.floor(Math.random() * 5) + 22,
+      max_age: Math.floor(Math.random() * 8) + 28,
+    })
+  }
+
+  // Remaining users - Mixed combinations
+  for (let i = 7; i < count; i++) {
+    const firstName = firstNames[i % firstNames.length]
+    const lastName = mixedLastNames[Math.floor(Math.random() * mixedLastNames.length)]
     
     users.push({
       id: `user-${i + 1}`,
@@ -218,12 +246,13 @@ export function generateRandomUsers(count: number = 20): DefaultUser[] {
       image: imageUrls[i % imageUrls.length],
       avatar: avatarUrls[i % avatarUrls.length],
       bio: bios[Math.floor(Math.random() * bios.length)],
-      gender: gender,
+      gender: 'F',
       interested_in: 'Men',
-      min_age: Math.floor(Math.random() * 5) + 20,
-      max_age: Math.floor(Math.random() * 10) + 28,
+      min_age: Math.floor(Math.random() * 5) + 21,
+      max_age: Math.floor(Math.random() * 8) + 27,
     })
   }
+  
   return users
 }
 
