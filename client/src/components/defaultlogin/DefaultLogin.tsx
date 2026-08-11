@@ -61,12 +61,12 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
   const { setTokens } = useAuthStore();
 
   // API URL
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const API_URL = import.meta.env.VITE_API_URL 
 
   // ✅ useMutation MUST be called unconditionally
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await fetch(`${API_URL}/account/login/`, {
+      const response = await fetch(`${API_URL}/account/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
