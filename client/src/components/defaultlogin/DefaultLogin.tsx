@@ -66,7 +66,7 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
   // ✅ useMutation MUST be called unconditionally
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await fetch(`${API_URL}/account/login`, {
+      const response = await fetch(`${API_URL}/account/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
