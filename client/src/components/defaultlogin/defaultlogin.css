@@ -84,6 +84,75 @@
 }
 
 /* =========================
+   ERROR MESSAGE
+========================= */
+.default-login-error {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.2rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  animation: defaultLoginErrorShake 0.4s ease;
+}
+
+@keyframes defaultLoginErrorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.default-login-error-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.default-login-error-text {
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* =========================
+   SUCCESS MESSAGE
+========================= */
+.default-login-success {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.2rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  animation: defaultLoginFadeIn 0.3s ease;
+}
+
+@keyframes defaultLoginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.default-login-success-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.default-login-success-text {
+  color: #16a34a;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* =========================
    CLOSE BUTTON
 ========================= */
 .default-login-close-btn {
@@ -158,6 +227,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  z-index: 1;
 }
 
 .default-login-input {
@@ -184,6 +254,51 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
+.default-login-input.error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.default-login-input.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+}
+
+.default-login-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Password Toggle Button */
+.default-login-password-toggle {
+  position: absolute;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+.default-login-password-toggle:hover:not(:disabled) {
+  color: #2563eb;
+}
+
+.default-login-password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.default-login-password-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* =========================
    OPTIONS (Remember me & Forgot password)
 ========================= */
@@ -208,6 +323,11 @@
   height: 1.1rem;
   accent-color: #2563eb;
   cursor: pointer;
+}
+
+.default-login-remember input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .default-login-remember span {
@@ -275,6 +395,7 @@
 .default-login-primary-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .default-login-btn-icon {
@@ -289,6 +410,7 @@
   border-top: 3px solid #ffffff;
   border-radius: 50%;
   animation: defaultLoginSpin 0.8s linear infinite;
+  display: inline-block;
 }
 
 @keyframes defaultLoginSpin {
@@ -343,14 +465,19 @@
   width: 100%;
 }
 
-.default-login-secondary-btn:hover {
+.default-login-secondary-btn:hover:not(:disabled) {
   background: #eff6ff;
   border-color: #93c5fd;
   transform: translateY(-1px);
 }
 
-.default-login-secondary-btn:active {
+.default-login-secondary-btn:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
+}
+
+.default-login-secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* =========================
@@ -369,7 +496,7 @@
 }
 
 /* =========================
-   RESPONSIVE - MOBILE (LARGER FONTS - TWICE AS BIG)
+   RESPONSIVE - MOBILE (LARGER FONTS)
 ========================= */
 @media screen and (max-width: 46.875em) {
   .default-login-overlay {
@@ -417,6 +544,15 @@
   .default-login-input-icon {
     font-size: 1.6rem;
     left: 1.4rem;
+  }
+
+  .default-login-password-toggle {
+    right: 1.4rem;
+  }
+
+  .default-login-password-toggle svg {
+    width: 24px;
+    height: 24px;
   }
 
   .default-login-options {
@@ -490,10 +626,27 @@
     height: 2rem;
     border-width: 3px;
   }
+
+  .default-login-error,
+  .default-login-success {
+    padding: 1rem 1.4rem;
+    gap: 1rem;
+    border-radius: 14px;
+  }
+
+  .default-login-error-text,
+  .default-login-success-text {
+    font-size: 1.1rem;
+  }
+
+  .default-login-error-icon,
+  .default-login-success-icon {
+    font-size: 1.4rem;
+  }
 }
 
 /* =========================
-   EXTRA SMALL SCREENS (EVEN LARGER)
+   EXTRA SMALL SCREENS
 ========================= */
 @media screen and (max-width: 30em) {
   .default-login-modal {
@@ -528,6 +681,11 @@
   .default-login-input-icon {
     font-size: 1.4rem;
     left: 1.2rem;
+  }
+
+  .default-login-password-toggle svg {
+    width: 20px;
+    height: 20px;
   }
 
   .default-login-remember {
@@ -581,4 +739,22 @@
       padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
   }
+}
+
+/* Scrollbar styling for modal */
+.default-login-modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.default-login-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.default-login-modal::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.default-login-modal::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
