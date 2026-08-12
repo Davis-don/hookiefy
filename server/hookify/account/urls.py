@@ -22,6 +22,9 @@ urlpatterns = [
     path('update-user/', views.update_user_details, name='update_user'),
     path('update-password/', views.update_user_password, name='update_password'),
     
+    # Create user assigned to superadmin
+    path('create-user-assigned-to-superadmin/', views.create_user_assigned_to_superadmin, name='create_user_assigned_to_superadmin'),
+    
     # Delete current user account
     path('delete-account/', views.delete_current_user, name='delete_current_user'),
     
@@ -36,5 +39,4 @@ urlpatterns = [
 
     # Profile image upload
     path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
-
 ]

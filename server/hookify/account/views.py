@@ -28,6 +28,121 @@ import time
 
 User = get_user_model()
 
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Public endpoint - no authentication required
+@transaction.atomic
+def create_user_assigned_to_superadmin(request):
+    """
+    PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to superadmin.
+    Anyone can create an account (no authentication required).
+    Requires that a superadmin exists in the system.
+    
+    This is useful for:
+    - Public user registration/signup
+    - Allowing anyone to create an account without being logged in
+    - Self-service account creation
+    
+    Request body:
+        {
+            "email": "user@example.com",
+            "password": "securepassword123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "phone_number": "+254712345678",
+            "gender": "M"  # Optional: M, F, O
+        }
+    
+    Response:
+        {
+            "message": "User created and assigned to superadmin successfully",
+            "data": {
+                "id": 123,
+                "email": "user@example.com",
+                "role": "user",
+                "first_name": "John",
+                "last_name": "Doe",
+                "full_name": "John Doe",
+                "phone_number": "+254712345678",
+                "gender": "M",
+                "profile_image_url": null,
+                "has_profile_image": false,
+                "assignment": {
+                    "assigned_to_id": 1,
+                    "assigned_to_email": "superadmin@example.com",
+                    "assigned_to_name": "Super Admin",
+                    "assigned_at": "2026-08-12T10:00:00Z"
+                }
+            }
+        }
+    """
+    
+    # Check if a superadmin exists in the system
+    try:
+        superadmin = Accounts.objects.get(role='superadmin')
+        print(f"✅ Superadmin found: {superadmin.email} (ID: {superadmin.id})")
+    except Accounts.DoesNotExist:
+        print("❌ No superadmin found in the system")
+        return Response(
+            {"message": "System is currently unavailable for registration. Please try again later or contact support."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE  # 503 Service Unavailable
+        )
+    except Accounts.MultipleObjectsReturned:
+        # If multiple superadmins exist (shouldn't happen), get the first one
+        superadmin = Accounts.objects.filter(role='superadmin').first()
+        print(f"⚠️ Multiple superadmins found, using first: {superadmin.email}")
+    
+    # Validate that the target role is 'user'
+    target_role = request.data.get("role", "user")
+    if target_role != 'user':
+        return Response(
+            {"message": "This endpoint only creates user accounts. Role must be 'user'."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Create the user
+    serializer = CreateNewUserSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Save the user with role 'user'
+    user = serializer.save()
+    
+    # DO NOT create balance for regular users (only admin and superadmin have balances)
+    # DO NOT create commission for regular users (only admin and superadmin have commissions)
+    
+    # Assign the user to the superadmin
+    try:
+        assignment = ClientAssignment.objects.create(
+            user=user,
+            assigned_admin=superadmin
+        )
+        print(f"✅ User {user.email} assigned to superadmin {superadmin.email}")
+    except Exception as e:
+        # If assignment fails, delete the user and return error
+        user.delete()
+        print(f"❌ Failed to assign user to superadmin: {str(e)}")
+        return Response(
+            {"message": f"Failed to complete registration: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Return success response
+    return Response(
+        {
+            "message": "Account created successfully! You can now login.",
+            "data": {
+                **CreateNewUserSerializer(user).data,
+                "assignment": {
+                    "assigned_to_id": assignment.assigned_admin.id,
+                    "assigned_to_email": assignment.assigned_admin.email,
+                    "assigned_to_name": assignment.assigned_admin.full_name,
+                    "assigned_at": assignment.assigned_at
+                }
+            }
+        },
+        status=status.HTTP_201_CREATED
+    )
+
 # ============================================
 # HELPER: Create user balance
 # ============================================
