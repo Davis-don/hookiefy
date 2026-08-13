@@ -20,6 +20,7 @@ interface DefaultSignupProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin?: () => void;
+  onSignupSuccess?: () => void; // New prop for success callback
 }
 
 interface SignupResponse {
@@ -48,7 +49,12 @@ interface SignupResponse {
 // MAIN COMPONENT
 // ============================================================
 
-function DefaultSignup({ isOpen, onClose, onSwitchToLogin }: DefaultSignupProps) {
+function DefaultSignup({ 
+  isOpen, 
+  onClose, 
+  onSwitchToLogin,
+  onSignupSuccess 
+}: DefaultSignupProps) {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -156,15 +162,18 @@ function DefaultSignup({ isOpen, onClose, onSwitchToLogin }: DefaultSignupProps)
     // Split full name into first and last name
     const { firstName, lastName } = splitFullName(fullName);
 
-    // Prepare the request data
+    // Prepare the request data with confirmpassword
     const requestData = {
       first_name: firstName,
-      last_name: lastName || firstName, // If no last name, use first name as both
+      last_name: lastName || firstName,
       email: email,
       phone_number: phoneNumber,
       gender: gender,
       password: password,
+      confirmpassword: confirmPassword,
     };
+
+    console.log('📝 Sending signup request:', requestData);
 
     try {
       // Show loading toast
@@ -190,34 +199,42 @@ function DefaultSignup({ isOpen, onClose, onSwitchToLogin }: DefaultSignupProps)
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('❌ Error response:', errorData);
         
         // Handle specific error messages
         if (errorData.message && errorData.message.includes('No superadmin exists')) {
           throw new Error('System is currently unavailable. Please try again later or contact support.');
         }
         
-        // Handle validation errors
+        // Handle validation errors from the serializer
+        if (errorData.errors) {
+          const errorMessages = [];
+          for (const [field, errors] of Object.entries(errorData.errors)) {
+            if (Array.isArray(errors)) {
+              errorMessages.push(`${field}: ${errors.join(', ')}`);
+            } else {
+              errorMessages.push(`${field}: ${errors}`);
+            }
+          }
+          throw new Error(errorMessages.join(' | '));
+        }
+        
+        // Handle field-specific errors
         if (errorData.email) {
           throw new Error(`Email error: ${Array.isArray(errorData.email) ? errorData.email[0] : errorData.email}`);
+        }
+        if (errorData.password) {
+          throw new Error(`Password error: ${Array.isArray(errorData.password) ? errorData.password[0] : errorData.password}`);
+        }
+        if (errorData.confirmpassword) {
+          throw new Error(`Password confirmation error: ${Array.isArray(errorData.confirmpassword) ? errorData.confirmpassword[0] : errorData.confirmpassword}`);
         }
         
         throw new Error(errorData.message || 'Failed to create account. Please try again.');
       }
 
       const result: SignupResponse = await response.json();
-
-      // Success - show toast with assignment info
-      const assignedTo = result.data?.assignment?.assigned_to_name || 'Super Admin';
-      toast.success('Account created successfully!', {
-        description: `Welcome ${result.data?.first_name || 'User'}! Your account has been created and assigned to ${assignedTo}. You can now login.`,
-        duration: 6000,
-        icon: '✅',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #22c55e',
-          color: '#ffffff',
-        },
-      });
+      console.log('✅ Signup success:', result);
 
       // Reset form
       setFullName('');
@@ -228,11 +245,46 @@ function DefaultSignup({ isOpen, onClose, onSwitchToLogin }: DefaultSignupProps)
       setConfirmPassword('');
       setIsLoading(false);
 
-      // Close modal and navigate to signin after a delay
-      setTimeout(() => {
-        onClose();
-        navigate('/signin');
-      }, 2000);
+      // ✅ Show success toast with the user's name and assignment info
+      const assignedTo = result.data?.assignment?.assigned_to_name || 'Super Admin';
+      const firstNameResult = result.data?.first_name || 'User';
+      
+      // Show a prominent success toast
+      toast.success('🎉 Account Created Successfully!', {
+        description: `Welcome ${firstNameResult}! Your account has been created and assigned to ${assignedTo}. Please login to continue.`,
+        duration: 6000,
+        icon: '✅',
+        style: {
+          background: '#1a1a2e',
+          border: '2px solid #22c55e',
+          color: '#ffffff',
+          fontSize: '1.1rem',
+          padding: '1.5rem',
+        },
+        className: 'signup-success-toast',
+      });
+
+      // ✅ Close the signup modal after showing the toast
+      // First close the signup modal
+      onClose();
+      
+      // ✅ Call the success callback to open login modal
+      if (onSignupSuccess) {
+        // Small delay to ensure modal close animation completes
+        setTimeout(() => {
+          onSignupSuccess?.();
+        }, 300);
+      } else if (onSwitchToLogin) {
+        // Fallback: switch to login if no success callback
+        setTimeout(() => {
+          onSwitchToLogin?.();
+        }, 300);
+      } else {
+        // Navigate to login page
+        setTimeout(() => {
+          navigate('/signin');
+        }, 1000);
+      }
 
     } catch (error) {
       setIsLoading(false);
@@ -258,7 +310,7 @@ function DefaultSignup({ isOpen, onClose, onSwitchToLogin }: DefaultSignupProps)
         }
       }
 
-      toast.error('Signup failed', {
+      toast.error('Signup Failed', {
         description: errorMessage,
         duration: 6000,
         icon: '⚠️',

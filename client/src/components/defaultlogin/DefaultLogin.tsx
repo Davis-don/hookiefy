@@ -269,12 +269,12 @@ function DefaultLogin({ isOpen, onClose, onSwitchToSignup }: DefaultLoginProps) 
             {loginMutation.isPending ? (
               <>
                 <span className="default-login-spinner"></span>
-                Signing in...
+                <span className="default-login-btn-text">Signing in...</span>
               </>
             ) : (
               <>
                 <IoLogInOutline className="default-login-btn-icon" />
-                Sign In
+                <span className="default-login-btn-text">Sign In</span>
               </>
             )}
           </button>

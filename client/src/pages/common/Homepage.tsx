@@ -65,6 +65,13 @@ function Homepage() {
     setIsLoginModalOpen(true);
   };
 
+  // ✅ Handle successful signup - show login modal
+  const handleSignupSuccess = () => {
+    // The signup success toast is already shown in the Signup component
+    // Now we just open the login modal so user can login
+    setIsLoginModalOpen(true);
+  };
+
   return (
     <div className="overall-homepage-container">
       {/* Sidebar / Navigation */}
@@ -143,6 +150,7 @@ function Homepage() {
         isOpen={isSignupModalOpen}
         onClose={handleModalClose}
         onSwitchToLogin={handleSwitchToLogin}
+        onSignupSuccess={handleSignupSuccess}
       />
     </div>
   );

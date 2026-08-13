@@ -346,9 +346,10 @@
 }
 
 /* =========================
-   LOGIN BUTTON - BLUE
+   LOGIN BUTTON - BLUE WITH IMPROVED LOADING STATE
 ========================= */
 .default-login-primary-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,8 +364,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
-  position: relative;
   overflow: hidden;
+  min-height: 3.5rem;
+  width: 100%;
   margin-top: 0.5rem;
 }
 
@@ -392,20 +394,19 @@
   transform: translateY(0) scale(0.98);
 }
 
+/* ✅ Disabled/Loading state - More visible */
 .default-login-primary-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.85;
   cursor: not-allowed;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
   transform: none !important;
+  box-shadow: none !important;
 }
 
-.default-login-btn-icon {
-  font-size: 1.4rem;
-}
-
-/* ✅ BOOTSTRAP-STYLED SPINNER - Matching DefaultPostsdiv */
+/* ✅ SPINNER - Large and visible */
 .default-login-spinner {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.8rem;
+  height: 1.8rem;
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-top: 3px solid #ffffff;
   border-radius: 50%;
@@ -417,6 +418,17 @@
 @keyframes defaultLoginSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ✅ Button text - stays visible during loading */
+.default-login-btn-text {
+  display: inline-block;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.default-login-btn-icon {
+  font-size: 1.4rem;
 }
 
 /* =========================
@@ -574,19 +586,31 @@
     font-size: 1.2rem;
   }
 
+  /* ✅ Mobile primary button - larger */
   .default-login-primary-btn {
     padding: 1.4rem 1.8rem;
     font-size: 1.5rem;
     border-radius: 16px;
     gap: 1rem;
+    min-height: 4.5rem;
+    margin-top: 0.8rem;
+  }
+
+  /* ✅ Mobile spinner - bigger and more visible */
+  .default-login-spinner {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-width: 4px;
+    border-color: rgba(255, 255, 255, 0.25);
+    border-top-color: #ffffff;
   }
 
   .default-login-btn-icon {
     font-size: 1.8rem;
   }
 
-  .default-login-primary-btn {
-    margin-top: 0.8rem;
+  .default-login-btn-text {
+    font-size: 1.5rem;
   }
 
   .default-login-secondary-btn {
@@ -620,13 +644,6 @@
 
   .default-login-footer span {
     font-size: 1rem;
-  }
-
-  /* ✅ Bigger spinner on mobile */
-  .default-login-spinner {
-    width: 2rem;
-    height: 2rem;
-    border-width: 3px;
   }
 
   .default-login-error,
@@ -698,10 +715,24 @@
     font-size: 1rem;
   }
 
+  /* ✅ Extra small primary button */
   .default-login-primary-btn {
     padding: 1.2rem 1.5rem;
     font-size: 1.3rem;
     border-radius: 14px;
+    gap: 0.8rem;
+    min-height: 4rem;
+  }
+
+  /* ✅ Extra small spinner */
+  .default-login-spinner {
+    width: 2rem;
+    height: 2rem;
+    border-width: 3px;
+  }
+
+  .default-login-btn-text {
+    font-size: 1.3rem;
   }
 
   .default-login-btn-icon {
@@ -724,11 +755,6 @@
 
   .default-login-footer span {
     font-size: 0.9rem;
-  }
-
-  .default-login-spinner {
-    width: 1.8rem;
-    height: 1.8rem;
   }
 }
 
@@ -779,7 +805,14 @@
   
   .default-login-spinner {
     animation: none;
-    border: 3px solid #ffffff;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-top: 3px solid #ffffff;
+  }
+
+  @media screen and (max-width: 46.875em) {
+    .default-login-spinner {
+      border-width: 4px;
+    }
   }
   
   .default-login-error {

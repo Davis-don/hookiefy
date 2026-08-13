@@ -34,47 +34,13 @@ User = get_user_model()
 def create_user_assigned_to_superadmin(request):
     """
     PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to superadmin.
-    Anyone can create an account (no authentication required).
-    Requires that a superadmin exists in the system.
-    
-    This is useful for:
-    - Public user registration/signup
-    - Allowing anyone to create an account without being logged in
-    - Self-service account creation
-    
-    Request body:
-        {
-            "email": "user@example.com",
-            "password": "securepassword123",
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone_number": "+254712345678",
-            "gender": "M"  # Optional: M, F, O
-        }
-    
-    Response:
-        {
-            "message": "User created and assigned to superadmin successfully",
-            "data": {
-                "id": 123,
-                "email": "user@example.com",
-                "role": "user",
-                "first_name": "John",
-                "last_name": "Doe",
-                "full_name": "John Doe",
-                "phone_number": "+254712345678",
-                "gender": "M",
-                "profile_image_url": null,
-                "has_profile_image": false,
-                "assignment": {
-                    "assigned_to_id": 1,
-                    "assigned_to_email": "superadmin@example.com",
-                    "assigned_to_name": "Super Admin",
-                    "assigned_at": "2026-08-12T10:00:00Z"
-                }
-            }
-        }
     """
+    
+    print("=" * 60)
+    print("📝 PUBLIC SIGNUP REQUEST RECEIVED")
+    print("=" * 60)
+    print(f"📋 Request data: {request.data}")
+    print("=" * 60)
     
     # Check if a superadmin exists in the system
     try:
@@ -84,31 +50,40 @@ def create_user_assigned_to_superadmin(request):
         print("❌ No superadmin found in the system")
         return Response(
             {"message": "System is currently unavailable for registration. Please try again later or contact support."},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE  # 503 Service Unavailable
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
     except Accounts.MultipleObjectsReturned:
-        # If multiple superadmins exist (shouldn't happen), get the first one
         superadmin = Accounts.objects.filter(role='superadmin').first()
         print(f"⚠️ Multiple superadmins found, using first: {superadmin.email}")
     
-    # Validate that the target role is 'user'
-    target_role = request.data.get("role", "user")
-    if target_role != 'user':
+    # Prepare data with role explicitly set to 'user'
+    data = request.data.copy()
+    data['role'] = 'user'  # Force role to be 'user'
+    
+    # Create the user
+    serializer = CreateNewUserSerializer(data=data)
+    
+    if not serializer.is_valid():
+        print(f"❌ Serializer validation errors: {serializer.errors}")
+        # Return detailed validation errors
         return Response(
-            {"message": "This endpoint only creates user accounts. Role must be 'user'."},
+            {
+                "message": "Validation failed",
+                "errors": serializer.errors
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Create the user
-    serializer = CreateNewUserSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Save the user with role 'user'
-    user = serializer.save()
-    
-    # DO NOT create balance for regular users (only admin and superadmin have balances)
-    # DO NOT create commission for regular users (only admin and superadmin have commissions)
+    # Save the user
+    try:
+        user = serializer.save()
+        print(f"✅ User created: {user.email} (ID: {user.id})")
+    except Exception as e:
+        print(f"❌ Error creating user: {str(e)}")
+        return Response(
+            {"message": f"Failed to create user: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
     
     # Assign the user to the superadmin
     try:
@@ -118,7 +93,6 @@ def create_user_assigned_to_superadmin(request):
         )
         print(f"✅ User {user.email} assigned to superadmin {superadmin.email}")
     except Exception as e:
-        # If assignment fails, delete the user and return error
         user.delete()
         print(f"❌ Failed to assign user to superadmin: {str(e)}")
         return Response(
@@ -141,9 +115,7 @@ def create_user_assigned_to_superadmin(request):
             }
         },
         status=status.HTTP_201_CREATED
-    )
-
-# ============================================
+    )# ============================================
 # HELPER: Create user balance
 # ============================================
 
