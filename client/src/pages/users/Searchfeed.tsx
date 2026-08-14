@@ -73,11 +73,14 @@ const fetchSearchFeed = async (accessToken: string | null, forceRefresh = false)
 
   const data = await response.json();
   
+  // Ensure data is an array before caching
+  const userArray = Array.isArray(data) ? data : [];
+  
   // Update cache
-  cachedUsers = data;
+  cachedUsers = userArray;
   cacheTimestamp = now;
 
-  return data;
+  return userArray;
 };
 
 function Searchfeed() {
@@ -103,10 +106,10 @@ function Searchfeed() {
     placeholderData: (previousData) => previousData,
   });
 
-  // Update users when data changes
+  // Update users when data changes - ensure it's always an array
   useEffect(() => {
     if (data) {
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     }
   }, [data]);
 
@@ -165,7 +168,8 @@ function Searchfeed() {
   }
 
   // Empty state - only show when data is loaded and there are no users
-  if (!isLoading && users.length === 0) {
+  // Use Array.isArray and length check for safety
+  if (!isLoading && (!Array.isArray(users) || users.length === 0)) {
     return (
       <div className="overall-searchfeed-container-user empty-container">
         <div className="feed-empty-state">
@@ -180,9 +184,10 @@ function Searchfeed() {
     );
   }
 
+  // Safely render users - ensure users is an array before mapping
   return (
     <div className="overall-searchfeed-container-user">
-      {users.map((user) => {
+      {Array.isArray(users) && users.map((user) => {
         // Create a SearchFeedCardUser object that matches what Serchfeedcard expects
         const cardUser: SearchFeedCardUser = {
           id: user.id,

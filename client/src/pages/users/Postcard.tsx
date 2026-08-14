@@ -1,6 +1,6 @@
 import './postcard.css'
 import { useState } from 'react';
-import { FaUser, FaChevronDown, FaChevronUp, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUser, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ interface PostcardProps {
   time: string;
   location: string;
   image: string | null;
-  bio: string; // ✅ This is the user's bio
+  bio: string;
   profile_image_url?: string | null;
   preference?: {
     interested_in_gender: string;
@@ -53,7 +53,7 @@ function Postcard({
   time, 
   location, 
   image, 
-  bio, // ✅ This is the user's bio
+  bio,
   profile_image_url,
   preference,
   gender,
@@ -204,9 +204,9 @@ function Postcard({
               <h5>{fullName}</h5>
             </div>
             <div className="post-meta">
-              <span>{time}</span>
+              <span className="post-time">{time}</span>
               <span className="post-dot">•</span>
-              <span>{location}</span>
+              <span className="post-location">{location}</span>
             </div>
           </div>
         </div>
@@ -251,29 +251,25 @@ function Postcard({
           )}
         </div>
 
-        {/* ✅ POST BIO - This displays the user's bio below the image */}
+        {/* ✅ POST BIO - Now with larger text */}
         <div className="post-caption">
           <span className="caption-text">{displayBio || 'No bio available'}</span>
           {needsTruncation && (
-            <button className="caption-expand-btn" onClick={toggleBio}>
-              {bioExpanded ? ' Show less' : ' Show more'}
-            </button>
+            <span className="caption-expand-text" onClick={toggleBio}>
+              {bioExpanded ? ' less' : ' more'}
+            </span>
           )}
         </div>
 
-        {/* See More Button - Shows additional details */}
+        {/* See More Details - Now just text like Instagram/TikTok */}
         <div className="post-see-more">
-          <button className="see-more-btn" onClick={toggleShowMore}>
+          <span className="see-more-text" onClick={toggleShowMore}>
             {showMore ? (
-              <>
-                <FaChevronUp /> See less
-              </>
+              <>See less</>
             ) : (
-              <>
-                <FaChevronDown /> See more details
-              </>
+              <>See more details</>
             )}
-          </button>
+          </span>
         </div>
 
         {/* Additional Details */}

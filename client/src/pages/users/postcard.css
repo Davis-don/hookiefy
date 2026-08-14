@@ -83,20 +83,32 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: #8b8ba7;
   margin-top: 2px;
+}
+
+/* 🟢 UPDATED: Post time and location - now larger */
+.post-time {
+  font-size: 16px;
+  color: #a0a0c0;
+  font-weight: 400;
+}
+
+.post-location {
+  font-size: 16px;
+  color: #a0a0c0;
+  font-weight: 400;
 }
 
 .post-dot {
   color: #5a5a7a;
+  font-size: 16px;
 }
 
 /* Post Image - Instagram Style - INCREASED HEIGHT */
 .post-image-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 90%; /* Increased from 75% to 90% for taller images */
+  padding-bottom: 90%;
   background: transparent;
   overflow: hidden;
   cursor: pointer;
@@ -193,47 +205,54 @@
   color: #6a6a8a;
 }
 
-/* Post Caption - Instagram Style */
+/* 🟢 UPDATED: Post Caption - Bio text is now larger */
 .post-caption {
   padding: 12px 16px 8px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #e0e0e0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #e8e8e8;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  font-weight: 400;
 }
 
-.post-caption strong {
-  color: #ffffff;
-  font-weight: 600;
-  margin-right: 6px;
+.caption-text {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #e8e8e8;
 }
 
-/* See More Button */
+/* 🟢 NEW: Show more/less as text link (like Instagram/TikTok) */
+.caption-expand-text {
+  font-size: 18px;
+  color: #8b8ba7;
+  cursor: pointer;
+  font-weight: 400;
+  transition: color 0.2s ease;
+  display: inline;
+  margin-left: 4px;
+}
+
+.caption-expand-text:hover {
+  color: #3b82f6;
+}
+
+/* 🟢 UPDATED: See More Details - now text link like Instagram */
 .post-see-more {
   padding: 0 16px 8px;
 }
 
-.see-more-btn {
-  background: none;
-  border: none;
+.see-more-text {
+  font-size: 16px;
   color: #8b8ba7;
-  font-size: 12px;
-  font-weight: 500;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 0;
+  font-weight: 400;
   transition: color 0.2s ease;
+  display: inline-block;
 }
 
-.see-more-btn:hover {
+.see-more-text:hover {
   color: #3b82f6;
-}
-
-.see-more-btn svg {
-  font-size: 10px;
 }
 
 /* Additional Details Grid */
@@ -441,15 +460,30 @@
   font-weight: 600;
 }
 
-/* Responsive Design */
+/* ============================================ */
+/* 🟢 MOBILE RESPONSIVE - UPDATED FOR LARGER TEXT */
+/* ============================================ */
+
 /* Tablet and smaller laptops */
 @media screen and (max-width: 1024px) {
   .overall-post-card-container {
     max-width: 500px;
   }
+  
+  .post-time,
+  .post-location,
+  .post-dot {
+    font-size: 15px;
+  }
+  
+  .caption-text,
+  .caption-expand-text,
+  .post-caption {
+    font-size: 17px;
+  }
 }
 
-/* Mobile devices */
+/* 🟢 Mobile devices - LARGER TEXT for better readability */
 @media screen and (max-width: 768px) {
   .overall-post-card-container {
     margin: 12px 8px;
@@ -467,20 +501,39 @@
   }
 
   .post-user-name h5 {
-    font-size: 13px;
+    font-size: 14px;
   }
 
-  .post-meta {
-    font-size: 11px;
+  /* 🟢 Mobile: Post time & location - even larger */
+  .post-time,
+  .post-location,
+  .post-dot {
+    font-size: 17px;
+  }
+
+  /* 🟢 Mobile: Bio text - significantly larger (almost double) */
+  .caption-text,
+  .caption-expand-text,
+  .post-caption {
+    font-size: 20px;
+    line-height: 1.8;
+  }
+  
+  .caption-expand-text {
+    font-size: 20px;
   }
 
   .post-caption {
-    font-size: 13px;
-    padding: 10px 14px 6px;
+    padding: 12px 14px 8px;
+  }
+
+  /* 🟢 Mobile: See more text - larger */
+  .see-more-text {
+    font-size: 17px;
   }
 
   .post-image-wrapper {
-    padding-bottom: 100%; /* Even taller on mobile - 1:1 aspect ratio */
+    padding-bottom: 100%;
   }
 
   .details-grid {
@@ -536,7 +589,7 @@
   }
 }
 
-/* Small mobile devices */
+/* 🟢 Small mobile devices - even larger text */
 @media screen and (max-width: 480px) {
   .overall-post-card-container {
     margin: 8px 4px;
@@ -553,16 +606,35 @@
   }
 
   .post-user-name h5 {
-    font-size: 12px;
+    font-size: 13px;
   }
 
-  .post-meta {
-    font-size: 10px;
+  /* 🟢 Small mobile: Post time & location - largest */
+  .post-time,
+  .post-location,
+  .post-dot {
+    font-size: 16px;
+  }
+
+  /* 🟢 Small mobile: Bio text - largest size (double original) */
+  .caption-text,
+  .caption-expand-text,
+  .post-caption {
+    font-size: 19px;
+    line-height: 1.8;
+  }
+  
+  .caption-expand-text {
+    font-size: 19px;
   }
 
   .post-caption {
-    font-size: 12px;
-    padding: 8px 12px 4px;
+    padding: 10px 12px 6px;
+  }
+
+  /* 🟢 Small mobile: See more text */
+  .see-more-text {
+    font-size: 16px;
   }
 
   .post-connect-section {
@@ -577,10 +649,6 @@
 
   .post-image-wrapper {
     padding-bottom: 100%;
-  }
-
-  .see-more-btn {
-    font-size: 11px;
   }
 
   .detail-item {
@@ -599,7 +667,7 @@
 /* Landscape orientation for mobile */
 @media screen and (max-height: 500px) and (orientation: landscape) {
   .post-image-wrapper {
-    padding-bottom: 70%; /* Slightly taller for landscape */
+    padding-bottom: 70%;
   }
 
   .full-image-content {
@@ -617,7 +685,18 @@
 
   .post-caption {
     padding: 6px 12px 4px;
-    font-size: 12px;
+  }
+  
+  .caption-text,
+  .caption-expand-text,
+  .post-caption {
+    font-size: 17px;
+  }
+  
+  .post-time,
+  .post-location,
+  .post-dot {
+    font-size: 15px;
   }
 }
 
@@ -640,7 +719,8 @@ html {
 
 /* Focus states for accessibility */
 .connect-btn:focus-visible,
-.see-more-btn:focus-visible,
+.caption-expand-text:focus-visible,
+.see-more-text:focus-visible,
 .close-full-image:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
