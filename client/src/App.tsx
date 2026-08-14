@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from 'sonner'
-import Login from "./pages/common/Login";
 import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
 import User from "./pages/users/User";
