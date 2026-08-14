@@ -34,6 +34,20 @@ interface SearchFeedCardUser {
   profileImage: string | null;
 }
 
+// Interface for the API response
+interface FeedApiResponse {
+  status: string;
+  data: User[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+    page_size: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
+}
+
 // Simple in-memory cache
 let cachedUsers: User[] | null = null;
 let cacheTimestamp: number | null = null;
@@ -71,10 +85,23 @@ const fetchSearchFeed = async (accessToken: string | null, forceRefresh = false)
     throw new Error(`Failed to fetch search feed: ${response.status}`);
   }
 
-  const data = await response.json();
+  const result: FeedApiResponse = await response.json();
   
-  // Ensure data is an array before caching
-  const userArray = Array.isArray(data) ? data : [];
+  // 🟢 FIX: Extract the data array from the response
+  // Check if the response has a data property that is an array
+  let userArray: User[] = [];
+  
+  if (result && result.status === 'success' && Array.isArray(result.data)) {
+    userArray = result.data;
+    console.log(`✅ Found ${userArray.length} users in feed`);
+  } else if (Array.isArray(result)) {
+    // Fallback: if the response is directly an array (backward compatibility)
+    userArray = result;
+  } else {
+    // If neither, log the unexpected structure
+    console.warn('⚠️ Unexpected API response structure:', result);
+    userArray = [];
+  }
   
   // Update cache
   cachedUsers = userArray;
