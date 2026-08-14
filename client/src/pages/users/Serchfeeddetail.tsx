@@ -1,7 +1,7 @@
 import './serchfeeddetail.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authtokenstore';
 import useSearchFeedStore from './store/sechfeed';
 import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
@@ -54,6 +54,28 @@ interface UserFullData {
   } | null;
 }
 
+// API call to send connection request
+const sendConnectionRequest = async (userId: string | number, accessToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/connections/hookup/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to send connection request');
+  }
+
+  return response.json();
+};
+
 // Fetch single user detail using the correct endpoint
 const fetchUserDetail = async (userId: string, accessToken: string | null): Promise<UserFullData> => {
   if (!accessToken) {
@@ -90,6 +112,7 @@ function Serchfeeddetail() {
   const { id } = useParams<{ id: string }>();
   const { access: accessToken } = useAuthStore();
   const { selectedUserId, reset } = useSearchFeedStore();
+  const [isConnecting, setIsConnecting] = useState(false);
 
   // Use the ID from URL params or from the store
   const userId = id || selectedUserId;
@@ -114,6 +137,40 @@ function Serchfeeddetail() {
     retry: 1,
   });
 
+  // Mutation for sending connection request
+  const connectionMutation = useMutation({
+    mutationFn: () => sendConnectionRequest(userId!, accessToken),
+    onSuccess: (data) => {
+      const userName = userData?.account?.full_name || 'this user';
+      toast.success(data.message || 'Connection request sent successfully!', {
+        description: `You have connected with ${userName}`,
+        duration: 5000,
+        icon: '🤝',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      console.log('Connection successful:', data);
+      setIsConnecting(false);
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to send connection request', {
+        description: error.message || 'Please try again later.',
+        duration: 6000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      console.error('Connection error:', error);
+      setIsConnecting(false);
+    },
+  });
+
   // Show error toast if fetch fails
   useEffect(() => {
     if (isError && error) {
@@ -134,6 +191,57 @@ function Serchfeeddetail() {
   const handleBack = () => {
     console.log('🔙 Going back, resetting store');
     reset();
+  };
+
+  // Handle connect button click
+  const handleConnect = () => {
+    if (!userId) {
+      toast.error('Invalid user', {
+        description: 'Unable to connect with this user.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    if (!accessToken) {
+      toast.error('Please login', {
+        description: 'You need to be logged in to connect with users.',
+        duration: 4000,
+        icon: '🔒',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    const userName = userData?.account?.full_name || 'this user';
+    console.log(`📨 Sending connection request to ${userName} (ID: ${userId})`);
+    
+    setIsConnecting(true);
+    
+    const loadingToast = toast.loading('Sending connection request...', {
+      description: `Connecting with ${userName}`,
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    connectionMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+      }
+    });
   };
 
   // If no valid ID, show error state
@@ -315,6 +423,24 @@ function Serchfeeddetail() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Connect Button - Full width at bottom */}
+      <div className="serchfeed-detail-connect-wrapper">
+        <button 
+          className={`serchfeed-detail-connect-btn ${isConnecting ? 'connecting' : ''}`}
+          onClick={handleConnect}
+          disabled={isConnecting}
+        >
+          {isConnecting ? (
+            <>
+              <span className="serchfeed-detail-connect-spinner"></span>
+              Connecting...
+            </>
+          ) : (
+            'Connect'
+          )}
+        </button>
       </div>
     </div>
   );

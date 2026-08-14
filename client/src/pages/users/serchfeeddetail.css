@@ -1,67 +1,43 @@
-/* ============================================
-   serchfeeddetail.css — User Profile Detail View
-   ============================================ */
+/* serchfeeddetail.css - Detailed profile view */
 
+/* Main Container */
 .overall-serchfeed-detail {
-  width: 100%;
-  max-width: 600px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 0 0.5rem 2rem 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 20px 16px 100px;
+  background: transparent;
   min-height: 100vh;
-  animation: detailFadeIn 0.3s ease;
+  position: relative;
 }
 
-@keyframes detailFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Back button */
+/* Back Button */
 .serchfeed-detail-back {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  padding: 1.5rem 0.5rem 2rem 0.5rem;
+  gap: 8px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
-  transition: all 0.2s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 2rem;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  transition: opacity 0.2s ease;
+  background: none;
+  border: none;
+  color: #a0a0c0;
 }
 
 .serchfeed-detail-back:hover {
-  color: #ffffff;
+  opacity: 0.7;
 }
 
 .serchfeed-detail-back-icon {
-  font-size: 2.5rem;
+  font-size: 24px;
+  color: #3b82f6;
+  font-weight: 300;
 }
 
 .serchfeed-detail-back-text {
-  font-size: 1.6rem;
+  font-size: 16px;
   font-weight: 500;
-}
-
-/* Loading */
-.serchfeed-detail-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  gap: 1.5rem;
-}
-
-.serchfeed-detail-loading-text {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 1.4rem;
+  color: #ffffff;
 }
 
 /* Profile Header */
@@ -69,172 +45,271 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 0 2.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 20px 0 24px;
+  text-align: center;
+  border-bottom: 1px solid rgba(45, 45, 68, 0.4);
 }
 
 .serchfeed-detail-avatar {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.5rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  border: 3px solid #3b82f6;
+  background: #1a1a2e;
+  margin-bottom: 16px;
 }
 
 .serchfeed-detail-avatar-fallback {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #2d2d44, #3d3d5c);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 5rem;
-  font-weight: 700;
+  border: 3px solid #3b82f6;
+  margin-bottom: 16px;
+}
+
+.serchfeed-detail-avatar-fallback span {
+  font-size: 48px;
+  font-weight: 600;
   color: #ffffff;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
 .serchfeed-detail-name {
-  font-size: 3rem;
+  font-size: 24px;
   font-weight: 700;
   color: #ffffff;
-  margin: 0.3rem 0;
+  margin: 0 0 4px;
 }
 
 .serchfeed-detail-handle {
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 0.5rem;
+  font-size: 14px;
+  color: #8b8ba7;
+  margin-bottom: 12px;
 }
 
-.serchfeed-detail-location {
+.serchfeed-detail-location,
+.serchfeed-detail-age {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.5);
+  gap: 6px;
+  font-size: 14px;
+  color: #c0c0d0;
+  margin: 2px 0;
 }
 
-.serchfeed-detail-location-icon {
-  font-size: 1.6rem;
+.serchfeed-detail-location-icon,
+.serchfeed-detail-age-icon {
+  font-size: 16px;
 }
 
-/* Stats */
+/* Stats Section */
 .serchfeed-detail-stats {
   display: flex;
   justify-content: space-around;
-  padding: 2rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 2rem;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(45, 45, 68, 0.4);
+  margin-bottom: 4px;
 }
 
 .serchfeed-detail-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 4px;
 }
 
 .serchfeed-detail-stat-number {
-  font-size: 2rem;
+  font-size: 20px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .serchfeed-detail-stat-label {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  color: #8b8ba7;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* About Section */
-.serchfeed-detail-about {
-  padding: 0.5rem 0 2rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 2rem;
+/* Bio Section */
+.serchfeed-detail-bio {
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(45, 45, 68, 0.4);
 }
 
-.serchfeed-detail-about-title {
-  font-size: 1.4rem;
+.serchfeed-detail-bio-title {
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  color: #8b8ba7;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.8rem;
+  margin-bottom: 8px;
 }
 
-.serchfeed-detail-about-text {
-  font-size: 1.8rem;
-  color: #e5e5e5;
-  line-height: 1.8;
+.serchfeed-detail-bio-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Looking For Section */
 .serchfeed-detail-looking {
-  padding: 0.5rem 0 2rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 2rem;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(45, 45, 68, 0.4);
 }
 
 .serchfeed-detail-looking-title {
-  font-size: 1.4rem;
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  color: #8b8ba7;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.8rem;
+  margin-bottom: 8px;
 }
 
 .serchfeed-detail-looking-text {
-  font-size: 1.8rem;
-  color: #e5e5e5;
-  line-height: 1.8;
-  padding: 1.2rem 1.5rem;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #e0e0e0;
 }
 
-/* Contact Section */
+/* Contact Info Section */
 .serchfeed-detail-contact {
-  padding: 0.5rem 0 2rem 0;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(45, 45, 68, 0.4);
+  margin-bottom: 20px;
 }
 
 .serchfeed-detail-contact-title {
-  font-size: 1.4rem;
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  color: #8b8ba7;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.8rem;
+  margin-bottom: 8px;
 }
 
 .serchfeed-detail-contact-text {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 6px;
 }
 
 .serchfeed-detail-contact-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 1.6rem;
-  color: #e5e5e5;
-  padding: 0.8rem 1.2rem;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 8px;
+  gap: 10px;
+  font-size: 14px;
+  color: #c0c0d0;
 }
 
 .serchfeed-detail-contact-icon {
-  font-size: 1.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  width: 24px;
+}
+
+/* Connect Button - Fixed at bottom */
+.serchfeed-detail-connect-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 16px;
+  background: linear-gradient(to top, rgba(18, 18, 30, 0.95) 60%, transparent);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.serchfeed-detail-connect-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.serchfeed-detail-connect-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.serchfeed-detail-connect-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.serchfeed-detail-connect-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+}
+
+.serchfeed-detail-connect-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.serchfeed-detail-connect-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
+}
+
+.serchfeed-detail-connect-btn.connecting {
+  background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
+}
+
+.serchfeed-detail-connect-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Loading State */
+.serchfeed-detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 20px;
+}
+
+.serchfeed-detail-loading-text {
+  font-size: 16px;
+  color: #8b8ba7;
 }
 
 /* Error State */
@@ -243,293 +318,228 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
-  gap: 1rem;
+  min-height: 60vh;
   text-align: center;
-  padding: 2rem;
+  gap: 12px;
 }
 
 .serchfeed-detail-error-icon {
-  font-size: 4rem;
+  font-size: 48px;
 }
 
 .serchfeed-detail-error-text {
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.6);
-  max-width: 400px;
+  font-size: 16px;
+  color: #c0c0d0;
+  max-width: 300px;
 }
 
 .serchfeed-detail-retry-btn {
-  margin-top: 0.5rem;
-  padding: 0.8rem 2rem;
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 1.4rem;
-  font-weight: 500;
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .serchfeed-detail-retry-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+  background: rgba(59, 130, 246, 0.25);
 }
 
-/* =========================
-   RESPONSIVE - TABLETS
-========================= */
-@media screen and (max-width: 48em) {
+/* ============================================ */
+/* Mobile Responsive */
+/* ============================================ */
+
+/* Tablets and smaller laptops */
+@media screen and (max-width: 1024px) {
   .overall-serchfeed-detail {
-    padding: 0 1rem 2rem 1rem;
+    padding: 16px 20px 100px;
+  }
+}
+
+/* Mobile devices */
+@media screen and (max-width: 768px) {
+  .overall-serchfeed-detail {
+    padding: 16px 16px 90px;
+    max-width: 100%;
   }
 
-  .serchfeed-detail-avatar {
-    width: 140px;
-    height: 140px;
-  }
-
+  .serchfeed-detail-avatar,
   .serchfeed-detail-avatar-fallback {
-    width: 140px;
-    height: 140px;
-    font-size: 4rem;
+    width: 100px;
+    height: 100px;
+  }
+
+  .serchfeed-detail-avatar-fallback span {
+    font-size: 40px;
   }
 
   .serchfeed-detail-name {
-    font-size: 2.6rem;
+    font-size: 22px;
   }
 
   .serchfeed-detail-handle {
-    font-size: 1.4rem;
+    font-size: 13px;
   }
 
-  .serchfeed-detail-location {
-    font-size: 1.3rem;
-  }
-
-  .serchfeed-detail-stat-number {
-    font-size: 1.8rem;
-  }
-
-  .serchfeed-detail-stat-label {
-    font-size: 1.1rem;
-  }
-
-  .serchfeed-detail-about-text {
-    font-size: 1.6rem;
-  }
-
+  .serchfeed-detail-bio-text,
   .serchfeed-detail-looking-text {
-    font-size: 1.6rem;
+    font-size: 15px;
   }
 
-  .serchfeed-detail-contact-item {
-    font-size: 1.4rem;
+  .serchfeed-detail-connect-wrapper {
+    max-width: 100%;
+    padding: 12px 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 
-  .serchfeed-detail-back-text {
-    font-size: 1.4rem;
-  }
-
-  .serchfeed-detail-back-icon {
-    font-size: 2rem;
-  }
-
-  .serchfeed-detail-about-title,
-  .serchfeed-detail-looking-title,
-  .serchfeed-detail-contact-title {
-    font-size: 1.2rem;
+  .serchfeed-detail-connect-btn {
+    padding: 14px;
+    font-size: 17px;
+    border-radius: 12px;
   }
 }
 
-/* =========================
-   RESPONSIVE - PHONES
-========================= */
-@media screen and (max-width: 30em) {
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
   .overall-serchfeed-detail {
-    padding: 0 0.5rem 1.5rem 0.5rem;
+    padding: 12px 12px 80px;
   }
 
   .serchfeed-detail-back {
-    padding: 1rem 0.3rem 1.5rem 0.3rem;
-    gap: 1rem;
+    margin-bottom: 12px;
   }
 
   .serchfeed-detail-back-icon {
-    font-size: 2.2rem;
+    font-size: 20px;
   }
 
   .serchfeed-detail-back-text {
-    font-size: 1.4rem;
+    font-size: 14px;
   }
 
-  .serchfeed-detail-profile {
-    padding: 1.5rem 0 2rem 0;
-  }
-
-  .serchfeed-detail-avatar {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 1.2rem;
-  }
-
+  .serchfeed-detail-avatar,
   .serchfeed-detail-avatar-fallback {
-    width: 120px;
-    height: 120px;
-    font-size: 3.5rem;
-    margin-bottom: 1.2rem;
+    width: 80px;
+    height: 80px;
+  }
+
+  .serchfeed-detail-avatar-fallback span {
+    font-size: 32px;
   }
 
   .serchfeed-detail-name {
-    font-size: 2.4rem;
+    font-size: 20px;
   }
 
   .serchfeed-detail-handle {
-    font-size: 1.3rem;
+    font-size: 12px;
   }
 
-  .serchfeed-detail-location {
-    font-size: 1.2rem;
-    gap: 0.5rem;
-  }
-
-  .serchfeed-detail-location-icon {
-    font-size: 1.3rem;
-  }
-
-  .serchfeed-detail-stats {
-    padding: 1.5rem 0;
-    margin-bottom: 1.5rem;
+  .serchfeed-detail-location,
+  .serchfeed-detail-age {
+    font-size: 13px;
   }
 
   .serchfeed-detail-stat-number {
-    font-size: 1.6rem;
+    font-size: 18px;
   }
 
   .serchfeed-detail-stat-label {
-    font-size: 1rem;
+    font-size: 10px;
   }
 
-  .serchfeed-detail-about {
-    padding: 0.5rem 0 1.5rem 0;
-    margin-bottom: 1.5rem;
-  }
-
-  .serchfeed-detail-about-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .serchfeed-detail-about-text {
-    font-size: 1.6rem;
-    line-height: 1.8;
-  }
-
-  .serchfeed-detail-looking {
-    padding: 0.5rem 0 1.5rem 0;
-    margin-bottom: 1.5rem;
-  }
-
-  .serchfeed-detail-looking-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .serchfeed-detail-looking-text {
-    font-size: 1.6rem;
-    padding: 1rem 1.2rem;
-    line-height: 1.8;
-  }
-
-  .serchfeed-detail-contact {
-    padding: 0.5rem 0 1.5rem 0;
-  }
-
+  .serchfeed-detail-bio-title,
+  .serchfeed-detail-looking-title,
   .serchfeed-detail-contact-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
+    font-size: 12px;
+  }
+
+  .serchfeed-detail-bio-text,
+  .serchfeed-detail-looking-text {
+    font-size: 14px;
+  }
+
+  .serchfeed-detail-connect-wrapper {
+    padding: 10px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .serchfeed-detail-connect-btn {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
   }
 
   .serchfeed-detail-contact-item {
-    font-size: 1.4rem;
-    padding: 0.7rem 1rem;
-  }
-
-  .serchfeed-detail-contact-icon {
-    font-size: 1.6rem;
+    font-size: 13px;
   }
 
   .serchfeed-detail-error-text {
-    font-size: 1.4rem;
+    font-size: 14px;
   }
 }
 
-/* Add these missing styles to your existing CSS */
-
-/* Age display in profile header */
-.serchfeed-detail-age {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 0.3rem;
-}
-
-.serchfeed-detail-age-icon {
-  font-size: 1.6rem;
-}
-
-/* Bio Section */
-.serchfeed-detail-bio {
-  padding: 0.5rem 0 2rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 2rem;
-}
-
-.serchfeed-detail-bio-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.8rem;
-}
-
-.serchfeed-detail-bio-text {
-  font-size: 1.8rem;
-  color: #e5e5e5;
-  line-height: 1.8;
-}
-
-/* Responsive additions */
-@media screen and (max-width: 48em) {
-  .serchfeed-detail-bio-text {
-    font-size: 1.6rem;
+/* Landscape orientation for mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .overall-serchfeed-detail {
+    padding: 12px 16px 80px;
   }
-  .serchfeed-detail-age {
-    font-size: 1.3rem;
+
+  .serchfeed-detail-profile {
+    padding: 12px 0 16px;
+  }
+
+  .serchfeed-detail-avatar,
+  .serchfeed-detail-avatar-fallback {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+  }
+
+  .serchfeed-detail-avatar-fallback span {
+    font-size: 24px;
+  }
+
+  .serchfeed-detail-name {
+    font-size: 18px;
+  }
+
+  .serchfeed-detail-stats {
+    padding: 12px 0;
+  }
+
+  .serchfeed-detail-bio,
+  .serchfeed-detail-looking,
+  .serchfeed-detail-contact {
+    padding: 12px 0;
+  }
+
+  .serchfeed-detail-connect-wrapper {
+    padding: 8px 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .serchfeed-detail-connect-btn {
+    padding: 10px;
+    font-size: 15px;
   }
 }
 
-@media screen and (max-width: 30em) {
-  .serchfeed-detail-bio {
-    padding: 0.5rem 0 1.5rem 0;
-    margin-bottom: 1.5rem;
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .overall-serchfeed-detail {
+    background: transparent;
   }
-  .serchfeed-detail-bio-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-  }
-  .serchfeed-detail-bio-text {
-    font-size: 1.6rem;
-    line-height: 1.8;
-  }
-  .serchfeed-detail-age {
-    font-size: 1.2rem;
-  }
-  .serchfeed-detail-age-icon {
-    font-size: 1.3rem;
+}
+
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+  .serchfeed-detail-connect-wrapper {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
