@@ -1,8 +1,7 @@
 from django.urls import path
-# Change 'feed_info' to 'UserFeedView'
-from .views import UserFeedView 
+from .views import get_user_feed_data
 
 urlpatterns = [
     # Use UserFeedView.as_view() since it's a class-based view
-    path('info/', UserFeedView.as_view(), name='user-feed'),
+    path('info/', get_user_feed_data, name='user-feed'),
 ]

@@ -22,6 +22,10 @@ interface PostcardProps {
   gender?: string;
   email?: string;
   phone_number?: string;
+  // Connection status fields
+  has_accepted?: boolean;
+  sent_pending?: boolean;
+  received_pending?: boolean;
 }
 
 // API call to send connection request
@@ -46,6 +50,50 @@ const sendConnectionRequest = async (userId: string, accessToken: string | null)
   return response.json();
 };
 
+// API call to accept connection request
+const acceptConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/connections/accept/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to accept connection request');
+  }
+
+  return response.json();
+};
+
+// API call to reject connection request
+const rejectConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/connections/reject/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to reject connection request');
+  }
+
+  return response.json();
+};
+
 function Postcard({ 
   id,
   firstName, 
@@ -57,6 +105,9 @@ function Postcard({
   profile_image_url,
   preference,
   gender,
+  has_accepted = false,
+  sent_pending = false,
+  received_pending = false,
 }: PostcardProps) {
   const [showFullImage, setShowFullImage] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -75,6 +126,7 @@ function Postcard({
     : bio;
 
   console.log(`🖼️ Rendering Postcard for ${fullName}, Bio: "${bio}"`);
+  console.log(`🔗 Connection status - Accepted: ${has_accepted}, Sent: ${sent_pending}, Received: ${received_pending}`);
 
   // Mutation for sending connection request
   const connectionMutation = useMutation({
@@ -91,6 +143,7 @@ function Postcard({
         },
       });
       console.log('Connection successful:', data);
+      // You might want to refetch the feed here to update the status
     },
     onError: (error: Error) => {
       toast.error('Failed to send connection request', {
@@ -104,6 +157,68 @@ function Postcard({
         },
       });
       console.error('Connection error:', error);
+    },
+  });
+
+  // Mutation for accepting connection request
+  const acceptMutation = useMutation({
+    mutationFn: () => acceptConnectionRequest(id, accessToken),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Connection accepted!', {
+        description: `You are now connected with ${fullName}`,
+        duration: 5000,
+        icon: '🎉',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      console.log('Accept successful:', data);
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to accept connection', {
+        description: error.message || 'Please try again later.',
+        duration: 6000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      console.error('Accept error:', error);
+    },
+  });
+
+  // Mutation for rejecting connection request
+  const rejectMutation = useMutation({
+    mutationFn: () => rejectConnectionRequest(id, accessToken),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Connection request rejected', {
+        description: `You have rejected ${fullName}'s request`,
+        duration: 5000,
+        icon: '👋',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #f59e0b',
+          color: '#ffffff',
+        },
+      });
+      console.log('Reject successful:', data);
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to reject connection', {
+        description: error.message || 'Please try again later.',
+        duration: 6000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      console.error('Reject error:', error);
     },
   });
 
@@ -126,6 +241,44 @@ function Postcard({
     });
   };
 
+  const handleAccept = () => {
+    console.log(`Accepting connection from ${fullName} (ID: ${id})`);
+    
+    const loadingToast = toast.loading('Accepting connection...', {
+      description: `Connecting with ${fullName}`,
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    acceptMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+      }
+    });
+  };
+
+  const handleReject = () => {
+    console.log(`Rejecting connection from ${fullName} (ID: ${id})`);
+    
+    const loadingToast = toast.loading('Rejecting connection...', {
+      description: `Rejecting ${fullName}'s request`,
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #f59e0b',
+        color: '#ffffff',
+      },
+    });
+
+    rejectMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+      }
+    });
+  };
+
   const handleImageClick = () => {
     if (image) {
       setShowFullImage(true);
@@ -136,16 +289,16 @@ function Postcard({
     setShowFullImage(false);
   };
 
-  const toggleShowMore = () => {
-    setShowMore(!showMore);
-  };
-
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
 
   const toggleBio = () => {
     setBioExpanded(!bioExpanded);
+  };
+
+  const toggleShowMore = () => {
+    setShowMore(!showMore);
   };
 
   // Get gender display
@@ -175,7 +328,63 @@ function Postcard({
     return genderMap[interested] || interested;
   };
 
-  const isConnecting = connectionMutation.isPending;
+  // Determine button state and render
+  const renderConnectionButton = () => {
+    const isConnecting = connectionMutation.isPending;
+    const isAccepting = acceptMutation.isPending;
+    const isRejecting = rejectMutation.isPending;
+
+    // Already connected (accepted)
+    if (has_accepted) {
+      return (
+        <button className="connect-btn connected" disabled>
+          ✓ Connected
+        </button>
+      );
+    }
+
+    // Sent a pending request (waiting for them to accept)
+    if (sent_pending) {
+      return (
+        <button className="connect-btn pending" disabled>
+          ⏳ Pending
+        </button>
+      );
+    }
+
+    // Received a pending request (need to accept or reject)
+    if (received_pending) {
+      return (
+        <div className="connect-actions">
+          <button 
+            className="connect-btn accept" 
+            onClick={handleAccept}
+            disabled={isAccepting || isRejecting}
+          >
+            {isAccepting ? 'Accepting...' : '✓ Accept'}
+          </button>
+          <button 
+            className="connect-btn reject" 
+            onClick={handleReject}
+            disabled={isAccepting || isRejecting}
+          >
+            {isRejecting ? 'Rejecting...' : '✕ Reject'}
+          </button>
+        </div>
+      );
+    }
+
+    // No connection - show Connect button
+    return (
+      <button 
+        className="connect-btn" 
+        onClick={handleConnect}
+        disabled={isConnecting}
+      >
+        {isConnecting ? 'Connecting...' : 'Connect'}
+      </button>
+    );
+  };
 
   return (
     <>
@@ -251,7 +460,7 @@ function Postcard({
           )}
         </div>
 
-        {/* ✅ POST BIO - Now with larger text */}
+        {/* Post Bio */}
         <div className="post-caption">
           <span className="caption-text">{displayBio || 'No bio available'}</span>
           {needsTruncation && (
@@ -261,7 +470,7 @@ function Postcard({
           )}
         </div>
 
-        {/* See More Details - Now just text like Instagram/TikTok */}
+        {/* See More Details */}
         <div className="post-see-more">
           <span className="see-more-text" onClick={toggleShowMore}>
             {showMore ? (
@@ -321,15 +530,9 @@ function Postcard({
           </div>
         )}
 
-        {/* Connect Button */}
+        {/* Connection Button Section */}
         <div className="post-connect-section">
-          <button 
-            className="connect-btn" 
-            onClick={handleConnect}
-            disabled={isConnecting}
-          >
-            {isConnecting ? 'Connecting...' : 'Connect'}
-          </button>
+          {renderConnectionButton()}
         </div>
       </div>
 
