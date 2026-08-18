@@ -43,6 +43,7 @@
   gap: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 0.5rem;
+  position: relative;
 }
 
 .notif-tab-btn {
@@ -93,6 +94,30 @@
   }
 }
 
+/* ============================================
+   NOTIFICATION DOTS - Improved Positioning
+   ============================================ */
+
+/* Base dot styling */
+.notif-tab-dot {
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure the tab button has proper positioning */
+.notif-tab-btn {
+  position: relative;
+  padding-right: 4px !important;
+}
+
+/* Adjust tab spacing for dots */
+.notif-tab-btn span:first-child {
+  margin-right: 2px;
+}
+
 /* Body */
 .notif-body {
   background: rgba(255, 255, 255, 0.02);
@@ -114,9 +139,9 @@
   max-width: 100%;
 }
 
-/* =========================
+/* ============================================
    RESPONSIVE - TABLETS & SMALL LAPTOPS
-========================= */
+   ============================================ */
 @media screen and (max-width: 48em) {
   .notif-wrapper {
     padding: 0.8rem;
@@ -149,11 +174,20 @@
       opacity: 1;
     }
   }
+
+  /* Larger dots for tablets */
+  .notif-tab-dot {
+    width: 12px !important;
+    height: 12px !important;
+    top: 2px !important;
+    right: -6px !important;
+    border-width: 2.5px !important;
+  }
 }
 
-/* =========================
-   RESPONSIVE - PHONES
-========================= */
+/* ============================================
+   RESPONSIVE - PHONES (FIXED DOT POSITIONING)
+   ============================================ */
 @media screen and (max-width: 30em) {
   .notif-wrapper {
     padding: 0.5rem;
@@ -175,12 +209,43 @@
   .notif-tabs {
     gap: 0.3rem;
     padding-bottom: 0.3rem;
+    justify-content: flex-start;
   }
 
   .notif-tab-btn {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.8rem 0.4rem 0.6rem;
     border-radius: 6px;
+    gap: 0.3rem;
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  /* Make dots BIGGER and more visible on mobile */
+  .notif-tab-dot {
+    width: 14px !important;
+    height: 14px !important;
+    top: -2px !important;
+    right: -4px !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7) !important;
+    animation: pulse-dot-mobile 1.5s infinite !important;
+  }
+
+  /* Add extra spacing between tabs for clarity */
+  .notif-tab-btn:first-child {
+    margin-right: 4px;
+  }
+
+  .notif-tab-btn:last-child {
+    margin-left: 4px;
+  }
+
+  /* Make text more readable */
+  .notif-tab-btn span:first-child {
+    font-size: 0.7rem;
+    letter-spacing: 0.2px;
   }
 
   .notif-tab-indicator {
@@ -207,8 +272,37 @@
   }
 }
 
+/* ============================================
+   EXTRA SMALL SCREENS (Very small phones)
+   ============================================ */
+@media screen and (max-width: 20em) {
+  .notif-tab-btn {
+    font-size: 0.6rem;
+    padding: 0.3rem 0.6rem 0.3rem 0.4rem;
+  }
 
-/* Pulse animation for notification dots */
+  .notif-tab-btn span:first-child {
+    font-size: 0.6rem;
+  }
+
+  .notif-tab-dot {
+    width: 12px !important;
+    height: 12px !important;
+    top: -1px !important;
+    right: -3px !important;
+    border-width: 2.5px !important;
+  }
+
+  .notif-tabs {
+    gap: 0.2rem;
+  }
+}
+
+/* ============================================
+   PULSE ANIMATIONS
+   ============================================ */
+
+/* Standard pulse for all screens */
 @keyframes pulse-dot {
   0% {
     transform: scale(1);
@@ -224,19 +318,18 @@
   }
 }
 
-/* Notification tab dot styling */
-.notif-tab-dot {
-  display: inline-block;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
-}
-
-/* Ensure the tab button has proper positioning */
-.notif-tab-btn {
-  position: relative;
-  padding-right: 16px !important; /* Add space for the dot */
-}
-
-/* Adjust tab spacing for dots */
-.notif-tab-btn span:first-child {
-  margin-right: 4px;
+/* Mobile-specific pulse - slightly different timing for visibility */
+@keyframes pulse-dot-mobile {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
