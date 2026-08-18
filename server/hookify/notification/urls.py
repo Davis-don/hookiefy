@@ -22,6 +22,16 @@ urlpatterns = [
     # Check if user has unread notifications
     path('has-unread/', views.has_unread_notifications, name='has_unread_notifications'),
     
+    # ============================================
+    # NEW UNREAD SPECIFIC ENDPOINTS
+    # ============================================
+    
+    # Check unread activity (non-pending, non-rejected)
+    path('has-unread-activity/', views.has_unread_activity, name='has_unread_activity'),
+    
+    # Check unread connection requests (pending only)
+    path('has-unread-requests/', views.has_unread_connection_requests, name='has_unread_connection_requests'),
+    
     # Get all completed/paid connections (for the Successful Connections tab)
     path('connections-paid/', views.get_paid_connections, name='get_paid_connections'),
     

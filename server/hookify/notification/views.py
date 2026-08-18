@@ -684,3 +684,113 @@ def get_paid_connections(request):
         "total_count": total_count,
         "data": response_data
     }, status=status.HTTP_200_OK)
+
+
+
+# ============================================
+# CHECK UNREAD ACTIVITY NOTIFICATIONS
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_unread_activity(request):
+    """
+    Check if the current authenticated user has any unread activity notifications.
+    Returns True if at least one unread notification exists for non-pending connections.
+    Excludes REJECTED connections.
+    """
+    
+    user = request.user
+    
+    print("=" * 60)
+    print("🔔 CHECKING UNREAD ACTIVITY NOTIFICATIONS")
+    print("=" * 60)
+    print(f"👤 User ID: {user.id}")
+    print(f"👤 User: {user.full_name}")
+    print("=" * 60)
+    
+    # Get notification types (excluding rejected)
+    connection_notification_types = [
+        Notification.NotificationType.CONNECTION_REQUEST,
+        Notification.NotificationType.CONNECTION_ACCEPTED,
+        Notification.NotificationType.CONNECTION_COMPLETED,
+    ]
+    
+    # Check for unread notifications for non-pending connections
+    # Exclude PENDING and REJECTED
+    has_unread = Notification.objects.filter(
+        user=user,
+        notification_type__in=connection_notification_types,
+        is_read=False
+    ).exclude(
+        connection__status='PENDING'
+    ).exclude(
+        connection__status='REJECTED'
+    ).exists()
+    
+    print(f"📊 Has unread activity: {has_unread}")
+    
+    if has_unread:
+        unread_count = Notification.objects.filter(
+            user=user,
+            notification_type__in=connection_notification_types,
+            is_read=False
+        ).exclude(
+            connection__status='PENDING'
+        ).exclude(
+            connection__status='REJECTED'
+        ).count()
+        print(f"📊 Total unread activity notifications: {unread_count}")
+    
+    print("=" * 60)
+    
+    return Response({
+        "has_unread_activity": has_unread
+    }, status=status.HTTP_200_OK)
+
+
+# ============================================
+# CHECK UNREAD CONNECTION REQUEST NOTIFICATIONS
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_unread_connection_requests(request):
+    """
+    Check if the current authenticated user has any unread connection request notifications.
+    Returns True if at least one unread notification exists for PENDING connections.
+    """
+    
+    user = request.user
+    
+    print("=" * 60)
+    print("🔔 CHECKING UNREAD CONNECTION REQUESTS")
+    print("=" * 60)
+    print(f"👤 User ID: {user.id}")
+    print(f"👤 User: {user.full_name}")
+    print("=" * 60)
+    
+    # Check for unread connection request notifications with PENDING status
+    has_unread = Notification.objects.filter(
+        user=user,
+        notification_type=Notification.NotificationType.CONNECTION_REQUEST,
+        connection__status='PENDING',
+        is_read=False
+    ).exists()
+    
+    print(f"📊 Has unread connection requests: {has_unread}")
+    
+    if has_unread:
+        unread_count = Notification.objects.filter(
+            user=user,
+            notification_type=Notification.NotificationType.CONNECTION_REQUEST,
+            connection__status='PENDING',
+            is_read=False
+        ).count()
+        print(f"📊 Total unread connection requests: {unread_count}")
+    
+    print("=" * 60)
+    
+    return Response({
+        "has_unread_connection_requests": has_unread
+    }, status=status.HTTP_200_OK)
