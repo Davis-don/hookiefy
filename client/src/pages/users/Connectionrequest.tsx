@@ -191,7 +191,7 @@ function Connectionrequest({ onNotificationRead }: ConnectionrequestProps) {
   const { access: accessToken } = useAuthStore();
   const { openPreview } = usePreviewStore();
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const intervalRef = useRef<number | null>(null);
@@ -237,7 +237,7 @@ function Connectionrequest({ onNotificationRead }: ConnectionrequestProps) {
   useEffect(() => {
     if (data) {
       setConnectionRequests(data.data);
-      setUnreadCount(data.pagination.unread_count || 0);
+      
     }
   }, [data]);
 
@@ -366,17 +366,9 @@ function Connectionrequest({ onNotificationRead }: ConnectionrequestProps) {
       <div className="conn-req-header">
         <div className="conn-req-header-left">
           <h2 className="conn-req-title">Connection Requests</h2>
-          {unreadCount > 0 && (
-            <span className="conn-req-unread-badge">
-              {unreadCount} new{unreadCount > 1 ? 's' : ''}
-            </span>
-          )}
+          
         </div>
-        <div className="conn-req-header-right">
-          {isFetching && (
-            <span className="conn-req-updating">Updating...</span>
-          )}
-        </div>
+        
       </div>
 
       {/* List of requests */}
