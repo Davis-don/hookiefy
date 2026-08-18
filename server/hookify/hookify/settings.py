@@ -24,13 +24,13 @@ DEBUG = os.environ.get("DEBUG", "True") == "True"
 # Updated ALLOWED_HOSTS to include Netlify frontend
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,hookiefy-server.onrender.com,hookiefy.netlify.app"
+    "localhost,127.0.0.1,hookiefy-server-7d6d.onrender.com,hookiefy.netlify.app"
 ).split(",")
 
 # Updated CSRF_TRUSTED_ORIGINS to include Netlify frontend
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://hookiefy-server.onrender.com,https://hookiefy.netlify.app"
+    "https://hookiefy-server-7d6d.onrender.com,https://hookiefy.netlify.app"
 ).split(",")
 
 # ---------------------------------------------------
@@ -140,7 +140,7 @@ default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://hookiefy.netlify.app",
-    "https://hookiefy-server.onrender.com",
+    "https://hookiefy-server-7d6d.onrender.com",
 ]
 
 # Parse CORS origins from environment
@@ -151,7 +151,7 @@ else:
     cors_origins = default_origins
 
 # Ensure both frontend and backend URLs are included
-backend_url = "https://hookiefy-server.onrender.com"
+backend_url = "https://hookiefy-server-7d6d.onrender.com"
 frontend_url = "https://hookiefy.netlify.app"
 
 if backend_url not in cors_origins:
@@ -205,7 +205,7 @@ if csrf_env:
     csrf_origins = [origin.strip() for origin in csrf_env.split(",") if origin.strip()]
 else:
     csrf_origins = [
-        "https://hookiefy-server.onrender.com",
+        "https://hookiefy-server-7d6d.onrender.com",
         "https://hookiefy.netlify.app",
     ]
 
@@ -268,7 +268,7 @@ PESAPAL_BASE_URL = config("PESAPAL_BASE_URL", default="https://cybqa.pesapal.com
 # Base domain for your server
 BASE_DOMAIN = os.environ.get(
     "BASE_DOMAIN",
-    "https://hookiefy-server.onrender.com"
+    "https://hookiefy-server-7d6d.onrender.com"
 )
 
 # Callback URLs - Note the /payments/ prefix to match your URL structure
