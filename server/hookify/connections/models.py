@@ -43,7 +43,16 @@ class Connection(models.Model):
     class Meta:
         db_table = "connections"
         ordering = ["-created_at"]
-        unique_together = ("sender", "receiver")
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["sender", "receiver"],
+                condition=models.Q(
+                    status__in=["PENDING", "ACCEPTED"]
+                ),
+                name="unique_active_connection"
+            )
+        ]
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver} ({self.status})"

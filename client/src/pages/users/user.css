@@ -602,6 +602,75 @@
   .statauses-user-container {
     z-index: 9999;
   }
+
+  /* =========================
+     MOBILE LOGOUT BUTTON - NEW
+  ========================= */
+  .user-logout-section {
+    display: flex !important;
+    padding: 0.3rem 0.3rem;
+    border-top: none;
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+
+  .user-logout-btn {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.4rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    background: transparent;
+    border: none;
+    color: #e5e5e5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    width: auto;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .user-logout-btn:hover:not(:disabled) {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+  }
+
+  .user-logout-btn:hover:not(:disabled) .user-logout-icon {
+    color: #ef4444;
+  }
+
+  .user-logout-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .user-logout-icon {
+    font-size: 3.2rem !important;
+    min-width: auto;
+    transition: color 0.2s ease;
+    color: #e5e5e5;
+    line-height: 1;
+  }
+
+  .user-logout-text {
+    display: none; /* Hide text, only show icon on mobile */
+  }
+
+  /* Show a small indicator text below icon */
+  .user-logout-btn::after {
+    content: 'Logout';
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.3px;
+  }
+
+  .user-logout-btn:hover:not(:disabled)::after {
+    color: #ef4444;
+  }
 }
 
 /* =========================
@@ -610,6 +679,10 @@
 @media screen and (max-width: 30em) {
   .icon-fig {
     font-size: 2.8rem !important; /* Slightly smaller for very small screens but still large */
+  }
+
+  .user-logout-icon {
+    font-size: 2.8rem !important;
   }
 
   .user-account-header-container {
@@ -669,6 +742,10 @@
     top: -1px !important;
     right: -1px !important;
   }
+
+  .user-logout-btn::after {
+    font-size: 0.4rem;
+  }
 }
 
 /* =========================
@@ -683,7 +760,7 @@
 }
 
 /* =========================
-   LOGOUT BUTTON
+   LOGOUT BUTTON (Desktop)
 ========================= */
 .user-logout-section {
   padding: 0.5rem 0.8rem 0.3rem 0.8rem;
@@ -734,10 +811,35 @@
   white-space: nowrap;
 }
 
-/* Mobile responsive - hide logout on mobile */
+/* Hide desktop logout text on mobile, show icon only */
 @media screen and (max-width: 46.875em) {
   .user-logout-section {
+    display: flex !important;
+    border-top: none;
+    padding: 0.3rem 0.3rem;
+  }
+  
+  .user-logout-btn {
+    flex-direction: column;
+    padding: 0.4rem 0.4rem;
+    font-size: 0.6rem;
+    width: auto;
+    flex: 1;
+  }
+  
+  .user-logout-text {
     display: none;
+  }
+  
+  .user-logout-icon {
+    font-size: 3.2rem !important;
+    min-width: auto;
+  }
+  
+  .user-logout-btn::after {
+    content: 'Logout';
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
   }
 }
 

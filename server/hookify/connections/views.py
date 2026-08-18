@@ -23,6 +23,13 @@ def hookup_view(request, id):
     """
     Hookup view that takes authenticated user and an ID parameter.
     Creates a connection request and notifies the receiver.
+    
+    Rules:
+    - Can create if NO previous connection exists
+    - Can create if previous connection status is REJECTED
+    - Can create if previous connection status is COMPLETED
+    - CANNOT create if previous connection status is PENDING
+    - CANNOT create if previous connection status is ACCEPTED
     """
 
     # Get the authenticated user (sender)
@@ -57,45 +64,37 @@ def hookup_view(request, id):
             "status": "failed"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check if connection already exists
-    try:
-        existing_connection = Connection.objects.get(
-            sender=sender,
-            receiver=receiver
-        )
+    # Check for any existing connections between these two users (both directions)
+    existing_connections = Connection.objects.filter(
+        models.Q(sender=sender, receiver=receiver) |
+        models.Q(sender=receiver, receiver=sender)
+    )
 
+    # Check if there's an ACTIVE connection (PENDING or ACCEPTED)
+    active_connection = existing_connections.filter(
+        status__in=[Connection.Status.PENDING, Connection.Status.ACCEPTED]
+    ).first()
+
+    if active_connection:
         return Response({
-            "message": "Connection request already sent",
-            "connection_id": str(existing_connection.connection_id),
-            "status": existing_connection.status,
-            "sender_id": sender.id,
-            "receiver_id": receiver.id,
-            "receiver_name": receiver_name,
-            "created_at": existing_connection.created_at
-        }, status=status.HTTP_200_OK)
+            "message": "Cannot create connection request",
+            "error": f"An active connection already exists with status: {active_connection.get_status_display()}",
+            "connection_id": str(active_connection.connection_id),
+            "status": active_connection.status,
+            "status_display": active_connection.get_status_display(),
+            "sender_id": active_connection.sender.id,
+            "receiver_id": active_connection.receiver.id,
+            "created_at": active_connection.created_at
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    except Connection.DoesNotExist:
-        pass
+    # Check if there's a previous connection (REJECTED or COMPLETED)
+    previous_connection = existing_connections.filter(
+        status__in=[Connection.Status.REJECTED, Connection.Status.COMPLETED]
+    ).first()
 
-    # Check if receiver already sent a request to sender
-    try:
-        existing_connection = Connection.objects.get(
-            sender=receiver,
-            receiver=sender
-        )
-
-        return Response({
-            "message": "This user has already sent you a connection request",
-            "connection_id": str(existing_connection.connection_id),
-            "status": existing_connection.status,
-            "sender_id": receiver.id,
-            "receiver_id": sender.id,
-            "sender_name": receiver_name,
-            "created_at": existing_connection.created_at
-        }, status=status.HTTP_200_OK)
-
-    except Connection.DoesNotExist:
-        pass
+    if previous_connection:
+        print(f"ℹ️ Previous {previous_connection.get_status_display()} connection found. Creating new request.")
+        # We'll allow creating a new one since the previous is not active
 
     # Create the connection and notification
     try:
@@ -118,6 +117,9 @@ def hookup_view(request, id):
         print(f"✅ Notification created for User ID: {receiver.id}")
         print(f"📩 Notification sent to: {receiver_name}")
         print(f"📝 Notification Type: {Notification.NotificationType.CONNECTION_REQUEST}")
+        
+        if previous_connection:
+            print(f"ℹ️ Previous connection ID: {previous_connection.connection_id} (status: {previous_connection.get_status_display()})")
         print("=" * 60)
 
         return Response({
@@ -130,6 +132,12 @@ def hookup_view(request, id):
             "receiver_name": receiver_name,
             "connection_status": connection.status,
             "status_display": connection.get_status_display(),
+            "previous_connection": {
+                "exists": previous_connection is not None,
+                "connection_id": str(previous_connection.connection_id) if previous_connection else None,
+                "status": previous_connection.status if previous_connection else None,
+                "status_display": previous_connection.get_status_display() if previous_connection else None
+            } if previous_connection else None,
             "notification": {
                 "type": Notification.NotificationType.CONNECTION_REQUEST,
                 "title": "New Connection Request",

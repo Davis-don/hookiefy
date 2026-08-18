@@ -129,7 +129,7 @@ def get_connection_requests(request):
 
 
 # ============================================
-# FETCH ALL CONNECTION NOTIFICATIONS (EXCLUDING PENDING - ONLY OTHER USER'S ACTIONS)
+# FETCH ALL CONNECTION NOTIFICATIONS (EXCLUDING PENDING AND REJECTED - ONLY OTHER USER'S ACTIONS)
 # ============================================
 
 @api_view(['GET'])
@@ -137,38 +137,39 @@ def get_connection_requests(request):
 def get_connection_requests_all(request):
     """
     Fetch all connection notifications for the current authenticated user.
-    Returns all connection-related notifications (CONNECTION_REQUEST, CONNECTION_ACCEPTED, CONNECTION_REJECTED, CONNECTION_COMPLETED)
-    where the connection status is NOT 'PENDING'.
+    Returns all connection-related notifications (CONNECTION_REQUEST, CONNECTION_ACCEPTED, CONNECTION_COMPLETED)
+    where the connection status is NOT 'PENDING' and NOT 'REJECTED'.
     
     CRITICAL: Only returns activities where the OTHER user took action.
     The current user's own actions (accepting/rejecting) are EXCLUDED.
+    REJECTED connections are EXCLUDED from the response.
     """
     
     # Get the current authenticated user
     user = request.user
     
     print("=" * 60)
-    print("📩 FETCHING ACTIVITY (OTHER USER'S ACTIONS ONLY)")
+    print("📩 FETCHING ACTIVITY (OTHER USER'S ACTIONS ONLY - EXCLUDING REJECTED)")
     print("=" * 60)
     print(f"👤 Current User ID: {user.id}")
     print(f"👤 Current User: {user.full_name}")
     print(f"📧 Email: {user.email}")
     print("=" * 60)
     
-    # Fetch ALL connection-related notification types
+    # Fetch connection notification types (EXCLUDING REJECTED)
     connection_notification_types = [
         Notification.NotificationType.CONNECTION_REQUEST,
         Notification.NotificationType.CONNECTION_ACCEPTED,
-        Notification.NotificationType.CONNECTION_REJECTED,
+        # Notification.NotificationType.CONNECTION_REJECTED,  # REMOVED - Exclude rejected
         Notification.NotificationType.CONNECTION_COMPLETED,
     ]
     
     # Get notifications where the OTHER user took action
     # This means:
-    # 1. Current user is the receiver -> Other user (sender) sent/requested/accepted/rejected
-    # 2. Current user is the sender -> Other user (receiver) accepted/rejected
+    # 1. Current user is the receiver -> Other user (sender) sent/requested/accepted
+    # 2. Current user is the sender -> Other user (receiver) accepted/completed
     
-    # For CONNECTION_ACCEPTED, CONNECTION_REJECTED, CONNECTION_COMPLETED:
+    # For CONNECTION_ACCEPTED, CONNECTION_COMPLETED:
     # The action_taker is the one who changed the status (not the current user)
     
     notifications = Notification.objects.filter(
@@ -187,16 +188,18 @@ def get_connection_requests_all(request):
         ) |
         Q(
             # Scenario: Current user is the sender
-            # Other user (receiver) accepted or rejected
+            # Other user (receiver) accepted or completed
             Q(connection__sender=user) &
             Q(
                 Q(notification_type=Notification.NotificationType.CONNECTION_ACCEPTED) |
-                Q(notification_type=Notification.NotificationType.CONNECTION_REJECTED) |
                 Q(notification_type=Notification.NotificationType.CONNECTION_COMPLETED)
+                # CONNECTION_REJECTED removed from here as well
             )
         )
     ).exclude(
         connection__status='PENDING'
+    ).exclude(
+        connection__status='REJECTED'  # EXCLUDE REJECTED - THIS IS THE KEY CHANGE
     ).select_related('connection', 'connection__sender', 'connection__receiver')
     
     # Order by created_at descending (newest first)
@@ -206,7 +209,7 @@ def get_connection_requests_all(request):
     total_count = notifications.count()
     unread_count = notifications.filter(is_read=False).count()
     
-    print(f"📊 Total activities (other user's actions): {total_count}")
+    print(f"📊 Total activities (other user's actions, excluding rejected): {total_count}")
     print(f"📊 Unread activities: {unread_count}")
     
     # Log breakdown
@@ -315,7 +318,7 @@ def get_connection_requests_all(request):
         response_data.append(notification_dict)
     
     return Response({
-        "message": "All connection notifications (other user's actions only) fetched successfully",
+        "message": "All connection notifications (other user's actions only, excluding rejected) fetched successfully",
         "count": total_count_paginated,
         "total_count": total_count,
         "unread_count": unread_count,
@@ -328,7 +331,6 @@ def get_connection_requests_all(request):
         "has_previous": notifications_page.has_previous(),
         "data": response_data
     }, status=status.HTTP_200_OK)
-
 
 # ============================================
 # MARK NOTIFICATION AS READ
@@ -448,40 +450,53 @@ def mark_all_notifications_read_all(request):
 # ============================================
 # CHECK IF USER HAS UNREAD NOTIFICATIONS
 # ============================================
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def has_unread_notifications(request):
     """
     Check if the current authenticated user has any unread notifications.
     Returns True if at least one unread notification exists, False otherwise.
+    REJECTED notifications are ALWAYS considered as read, even if marked unread.
     """
     
     user = request.user
     
     print("=" * 60)
-    print("🔔 CHECKING UNREAD NOTIFICATIONS")
+    print("🔔 CHECKING UNREAD NOTIFICATIONS (REJECTED TREATED AS READ)")
     print("=" * 60)
     print(f"👤 User ID: {user.id}")
     print(f"👤 User: {user.full_name}")
     print(f"📧 Email: {user.email}")
     print("=" * 60)
     
-    # Check if there's at least one unread notification
+    # Check for unread notifications that are NOT rejected
+    # This includes: CONNECTION_REQUEST, CONNECTION_ACCEPTED, CONNECTION_COMPLETED
+    # Rejected notifications are excluded even if is_read=False
     has_unread = Notification.objects.filter(
         user=user,
         is_read=False
+    ).exclude(
+        connection__status='REJECTED'  # Rejected always treated as read
     ).exists()
     
-    print(f"📊 Has unread notifications: {has_unread}")
+    print(f"📊 Has unread notifications (rejected excluded): {has_unread}")
     
     # Get count for logging purposes
     if has_unread:
         unread_count = Notification.objects.filter(
             user=user,
             is_read=False
+        ).exclude(
+            connection__status='REJECTED'
         ).count()
-        print(f"📊 Total unread notifications: {unread_count}")
+        print(f"📊 Total unread notifications (rejected excluded): {unread_count}")
+    
+    # Also log how many rejected notifications exist
+    rejected_count = Notification.objects.filter(
+        user=user,
+        connection__status='REJECTED'
+    ).count()
+    print(f"📊 Total rejected notifications (treated as read): {rejected_count}")
     
     print("=" * 60)
     
