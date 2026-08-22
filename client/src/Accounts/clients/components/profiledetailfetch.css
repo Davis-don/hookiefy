@@ -1,0 +1,398 @@
+/* ============================================================
+   Profile Detail Fetch View - Dark Transparent Instagram Style
+   ============================================================ */
+
+.pdf-overall-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+}
+
+/* ===== USER HEADER ===== */
+.pdf-user-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pdf-user-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.pdf-user-role {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===== BIO ===== */
+.pdf-bio-section {
+  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pdf-bio-text {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* When show all is true, remove truncation */
+.pdf-show-all .pdf-bio-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* ===== STATS ROW ===== */
+.pdf-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pdf-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pdf-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.pdf-stat-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.15rem;
+}
+
+/* ===== DETAILS GRID ===== */
+.pdf-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .pdf-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ===== DETAIL CARD ===== */
+.pdf-detail-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s ease;
+}
+
+.pdf-detail-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.pdf-detail-icon-wrapper {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pdf-detail-icon {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pdf-detail-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.pdf-detail-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pdf-detail-value {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-word;
+}
+
+/* ===== ADDITIONAL DETAILS ===== */
+.pdf-additional-details {
+  margin-top: 0.5rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.pdf-additional-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.pdf-additional-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SHOW MORE BUTTON ===== */
+.pdf-show-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  margin: 0.25rem 0 0.75rem 0;
+}
+
+.pdf-show-more-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pdf-chevron-icon {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.pdf-show-more-btn:hover .pdf-chevron-icon {
+  transform: scale(1.1);
+}
+
+/* ===== FOOTER ===== */
+.pdf-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pdf-footer-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.pdf-active-badge {
+  font-size: 0.75rem;
+  color: #0095f6;
+  font-weight: 500;
+}
+
+/* ===== ERROR STATE ===== */
+.pdf-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  min-height: 300px;
+}
+
+.pdf-error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pdf-error-text {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1.5rem;
+}
+
+.pdf-retry-btn {
+  padding: 0.6rem 2rem;
+  background: #0095f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pdf-retry-btn:hover {
+  background: #0077d4;
+}
+
+/* ============================================================
+   RESPONSIVE - LARGER FONTS ON MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .pdf-overall-container {
+    padding: 1rem;
+  }
+
+  .pdf-user-name {
+    font-size: 2.2rem !important; /* Twice the size on mobile */
+  }
+
+  .pdf-user-role {
+    font-size: 1rem;
+    padding: 0.3rem 1rem;
+  }
+
+  .pdf-bio-text {
+    font-size: 1.2rem !important;
+    line-height: 1.8;
+  }
+
+  .pdf-stat-value {
+    font-size: 1.4rem !important;
+  }
+
+  .pdf-stat-label {
+    font-size: 0.8rem !important;
+  }
+
+  .pdf-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .pdf-detail-card {
+    padding: 0.9rem 1.2rem;
+    gap: 1rem;
+    border-radius: 12px;
+  }
+
+  .pdf-detail-icon-wrapper {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .pdf-detail-icon {
+    font-size: 1.3rem;
+  }
+
+  .pdf-detail-label {
+    font-size: 0.75rem !important;
+  }
+
+  .pdf-detail-value {
+    font-size: 1.1rem !important;
+  }
+
+  .pdf-show-more-btn {
+    font-size: 1rem;
+    padding: 0.75rem 0;
+  }
+
+  .pdf-chevron-icon {
+    font-size: 1.2rem;
+  }
+
+  .pdf-footer-text {
+    font-size: 0.9rem;
+  }
+
+  .pdf-active-badge {
+    font-size: 0.9rem;
+  }
+
+  .pdf-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .pdf-error-text {
+    font-size: 1.2rem;
+  }
+
+  .pdf-retry-btn {
+    padding: 0.8rem 2.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .pdf-overall-container {
+    padding: 1.25rem;
+  }
+
+  .pdf-user-name {
+    font-size: 2rem;
+  }
+
+  .pdf-bio-text {
+    font-size: 1rem;
+  }
+
+  .pdf-stat-value {
+    font-size: 1.1rem;
+  }
+
+  .pdf-detail-value {
+    font-size: 0.95rem;
+  }
+}
