@@ -1,19 +1,19 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from 'sonner'
-import Superadmin from "./pages/superadmin/Superadmin";
-import Admin from "./pages/admin/Admin";
+import Superadmin from "./Accounts/superadmin/pages/Superadmin";
+import Admin from "./Accounts/admin/pages/Admin";
 import User from "./Accounts/clients/pages/User";
-import Unauthorized from "./pages/common/Unauthorized";
+import Unauthorized from "./pages/Unauthorized";
 import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
-import Homepage from "./pages/common/Homepage";
+import Homepage from "./pages/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";
 // ============================================================
 // IMPORT PAYMENT PAGES
 // ============================================================
-import PaymentSuccess from "./pages/payments/PaymentSuccess";
-import PaymentFailure from "./pages/payments/PaymentFailure";
-import PaymentError from "./pages/payments/PaymentError";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
+import PaymentError from "./pages/PaymentError";
 import "./App.css";
 
 function App() {

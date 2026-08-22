@@ -21,7 +21,7 @@ import Search from '../components/Search';
 import Notifications from '../components/Notifications';
 import Profile from '../components/Profile';
 import PaidConnections from '../components/PaidConnections'; // Keep the same component
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { useAuthStore } from '../../../store/authtokenstore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';

@@ -1,0 +1,32 @@
+// ============================================================
+// DefaultFeed.tsx - Feed shown to non-authenticated users (NO STORIES)
+// ============================================================
+
+import './defaultfeed.css'
+import DefaultPostsdiv from './DefaultPostsdiv'
+
+// ============================================================
+// TYPES
+// ============================================================
+
+interface DefaultFeedProps {
+  onConnectClick?: () => void
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
+function DefaultFeed({ onConnectClick }: DefaultFeedProps) {
+  return (
+    <div className="default-feed-container">
+      <div className="default-feed-header">
+      </div>
+      <div className="default-feed-posts-data">
+        <DefaultPostsdiv onConnectClick={onConnectClick} />
+      </div>
+    </div>
+  )
+}
+
+export default DefaultFeed

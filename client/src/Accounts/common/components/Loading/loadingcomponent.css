@@ -1,0 +1,133 @@
+.overall-loading-component-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: transparent;
+}
+
+.loading-spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 3px solid rgba(0, 149, 246, 0.15);
+  border-radius: 50%;
+  border-top-color: #0095f6;
+  animation: spin 0.9s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 149, 246, 0.1);
+}
+
+.loading-spinner-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #0095f6;
+  border-radius: 50%;
+  animation: pulse 1.2s ease-in-out infinite;
+  position: absolute;
+  box-shadow: 0 0 12px rgba(0, 149, 246, 0.4);
+}
+
+/* Pulsing ring effect */
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 149, 246, 0.08);
+  animation: ringPulse 1.5s ease-in-out infinite;
+}
+
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 149, 246, 0.05);
+  animation: ringPulse 1.8s ease-in-out infinite 0.3s;
+}
+
+/* Animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ringPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .loading-spinner {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .loading-spinner-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 2.5px;
+  }
+  
+  .loading-spinner-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+  }
+  
+  .loading-spinner::before {
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+  }
+  
+  .loading-spinner::after {
+    top: -7px;
+    left: -7px;
+    right: -7px;
+    bottom: -7px;
+  }
+}

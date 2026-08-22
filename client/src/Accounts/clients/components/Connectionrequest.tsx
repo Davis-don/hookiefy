@@ -5,7 +5,7 @@ import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import Connectionrequestpreview from './Connectionrequestpreview'
 import { usePreviewStore } from '../store/connectpreview'
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent'
 
 // Interface matching the API response
 interface ConnectionRequestData {

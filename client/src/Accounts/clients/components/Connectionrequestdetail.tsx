@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authtokenstore'
 import {  useEffect } from 'react'
 import { toast } from 'sonner'
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent'
 
 interface UserFullData {
   account: {

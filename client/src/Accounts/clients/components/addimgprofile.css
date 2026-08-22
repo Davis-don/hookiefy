@@ -1,0 +1,241 @@
+.overall-add-img-profile-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+}
+
+.image-circular-card {
+  width: 25rem;
+  height: 25rem;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-circular-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Instagram-style plus button */
+.addimg-button {
+  position: absolute;
+  bottom: 15%;
+  right: 15%;
+  background-color: #ffffff;
+  border-radius: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+}
+
+.addimg-button svg {
+  color: #000000;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.addimg-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.addimg-button:active {
+  transform: scale(0.95);
+}
+
+/* Upload options overlay - Instagram style */
+.addimg-upload-options {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 0.5rem;
+  z-index: 3;
+  animation: slideUp 0.3s ease;
+}
+
+.addimg-upload-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.addimg-upload-btn,
+.addimg-cancel-btn {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.addimg-upload-btn {
+  background: #0095f6;
+  color: white;
+}
+
+.addimg-upload-btn:hover {
+  background: #0077d4;
+  transform: scale(1.02);
+}
+
+.addimg-cancel-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.addimg-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.02);
+}
+
+/* Uploading overlay */
+.addimg-uploading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: white;
+  z-index: 4;
+  border-radius: 50%;
+}
+
+.addimg-uploading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #0095f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.addimg-uploading-overlay span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* File input hidden */
+.addimg-file-input {
+  display: none;
+}
+
+/* Loading state */
+.image-loading-spinner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.image-loading-spinner::after {
+  content: '';
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #0095f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .image-circular-card {
+    width: 20rem;
+    height: 20rem;
+  }
+  
+  .addimg-button {
+    width: 3.2rem;
+    height: 3.2rem;
+    bottom: 15%;
+    right: 15%;
+  }
+  
+  .addimg-button svg {
+    font-size: 1.6rem;
+  }
+
+  .addimg-upload-btn,
+  .addimg-cancel-btn {
+    padding: 0.4rem 1.2rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-circular-card {
+    width: 18rem;
+    height: 18rem;
+  }
+  
+  .addimg-button {
+    width: 3rem;
+    height: 3rem;
+    bottom: 12%;
+    right: 12%;
+  }
+  
+  .addimg-button svg {
+    font-size: 1.5rem;
+  }
+
+  .addimg-upload-options {
+    bottom: 8%;
+    padding: 0.4rem;
+  }
+
+  .addimg-upload-btn,
+  .addimg-cancel-btn {
+    padding: 0.3rem 1rem;
+    font-size: 0.75rem;
+  }
+}

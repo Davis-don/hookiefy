@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import Youractivitypreview from './Youractivitypreview'
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent'
 
 // Interface matching the API response for all connection requests (non-pending)
 interface ConnectionRequestData {

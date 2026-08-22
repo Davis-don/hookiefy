@@ -3,7 +3,7 @@ import Serchfeedcard from './Serchfeedcard';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { toast } from 'sonner';
 
 // Define the User interface matching your Django serializer

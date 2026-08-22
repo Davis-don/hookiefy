@@ -2,7 +2,7 @@ import './serchedentities.css'
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
-import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
+import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { toast } from 'sonner';
 import useSearchFeedStore from '../store/sechfeed'
 
