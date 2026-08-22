@@ -6,8 +6,8 @@ import './PaidConnections.css'
 import Paidconnectionpreview from './Paidconnectionpreview'
 import Paidpreviewdetail from './Paidpreviewdetail'
 import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent'
+import { useAuthStore } from '../../../store/authtokenstore'
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
 import { useState } from 'react'
 
 // ============================================================

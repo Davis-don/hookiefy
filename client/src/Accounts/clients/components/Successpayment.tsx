@@ -1,5 +1,5 @@
 import './successpayment.css'
-import { usePaymentModalStore } from './store/modalstore'
+import { usePaymentModalStore } from '../store/modalstore'
 import { useEffect } from 'react'
 
 function Successpayment() {

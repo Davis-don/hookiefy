@@ -1,5 +1,5 @@
 import './failedpayment.css'
-import { usePaymentModalStore } from './store/modalstore'
+import { usePaymentModalStore } from '../store/modalstore'
 
 function Failedpayment() {
   const { close } = usePaymentModalStore();

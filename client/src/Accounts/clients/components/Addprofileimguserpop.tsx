@@ -2,7 +2,7 @@ import './addprofileuserpop.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { FiCamera, FiUpload, FiXCircle, FiEye, FiX, FiCheck } from 'react-icons/fi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import { useState, useRef } from 'react'
 

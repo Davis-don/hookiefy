@@ -1,11 +1,7 @@
-// ============================================================
-// Myuserpreference.tsx  (Instagram-style preference edit - unique)
-// ============================================================
-
-import './myuserpreference.css'
+import './mypreference.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 
@@ -15,7 +11,7 @@ interface PreferenceData {
   maximum_age: number | string;
 }
 
-interface MyuserpreferenceProps {
+interface MypreferenceProps {
   onComplete?: () => void;
   onCancel?: () => void;
 }
@@ -48,7 +44,7 @@ const fetchPreference = async (accessToken: string | null): Promise<PreferenceRe
 
   if (!response.ok) {
     if (response.status === 404) {
-      return null;
+      return null; // No preference exists yet
     }
     throw new Error('Failed to fetch preference');
   }
@@ -79,7 +75,7 @@ const createOrUpdatePreference = async (preferenceData: PreferenceData, accessTo
   return response.json();
 };
 
-function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
+function Mypreference({ onComplete, onCancel }: MypreferenceProps) {
   const { access: accessToken } = useAuthStore();
   const [formData, setFormData] = useState<PreferenceData>({
     interested_in_gender: '',
@@ -128,8 +124,9 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
   const mutation = useMutation({
     mutationFn: (data: PreferenceData) => createOrUpdatePreference(data, accessToken),
     onSuccess: () => {
-      toast.success(isExistingPreference ? 'Preferences updated!' : 'Preferences created!', {
-        duration: 3000,
+      toast.success(isExistingPreference ? 'Preferences updated successfully!' : 'Preferences created successfully!', {
+        description: isExistingPreference ? 'Your preferences have been updated.' : 'Your preferences have been created.',
+        duration: 4000,
         icon: '✅',
         style: {
           background: '#1a1a2e',
@@ -144,8 +141,8 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
     },
     onError: (error: Error) => {
       toast.error('Failed to save preferences', {
-        description: error.message || 'Please try again.',
-        duration: 4000,
+        description: error.message || 'Please check your input and try again.',
+        duration: 5000,
         icon: '⚠️',
         style: {
           background: '#1a1a2e',
@@ -184,7 +181,7 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
 
     if (!formData.minimum_age || Number(formData.minimum_age) < 18) {
       toast.error('Minimum age is required', {
-        description: 'Must be at least 18.',
+        description: 'Please enter a minimum age (must be at least 18).',
         duration: 3000,
         icon: '⚠️',
         style: {
@@ -198,7 +195,7 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
 
     if (!formData.maximum_age || Number(formData.maximum_age) < 18) {
       toast.error('Maximum age is required', {
-        description: 'Must be at least 18.',
+        description: 'Please enter a maximum age (must be at least 18).',
         duration: 3000,
         icon: '⚠️',
         style: {
@@ -228,6 +225,7 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
     }
 
     const loadingToast = toast.loading(isExistingPreference ? 'Updating preferences...' : 'Creating preferences...', {
+      description: 'Please wait while we save your preferences.',
       style: {
         background: '#1a1a2e',
         border: '1px solid #3b82f6',
@@ -244,10 +242,10 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
 
   if (isLoadingPreference) {
     return (
-      <div className="mupref-overlay">
-        <div className="mupref-modal-content">
-          <div className="mupref-loading-container">
-            <div className="mupref-loading-spinner"></div>
+      <div className="mpf-pref-overlay">
+        <div className="mpf-pref-modal-content">
+          <div className="mpf-pref-loading-container">
+            <div className="mpf-pref-loading-spinner"></div>
             <p>Loading preferences...</p>
           </div>
         </div>
@@ -256,48 +254,40 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
   }
 
   return (
-    <div className="mupref-overlay">
-      <div className="mupref-modal-content">
-        <div className="mupref-header">
-          <div className="mupref-header-left">
-            <h3>{isExistingPreference ? 'Edit Preferences' : 'Set Preferences'}</h3>
-            <p className="mupref-header-subtitle">Define your matching preferences</p>
+    <div className="mpf-pref-overlay">
+      <div className="mpf-pref-modal-content">
+        <div className="mpf-pref-header">
+          <div className="mpf-pref-header-left">
+            <h3>{isExistingPreference ? 'Edit Preferences' : 'Complete Preferences'}</h3>
           </div>
-          {onCancel && (
-            <div className="mupref-header-right">
-              <button className="mupref-close-btn" onClick={onCancel}>
-                ✕
-              </button>
-            </div>
-          )}
         </div>
 
-        <div className="mupref-form-container">
-          <form className="mupref-form" onSubmit={handleSubmit}>
-            <div className="mupref-form-group">
-              <label className="mupref-label">Interested In</label>
+        <div className="mpf-pref-form-container">
+          <form className="mpf-pref-form" onSubmit={handleSubmit}>
+            <div className="mpf-pref-form-group">
+              <label className="mpf-pref-label">Interested In</label>
               <select
                 name="interested_in_gender"
-                className="mupref-select"
+                className="mpf-pref-select"
                 value={formData.interested_in_gender}
                 onChange={handleChange}
                 required
               >
-                <option value="">Select preference</option>
+                <option value="">Select gender preference</option>
                 <option value="M">Men</option>
                 <option value="F">Women</option>
-                <option value="A">Everyone</option>
+                <option value="A">All</option>
               </select>
             </div>
 
-            <div className="mupref-form-row">
-              <div className="mupref-form-group">
-                <label className="mupref-label">Minimum Age</label>
+            <div className="mpf-pref-form-row">
+              <div className="mpf-pref-form-group">
+                <label className="mpf-pref-label">Minimum Age</label>
                 <input
                   type="number"
                   name="minimum_age"
                   placeholder="18"
-                  className="mupref-input"
+                  className="mpf-pref-input"
                   value={formData.minimum_age}
                   onChange={handleChange}
                   min="18"
@@ -306,13 +296,13 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
                 />
               </div>
 
-              <div className="mupref-form-group">
-                <label className="mupref-label">Maximum Age</label>
+              <div className="mpf-pref-form-group">
+                <label className="mpf-pref-label">Maximum Age</label>
                 <input
                   type="number"
                   name="maximum_age"
                   placeholder="100"
-                  className="mupref-input"
+                  className="mpf-pref-input"
                   value={formData.maximum_age}
                   onChange={handleChange}
                   min="18"
@@ -322,18 +312,18 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
               </div>
             </div>
 
-            <div className="mupref-form-actions">
+            <div className="mpf-pref-form-actions">
               <button 
                 type="submit" 
-                className="mupref-submit-btn"
+                className="mpf-pref-submit-btn"
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? 'Saving...' : isExistingPreference ? 'Update Preferences' : 'Save Preferences'}
+                {mutation.isPending ? 'Saving...' : isExistingPreference ? 'Update Preferences' : 'Create Preferences'}
               </button>
               {onCancel && (
                 <button 
                   type="button" 
-                  className="mupref-cancel-btn"
+                  className="mpf-pref-cancel-btn"
                   onClick={onCancel}
                   disabled={mutation.isPending}
                 >
@@ -348,4 +338,4 @@ function Myuserpreference({ onComplete, onCancel }: MyuserpreferenceProps) {
   )
 }
 
-export default Myuserpreference
+export default Mypreference

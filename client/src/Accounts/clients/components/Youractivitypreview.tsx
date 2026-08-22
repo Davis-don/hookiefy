@@ -1,5 +1,5 @@
 import './youractivitypreview.css'
-import { usePaymentModalStore } from './store/modalstore'
+import { usePaymentModalStore } from '../store/modalstore'
 import type { Activity } from './Youractivity'
 
 interface YouractivitypreviewProps {

@@ -1,5 +1,5 @@
 import "./serchfeedcard.css";
-import useSearchFeedStore from "./store/sechfeed";
+import useSearchFeedStore from "../store/sechfeed"
 
 // Define the interface locally
 interface SearchFeedCardUser {

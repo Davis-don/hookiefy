@@ -1,5 +1,5 @@
 import React from 'react';
-import Spinner from '../components/protected/protectedspinner/Spinner';
+import Spinner from '../../../components/protected/protectedspinner/Spinner';
 import './spinnerpage.css'
 
 const CenteredSpinner: React.FC = () => {

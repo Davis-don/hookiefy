@@ -1,10 +1,10 @@
 import './youractivity.css'
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import Youractivitypreview from './Youractivitypreview'
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent'
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
 
 // Interface matching the API response for all connection requests (non-pending)
 interface ConnectionRequestData {

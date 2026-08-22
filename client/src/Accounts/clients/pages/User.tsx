@@ -11,18 +11,18 @@ import { IoLogOutOutline } from "react-icons/io5";
 import { IoCheckmarkCircle } from "react-icons/io5"; // Green tick icon
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
-import Submodalsuser from './Submodalsuser';
-import Mypreference from './Mypreference';
-import Myprofile from './Myprofile';
-import Addprofileimguserpop from './Addprofileimguserpop';
+import Submodalsuser from '../components/Submodalsuser';
+import Mypreference from '../components/Mypreference';
+import Myprofile from '../components/Myprofile';
+import Addprofileimguserpop from '../components/Addprofileimguserpop';
 // Import components
-import Home from './Home';
-import Search from './Search';
-import Notifications from './Notifications';
-import Profile from './Profile';
-import PaidConnections from './PaidConnections'; // Keep the same component
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
-import { useAuthStore } from '../../store/authtokenstore';
+import Home from '../components/Home';
+import Search from '../components/Search';
+import Notifications from '../components/Notifications';
+import Profile from '../components/Profile';
+import PaidConnections from '../components/PaidConnections'; // Keep the same component
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
+import { useAuthStore } from '../../../store/authtokenstore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 

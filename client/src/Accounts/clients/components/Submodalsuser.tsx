@@ -1,5 +1,5 @@
 import './submodaluser.css'
-import { usePaymentModalStore } from './store/modalstore'
+import { usePaymentModalStore } from '../store/modalstore'
 import Paymentmodal from './Paymentmodal';
 import Successpayment from './Successpayment';
 import Failedpayment from './Failedpayment';

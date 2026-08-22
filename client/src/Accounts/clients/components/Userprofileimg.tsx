@@ -5,7 +5,7 @@
 import React, { useState, useRef } from 'react';
 import { FiCamera, FiUser, FiCheck, FiX, FiEye, FiInfo } from 'react-icons/fi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
+import { useAuthStore } from '../../../store/authtokenstore';
 import { toast } from 'sonner';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './userprofileimg.css';

@@ -1,6 +1,6 @@
 import './connectionrequestpreview.css'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import type { ConnectionRequest } from './Connectionrequest'
 

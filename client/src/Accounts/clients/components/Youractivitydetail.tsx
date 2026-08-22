@@ -1,11 +1,11 @@
 import './youractivitydetail.css'
-import { usePreviewStore } from './store/connectpreview'
+import { usePreviewStore } from '../store/connectpreview'
 import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent'
-import { usePaymentModalStore } from './store/modalstore'
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
+import { usePaymentModalStore } from '../store/modalstore'
 
 interface UserFullData {
   account: {

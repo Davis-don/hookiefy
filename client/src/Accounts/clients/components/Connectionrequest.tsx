@@ -1,11 +1,11 @@
 import './connectionrequest.css'
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import Connectionrequestpreview from './Connectionrequestpreview'
-import { usePreviewStore } from './store/connectpreview'
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent'
+import { usePreviewStore } from '../store/connectpreview'
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent'
 
 // Interface matching the API response
 interface ConnectionRequestData {

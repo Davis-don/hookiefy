@@ -1,10 +1,10 @@
 import './serchedentities.css'
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+import { useAuthStore } from '../../../store/authtokenstore';
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner';
-import useSearchFeedStore from './store/sechfeed';
+import useSearchFeedStore from '../store/sechfeed'
 
 interface SerchedentitiesProps {
   searchTerm: string;

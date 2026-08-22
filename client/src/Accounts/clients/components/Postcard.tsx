@@ -2,7 +2,7 @@ import './postcard.css'
 import { useState } from 'react';
 import { FaUser, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { useMutation } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
+import { useAuthStore } from '../../../store/authtokenstore';
 import { toast } from 'sonner';
 
 interface PostcardProps {

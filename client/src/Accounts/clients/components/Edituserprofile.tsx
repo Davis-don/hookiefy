@@ -2,9 +2,9 @@
 // Edituserprofile.tsx  (Instagram-style profile edit - scrollable)
 // ============================================================
 
-import Generalinfoedit from "../superadmin/Generalinfoedit";
-import Passwordedit from "../superadmin/Passwordedit";
-import Dangerzone from "../superadmin/Dangerzone";
+import Generalinfoedit from "../../../pages/superadmin/Generalinfoedit";
+import Passwordedit from "../../../pages/superadmin/Passwordedit";
+import Dangerzone from "../../../pages/superadmin/Dangerzone";
 import Myuserpreference from "./Myuserpreference";
 import Myuserprofile from "./Myuserprofile";
 import { FiUser, FiLock, FiHeart, FiEdit2, FiAlertTriangle } from 'react-icons/fi';

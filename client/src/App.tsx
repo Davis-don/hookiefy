@@ -2,9 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from 'sonner'
 import Superadmin from "./pages/superadmin/Superadmin";
 import Admin from "./pages/admin/Admin";
-import User from "./pages/users/User";
+import User from "./Accounts/clients/pages/User";
 import Unauthorized from "./pages/common/Unauthorized";
-import CenteredSpinner from "./pages/Spinnerpage";
+import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/common/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";

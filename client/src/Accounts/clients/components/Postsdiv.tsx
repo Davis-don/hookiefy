@@ -1,9 +1,9 @@
 import './postsdiv.css'
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import Postcard from './Postcard'
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner'
 
 // Define the Post interface - FLAT structure with connection status

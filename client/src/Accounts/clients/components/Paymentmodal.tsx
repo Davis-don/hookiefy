@@ -1,8 +1,8 @@
 import './paymentmodal.css'
-import { usePaymentModalStore } from './store/modalstore'
+import { usePaymentModalStore } from '../store/modalstore'
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 
 interface HookupFeeResponse {

@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
+import { useAuthStore } from '../../../store/authtokenstore';
 import { FiUser, FiPhone, FiCalendar, FiMapPin, FiGlobe } from 'react-icons/fi';
 import './userfetchprofileinfo.css'
 

@@ -2,9 +2,9 @@ import './serchfeeddetail.css';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
-import useSearchFeedStore from './store/sechfeed';
-import Loadingcomponent from '../../components/superadmin/Loadingcomponent';
+import { useAuthStore } from '../../../store/authtokenstore';
+import useSearchFeedStore from '../store/sechfeed'
+import Loadingcomponent from '../../../components/superadmin/Loadingcomponent';
 import { toast } from 'sonner';
 
 // Define the UserFullData interface matching the API response

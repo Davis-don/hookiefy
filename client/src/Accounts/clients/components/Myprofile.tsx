@@ -2,7 +2,7 @@ import './myprofile.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { IoMdClose } from "react-icons/io";
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../../store/authtokenstore'
+import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 

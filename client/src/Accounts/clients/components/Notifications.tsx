@@ -1,12 +1,12 @@
 import "./notification.css";
 import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authtokenstore';
+import { useAuthStore } from '../../../store/authtokenstore';
 import Connectionrequest from "./Connectionrequest";
 import Youractivity from "./Youractivity";
 import Connectionrequestdetail from "./Connectionrequestdetail";
 import Youractivitydetail from "./Youractivitydetail";
-import { usePreviewStore } from "./store/connectpreview";
+import { usePreviewStore } from "../store/connectpreview"
 
 interface NotificationsProps {
   onNavigateToSuccessfulConnections?: () => void;

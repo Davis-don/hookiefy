@@ -4,7 +4,7 @@ import Searchfeed from './Searchfeed'
 import Serchedentities from './Serchedentities'
 import { useState } from 'react'
 import Serchfeeddetail from './Serchfeeddetail'
-import useSearchFeedStore from './store/sechfeed'
+import useSearchFeedStore from '../store/sechfeed'
 
 function Search() {
   const [mountFeed, setmountFeed] = useState(true)
