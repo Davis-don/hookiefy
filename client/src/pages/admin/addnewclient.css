@@ -1,0 +1,109 @@
+/* ============================================
+   addnewclient.css — Add New Client Component
+   ============================================ */
+
+.anc-overall-add-new-client-form {
+  /* Empty as requested - same as original */
+}
+
+.anc-add-client-header-form {
+  color: black;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 1.5rem;
+  font-size: 2rem;
+  border-bottom: 2px solid black;
+}
+
+.anc-add-client-form-left h3 {
+  margin: 0;
+}
+
+.anc-add-client-right-form {
+  display: flex;
+  align-items: center;
+}
+
+.anc-close-icon {
+  font-size: 2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.anc-close-icon:hover {
+  transform: rotate(90deg);
+}
+
+.anc-add-client-form-div-actual {
+  margin-top: 1rem;
+}
+
+.anc-form-component-div-actual {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.anc-form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  color: #333;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.anc-form-input:focus {
+  border-color: #00e5ff;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.anc-form-select {
+  appearance: auto;
+}
+
+.anc-submit-client-button {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.anc-submit-client-button .btn {
+  flex: 1;
+}
+
+.anc-confirm-btn {
+  background-color: black;
+  color: white;
+  padding: 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.anc-confirm-btn:hover:not(:disabled) {
+  background-color: #1a1a1a;
+  transform: scale(1.02);
+}
+
+.anc-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.anc-close-btn {
+  color: white;
+  padding: 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+
+.anc-close-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,0 +1,385 @@
+import "bootstrap/dist/css/bootstrap.min.css";
+import { IoMdClose } from "react-icons/io";
+import { IoMdMenu } from "react-icons/io";
+import { useState, useEffect } from 'react';
+import { MdOutlineSpaceDashboard } from "react-icons/md";
+import { FaUsers } from "react-icons/fa";
+import { CiSettings } from "react-icons/ci";
+import { FcMoneyTransfer } from "react-icons/fc";
+import { ImProfile } from "react-icons/im";
+import Admindash from './Admindash';
+import Myclients from './Myclients';
+import Adminfinancing from './Adminfinancing';
+import Adminsettings from './Adminsettings';
+import Profile from '../superadmin/Profile';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useAuthStore } from '../../store/authtokenstore';
+import Loadingcomponent from "../../components/superadmin/Loadingcomponent";
+import { toast } from 'sonner';
+import UserBalance from "../superadmin/UserBalance";
+
+interface UserData {
+  id: number;
+  email: string;
+  role: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone_number: string;
+  gender: string;
+  profile_image_url: string | null;
+  profile_image_public_id: string | null;
+  has_profile_image: boolean;
+}
+
+const fetchCurrentUser = async (accessToken: string | null): Promise<UserData> => {
+  if (!accessToken) {
+    throw new Error('No access token found. Please login again.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/account/current-user/`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Session expired. Please login again.');
+    }
+    throw new Error(`Failed to fetch user: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+// Logout function
+const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
+  if (!accessToken) {
+    throw new Error('No access token found.');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/account/logout/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Logout failed');
+  }
+
+  return response.json();
+};
+
+function Admin() {
+  const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const { 
+    data: user, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['currentUser', accessToken],
+    queryFn: () => fetchCurrentUser(accessToken),
+    enabled: !!accessToken,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => logoutUser(accessToken, refreshToken),
+    onSuccess: () => {
+      toast.success('Logged out successfully!', {
+        duration: 3000,
+        icon: '👋',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      });
+      
+      // Clear tokens from store
+      clearTokens();
+      
+      // Redirect to signin page
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      toast.error('Logout failed', {
+        description: error.message || 'Please try again.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      setIsLoggingOut(false);
+    },
+  });
+
+  const [mount, ismounted] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [dash, isdashmount] = useState(true)
+  const [clients, isclientmount] = useState(false)
+  const [finances, isFinances] = useState(false)
+  const [profile, isprofile] = useState(false)
+  const [adminSetings, setAdminsettings] = useState(false)
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsLargeScreen(window.innerWidth > 1020);
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
+  const sidebarVisible = isLargeScreen ? true : mount;
+
+  const clearAllStates = () => {
+    isdashmount(false)
+    isclientmount(false)
+    isFinances(false)
+    isprofile(false)
+    setAdminsettings(false)
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    const loadingToast = toast.loading('Logging out...', {
+      style: {
+        background: '#1a1a2e',
+        border: '1px solid #3b82f6',
+        color: '#ffffff',
+      },
+    });
+
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.dismiss(loadingToast);
+        setIsLoggingOut(false);
+      }
+    });
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body loading-container">
+          <Loadingcomponent />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body error-container">
+          <div className="error-content">
+            <div className="error-emoji">😅</div>
+            <p className="error-message">
+              {error instanceof Error ? error.message : 'Failed to load user data'}
+            </p>
+            <button className="error-retry-btn" onClick={() => refetch()}>
+              🔄 Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No token available
+  if (!accessToken) {
+    return (
+      <div className="overall-superadmin-container">
+        <div className="right-side-dashboard-body no-token-container">
+          <div className="no-token-content">
+            <div className="no-token-emoji">🔒</div>
+            <p className="no-token-message">Please login to continue</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || 'User';
+  const profileImage = user?.profile_image_url || null;
+
+  return (
+    <div className="overall-superadmin-container">
+
+      {/* Sidebar */}
+      <div
+        style={{ visibility: sidebarVisible ? "visible" : "hidden" }}
+        className="left-side-dashboard-sidebar"
+      >
+        <div className="sidebar-header-container-dashboard">
+          <div className="brandname-container">
+            <h3 style={{cursor:"pointer"}} onClick={()=>{clearAllStates(); isdashmount(true); setAdminsettings(false); ismounted(!mount)}}>Hookiefy</h3>
+          </div>
+
+          <div
+            className="close-sidebar-btn"
+            onClick={() => ismounted(!mount)}
+          >
+            <IoMdClose className='fs-1 text-light' />
+          </div>
+        </div>
+
+        <div className="sidebar-body-container">
+
+          <ul>
+            <div onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}} className={dash?"sidebar_link active-sidebar":"sidebar_link"}>
+              <MdOutlineSpaceDashboard /> Dashboard
+            </div>
+            
+            <div onClick={()=>{clearAllStates(); setAdminsettings(false); isclientmount(true); ismounted(!mount)}} className={clients?"sidebar_link active-sidebar":"sidebar_link"}>
+              <FaUsers /> Clients
+            </div>
+            
+            <div onClick={()=>{clearAllStates(); setAdminsettings(false); isFinances(true); ismounted(!mount)}} className={finances?"sidebar_link active-sidebar":"sidebar_link"}>
+              <FcMoneyTransfer /> Finances
+            </div>
+            
+            <div onClick={()=>{clearAllStates(); setAdminsettings(false); isprofile(true); ismounted(!mount)}} className={profile?"sidebar_link active-sidebar":"sidebar_link"}>
+              <ImProfile /> Profile
+            </div>
+           <div onClick={()=>{clearAllStates(); setAdminsettings(false); isprofile(false);setAdminsettings(true); ismounted(!mount)}} className={adminSetings?"sidebar_link active-sidebar":"sidebar_link"}>
+              <CiSettings /> Settings
+            </div>
+           
+          </ul>
+
+          {/* Footer */}
+          <div className="sidebar-body-footer">
+            <div className="footer-content">
+              <span className="footer-title">System</span>
+              <span className="footer-sub">by Kinstry Systems</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="right-side-dashboard-body">
+
+        <div className="body-header-container">
+          <div className="left-side-header-body-container">
+            <h3
+              onClick={() => ismounted(!mount)}
+              className='menu-icon-dash'
+            >
+              <IoMdMenu className='fs-1' />
+            </h3>
+
+            {dash && <h3 style={{cursor:"pointer"}}>Dashboard</h3>}
+            {clients && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>clients</h3>}
+            {finances && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Finances</h3>}
+            {profile && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Profile</h3>}
+            {adminSetings && <h3 style={{cursor:"pointer"}}><span onClick={()=>{clearAllStates(); setAdminsettings(false); isdashmount(true); ismounted(!mount)}}>Dashboard/</span>Settings</h3>}
+          </div>
+
+          <div className="right-side-header-body-container">
+            <ul>
+              {/* Message and Notification icons removed */}
+              
+              {/* User Balance - placed at the top */}
+              <li className="user-balance-nav-item">
+                <UserBalance />
+              </li>
+
+              <li className="current-user">
+                <div className="icon-image-holder rounded-circle">
+                  {profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt={displayName}
+                      className="profile-avatar-image"
+                    />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <h5>{displayName}</h5>
+
+                <div className="user-dropdown">
+                  <button className="dropdown-btn">▼</button>
+
+                  <div className="dropdown-menu-custom">
+                    <button onClick={()=>{clearAllStates(); setAdminsettings(false); isprofile(true); ismounted(!mount)}} className="dropdown-item-custom">Profile</button>
+                    <button 
+                      onClick={handleLogout} 
+                      className="dropdown-item-custom logout-btn"
+                      disabled={isLoggingOut || logoutMutation.isPending}
+                    >
+                      {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    </button>
+                  </div>
+                </div>
+              </li>
+
+            </ul>
+          </div>
+        </div>
+
+        {/* Body content */}
+        <div className="dashboard-body-content">
+          {dash && <Admindash/>}
+          {clients && <Myclients/>}
+          {finances && <Adminfinancing/>}
+          {profile && <Profile/>}
+          {adminSetings && <Adminsettings/>}
+        </div>
+
+        {/* Footer */}
+        <div className="dashboard-footer">
+          <div className="footer-divider"></div>
+          <div className="footer-content-bottom">
+            <span className="footer-text">
+              Developed by <span className="footer-highlight">Kinstry Systems</span>
+            </span>
+            <span className="footer-year">© {new Date().getFullYear()}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+export default Admin

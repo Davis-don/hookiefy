@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from 'sonner'
-import Superadmin from "./accounts/superadmin/pages/Superadmin";
-import Admin from "./accounts/admin/pages/Admin";
+import Superadmin from "./pages/superadmin/Superadmin";
+import Admin from "./pages/admin/Admin";
 import User from "./pages/users/User";
 import Unauthorized from "./pages/common/Unauthorized";
 import CenteredSpinner from "./pages/Spinnerpage";
