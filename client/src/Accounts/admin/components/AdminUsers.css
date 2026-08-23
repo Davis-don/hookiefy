@@ -1,198 +1,211 @@
-/* components/AdminUsers.css */
-.admin-users-container {
-  width: 100%;
-  padding: 0.5rem 0;
-}
+/* AdminUsers.css */
+/* ============================================================
+   AdminUsers.css — Admin Users Management
+   ============================================================ */
 
-.admin-users-header {
-  margin-bottom: 1.5rem;
-}
-
-.admin-users-header h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 0.3rem 0;
-}
-
-.admin-users-subtitle {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.4);
-  margin: 0;
-}
-
-.admin-users-controls {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.admin-search-wrapper {
-  flex: 1;
-  min-width: 200px;
-}
-
-.admin-search-input {
-  width: 100%;
-  padding: 0.6rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.admin-search-input:focus {
-  outline: none;
-  border-color: rgba(96, 165, 250, 0.3);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.admin-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.admin-filter-select {
-  padding: 0.6rem 2rem 0.6rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-}
-
-.admin-filter-select:focus {
-  outline: none;
-  border-color: rgba(96, 165, 250, 0.3);
-}
-
-.admin-filter-select option {
-  background: #1a1a2e;
-}
-
-.admin-users-table-wrapper {
-  overflow-x: auto;
+/* --- Main Container --- */
+.overall-admin-users-container {
+  background: #0a0a0f;
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* --- Custom Scrollbar --- */
+.overall-admin-users-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overall-admin-users-container::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
 }
 
-.admin-users-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+.overall-admin-users-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
 }
 
-.admin-users-table thead {
-  background: rgba(255, 255, 255, 0.03);
+.overall-admin-users-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(255, 255, 255, 0.02);
 }
 
-.admin-users-table th {
-  padding: 0.8rem 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* --- Header Section --- */
+.admin-users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 2rem;
 }
 
-.admin-users-table td {
-  padding: 0.8rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.8);
+.admin-users-header-left {
+  display: flex;
+  align-items: center;
 }
 
-.admin-user-name {
-  font-weight: 500;
+.admin-users-title {
+  color: #ffffff;
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff, #a8a8a8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-users-header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* --- Toggle Button (Instagram Style - BIG) --- */
+.admin-users-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.admin-users-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.admin-users-toggle-btn:active {
+  transform: scale(0.92);
+}
+
+.admin-users-toggle-icon {
+  font-size: 4rem;
+  transition: transform 0.3s ease;
   color: #ffffff;
 }
 
-.admin-user-role {
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  background: rgba(96, 165, 250, 0.12);
-  color: #60a5fa;
+.admin-users-toggle-btn:hover .admin-users-toggle-icon {
+  transform: scale(1.1);
 }
 
-.admin-user-status {
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  text-transform: capitalize;
+/* --- Content Section --- */
+.admin-users-content {
+  width: 100%;
+  animation: adminUsersFadeIn 0.3s ease;
 }
 
-.status-active {
-  background: rgba(74, 222, 128, 0.12);
-  color: #4ade80;
+@keyframes adminUsersFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.status-inactive {
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
-.status-pending {
-  background: rgba(251, 191, 36, 0.12);
-  color: #fbbf24;
-}
-
-.admin-action-btn {
-  padding: 0.25rem 0.6rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  cursor: pointer;
-  margin-right: 0.3rem;
-  transition: all 0.2s ease;
-}
-
-.admin-action-btn.edit {
-  background: rgba(96, 165, 250, 0.15);
-  color: #60a5fa;
-}
-
-.admin-action-btn.edit:hover {
-  background: rgba(96, 165, 250, 0.25);
-}
-
-.admin-action-btn.delete {
-  background: rgba(248, 113, 113, 0.15);
-  color: #f87171;
-}
-
-.admin-action-btn.delete:hover {
-  background: rgba(248, 113, 113, 0.25);
-}
-
-@media screen and (max-width: 46.875em) {
-  .admin-users-controls {
-    flex-direction: column;
+/* Tablet */
+@media screen and (max-width: 63.75em) {
+  .overall-admin-users-container {
+    padding: 1.5rem;
   }
 
-  .admin-search-wrapper {
-    min-width: unset;
+  .admin-users-title {
+    font-size: 2.2rem;
   }
 
-  .admin-users-table {
-    font-size: 0.75rem;
+  .admin-users-toggle-btn {
+    width: 60px;
+    height: 60px;
   }
 
-  .admin-users-table th,
-  .admin-users-table td {
-    padding: 0.5rem 0.6rem;
+  .admin-users-toggle-icon {
+    font-size: 3.2rem;
+  }
+}
+
+/* Mobile Large */
+@media screen and (max-width: 48em) {
+  .overall-admin-users-container {
+    padding: 1.2rem;
   }
 
-  .admin-action-btn {
-    padding: 0.15rem 0.4rem;
-    font-size: 0.6rem;
+  .admin-users-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-users-title {
+    font-size: 2rem;
+  }
+
+  .admin-users-toggle-btn {
+    width: 56px;
+    height: 56px;
+    border-width: 2px;
+  }
+
+  .admin-users-toggle-icon {
+    font-size: 3rem;
+  }
+}
+
+/* Mobile Small */
+@media screen and (max-width: 30em) {
+  .overall-admin-users-container {
+    padding: 0.8rem;
+  }
+
+  .admin-users-title {
+    font-size: 1.8rem;
+  }
+
+  .admin-users-toggle-btn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .admin-users-toggle-icon {
+    font-size: 2.8rem;
+  }
+}
+
+/* Extra Small */
+@media screen and (max-width: 22em) {
+  .overall-admin-users-container {
+    padding: 0.6rem;
+  }
+
+  .admin-users-title {
+    font-size: 1.6rem;
+  }
+
+  .admin-users-toggle-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-users-toggle-icon {
+    font-size: 2.4rem;
   }
 }
