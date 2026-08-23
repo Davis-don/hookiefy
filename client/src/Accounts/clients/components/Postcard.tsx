@@ -1,9 +1,11 @@
+// Postcard.tsx - with unique class names
 import './postcard.css'
 import { useState } from 'react';
 import { FaUser, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
 import { toast } from 'sonner';
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 interface PostcardProps {
   id: string;
@@ -22,13 +24,12 @@ interface PostcardProps {
   gender?: string;
   email?: string;
   phone_number?: string;
-  // Connection status fields
   has_accepted?: boolean;
   sent_pending?: boolean;
   received_pending?: boolean;
 }
 
-// API call to send connection request
+// API calls remain the same...
 const sendConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -50,7 +51,6 @@ const sendConnectionRequest = async (userId: string, accessToken: string | null)
   return response.json();
 };
 
-// API call to accept connection request
 const acceptConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -72,7 +72,6 @@ const acceptConnectionRequest = async (userId: string, accessToken: string | nul
   return response.json();
 };
 
-// API call to reject connection request
 const rejectConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -118,7 +117,6 @@ function Postcard({
   const fullName = `${firstName} ${lastName}`;
   const avatarUrl = profile_image_url || null;
 
-  // Check if bio is too long and needs truncation
   const BIO_MAX_LENGTH = 120;
   const needsTruncation = bio && bio.length > BIO_MAX_LENGTH;
   const displayBio = needsTruncation && !bioExpanded 
@@ -128,7 +126,6 @@ function Postcard({
   console.log(`🖼️ Rendering Postcard for ${fullName}, Bio: "${bio}"`);
   console.log(`🔗 Connection status - Accepted: ${has_accepted}, Sent: ${sent_pending}, Received: ${received_pending}`);
 
-  // Mutation for sending connection request
   const connectionMutation = useMutation({
     mutationFn: () => sendConnectionRequest(id, accessToken),
     onSuccess: (data) => {
@@ -143,7 +140,6 @@ function Postcard({
         },
       });
       console.log('Connection successful:', data);
-      // You might want to refetch the feed here to update the status
     },
     onError: (error: Error) => {
       toast.error('Failed to send connection request', {
@@ -160,7 +156,6 @@ function Postcard({
     },
   });
 
-  // Mutation for accepting connection request
   const acceptMutation = useMutation({
     mutationFn: () => acceptConnectionRequest(id, accessToken),
     onSuccess: (data) => {
@@ -191,7 +186,6 @@ function Postcard({
     },
   });
 
-  // Mutation for rejecting connection request
   const rejectMutation = useMutation({
     mutationFn: () => rejectConnectionRequest(id, accessToken),
     onSuccess: (data) => {
@@ -301,7 +295,6 @@ function Postcard({
     setShowMore(!showMore);
   };
 
-  // Get gender display
   const getGenderDisplay = (gender?: string) => {
     if (!gender) return 'Not specified';
     const genderMap: { [key: string]: string } = {
@@ -314,7 +307,6 @@ function Postcard({
     return genderMap[gender] || gender;
   };
 
-  // Get interested in display
   const getInterestedInDisplay = (interested?: string) => {
     if (!interested) return 'Not specified';
     const genderMap: { [key: string]: string } = {
@@ -328,43 +320,39 @@ function Postcard({
     return genderMap[interested] || interested;
   };
 
-  // Determine button state and render
   const renderConnectionButton = () => {
     const isConnecting = connectionMutation.isPending;
     const isAccepting = acceptMutation.isPending;
     const isRejecting = rejectMutation.isPending;
 
-    // Already connected (accepted)
     if (has_accepted) {
       return (
-        <button className="connect-btn connected" disabled>
+        <button className="pcard-connect-btn pcard-connected" disabled>
           ✓ Connected
         </button>
       );
     }
 
-    // Sent a pending request (waiting for them to accept)
     if (sent_pending) {
       return (
-        <button className="connect-btn pending" disabled>
+        <button className="pcard-connect-btn pcard-pending" disabled>
           ⏳ Pending
         </button>
       );
     }
 
-    // Received a pending request (need to accept or reject)
     if (received_pending) {
       return (
-        <div className="connect-actions">
+        <div className="pcard-connect-actions">
           <button 
-            className="connect-btn accept" 
+            className="pcard-connect-btn pcard-accept" 
             onClick={handleAccept}
             disabled={isAccepting || isRejecting}
           >
             {isAccepting ? 'Accepting...' : '✓ Accept'}
           </button>
           <button 
-            className="connect-btn reject" 
+            className="pcard-connect-btn pcard-reject" 
             onClick={handleReject}
             disabled={isAccepting || isRejecting}
           >
@@ -374,10 +362,9 @@ function Postcard({
       );
     }
 
-    // No connection - show Connect button
     return (
       <button 
-        className="connect-btn" 
+        className="pcard-connect-btn" 
         onClick={handleConnect}
         disabled={isConnecting}
       >
@@ -388,91 +375,91 @@ function Postcard({
 
   return (
     <>
-      <div className="overall-post-card-container">
+      <div className="pcard-container">
         {/* Post Header */}
-        <div className="post-header">
-          <div className="post-avatar-container">
+        <div className="pcard-header">
+          <div className="pcard-avatar-wrapper">
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
                 alt={fullName} 
-                className="post-avatar-img" 
+                className="pcard-avatar-img" 
                 loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
-                  (e.target as HTMLImageElement).parentElement?.querySelector('.post-avatar-fallback')?.classList.add('show');
+                  (e.target as HTMLImageElement).parentElement?.querySelector('.pcard-avatar-fallback')?.classList.add('show');
                 }}
               />
             ) : null}
-            <div className={`post-avatar-fallback ${!avatarUrl ? 'show' : ''}`}>
-              <FaUser className="post-avatar-icon" />
+            <div className={`pcard-avatar-fallback ${!avatarUrl ? 'show' : ''}`}>
+              <FaUser className="pcard-avatar-icon" />
             </div>
           </div>
-          <div className="post-user-info">
-            <div className="post-user-name">
-              <h5>{fullName}</h5>
+          <div className="pcard-user-info">
+            <div className="pcard-user-name">
+              <h5 className='fs-3'>{fullName}</h5>
             </div>
-            <div className="post-meta">
-              <span className="post-time">{time}</span>
-              <span className="post-dot">•</span>
-              <span className="post-location">{location}</span>
+            <div className="pcard-meta">
+              <span className="pcard-time fs-6">{time}</span>
+              <span className="pcard-dot fs-6">•</span>
+              <span className="pcard-location fs-6">{location}</span>
             </div>
           </div>
         </div>
 
         {/* Post Image Section */}
-        <div className="post-image-wrapper" onClick={handleImageClick}>
+        <div className="pcard-image-wrapper" onClick={handleImageClick}>
           {image ? (
             <>
-              <div className={`post-image-loader ${imageLoaded ? 'hidden' : ''}`}>
-                <div className="loader-spinner"></div>
+              <div className={`pcard-image-loader ${imageLoaded ? 'hidden' : ''}`}>
+                <div className="pcard-loader-spinner"></div>
               </div>
               <img 
                 src={image} 
                 alt={bio || `${fullName}'s profile`} 
-                className={`post-image-content ${imageLoaded ? 'loaded' : ''}`}
+                className={`pcard-image-content ${imageLoaded ? 'loaded' : ''}`}
                 loading="lazy"
                 onLoad={handleImageLoad}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent) {
-                    const fallback = parent.querySelector('.post-image-fallback');
+                    const fallback = parent.querySelector('.pcard-image-fallback');
                     if (fallback) {
                       fallback.classList.add('show');
                     }
-                    const loader = parent.querySelector('.post-image-loader');
+                    const loader = parent.querySelector('.pcard-image-loader');
                     if (loader) {
                       loader.classList.add('hidden');
                     }
                   }
                 }}
               />
-              <div className="post-image-overlay">
+              <div className="pcard-image-overlay">
                 <span>Tap to view full</span>
               </div>
             </>
           ) : (
-            <div className="post-image-fallback show">
-              <FaUser className="post-image-icon" />
-              <span className="post-image-fallback-text">No image available</span>
+            <div className="pcard-image-fallback show">
+              <FaUser className="pcard-image-icon" />
+              <span className="pcard-image-fallback-text">No image available</span>
             </div>
           )}
         </div>
 
         {/* Post Bio */}
-        <div className="post-caption">
-          <span className="caption-text">{displayBio || 'No bio available'}</span>
+        <div className="pcard-caption">
+          <span className="pcard-caption-text">{displayBio || 'No bio available'}</span>
           {needsTruncation && (
-            <span className="caption-expand-text" onClick={toggleBio}>
+            <span className="pcard-caption-expand" onClick={toggleBio}>
               {bioExpanded ? ' less' : ' more'}
             </span>
           )}
         </div>
 
         {/* See More Details */}
-        <div className="post-see-more">
-          <span className="see-more-text" onClick={toggleShowMore}>
+        <div className="pcard-see-more">
+          <span className="pcard-see-more-text" onClick={toggleShowMore}>
             {showMore ? (
               <>See less</>
             ) : (
@@ -483,34 +470,34 @@ function Postcard({
 
         {/* Additional Details */}
         {showMore && (
-          <div className="post-additional-details">
-            <div className="details-grid">
+          <div className="pcard-details">
+            <div className="pcard-details-grid">
               {gender && (
-                <div className="detail-item">
-                  <FaVenusMars className="detail-icon" />
-                  <div className="detail-content">
-                    <span className="detail-label">Gender</span>
-                    <span className="detail-value">{getGenderDisplay(gender)}</span>
+                <div className="pcard-detail-item">
+                  <FaVenusMars className="pcard-detail-icon" />
+                  <div className="pcard-detail-content">
+                    <span className="pcard-detail-label">Gender</span>
+                    <span className="pcard-detail-value">{getGenderDisplay(gender)}</span>
                   </div>
                 </div>
               )}
               
               {preference?.interested_in_gender && (
-                <div className="detail-item">
-                  <FaHeart className="detail-icon" />
-                  <div className="detail-content">
-                    <span className="detail-label">Interested in</span>
-                    <span className="detail-value">{getInterestedInDisplay(preference.interested_in_gender)}</span>
+                <div className="pcard-detail-item">
+                  <FaHeart className="pcard-detail-icon" />
+                  <div className="pcard-detail-content">
+                    <span className="pcard-detail-label">Interested in</span>
+                    <span className="pcard-detail-value">{getInterestedInDisplay(preference.interested_in_gender)}</span>
                   </div>
                 </div>
               )}
               
               {(preference?.minimum_age || preference?.maximum_age) && (
-                <div className="detail-item">
-                  <FaCalendarAlt className="detail-icon" />
-                  <div className="detail-content">
-                    <span className="detail-label">Age preference</span>
-                    <span className="detail-value">
+                <div className="pcard-detail-item">
+                  <FaCalendarAlt className="pcard-detail-icon" />
+                  <div className="pcard-detail-content">
+                    <span className="pcard-detail-label">Age preference</span>
+                    <span className="pcard-detail-value">
                       {preference?.minimum_age || 'Any'} - {preference?.maximum_age || 'Any'}
                     </span>
                   </div>
@@ -518,11 +505,11 @@ function Postcard({
               )}
               
               {location && (
-                <div className="detail-item">
-                  <FaMapMarkerAlt className="detail-icon" />
-                  <div className="detail-content">
-                    <span className="detail-label">Location</span>
-                    <span className="detail-value">{location}</span>
+                <div className="pcard-detail-item">
+                  <FaMapMarkerAlt className="pcard-detail-icon" />
+                  <div className="pcard-detail-content">
+                    <span className="pcard-detail-label">Location</span>
+                    <span className="pcard-detail-value">{location}</span>
                   </div>
                 </div>
               )}
@@ -531,25 +518,25 @@ function Postcard({
         )}
 
         {/* Connection Button Section */}
-        <div className="post-connect-section">
+        <div className="pcard-connect-section">
           {renderConnectionButton()}
         </div>
       </div>
 
       {/* Full Screen Image Modal */}
       {showFullImage && image && (
-        <div className="full-image-modal" onClick={handleCloseFullImage}>
-          <div className="full-image-container">
+        <div className="pcard-full-modal" onClick={handleCloseFullImage}>
+          <div className="pcard-full-container">
             <img 
               src={image} 
               alt={bio || `${fullName}'s profile`} 
-              className="full-image-content"
+              className="pcard-full-image"
               loading="eager"
             />
-            <button className="close-full-image" onClick={handleCloseFullImage}>
+            <button className="pcard-full-close" onClick={handleCloseFullImage}>
               ✕
             </button>
-            <div className="full-image-caption">
+            <div className="pcard-full-caption">
               <strong>{fullName}</strong> {bio || 'No bio available'}
             </div>
           </div>

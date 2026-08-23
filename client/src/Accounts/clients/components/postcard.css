@@ -1,7 +1,7 @@
-/* Postcard.css - Instagram-style post component */
+/* postcard.css - Unique class names to avoid collisions */
 
 /* Main Container */
-.overall-post-card-container {
+.pcard-container {
   background: transparent;
   border-radius: 16px;
   overflow: hidden;
@@ -11,39 +11,39 @@
   transition: transform 0.2s ease;
 }
 
-.overall-post-card-container:hover {
+.pcard-container:hover {
   transform: translateY(-2px);
 }
 
-/* Post Header - Instagram Style */
-.post-header {
+/* Post Header */
+.pcard-header {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  gap: 12px;
+  gap: 14px;
 }
 
-.post-avatar-container {
+.pcard-avatar-wrapper {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
 }
 
-.post-avatar-img {
+.pcard-avatar-img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #3b82f6;
+  border: 3px solid #3b82f6;
   display: block;
 }
 
-.post-avatar-img[src=""] {
+.pcard-avatar-img[src=""] {
   display: none;
 }
 
-.post-avatar-fallback {
+.pcard-avatar-fallback {
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -51,26 +51,26 @@
   display: none;
   align-items: center;
   justify-content: center;
-  border: 2px solid #3b82f6;
+  border: 3px solid #3b82f6;
 }
 
-.post-avatar-fallback.show {
+.pcard-avatar-fallback.show {
   display: flex;
 }
 
-.post-avatar-icon {
+.pcard-avatar-icon {
   color: #8b8ba7;
-  font-size: 18px;
+  font-size: 36px;
 }
 
-.post-user-info {
+.pcard-user-info {
   flex: 1;
   min-width: 0;
 }
 
-.post-user-name h5 {
+.pcard-user-name h5 {
   margin: 0;
-  font-size: 14px;
+  font-size: 32px;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.3px;
@@ -79,32 +79,32 @@
   text-overflow: ellipsis;
 }
 
-.post-meta {
+.pcard-meta {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
-.post-time {
-  font-size: 13px;
+.pcard-time {
+  font-size: 15px;
   color: #8e8e8e;
   font-weight: 400;
 }
 
-.post-location {
-  font-size: 13px;
+.pcard-location {
+  font-size: 15px;
   color: #8e8e8e;
   font-weight: 400;
 }
 
-.post-dot {
+.pcard-dot {
   color: #5a5a7a;
-  font-size: 13px;
+  font-size: 15px;
 }
 
-/* Post Image - fills container properly */
-.post-image-wrapper {
+/* Post Image */
+.pcard-image-wrapper {
   position: relative;
   width: 100%;
   background: #0a0a0a;
@@ -112,25 +112,23 @@
   cursor: pointer;
 }
 
-/* Instagram-style square image (1:1) */
-.post-image-wrapper.instagram-square {
+.pcard-image-wrapper.square {
   aspect-ratio: 1 / 1;
 }
 
-.post-image-wrapper.instagram-square .post-image-content {
+.pcard-image-wrapper.square .pcard-image-content {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Alternative: Auto height based on image */
-.post-image-wrapper.auto-height .post-image-content {
+.pcard-image-wrapper.auto .pcard-image-content {
   width: 100%;
   height: auto;
   display: block;
 }
 
-.post-image-content {
+.pcard-image-content {
   width: 100%;
   height: auto;
   display: block;
@@ -138,11 +136,11 @@
   transition: opacity 0.3s ease;
 }
 
-.post-image-content.loaded {
+.pcard-image-content.loaded {
   opacity: 1;
 }
 
-.post-image-loader {
+.pcard-image-loader {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -150,25 +148,25 @@
   z-index: 2;
 }
 
-.loader-spinner {
+.pcard-loader-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(59, 130, 246, 0.1);
   border-top: 3px solid #3b82f6;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: pcardSpin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes pcardSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.post-image-loader.hidden {
+.pcard-image-loader.hidden {
   display: none;
 }
 
-.post-image-overlay {
+.pcard-image-overlay {
   position: absolute;
   bottom: 16px;
   right: 16px;
@@ -185,11 +183,11 @@
   pointer-events: none;
 }
 
-.post-image-wrapper:hover .post-image-overlay {
+.pcard-image-wrapper:hover .pcard-image-overlay {
   opacity: 1;
 }
 
-.post-image-fallback {
+.pcard-image-fallback {
   position: absolute;
   top: 0;
   left: 0;
@@ -204,39 +202,39 @@
   color: #8b8ba7;
 }
 
-.post-image-fallback.show {
+.pcard-image-fallback.show {
   display: flex;
 }
 
-.post-image-icon {
+.pcard-image-icon {
   font-size: 48px;
   color: #4a4a6a;
 }
 
-.post-image-fallback-text {
+.pcard-image-fallback-text {
   font-size: 14px;
   color: #6a6a8a;
 }
 
-/* Post Caption - Instagram-sized bio */
-.post-caption {
+/* Post Caption */
+.pcard-caption {
   padding: 12px 16px 8px;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   color: #e8e8e8;
   word-wrap: break-word;
   overflow-wrap: break-word;
   font-weight: 400;
 }
 
-.caption-text {
-  font-size: 14px;
-  line-height: 1.5;
+.pcard-caption-text {
+  font-size: 16px;
+  line-height: 1.6;
   color: #e8e8e8;
 }
 
-.caption-expand-text {
-  font-size: 14px;
+.pcard-caption-expand {
+  font-size: 16px;
   color: #8b8ba7;
   cursor: pointer;
   font-weight: 400;
@@ -245,17 +243,17 @@
   margin-left: 4px;
 }
 
-.caption-expand-text:hover {
+.pcard-caption-expand:hover {
   color: #3b82f6;
 }
 
-/* See More Details - Instagram style */
-.post-see-more {
+/* See More */
+.pcard-see-more {
   padding: 0 16px 8px;
 }
 
-.see-more-text {
-  font-size: 13px;
+.pcard-see-more-text {
+  font-size: 14px;
   color: #8b8ba7;
   cursor: pointer;
   font-weight: 400;
@@ -263,18 +261,18 @@
   display: inline-block;
 }
 
-.see-more-text:hover {
+.pcard-see-more-text:hover {
   color: #3b82f6;
 }
 
-/* Additional Details Grid */
-.post-additional-details {
+/* Additional Details */
+.pcard-details {
   padding: 12px 16px;
   margin: 0 0 12px;
-  animation: slideDown 0.3s ease;
+  animation: pcardSlideDown 0.3s ease;
 }
 
-@keyframes slideDown {
+@keyframes pcardSlideDown {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -285,13 +283,13 @@
   }
 }
 
-.details-grid {
+.pcard-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
 }
 
-.detail-item {
+.pcard-detail-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -302,24 +300,24 @@
   transition: background 0.2s ease;
 }
 
-.detail-item:hover {
+.pcard-detail-item:hover {
   background: rgba(45, 45, 68, 0.6);
 }
 
-.detail-icon {
+.pcard-detail-icon {
   color: #3b82f6;
   font-size: 14px;
   flex-shrink: 0;
 }
 
-.detail-content {
+.pcard-detail-content {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.detail-label {
+.pcard-detail-label {
   font-size: 10px;
   font-weight: 600;
   color: #6a6a8a;
@@ -327,7 +325,7 @@
   letter-spacing: 0.5px;
 }
 
-.detail-value {
+.pcard-detail-value {
   font-size: 13px;
   color: #e0e0e0;
   font-weight: 500;
@@ -337,11 +335,11 @@
 }
 
 /* Connect Button Section */
-.post-connect-section {
+.pcard-connect-section {
   padding: 12px 16px 16px;
 }
 
-.connect-btn {
+.pcard-connect-btn {
   width: 100%;
   padding: 12px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -357,7 +355,7 @@
   overflow: hidden;
 }
 
-.connect-btn::before {
+.pcard-connect-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -368,84 +366,83 @@
   transition: left 0.5s ease;
 }
 
-.connect-btn:hover:not(:disabled)::before {
+.pcard-connect-btn:hover:not(:disabled)::before {
   left: 100%;
 }
 
-.connect-btn:hover:not(:disabled) {
+.pcard-connect-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
-.connect-btn:active:not(:disabled) {
+.pcard-connect-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.connect-btn:disabled {
+.pcard-connect-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
 }
 
-/* Connect button states */
-.connect-btn.connected {
+.pcard-connect-btn.pcard-connected {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   opacity: 0.8;
   cursor: default;
 }
 
-.connect-btn.connected::before {
+.pcard-connect-btn.pcard-connected::before {
   display: none;
 }
 
-.connect-btn.connected:hover {
+.pcard-connect-btn.pcard-connected:hover {
   transform: none;
   box-shadow: none;
 }
 
-.connect-btn.pending {
+.pcard-connect-btn.pcard-pending {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   opacity: 0.8;
   cursor: default;
 }
 
-.connect-btn.pending::before {
+.pcard-connect-btn.pcard-pending::before {
   display: none;
 }
 
-.connect-btn.pending:hover {
+.pcard-connect-btn.pcard-pending:hover {
   transform: none;
   box-shadow: none;
 }
 
-.connect-btn.accept {
+.pcard-connect-btn.pcard-accept {
   background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
-.connect-btn.accept:hover:not(:disabled) {
+.pcard-connect-btn.pcard-accept:hover:not(:disabled) {
   box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
 }
 
-.connect-btn.reject {
+.pcard-connect-btn.pcard-reject {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-.connect-btn.reject:hover:not(:disabled) {
+.pcard-connect-btn.pcard-reject:hover:not(:disabled) {
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
-.connect-actions {
+.pcard-connect-actions {
   display: flex;
   gap: 8px;
   width: 100%;
 }
 
-.connect-actions .connect-btn {
+.pcard-connect-actions .pcard-connect-btn {
   flex: 1;
 }
 
 /* Full Screen Image Modal */
-.full-image-modal {
+.pcard-full-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -457,11 +454,11 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.3s ease;
+  animation: pcardFadeIn 0.3s ease;
   padding: 20px;
 }
 
-@keyframes fadeIn {
+@keyframes pcardFadeIn {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -472,7 +469,7 @@
   }
 }
 
-.full-image-container {
+.pcard-full-container {
   position: relative;
   max-width: 90%;
   max-height: 90%;
@@ -482,7 +479,7 @@
   gap: 16px;
 }
 
-.full-image-content {
+.pcard-full-image {
   max-width: 100%;
   max-height: calc(90vh - 80px);
   object-fit: contain;
@@ -491,7 +488,7 @@
   background: #12121e;
 }
 
-.close-full-image {
+.pcard-full-close {
   position: absolute;
   top: -20px;
   right: -20px;
@@ -510,12 +507,12 @@
   transition: all 0.3s ease;
 }
 
-.close-full-image:hover {
+.pcard-full-close:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
 }
 
-.full-image-caption {
+.pcard-full-caption {
   color: #e0e0e0;
   font-size: 14px;
   text-align: center;
@@ -524,105 +521,104 @@
   line-height: 1.6;
 }
 
-.full-image-caption strong {
+.pcard-full-caption strong {
   color: #ffffff;
   font-weight: 600;
 }
 
 /* ============================================ */
-/* RESPONSIVE - Instagram-style */
+/* RESPONSIVE */
 /* ============================================ */
 
-/* Tablet and smaller laptops */
 @media screen and (max-width: 1024px) {
-  .overall-post-card-container {
+  .pcard-container {
     max-width: 500px;
   }
 }
 
-/* Mobile devices */
 @media screen and (max-width: 768px) {
-  .overall-post-card-container {
+  .pcard-container {
     margin: 12px 8px;
     border-radius: 12px;
     max-width: 100%;
   }
 
-  .post-header {
+  .pcard-header {
     padding: 10px 14px;
+    gap: 14px;
   }
 
-  .post-avatar-container {
-    width: 36px;
-    height: 36px;
+  .pcard-avatar-wrapper {
+    width: 68px;
+    height: 68px;
   }
 
-  .post-user-name h5 {
-    font-size: 13px;
+  .pcard-avatar-icon {
+    font-size: 30px;
   }
 
-  .post-time,
-  .post-location,
-  .post-dot {
-    font-size: 12px;
+  .pcard-user-name h5 {
+    font-size: 28px;
   }
 
-  .caption-text,
-  .caption-expand-text,
-  .post-caption {
-    font-size: 13px;
-    line-height: 1.5;
+  .pcard-time,
+  .pcard-location,
+  .pcard-dot {
+    font-size: 14px;
+  }
+
+  .pcard-caption-text,
+  .pcard-caption-expand,
+  .pcard-caption {
+    font-size: 15px;
+    line-height: 1.6;
   }
   
-  .caption-expand-text {
-    font-size: 13px;
+  .pcard-caption-expand {
+    font-size: 15px;
   }
 
-  .post-caption {
+  .pcard-caption {
     padding: 10px 14px 6px;
   }
 
-  .see-more-text {
-    font-size: 12px;
+  .pcard-see-more-text {
+    font-size: 13px;
   }
 
-  .post-image-wrapper.instagram-square {
-    aspect-ratio: 1 / 1;
-  }
-
-  .details-grid {
+  .pcard-details-grid {
     grid-template-columns: 1fr;
     gap: 8px;
   }
 
-  .detail-item {
+  .pcard-detail-item {
     padding: 6px 10px;
   }
 
-  .post-connect-section {
+  .pcard-connect-section {
     padding: 10px 14px 14px;
   }
 
-  .connect-btn {
+  .pcard-connect-btn {
     padding: 11px;
     font-size: 14px;
   }
 
-  .full-image-modal {
+  .pcard-full-modal {
     padding: 12px;
   }
 
-  .full-image-container {
+  .pcard-full-container {
     max-width: 100%;
     max-height: 100%;
   }
 
-  .full-image-content {
+  .pcard-full-image {
     max-height: calc(85vh - 100px);
     border-radius: 8px;
   }
 
-  .close-full-image {
+  .pcard-full-close {
     top: 10px;
     right: 10px;
     width: 36px;
@@ -630,12 +626,12 @@
     font-size: 16px;
   }
 
-  .full-image-caption {
+  .pcard-full-caption {
     font-size: 13px;
     padding: 0 12px;
   }
 
-  .post-image-overlay {
+  .pcard-image-overlay {
     font-size: 10px;
     padding: 4px 10px;
     bottom: 12px;
@@ -643,153 +639,175 @@
   }
 }
 
-/* Small mobile devices */
 @media screen and (max-width: 480px) {
-  .overall-post-card-container {
+  .pcard-container {
     margin: 8px 4px;
     border-radius: 10px;
   }
 
-  .post-header {
+  .pcard-header {
     padding: 8px 12px;
+    gap: 12px;
   }
 
-  .post-avatar-container {
-    width: 32px;
-    height: 32px;
+  .pcard-avatar-wrapper {
+    width: 60px;
+    height: 60px;
   }
 
-  .post-user-name h5 {
-    font-size: 12px;
+  .pcard-avatar-icon {
+    font-size: 26px;
   }
 
-  .post-time,
-  .post-location,
-  .post-dot {
-    font-size: 11px;
+  .pcard-user-name h5 {
+    font-size: 24px;
   }
 
-  .caption-text,
-  .caption-expand-text,
-  .post-caption {
-    font-size: 12px;
+  .pcard-time,
+  .pcard-location,
+  .pcard-dot {
+    font-size: 13px;
+  }
+
+  .pcard-caption-text,
+  .pcard-caption-expand,
+  .pcard-caption {
+    font-size: 14px;
     line-height: 1.5;
   }
   
-  .caption-expand-text {
-    font-size: 12px;
+  .pcard-caption-expand {
+    font-size: 14px;
   }
 
-  .post-caption {
+  .pcard-caption {
     padding: 8px 12px 4px;
   }
 
-  .see-more-text {
-    font-size: 11px;
+  .pcard-see-more-text {
+    font-size: 12px;
   }
 
-  .post-connect-section {
+  .pcard-connect-section {
     padding: 8px 12px 12px;
   }
 
-  .connect-btn {
+  .pcard-connect-btn {
     padding: 10px;
     font-size: 13px;
     border-radius: 10px;
   }
 
-  .connect-actions {
+  .pcard-connect-actions {
     flex-direction: column;
     gap: 6px;
   }
 
-  .detail-item {
+  .pcard-detail-item {
     padding: 5px 8px;
   }
 
-  .detail-label {
+  .pcard-detail-label {
     font-size: 9px;
   }
 
-  .detail-value {
+  .pcard-detail-value {
     font-size: 12px;
   }
 }
 
-/* Landscape orientation for mobile */
+@media screen and (max-width: 380px) {
+  .pcard-avatar-wrapper {
+    width: 52px;
+    height: 52px;
+  }
+
+  .pcard-avatar-icon {
+    font-size: 22px;
+  }
+
+  .pcard-user-name h5 {
+    font-size: 20px;
+  }
+}
+
 @media screen and (max-height: 500px) and (orientation: landscape) {
-  .post-image-wrapper.instagram-square {
+  .pcard-image-wrapper.square {
     aspect-ratio: 2 / 1;
   }
 
-  .full-image-content {
+  .pcard-full-image {
     max-height: calc(80vh - 60px);
   }
 
-  .post-header {
+  .pcard-header {
     padding: 6px 12px;
+    gap: 10px;
   }
 
-  .post-avatar-container {
-    width: 30px;
-    height: 30px;
+  .pcard-avatar-wrapper {
+    width: 52px;
+    height: 52px;
   }
 
-  .post-caption {
+  .pcard-avatar-icon {
+    font-size: 22px;
+  }
+
+  .pcard-user-name h5 {
+    font-size: 22px;
+  }
+
+  .pcard-caption {
     padding: 6px 12px 4px;
   }
   
-  .caption-text,
-  .caption-expand-text,
-  .post-caption {
-    font-size: 12px;
+  .pcard-caption-text,
+  .pcard-caption-expand,
+  .pcard-caption {
+    font-size: 14px;
   }
   
-  .post-time,
-  .post-location,
-  .post-dot {
-    font-size: 11px;
+  .pcard-time,
+  .pcard-location,
+  .pcard-dot {
+    font-size: 13px;
   }
 }
 
-/* Dark mode enhancements */
 @media (prefers-color-scheme: dark) {
-  .overall-post-card-container {
+  .pcard-container {
     background: transparent;
   }
 }
 
-/* Loading state for images */
-.post-image-content:not(.loaded) {
+.pcard-image-content:not(.loaded) {
   background: transparent;
 }
 
-/* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
 }
 
-/* Focus states for accessibility */
-.connect-btn:focus-visible,
-.caption-expand-text:focus-visible,
-.see-more-text:focus-visible,
-.close-full-image:focus-visible {
+.pcard-connect-btn:focus-visible,
+.pcard-caption-expand:focus-visible,
+.pcard-see-more-text:focus-visible,
+.pcard-full-close:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Touch device optimizations */
 @media (hover: none) {
-  .post-image-overlay {
+  .pcard-image-overlay {
     opacity: 0.6;
   }
   
-  .connect-btn:hover:not(:disabled) {
+  .pcard-connect-btn:hover:not(:disabled) {
     transform: none;
     box-shadow: none;
   }
   
-  .post-image-wrapper:hover .post-image-overlay {
+  .pcard-image-wrapper:hover .pcard-image-overlay {
     opacity: 0.6;
   }
 }
