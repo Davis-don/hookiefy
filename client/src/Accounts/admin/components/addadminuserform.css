@@ -1,15 +1,16 @@
 /* addadminuserform.css */
 /* ============================================================
-   addadminuserform.css — Add User Form
+   addadminuserform.css — Add Admin User Form
    ============================================================ */
 
 /* --- Main Container --- */
 .aauf-main-wrapper {
   background: #0a0a0f;
+  padding: 2rem;
   height: 100%;
   overflow-y: auto;
-  border-radius: 0;
-  border: none;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* --- Custom Scrollbar --- */
@@ -273,6 +274,10 @@
 
 /* Tablet */
 @media screen and (max-width: 63.75em) {
+  .aauf-main-wrapper {
+    padding: 1.5rem;
+  }
+
   .aauf-form-grid {
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
@@ -305,6 +310,10 @@
 
 /* Mobile Large */
 @media screen and (max-width: 48em) {
+  .aauf-main-wrapper {
+    padding: 1.2rem;
+  }
+
   .aauf-header {
     flex-direction: column;
     align-items: stretch;
@@ -376,6 +385,10 @@
 
 /* Mobile Small */
 @media screen and (max-width: 30em) {
+  .aauf-main-wrapper {
+    padding: 0.8rem;
+  }
+
   .aauf-header-left {
     flex-wrap: wrap;
   }
