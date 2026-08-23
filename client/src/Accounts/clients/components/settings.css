@@ -1,0 +1,138 @@
+/* settings.css */
+
+.overall-client-settings-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    padding: 0 1.5rem 80px 1.5rem;
+    background: transparent;
+    animation: fadeSlideIn 0.3s ease-out;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0 1.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 1.5rem;
+}
+
+.settings-back-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
+    color: #ffffff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.settings-back-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.05);
+}
+
+.settings-back-btn:active {
+    transform: scale(0.92);
+}
+
+.settings-header h1 {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .overall-client-settings-container {
+        padding: 0 1rem 70px 1rem;
+    }
+
+    .settings-header {
+        padding: 0.75rem 0 1.25rem 0;
+    }
+
+    .settings-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .settings-back-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .overall-client-settings-container {
+        padding: 0 0.75rem 65px 0.75rem;
+    }
+
+    .settings-header {
+        padding: 0.5rem 0 1rem 0;
+    }
+
+    .settings-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .settings-back-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 1025px) {
+    .overall-client-settings-container {
+        padding: 0 2rem 90px 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .settings-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .settings-back-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.6rem;
+    }
+}
+
+/* Scrollbar styling */
+.overall-client-settings-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.overall-client-settings-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.overall-client-settings-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}

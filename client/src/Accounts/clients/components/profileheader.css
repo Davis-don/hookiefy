@@ -1,0 +1,341 @@
+/* profileheader.css */
+
+.profile-header-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 1.5rem 2rem 0 2rem;
+    margin-bottom: -3rem;
+    background: transparent;
+}
+
+.profile-header-content {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Settings Button */
+.profile-settings-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px;
+    overflow: visible;
+    z-index: 2;
+}
+
+.profile-settings-btn .settings-btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-settings-btn .settings-icon {
+    font-size: 3rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: rgba(255, 255, 255, 0.6);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.profile-settings-btn .settings-tooltip {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.profile-settings-btn .settings-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 16px;
+    border: 8px solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.85);
+}
+
+.profile-settings-btn:hover:not(:disabled) {
+    transform: scale(1.1) rotate(30deg);
+}
+
+.profile-settings-btn:hover:not(:disabled) .settings-icon {
+    color: #ffffff;
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.2));
+}
+
+.profile-settings-btn:hover:not(:disabled) .settings-tooltip {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.profile-settings-btn:active:not(:disabled) {
+    transform: scale(0.92) rotate(0deg);
+    transition-duration: 0.1s;
+}
+
+/* Logout Button */
+.profile-logout-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px;
+    overflow: visible;
+    z-index: 2;
+}
+
+.profile-logout-btn .logout-btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-logout-btn .logout-icon {
+    font-size: 3.5rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: rgba(255, 255, 255, 0.7);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.profile-logout-btn .logout-tooltip {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.profile-logout-btn .logout-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 16px;
+    border: 8px solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Hover Effects */
+.profile-logout-btn:hover:not(:disabled) {
+    transform: scale(1.15) rotate(-8deg);
+}
+
+.profile-logout-btn:hover:not(:disabled) .logout-icon {
+    color: #ffffff;
+    transform: rotate(-90deg) scale(1.1);
+    filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.2));
+}
+
+.profile-logout-btn:hover:not(:disabled) .logout-tooltip {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Active/Click State */
+.profile-logout-btn:active:not(:disabled) {
+    transform: scale(0.92) rotate(0deg);
+    transition-duration: 0.1s;
+}
+
+/* Disabled State */
+.profile-logout-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: scale(0.95);
+}
+
+.profile-logout-btn:disabled .logout-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .profile-header-wrapper {
+        padding: 1rem 1rem 0 1rem;
+        margin-bottom: -2.5rem;
+    }
+
+    .profile-header-content {
+        gap: 0.5rem;
+    }
+
+    .profile-settings-btn .settings-icon {
+        font-size: 2.4rem;
+    }
+
+    .profile-logout-btn .logout-icon {
+        font-size: 2.8rem;
+    }
+
+    .profile-settings-btn .settings-tooltip,
+    .profile-logout-btn .logout-tooltip {
+        right: -4px;
+        font-size: 0.75rem;
+        padding: 6px 14px;
+        border-radius: 8px;
+    }
+
+    .profile-settings-btn .settings-tooltip::before,
+    .profile-logout-btn .logout-tooltip::before {
+        right: 12px;
+        border-width: 6px;
+    }
+
+    .profile-settings-btn:hover:not(:disabled) {
+        transform: scale(1.08) rotate(20deg);
+    }
+
+    .profile-logout-btn:hover:not(:disabled) {
+        transform: scale(1.1) rotate(-5deg);
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-header-wrapper {
+        padding: 0.75rem 0.75rem 0 0.75rem;
+        margin-bottom: -2rem;
+    }
+
+    .profile-settings-btn .settings-icon {
+        font-size: 2rem;
+    }
+
+    .profile-logout-btn .logout-icon {
+        font-size: 2.4rem;
+    }
+
+    .profile-settings-btn .settings-tooltip,
+    .profile-logout-btn .logout-tooltip {
+        font-size: 0.65rem;
+        padding: 4px 12px;
+        right: -2px;
+        border-radius: 6px;
+    }
+
+    .profile-settings-btn .settings-tooltip::before,
+    .profile-logout-btn .logout-tooltip::before {
+        right: 8px;
+        border-width: 5px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .profile-header-wrapper {
+        padding: 1.25rem 1.5rem 0 1.5rem;
+    }
+
+    .profile-settings-btn .settings-icon {
+        font-size: 2.8rem;
+    }
+
+    .profile-logout-btn .logout-icon {
+        font-size: 3.2rem;
+    }
+}
+
+@media (min-width: 1025px) {
+    .profile-header-wrapper {
+        padding: 1.5rem 2.5rem 0 2.5rem;
+        margin-bottom: -3.5rem;
+    }
+
+    .profile-header-content {
+        gap: 1.5rem;
+    }
+
+    .profile-settings-btn .settings-icon {
+        font-size: 3.5rem;
+    }
+
+    .profile-logout-btn .logout-icon {
+        font-size: 4rem;
+    }
+
+    .profile-settings-btn .settings-tooltip,
+    .profile-logout-btn .logout-tooltip {
+        font-size: 0.9rem;
+        padding: 10px 22px;
+        border-radius: 12px;
+        top: calc(100% + 14px);
+    }
+
+    .profile-settings-btn .settings-tooltip::before,
+    .profile-logout-btn .logout-tooltip::before {
+        right: 20px;
+        border-width: 9px;
+    }
+
+    .profile-settings-btn:hover:not(:disabled) {
+        transform: scale(1.15) rotate(35deg);
+    }
+
+    .profile-logout-btn:hover:not(:disabled) {
+        transform: scale(1.18) rotate(-10deg);
+    }
+}
+
+@media (min-width: 1400px) {
+    .profile-settings-btn .settings-icon {
+        font-size: 4rem;
+    }
+
+    .profile-logout-btn .logout-icon {
+        font-size: 4.5rem;
+    }
+
+    .profile-settings-btn .settings-tooltip,
+    .profile-logout-btn .logout-tooltip {
+        font-size: 1rem;
+        padding: 12px 24px;
+    }
+}
