@@ -1,10 +1,14 @@
 import './editclientprofile.css'
-import Loadingcomponent from '../../common/components/Loading/Loadingcomponent'
+import Generalinfoedit from './Generalinfoedit'
+import Passwordedit from './Passwordedit'
+import Dangerzone from './Dangerzone'
 
 function Editclientprofile() {
   return (
    <div className="overall-edit-user-profile-container">
-    <Loadingcomponent/>
+    <Generalinfoedit/>
+    <Passwordedit/>
+    <Dangerzone/>
    </div>
   )
 }
