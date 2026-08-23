@@ -138,7 +138,7 @@ function Settings({ onBack }: SettingsProps) {
               <p className="status-description">
                 {currentStatus === 'public' 
                   ? 'Your profile and posts are visible to everyone on Hookiefy.'
-                  : 'Your profile and posts are only visible to your approved followers.'}
+                  : 'Your profile and posts are not visible publicly'}
               </p>
             </div>
 
