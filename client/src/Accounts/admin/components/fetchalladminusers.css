@@ -1,0 +1,706 @@
+/* fetchalladminusers.css */
+/* ============================================================
+   fetchalladminusers.css — Fetch Assigned Users
+   ============================================================ */
+
+/* --- Main Container --- */
+.fau-main-wrapper {
+  background: transparent;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Loading State --- */
+.fau-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  gap: 1.5rem;
+}
+
+.fau-loading-text {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+/* --- Error State --- */
+.fau-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  gap: 1.2rem;
+  text-align: center;
+}
+
+.fau-error-icon {
+  font-size: 4rem;
+}
+
+.fau-error-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  max-width: 500px;
+}
+
+.fau-retry-btn {
+  padding: 0.8rem 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fau-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Empty State --- */
+.fau-empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  gap: 1rem;
+  text-align: center;
+}
+
+.fau-empty-icon {
+  font-size: 4rem;
+}
+
+.fau-empty-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.fau-empty-text {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* --- Header --- */
+.fau-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.fau-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fau-header-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.fau-header-icon {
+  font-size: 1.8rem;
+  color: #60a5fa;
+}
+
+.fau-title {
+  color: #ffffff;
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.fau-subtitle {
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.fau-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fau-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.fau-refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.fau-refresh-icon {
+  transition: transform 0.3s ease;
+}
+
+.fau-refresh-btn:hover .fau-refresh-icon {
+  transform: rotate(180deg);
+}
+
+/* --- Table Scroll Container --- */
+.fau-table-scroll {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  position: relative;
+}
+
+/* Hide scrollbar for cleaner look */
+.fau-table-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.fau-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fau-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+/* --- Table --- */
+.fau-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 700px;
+}
+
+.fau-table thead {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.fau-table th {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+  background: #0a0a0f;
+  z-index: 2;
+}
+
+.fau-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  vertical-align: middle;
+}
+
+.fau-table-row:last-child td {
+  border-bottom: none;
+}
+
+.fau-table-row:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* --- User Cell --- */
+.fau-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 180px;
+}
+
+.fau-user-avatar {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fau-user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fau-user-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fau-user-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fau-user-fullname {
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fau-user-username {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Email Cell --- */
+.fau-email-cell {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* --- Phone Cell --- */
+.fau-phone-cell {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* --- Status Badge --- */
+.fau-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fau-status-icon {
+  font-size: 0.75rem;
+}
+
+.status-active {
+  background: rgba(74, 222, 128, 0.08);
+  color: #4ade80;
+}
+
+.status-inactive {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+/* --- Date Cell --- */
+.fau-date-cell {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.fau-date-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fau-date-icon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.fau-date-time {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Pagination --- */
+.fau-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  margin-top: 1.5rem;
+}
+
+.fau-pagination-btn {
+  padding: 0.4rem 1.2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fau-pagination-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.fau-pagination-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.fau-pagination-info {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Tablet */
+@media screen and (max-width: 63.75em) {
+  .fau-title {
+    font-size: 1.6rem;
+  }
+
+  .fau-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .fau-header-icon-wrapper {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .fau-header-icon {
+    font-size: 1.5rem;
+  }
+
+  .fau-table {
+    font-size: 0.85rem;
+    min-width: 650px;
+  }
+
+  .fau-table th,
+  .fau-table td {
+    padding: 0.7rem 0.9rem;
+  }
+
+  .fau-user-avatar {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+}
+
+/* Mobile Large */
+@media screen and (max-width: 48em) {
+  .fau-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .fau-header-left {
+    gap: 0.8rem;
+  }
+
+  .fau-header-right {
+    justify-content: flex-start;
+  }
+
+  .fau-title {
+    font-size: 1.4rem;
+  }
+
+  .fau-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .fau-header-icon-wrapper {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .fau-header-icon {
+    font-size: 1.3rem;
+  }
+
+  /* --- MOBILE: LARGER TABLE FONTS (almost double) --- */
+  .fau-table {
+    font-size: 1.4rem;
+    min-width: 700px;
+  }
+
+  .fau-table th {
+    font-size: 1rem;
+    padding: 1rem 1.2rem;
+  }
+
+  .fau-table td {
+    font-size: 1.3rem;
+    padding: 1rem 1.2rem;
+  }
+
+  .fau-user-cell {
+    min-width: 200px;
+    gap: 1rem;
+  }
+
+  .fau-user-avatar {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+
+  .fau-user-avatar-fallback {
+    font-size: 1.6rem;
+  }
+
+  .fau-user-fullname {
+    font-size: 1.3rem;
+  }
+
+  .fau-user-username {
+    font-size: 1rem;
+  }
+
+  .fau-email-cell {
+    font-size: 1.2rem;
+    max-width: 220px;
+  }
+
+  .fau-phone-cell {
+    font-size: 1.2rem;
+  }
+
+  .fau-status-badge {
+    font-size: 1rem;
+    padding: 0.4rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .fau-status-icon {
+    font-size: 1.1rem;
+  }
+
+  .fau-date-cell {
+    font-size: 1.1rem;
+  }
+
+  .fau-date-icon {
+    font-size: 1.1rem;
+  }
+
+  .fau-date-time {
+    font-size: 0.9rem;
+  }
+
+  .fau-pagination {
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 1.2rem;
+    margin-top: 1.2rem;
+  }
+
+  .fau-pagination-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .fau-pagination-info {
+    font-size: 1.1rem;
+  }
+}
+
+/* Mobile Small */
+@media screen and (max-width: 30em) {
+  .fau-title {
+    font-size: 1.2rem;
+  }
+
+  .fau-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .fau-header-icon-wrapper {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .fau-header-icon {
+    font-size: 1.1rem;
+  }
+
+  /* --- SMALL MOBILE: EVEN LARGER FONTS --- */
+  .fau-table {
+    font-size: 1.2rem;
+    min-width: 600px;
+  }
+
+  .fau-table th {
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .fau-table td {
+    font-size: 1.1rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .fau-user-cell {
+    min-width: 170px;
+    gap: 0.8rem;
+  }
+
+  .fau-user-avatar {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .fau-user-avatar-fallback {
+    font-size: 1.3rem;
+  }
+
+  .fau-user-fullname {
+    font-size: 1.1rem;
+  }
+
+  .fau-user-username {
+    font-size: 0.85rem;
+  }
+
+  .fau-email-cell {
+    font-size: 1rem;
+    max-width: 150px;
+  }
+
+  .fau-phone-cell {
+    font-size: 1rem;
+  }
+
+  .fau-status-badge {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .fau-status-icon {
+    font-size: 0.9rem;
+  }
+
+  .fau-date-cell {
+    font-size: 0.95rem;
+  }
+
+  .fau-date-icon {
+    font-size: 0.95rem;
+  }
+
+  .fau-date-time {
+    font-size: 0.75rem;
+  }
+
+  .fau-pagination-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .fau-pagination-info {
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra Small */
+@media screen and (max-width: 22em) {
+  .fau-table {
+    min-width: 500px;
+  }
+
+  .fau-table th {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .fau-table td {
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .fau-user-cell {
+    min-width: 150px;
+    gap: 0.6rem;
+  }
+
+  .fau-user-avatar {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .fau-user-fullname {
+    font-size: 1rem;
+  }
+
+  .fau-email-cell {
+    max-width: 120px;
+    font-size: 0.9rem;
+  }
+
+  .fau-phone-cell {
+    font-size: 0.9rem;
+  }
+
+  .fau-status-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+}
