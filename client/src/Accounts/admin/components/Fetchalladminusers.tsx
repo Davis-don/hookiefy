@@ -246,9 +246,7 @@ function Fetchalladminusers() {
             </button>
           )}
         </div>
-        <div className="fau-search-count">
-          {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
-        </div>
+       
       </div>
 
       {/* Users Table - Scrollable on mobile */}
