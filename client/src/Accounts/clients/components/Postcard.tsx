@@ -1,4 +1,4 @@
-// Postcard.tsx - with unique class names
+// Postcard.tsx - with unique class names and server error handling
 import './postcard.css'
 import { useState } from 'react';
 import { FaUser, FaHeart, FaVenusMars, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
@@ -29,7 +29,7 @@ interface PostcardProps {
   received_pending?: boolean;
 }
 
-// API calls remain the same...
+// API call to send connection request
 const sendConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -43,14 +43,37 @@ const sendConnectionRequest = async (userId: string, accessToken: string | null)
     },
   });
 
+  // Handle non-OK responses
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to send connection request');
+    let errorMessage = 'Failed to send connection request';
+    try {
+      const errorData = await response.json();
+      console.log('🔴 Server error response:', errorData);
+      
+      // Priority: error > message > statusText
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.statusText) {
+        errorMessage = errorData.statusText;
+      }
+      
+      // If the error is about role, make it more specific
+      if (errorData.your_role === 'admin' || errorData.your_role === 'superadmin') {
+        errorMessage = `Only regular users can send connection requests. You are logged in as '${errorData.your_role}'. Please use a regular user account.`;
+      }
+    } catch (e) {
+      // If response is not JSON, use status text
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
 };
 
+// API call to accept connection request
 const acceptConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -65,13 +88,20 @@ const acceptConnectionRequest = async (userId: string, accessToken: string | nul
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to accept connection request');
+    let errorMessage = 'Failed to accept connection request';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch (e) {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
 };
 
+// API call to reject connection request
 const rejectConnectionRequest = async (userId: string, accessToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
@@ -86,8 +116,14 @@ const rejectConnectionRequest = async (userId: string, accessToken: string | nul
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to reject connection request');
+    let errorMessage = 'Failed to reject connection request';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch (e) {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -126,6 +162,7 @@ function Postcard({
   console.log(`🖼️ Rendering Postcard for ${fullName}, Bio: "${bio}"`);
   console.log(`🔗 Connection status - Accepted: ${has_accepted}, Sent: ${sent_pending}, Received: ${received_pending}`);
 
+  // Mutation for sending connection request
   const connectionMutation = useMutation({
     mutationFn: () => sendConnectionRequest(id, accessToken),
     onSuccess: (data) => {
@@ -142,20 +179,24 @@ function Postcard({
       console.log('Connection successful:', data);
     },
     onError: (error: Error) => {
-      toast.error('Failed to send connection request', {
+      // Show the actual error message from the server
+      console.log('🔴 Connection error:', error.message);
+      
+      toast.error('Connection request failed', {
         description: error.message || 'Please try again later.',
-        duration: 6000,
-        icon: '⚠️',
+        duration: 8000,
+        icon: '🚫',
         style: {
           background: '#1a1a2e',
           border: '1px solid #ef4444',
           color: '#ffffff',
+          maxWidth: '400px',
         },
       });
-      console.error('Connection error:', error);
     },
   });
 
+  // Mutation for accepting connection request
   const acceptMutation = useMutation({
     mutationFn: () => acceptConnectionRequest(id, accessToken),
     onSuccess: (data) => {
@@ -186,6 +227,7 @@ function Postcard({
     },
   });
 
+  // Mutation for rejecting connection request
   const rejectMutation = useMutation({
     mutationFn: () => rejectConnectionRequest(id, accessToken),
     onSuccess: (data) => {
