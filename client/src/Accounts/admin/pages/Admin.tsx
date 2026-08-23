@@ -8,7 +8,6 @@ import { IoHome } from "react-icons/io5";
 import { IoAnalytics } from "react-icons/io5";
 import { IoPeople } from "react-icons/io5";
 import { IoWalletOutline } from "react-icons/io5";
-import { IoPerson } from "react-icons/io5";
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -136,13 +135,6 @@ function Admin() {
             >
               <div className="admin-icon-fig"><IoWalletOutline /></div>
               <div className="admin-nav-name">Financials</div>
-            </li>
-            <li 
-              className={`admin-profile-nav ${activeTab === 'profile' ? 'active-nav' : ''}`}
-              onClick={() => handleNavClick('profile')}
-            >
-              <div className="admin-icon-fig"><IoPerson /></div>
-              <div className="admin-nav-name">Profile</div>
             </li>
           </ul>
 
