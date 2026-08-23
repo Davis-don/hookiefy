@@ -1,0 +1,361 @@
+/* admin.css */
+/* ============================================================
+   admin.css — Admin Dashboard
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.overall-admin-component-container {
+  background-color: #0a0a0f;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+}
+
+/* =========================
+   MAIN LAYOUT (Sidebar + Content)
+========================= */
+.admin-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* =========================
+   SIDEBAR / NAVIGATION (Left on desktop)
+========================= */
+.admin-account-header-container {
+  height: 100%;
+  width: 220px;
+  padding: 1rem 0.8rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: #0a0a0f;
+  overflow-y: auto;
+}
+
+.admin-account-header-container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.admin-account-header-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-account-header-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.admin-account-header-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.admin-account-header-container ul li {
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+.admin-account-header-container ul li:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.admin-account-header-container ul li.active-nav {
+  background: rgba(96, 165, 250, 0.10);
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+.admin-account-header-container ul li.active-nav .admin-icon-fig {
+  color: #60a5fa;
+}
+
+.admin-icon-fig {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.2s ease;
+}
+
+.admin-account-header-container ul li:hover .admin-icon-fig {
+  color: #ffffff;
+}
+
+.admin-account-header-container ul li.active-nav .admin-icon-fig {
+  color: #60a5fa;
+}
+
+.admin-nav-name {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Profile nav item */
+.admin-profile-nav {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.6rem;
+}
+
+.admin-profile-avatar-wrapper {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.admin-profile-avatar-wrapper.default-bg {
+  background: linear-gradient(135deg, #3b82f6, #7c3aed);
+}
+
+.admin-profile-avatar-icon {
+  font-size: 1rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.admin-profile-nav:hover .admin-profile-avatar-wrapper {
+  transform: scale(1.05);
+  border-color: #60a5fa;
+}
+
+.admin-profile-nav.active-nav .admin-profile-avatar-wrapper {
+  border-color: #60a5fa;
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
+}
+
+/* Sidebar footer */
+.admin-sidebar-footer {
+  padding: 0.8rem 0.5rem 0 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: 0.3rem;
+}
+
+.admin-sidebar-footer span {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+/* =========================
+   BODY CONTENT (Center)
+========================= */
+.overall-admin-body-container {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  background: #0a0a0f;
+}
+
+.overall-admin-body-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overall-admin-body-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overall-admin-body-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.actual-admin-body-content-retainer {
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  padding-bottom: 2rem;
+}
+
+/* =========================
+   RESPONSIVE - Mobile
+========================= */
+@media screen and (max-width: 46.875em) {
+  .overall-admin-component-container {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Sidebar becomes bottom nav */
+  .admin-account-header-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    height: auto;
+    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: #0a0a0f;
+    z-index: 100;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .admin-sidebar-footer {
+    display: none;
+  }
+
+  .admin-account-header-container ul {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 0.1rem;
+    padding: 0;
+  }
+
+  .admin-account-header-container ul li {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    padding: 0.3rem 0.3rem;
+    font-size: 0.55rem;
+    border-radius: 8px;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .admin-icon-fig {
+    font-size: 2.6rem !important;
+    min-width: auto;
+    line-height: 1;
+  }
+
+  .admin-nav-name {
+    display: none;
+  }
+
+  .admin-profile-nav {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .admin-profile-avatar-wrapper {
+    height: 2.6rem !important;
+    width: 2.6rem !important;
+  }
+
+  .admin-profile-avatar-icon {
+    font-size: 1.4rem !important;
+  }
+
+  .admin-account-header-container ul li.active-nav {
+    background: rgba(96, 165, 250, 0.12);
+    border-radius: 8px;
+  }
+
+  .admin-account-header-container ul li.active-nav .admin-icon-fig {
+    color: #60a5fa;
+  }
+
+  /* Main body */
+  .overall-admin-body-container {
+    padding: 0.8rem 0.8rem;
+    height: calc(100% - 56px);
+    margin-bottom: 56px;
+  }
+
+  .actual-admin-body-content-retainer {
+    max-width: 100%;
+    padding-bottom: 0.5rem;
+  }
+
+  .admin-main-layout {
+    flex-direction: column;
+  }
+}
+
+/* =========================
+   EXTRA SMALL SCREENS
+========================= */
+@media screen and (max-width: 30em) {
+  .admin-account-header-container {
+    padding: 0.3rem 0.1rem 0.5rem 0.1rem;
+  }
+
+  .admin-account-header-container ul li {
+    padding: 0.2rem 0.15rem;
+  }
+
+  .admin-icon-fig {
+    font-size: 2.2rem !important;
+  }
+
+  .admin-profile-avatar-wrapper {
+    height: 2.2rem !important;
+    width: 2.2rem !important;
+  }
+
+  .admin-profile-avatar-icon {
+    font-size: 1.2rem !important;
+  }
+
+  .overall-admin-body-container {
+    padding: 0.5rem 0.5rem;
+    margin-bottom: 50px;
+    height: calc(100% - 50px);
+  }
+}
+
+/* =========================
+   SAFE AREA FOR NOTCH PHONES
+========================= */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 46.875em) {
+    .admin-account-header-container {
+      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+    }
+  }
+}

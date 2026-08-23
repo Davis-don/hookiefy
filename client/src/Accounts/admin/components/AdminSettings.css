@@ -1,0 +1,146 @@
+/* components/AdminSettings.css */
+.admin-settings-container {
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.admin-settings-header {
+  margin-bottom: 2rem;
+}
+
+.admin-settings-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.3rem 0;
+}
+
+.admin-settings-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.admin-settings-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.admin-settings-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-settings-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.admin-settings-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+}
+
+.admin-settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+}
+
+.admin-settings-item label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-settings-select {
+  padding: 0.4rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.admin-settings-select:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.admin-settings-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+}
+
+.admin-settings-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.admin-settings-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.admin-settings-toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.admin-settings-toggle input:checked + .admin-settings-toggle-slider {
+  background: #60a5fa;
+}
+
+.admin-settings-toggle input:checked + .admin-settings-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.admin-settings-btn {
+  padding: 0.4rem 1.2rem;
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-settings-btn:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+@media screen and (max-width: 46.875em) {
+  .admin-settings-card {
+    padding: 1rem;
+  }
+
+  .admin-settings-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
