@@ -1,6 +1,6 @@
 // components/AdminHeader.tsx
 // ============================================================
-// AdminHeader.tsx - Top Header Bar (With Profile & Icons)
+// AdminHeader.tsx - Top Header Bar (With Profile, Balance & Icons)
 // ============================================================
 
 import './AdminHeader.css'
@@ -12,6 +12,7 @@ import { useAuthStore } from '../../../store/authtokenstore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import AdminBalance from './AdminBalance';
 
 // ============================================================
 // TYPES
@@ -62,7 +63,7 @@ const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUser
   return response.json();
 };
 
-// Logout function - exactly like Profileheader
+// Logout function
 const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found.');
@@ -109,7 +110,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
     retry: 1,
   });
 
-  // ---- Logout mutation - exactly like Profileheader ----
+  // ---- Logout mutation ----
   const logoutMutation = useMutation({
     mutationFn: () => logoutUser(accessToken, refreshToken),
     onSuccess: () => {
@@ -173,7 +174,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
     );
   };
 
-  // ---- Handle logout - exactly like Profileheader ----
+  // ---- Handle logout ----
   const handleLogout = () => {
     if (isLoggingOut) return;
     
@@ -225,6 +226,9 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
           </div>
         </div>
       </div>
+
+      {/* Balance Component - Between Profile and Icons */}
+      <AdminBalance />
 
       <div className="admin-header-icons-wrapper">
         <button 

@@ -1,0 +1,126 @@
+/* components/AdminBalance.css */
+/* ============================================================
+   AdminBalance.css — Admin Balance Display
+   ============================================================ */
+
+.admin-balance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  flex-shrink: 0;
+}
+
+.admin-balance-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff, #a8a8a8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.admin-balance-amount:hover {
+  background: linear-gradient(135deg, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading State */
+.admin-balance-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0;
+  min-width: 60px;
+}
+
+.admin-balance-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.03);
+  border-top: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: adminBalanceSpin 0.8s linear infinite;
+}
+
+@keyframes adminBalanceSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media screen and (max-width: 46.875em) {
+  .admin-balance-container {
+    padding: 0 0.8rem;
+  }
+
+  .admin-balance-amount {
+    font-size: 2rem;
+  }
+
+  .admin-balance-loading {
+    min-width: 50px;
+  }
+
+  .admin-balance-spinner {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .admin-balance-container {
+    padding: 0 0.4rem;
+  }
+
+  .admin-balance-amount {
+    font-size: 1.6rem;
+  }
+
+  .admin-balance-loading {
+    min-width: 40px;
+  }
+
+  .admin-balance-spinner {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media screen and (max-width: 22em) {
+  .admin-balance-container {
+    padding: 0 0.2rem;
+  }
+
+  .admin-balance-amount {
+    font-size: 1.3rem;
+  }
+
+  .admin-balance-loading {
+    min-width: 35px;
+  }
+
+  .admin-balance-spinner {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* =========================
+   SAFE AREA FOR NOTCH PHONES
+========================= */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 46.875em) {
+    .admin-balance-container {
+      padding-top: max(0.2rem, env(safe-area-inset-top));
+    }
+  }
+}
