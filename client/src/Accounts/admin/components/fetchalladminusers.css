@@ -106,12 +106,14 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .fau-search-wrapper {
   flex: 1;
   position: relative;
   min-width: 200px;
+  max-width: 100%;
 }
 
 .fau-search-icon {
@@ -121,6 +123,7 @@
   transform: translateY(-50%);
   color: rgba(255, 255, 255, 0.2);
   font-size: 1.1rem;
+  pointer-events: none;
 }
 
 .fau-search-input {
@@ -134,6 +137,8 @@
   outline: none;
   transition: all 0.3s ease;
   font-family: inherit;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .fau-search-input:focus {
@@ -179,6 +184,7 @@
   overflow: auto;
   min-height: 0;
   position: relative;
+  width: 100%;
 }
 
 .fau-table-scroll::-webkit-scrollbar {
@@ -389,6 +395,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
   margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .fau-pagination-btn {
@@ -429,6 +436,11 @@
     gap: 0.8rem;
   }
 
+  .fau-search-wrapper {
+    min-width: unset;
+    width: 100%;
+  }
+
   .fau-search-count {
     text-align: right;
   }
@@ -451,22 +463,31 @@
 
 /* Mobile Large */
 @media screen and (max-width: 48em) {
+  .fau-main-wrapper {
+    padding: 0 0.5rem;
+  }
+
   .fau-search-container {
     flex-direction: column;
     align-items: stretch;
     gap: 0.6rem;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
+    width: 100%;
   }
 
   .fau-search-wrapper {
     min-width: unset;
+    width: 100%;
+    max-width: 100%;
   }
 
   .fau-search-input {
+    width: 100%;
     padding: 1rem 3rem 1rem 3.2rem;
     font-size: 1.2rem;
     border-radius: 12px;
+    box-sizing: border-box;
   }
 
   .fau-search-icon {
@@ -484,9 +505,15 @@
     text-align: left;
   }
 
+  .fau-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+  }
+
   .fau-table {
     font-size: 1.4rem;
     min-width: 700px;
+    width: 100%;
   }
 
   .fau-table th {
@@ -579,9 +606,27 @@
 
 /* Mobile Small */
 @media screen and (max-width: 30em) {
+  .fau-main-wrapper {
+    padding: 0 0.3rem;
+  }
+
+  .fau-search-container {
+    gap: 0.5rem;
+    padding-bottom: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .fau-search-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
   .fau-search-input {
+    width: 100%;
     padding: 0.9rem 2.8rem 0.9rem 3rem;
     font-size: 1rem;
+    border-radius: 10px;
+    box-sizing: border-box;
   }
 
   .fau-search-icon {
@@ -598,9 +643,15 @@
     font-size: 0.85rem;
   }
 
+  .fau-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+  }
+
   .fau-table {
     font-size: 1.2rem;
     min-width: 600px;
+    width: 100%;
   }
 
   .fau-table th {
@@ -685,6 +736,25 @@
 
 /* Extra Small */
 @media screen and (max-width: 22em) {
+  .fau-main-wrapper {
+    padding: 0 0.2rem;
+  }
+
+  .fau-search-input {
+    padding: 0.8rem 2.5rem 0.8rem 2.8rem;
+    font-size: 0.9rem;
+  }
+
+  .fau-search-icon {
+    font-size: 1rem;
+    left: 0.8rem;
+  }
+
+  .fau-search-clear {
+    font-size: 1rem;
+    right: 0.6rem;
+  }
+
   .fau-table {
     min-width: 500px;
   }
@@ -727,8 +797,12 @@
     padding: 0.2rem 0.6rem;
   }
 
-  .fau-search-input {
-    font-size: 0.9rem;
-    padding: 0.8rem 2.5rem 0.8rem 2.8rem;
+  .fau-pagination-btn {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .fau-pagination-info {
+    font-size: 0.8rem;
   }
 }
