@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
-from django.db import models  # Add this import for Q objects
+from django.db import models
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -9,13 +9,16 @@ from django.utils import timezone
 
 from .models import Connection
 from notification.models import Notification
-from assignments.models import ClientAssignment  # Add this import
-
-User = get_user_model()
+from assignments.models import ClientAssignment
+from account.models import Accounts
 
 # ============================================
-# HOOKUP VIEW - Create connection request
+# HOOKUP VIEW - Create connection request (with enhanced logging)
 # ============================================
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -25,46 +28,70 @@ def hookup_view(request, id):
     Creates a connection request and notifies the receiver.
     
     Rules:
+    - Only 'user' role can send connection requests (not 'admin' or 'superadmin')
     - Can create if NO previous connection exists
     - Can create if previous connection status is REJECTED
     - Can create if previous connection status is COMPLETED
     - CANNOT create if previous connection status is PENDING
     - CANNOT create if previous connection status is ACCEPTED
+    - CANNOT create if receiver is 'admin' or 'superadmin'
     """
 
     # Get the authenticated user (sender)
     sender = request.user
+    
+    # LOG THE USER DETAILS
+    logger.info(f"🔍 HOOKUP ATTEMPT - User: {sender.email}, ID: {sender.id}, Role: {sender.role}")
+
+    # Check if sender is a 'user' role (not 'admin' or 'superadmin')
+    if sender.role != 'user':
+        logger.warning(f"❌ Blocked - User {sender.email} has role '{sender.role}', not 'user'")
+        # Get role display name
+        role_display = dict(Accounts.ROLE_CHOICES).get(sender.role, sender.role)
+        return Response({
+            "success": False,
+            "message": "Connection request failed",
+            "error": f"Only regular users can send connection requests. You are logged in as '{role_display}'. Please use a regular user account.",
+            "status": "failed",
+            "your_role": sender.role,
+            "allowed_roles": ['user']
+        }, status=status.HTTP_403_FORBIDDEN)
 
     # Try to find the target user (receiver)
     try:
-        receiver = User.objects.get(id=id)
+        receiver = Accounts.objects.get(id=id)
         receiver_name = f"{receiver.first_name} {receiver.last_name}"
-    except User.DoesNotExist:
+        logger.info(f"📎 Receiver found: {receiver.email}, Role: {receiver.role}")
+    except Accounts.DoesNotExist:
+        logger.warning(f"❌ Receiver not found: ID {id}")
         return Response({
-            "message": "Connection failed",
+            "success": False,
+            "message": "Connection request failed",
             "error": "User not found",
             "status": "failed"
         }, status=status.HTTP_404_NOT_FOUND)
 
-    # Print both IDs to console
-    print("=" * 60)
-    print("🔌 HOOKUP VIEW TRIGGERED")
-    print("=" * 60)
-    print(f"👤 Sender ID: {sender.id}")
-    print(f"👤 Sender: {sender.full_name}")
-    print(f"📎 Receiver ID: {receiver.id}")
-    print(f"📎 Receiver: {receiver_name}")
-    print("=" * 60)
+    # Check if receiver is 'admin' or 'superadmin'
+    if receiver.role in ['admin', 'superadmin']:
+        logger.warning(f"❌ Blocked - Cannot send to admin/superadmin: {receiver.email} (role: {receiver.role})")
+        return Response({
+            "success": False,
+            "message": "Connection request failed",
+            "error": "You cannot send a connection request to an admin or super admin user.",
+            "status": "failed"
+        }, status=status.HTTP_403_FORBIDDEN)
 
     # Check if user is trying to connect with themselves
     if sender.id == receiver.id:
+        logger.warning(f"❌ Blocked - User tried to connect with themselves: {sender.email}")
         return Response({
-            "message": "Connection failed",
-            "error": "You cannot connect with yourself",
+            "success": False,
+            "message": "Connection request failed",
+            "error": "You cannot send a connection request to yourself",
             "status": "failed"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check for any existing connections between these two users (both directions)
+    # Check for any existing connections between these two users
     existing_connections = Connection.objects.filter(
         models.Q(sender=sender, receiver=receiver) |
         models.Q(sender=receiver, receiver=sender)
@@ -76,15 +103,14 @@ def hookup_view(request, id):
     ).first()
 
     if active_connection:
+        logger.info(f"ℹ️ Active connection exists: {active_connection.connection_id} (status: {active_connection.get_status_display()})")
         return Response({
+            "success": False,
             "message": "Cannot create connection request",
             "error": f"An active connection already exists with status: {active_connection.get_status_display()}",
             "connection_id": str(active_connection.connection_id),
             "status": active_connection.status,
-            "status_display": active_connection.get_status_display(),
-            "sender_id": active_connection.sender.id,
-            "receiver_id": active_connection.receiver.id,
-            "created_at": active_connection.created_at
+            "status_display": active_connection.get_status_display()
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # Check if there's a previous connection (REJECTED or COMPLETED)
@@ -93,8 +119,7 @@ def hookup_view(request, id):
     ).first()
 
     if previous_connection:
-        print(f"ℹ️ Previous {previous_connection.get_status_display()} connection found. Creating new request.")
-        # We'll allow creating a new one since the previous is not active
+        logger.info(f"ℹ️ Previous connection found: {previous_connection.connection_id} (status: {previous_connection.get_status_display()})")
 
     # Create the connection and notification
     try:
@@ -104,7 +129,7 @@ def hookup_view(request, id):
             status=Connection.Status.PENDING
         )
 
-        # Create notification for the receiver with type CONNECTION_REQUEST
+        # Create notification for the receiver
         Notification.objects.create(
             user=receiver,
             connection=connection,
@@ -113,23 +138,18 @@ def hookup_view(request, id):
             notification_type=Notification.NotificationType.CONNECTION_REQUEST
         )
 
-        print(f"✅ Connection created with ID: {connection.connection_id}")
-        print(f"✅ Notification created for User ID: {receiver.id}")
-        print(f"📩 Notification sent to: {receiver_name}")
-        print(f"📝 Notification Type: {Notification.NotificationType.CONNECTION_REQUEST}")
-        
-        if previous_connection:
-            print(f"ℹ️ Previous connection ID: {previous_connection.connection_id} (status: {previous_connection.get_status_display()})")
-        print("=" * 60)
+        logger.info(f"✅ Connection created: {connection.connection_id} | Sender: {sender.email} | Receiver: {receiver.email}")
 
         return Response({
-            "message": f"Connection request sent to {receiver_name} successfully!",
             "success": True,
+            "message": f"Connection request sent to {receiver_name} successfully!",
             "connection_id": str(connection.connection_id),
             "sender_id": sender.id,
             "sender_name": sender.full_name,
+            "sender_role": sender.role,
             "receiver_id": receiver.id,
             "receiver_name": receiver_name,
+            "receiver_role": receiver.role,
             "connection_status": connection.status,
             "status_display": connection.get_status_display(),
             "previous_connection": {
@@ -138,18 +158,13 @@ def hookup_view(request, id):
                 "status": previous_connection.status if previous_connection else None,
                 "status_display": previous_connection.get_status_display() if previous_connection else None
             } if previous_connection else None,
-            "notification": {
-                "type": Notification.NotificationType.CONNECTION_REQUEST,
-                "title": "New Connection Request",
-                "message": f"{sender.full_name} sent you a connection request."
-            },
             "created_at": connection.created_at
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print(f"❌ Error creating connection: {str(e)}")
-
+        logger.error(f"❌ Error creating connection: {str(e)}")
         return Response({
+            "success": False,
             "message": "Failed to create connection",
             "error": str(e),
             "status": "failed"
@@ -175,6 +190,7 @@ def accept_connection(request, connection_id):
         connection = Connection.objects.get(connection_id=connection_id)
     except Connection.DoesNotExist:
         return Response({
+            "success": False,
             "message": "Connection not found",
             "error": "Invalid connection ID",
             "status": "failed"
@@ -183,6 +199,7 @@ def accept_connection(request, connection_id):
     # Check if the user is the receiver of this connection
     if connection.receiver.id != user.id:
         return Response({
+            "success": False,
             "message": "Permission denied",
             "error": "You are not the receiver of this connection request",
             "status": "failed"
@@ -191,6 +208,7 @@ def accept_connection(request, connection_id):
     # Check if connection is already accepted or rejected
     if connection.status == Connection.Status.ACCEPTED:
         return Response({
+            "success": True,
             "message": "Connection already accepted",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
@@ -199,6 +217,7 @@ def accept_connection(request, connection_id):
     
     if connection.status == Connection.Status.REJECTED:
         return Response({
+            "success": False,
             "message": "Connection already rejected",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
@@ -229,8 +248,8 @@ def accept_connection(request, connection_id):
         print("=" * 60)
         
         return Response({
-            "message": f"Connection request accepted successfully!",
             "success": True,
+            "message": f"Connection request accepted successfully!",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
             "status_display": connection.get_status_display(),
@@ -250,6 +269,7 @@ def accept_connection(request, connection_id):
     except Exception as e:
         print(f"❌ Error accepting connection: {str(e)}")
         return Response({
+            "success": False,
             "message": "Failed to accept connection",
             "error": str(e),
             "status": "failed"
@@ -276,6 +296,7 @@ def reject_connection(request, connection_id):
         connection = Connection.objects.get(connection_id=connection_id)
     except Connection.DoesNotExist:
         return Response({
+            "success": False,
             "message": "Connection not found",
             "error": "Invalid connection ID",
             "status": "failed"
@@ -284,6 +305,7 @@ def reject_connection(request, connection_id):
     # Check if the user is the receiver of this connection
     if connection.receiver.id != user.id:
         return Response({
+            "success": False,
             "message": "Permission denied",
             "error": "You are not the receiver of this connection request",
             "status": "failed"
@@ -292,6 +314,7 @@ def reject_connection(request, connection_id):
     # Check if connection is already rejected
     if connection.status == Connection.Status.REJECTED:
         return Response({
+            "success": True,
             "message": "Connection already rejected",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
@@ -301,6 +324,7 @@ def reject_connection(request, connection_id):
     # Check if connection is completed (cannot reject completed)
     if connection.status == Connection.Status.COMPLETED:
         return Response({
+            "success": False,
             "message": "Cannot reject a completed connection",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
@@ -332,8 +356,8 @@ def reject_connection(request, connection_id):
         print("=" * 60)
         
         return Response({
-            "message": f"Connection request rejected successfully.",
             "success": True,
+            "message": f"Connection request rejected successfully.",
             "connection_id": str(connection.connection_id),
             "status": connection.status,
             "status_display": connection.get_status_display(),
@@ -353,6 +377,7 @@ def reject_connection(request, connection_id):
     except Exception as e:
         print(f"❌ Error rejecting connection: {str(e)}")
         return Response({
+            "success": False,
             "message": "Failed to reject connection",
             "error": str(e),
             "status": "failed"
@@ -383,7 +408,7 @@ def get_admin_hookups(request):
     # Get all client IDs assigned to this admin
     if user.role == 'superadmin':
         # Superadmin: get all users with role 'user'
-        client_user_ids = User.objects.filter(role='user').values_list('id', flat=True)
+        client_user_ids = Accounts.objects.filter(role='user').values_list('id', flat=True)
     else:
         # Admin: get only assigned clients
         client_user_ids = ClientAssignment.objects.filter(
@@ -449,6 +474,7 @@ def get_admin_hookups(request):
         "status": "success"
     }, status=status.HTTP_200_OK)
 
+
 # ============================================
 # GET REVENUE BY LOCATION
 # ============================================
@@ -476,7 +502,7 @@ def get_revenue_by_location(request):
     # Get all client IDs assigned to this admin
     if user.role == 'superadmin':
         # Superadmin: get all users with role 'user'
-        client_user_ids = list(User.objects.filter(role='user').values_list('id', flat=True))
+        client_user_ids = list(Accounts.objects.filter(role='user').values_list('id', flat=True))
     else:
         # Admin: get only assigned clients
         client_user_ids = list(ClientAssignment.objects.filter(
@@ -516,6 +542,7 @@ def get_revenue_by_location(request):
         user_ids.add(conn.receiver_id)
     
     # Get balances for these users
+    from userbalance.models import UserBalance
     balances = UserBalance.objects.filter(
         user_id__in=user_ids
     ).select_related('user')

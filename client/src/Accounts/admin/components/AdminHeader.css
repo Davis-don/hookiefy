@@ -1,6 +1,6 @@
 /* components/AdminHeader.css */
 /* ============================================================
-   AdminHeader.css — Top Header Bar (Icons only - Centered)
+   AdminHeader.css — Top Header Bar (With Profile & Icons)
    ============================================================ */
 
 /* =========================
@@ -12,7 +12,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   flex-shrink: 0;
   background: #0a0a0f;
   z-index: 10;
@@ -23,23 +23,139 @@
 }
 
 /* =========================
-   ICONS WRAPPER - Centered with equal spacing
+   LEFT SECTION - Profile
+========================= */
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.admin-header-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.3rem 1.2rem 0.3rem 0.3rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.admin-header-profile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.admin-header-profile:active {
+  transform: scale(0.98);
+}
+
+/* Avatar - LARGER SIZE */
+.admin-header-avatar-wrapper {
+  height: 4rem;
+  width: 4rem;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.admin-header-avatar-wrapper.default-bg {
+  background: linear-gradient(135deg, #3b82f6, #7c3aed);
+}
+
+.admin-header-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% !important;
+  display: block;
+}
+
+.admin-header-avatar-icon {
+  font-size: 2rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.admin-header-avatar-loading {
+  background: #1a1a2e;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-header-avatar-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid #60a5fa;
+  border-radius: 50%;
+  animation: adminHeaderSpin 0.8s linear infinite;
+}
+
+@keyframes adminHeaderSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Profile Info */
+.admin-header-profile-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.admin-header-profile-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.admin-header-profile-role {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* =========================
+   CENTER SECTION - Icons (LARGER SIZE)
 ========================= */
 .admin-header-icons-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2.5rem;
-  width: 100%;
+  flex: 1;
   max-width: 500px;
 }
 
-/* Icon buttons - LARGE SIZE */
+/* Icon buttons - LARGER SIZE */
 .admin-header-icon-btn {
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 3rem !important;
+  font-size: 3.2rem !important;
   cursor: pointer;
   padding: 0.8rem;
   border-radius: 50%;
@@ -48,8 +164,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  height: 76px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 
@@ -84,12 +200,12 @@
   border: 2px solid #0a0a0f;
 }
 
-/* Logout button - LARGE SIZE */
+/* Logout button - LARGER SIZE */
 .admin-header-logout-btn {
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.4);
-  font-size: 3rem !important;
+  font-size: 3.2rem !important;
   cursor: pointer;
   padding: 0.8rem;
   border-radius: 50%;
@@ -97,8 +213,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  height: 76px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 
@@ -127,7 +243,7 @@
 }
 
 /* =========================
-   RESPONSIVE - Mobile
+   RESPONSIVE - Mobile (EVEN LARGER)
 ========================= */
 @media screen and (max-width: 46.875em) {
   .overall-admin-header-container {
@@ -137,31 +253,60 @@
     background: #0a0a0f;
   }
 
+  .admin-header-profile-info {
+    display: none;
+  }
+
+  .admin-header-profile {
+    padding: 0.2rem;
+    border-radius: 50%;
+    border: none;
+  }
+
+  .admin-header-profile:hover {
+    background: transparent;
+    border: none;
+  }
+
+  .admin-header-avatar-wrapper {
+    height: 3.2rem;
+    width: 3.2rem;
+  }
+
+  .admin-header-avatar-icon {
+    font-size: 1.6rem;
+  }
+
+  .admin-header-avatar-spinner {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
   .admin-header-icons-wrapper {
     gap: 1.5rem;
-    max-width: 400px;
+    max-width: 350px;
   }
 
   .admin-header-icon-btn {
-    font-size: 3.4rem !important;
+    font-size: 3rem !important;
     padding: 0.6rem;
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
   }
 
   .admin-header-logout-btn {
-    font-size: 3.4rem !important;
+    font-size: 3rem !important;
     padding: 0.6rem;
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
   }
 
   .admin-header-notification-badge {
     width: 24px;
     height: 24px;
     font-size: 0.7rem;
-    top: 4px;
-    right: 4px;
+    top: 6px;
+    right: 6px;
   }
 }
 
@@ -171,50 +316,83 @@
     padding: 0 0.6rem;
   }
 
+  .admin-header-avatar-wrapper {
+    height: 2.8rem;
+    width: 2.8rem;
+  }
+
+  .admin-header-avatar-icon {
+    font-size: 1.4rem;
+  }
+
+  .admin-header-avatar-spinner {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
   .admin-header-icons-wrapper {
     gap: 1rem;
-    max-width: 320px;
-  }
-
-  .admin-header-icon-btn {
-    font-size: 2.8rem !important;
-    padding: 0.4rem;
-    width: 56px;
-    height: 56px;
-  }
-
-  .admin-header-logout-btn {
-    font-size: 2.8rem !important;
-    padding: 0.4rem;
-    width: 56px;
-    height: 56px;
-  }
-
-  .admin-header-notification-badge {
-    width: 20px;
-    height: 20px;
-    font-size: 0.6rem;
-    top: 2px;
-    right: 2px;
-  }
-}
-
-@media screen and (max-width: 22em) {
-  .admin-header-icons-wrapper {
-    gap: 0.6rem;
     max-width: 280px;
   }
 
   .admin-header-icon-btn {
-    font-size: 2.4rem !important;
-    padding: 0.3rem;
+    font-size: 2.6rem !important;
+    padding: 0.5rem;
+    width: 58px;
+    height: 58px;
+  }
+
+  .admin-header-logout-btn {
+    font-size: 2.6rem !important;
+    padding: 0.5rem;
+    width: 58px;
+    height: 58px;
+  }
+
+  .admin-header-notification-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 0.65rem;
+    top: 4px;
+    right: 4px;
+  }
+}
+
+@media screen and (max-width: 22em) {
+  .overall-admin-header-container {
+    height: 58px;
+    padding: 0 0.4rem;
+  }
+
+  .admin-header-avatar-wrapper {
+    height: 2.4rem;
+    width: 2.4rem;
+  }
+
+  .admin-header-avatar-icon {
+    font-size: 1.2rem;
+  }
+
+  .admin-header-avatar-spinner {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .admin-header-icons-wrapper {
+    gap: 0.6rem;
+    max-width: 220px;
+  }
+
+  .admin-header-icon-btn {
+    font-size: 2.2rem !important;
+    padding: 0.4rem;
     width: 48px;
     height: 48px;
   }
 
   .admin-header-logout-btn {
-    font-size: 2.4rem !important;
-    padding: 0.3rem;
+    font-size: 2.2rem !important;
+    padding: 0.4rem;
     width: 48px;
     height: 48px;
   }
@@ -223,8 +401,8 @@
     width: 18px;
     height: 18px;
     font-size: 0.5rem;
-    top: 1px;
-    right: 1px;
+    top: 2px;
+    right: 2px;
   }
 }
 

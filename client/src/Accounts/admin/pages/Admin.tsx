@@ -1,9 +1,10 @@
-// Admin.tsx - Updated with Settings and Notifications routing
+// Admin.tsx - Updated with Home icon and AdminHome component
 // ============================================================
 // Admin.tsx - Admin Dashboard with Header and Sidebar
 // ============================================================
 
 import './admin.css'
+import { IoHome } from "react-icons/io5";
 import { IoAnalytics } from "react-icons/io5";
 import { IoPeople } from "react-icons/io5";
 import { IoWalletOutline } from "react-icons/io5";
@@ -13,6 +14,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 // Import admin components
 import AdminHeader from '../components/AdminHeader';
+import AdminHome from '../components/AdminHome';
 import AdminAnalytics from '../components/AdminAnalytics';
 import AdminUsers from '../components/AdminUsers';
 import AdminFinancials from '../components/AdminFinancials';
@@ -27,7 +29,7 @@ import { useAuthStore } from '../../../store/authtokenstore';
 // ============================================================
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('home');
   const [isLoading, setIsLoading] = useState(true);
 
   const { access: accessToken } = useAuthStore();
@@ -43,15 +45,6 @@ function Admin() {
   // Handle navigation click
   const handleNavClick = (tab: string) => {
     setActiveTab(tab);
-  };
-
-  // ---- Render profile avatar content ----
-  const renderProfileAvatar = () => {
-    return (
-      <div className="admin-profile-avatar-wrapper default-bg">
-        <IoPerson className="admin-profile-avatar-icon" />
-      </div>
-    );
   };
 
   // Render the appropriate component based on active tab
@@ -71,6 +64,8 @@ function Admin() {
     }
 
     switch(activeTab) {
+      case 'home':
+        return <AdminHome />;
       case 'analytics':
         return <AdminAnalytics />;
       case 'users':
@@ -84,7 +79,7 @@ function Admin() {
       case 'notifications':
         return <AdminNotifications />;
       default:
-        return <AdminAnalytics />;
+        return <AdminHome />;
     }
   };
 
@@ -115,6 +110,13 @@ function Admin() {
         <div className="admin-account-header-container">
           <ul>
             <li 
+              className={activeTab === 'home' ? 'active-nav' : ''}
+              onClick={() => handleNavClick('home')}
+            >
+              <div className="admin-icon-fig"><IoHome /></div>
+              <div className="admin-nav-name">Home</div>
+            </li>
+            <li 
               className={activeTab === 'analytics' ? 'active-nav' : ''}
               onClick={() => handleNavClick('analytics')}
             >
@@ -139,7 +141,7 @@ function Admin() {
               className={`admin-profile-nav ${activeTab === 'profile' ? 'active-nav' : ''}`}
               onClick={() => handleNavClick('profile')}
             >
-              {renderProfileAvatar()}
+              <div className="admin-icon-fig"><IoPerson /></div>
               <div className="admin-nav-name">Profile</div>
             </li>
           </ul>
