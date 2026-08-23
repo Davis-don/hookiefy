@@ -5,7 +5,6 @@
 
 import './admin.css'
 import { IoHome } from "react-icons/io5";
-import { IoAnalytics } from "react-icons/io5";
 import { IoPeople } from "react-icons/io5";
 import { IoWalletOutline } from "react-icons/io5";
 import { useState, useEffect } from 'react';
@@ -14,7 +13,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 // Import admin components
 import AdminHeader from '../components/AdminHeader';
 import AdminHome from '../components/AdminHome';
-import AdminAnalytics from '../components/AdminAnalytics';
 import AdminUsers from '../components/AdminUsers';
 import AdminFinancials from '../components/AdminFinancials';
 import AdminProfile from '../components/AdminProfile';
@@ -65,8 +63,6 @@ function Admin() {
     switch(activeTab) {
       case 'home':
         return <AdminHome />;
-      case 'analytics':
-        return <AdminAnalytics />;
       case 'users':
         return <AdminUsers />;
       case 'financials':
@@ -114,13 +110,6 @@ function Admin() {
             >
               <div className="admin-icon-fig"><IoHome /></div>
               <div className="admin-nav-name">Home</div>
-            </li>
-            <li 
-              className={activeTab === 'analytics' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('analytics')}
-            >
-              <div className="admin-icon-fig"><IoAnalytics /></div>
-              <div className="admin-nav-name">Analytics</div>
             </li>
             <li 
               className={activeTab === 'users' ? 'active-nav' : ''}
