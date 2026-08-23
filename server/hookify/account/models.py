@@ -40,10 +40,23 @@ class Accounts(AbstractUser):
         ('superadmin', 'Super Admin'),
     )
 
+    ACCOUNT_STATUS_CHOICES = (
+        ('public', 'Public'),
+        ('private', 'Private'),
+    )
+
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Account status: public or private
+    account_status = models.CharField(
+        max_length=10, 
+        choices=ACCOUNT_STATUS_CHOICES, 
+        default='public',
+        help_text="Whether the user's account is public or private"
+    )
     
     # Profile image fields for Cloudinary
     profile_image_url = models.URLField(

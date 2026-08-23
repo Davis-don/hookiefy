@@ -13,6 +13,7 @@ class AccountsAdmin(UserAdmin):
         "first_name",
         "last_name",
         "role",
+        "account_status",
         "has_profile_image_display",
         "is_staff",
         "is_superuser",
@@ -20,6 +21,7 @@ class AccountsAdmin(UserAdmin):
 
     list_filter = (
         "role",
+        "account_status",
         "is_staff",
         "is_superuser",
         "is_active",
@@ -44,6 +46,7 @@ class AccountsAdmin(UserAdmin):
                 "last_name", 
                 "phone_number", 
                 "gender",
+                "account_status",
                 "profile_image_url",
                 "profile_image_public_id",
             )
@@ -71,6 +74,7 @@ class AccountsAdmin(UserAdmin):
                 "last_name",
                 "phone_number",
                 "gender",
+                "account_status",
                 "role",
                 "password1",
                 "password2",

@@ -1508,3 +1508,46 @@ def upload_profile_image(request):
         return Response({
             "message": f"Failed to upload image: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================
+# ACCOUNT STATUS MANAGEMENT
+# ============================================
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_account_status(request):
+    """
+    Update the current user's account status (public/private)
+    """
+    user = request.user
+    account_status = request.data.get("account_status")
+    
+    # Validate the status
+    if account_status not in ['public', 'private']:
+        return Response(
+            {"message": "Invalid account status. Must be 'public' or 'private'."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Update the status
+    user.account_status = account_status
+    user.save()
+    
+    return Response({
+        "message": f"Account status updated to '{account_status}' successfully",
+        "account_status": user.account_status
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_account_status(request):
+    """
+    Get the current user's account status
+    """
+    user = request.user
+    
+    return Response({
+        "account_status": user.account_status
+    }, status=status.HTTP_200_OK)

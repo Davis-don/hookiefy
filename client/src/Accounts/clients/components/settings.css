@@ -64,6 +64,156 @@
     letter-spacing: -0.5px;
 }
 
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: 2rem;
+}
+
+.settings-section h3 {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Account Status Card */
+.settings-status-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.settings-status-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.status-info {
+    margin-bottom: 1.25rem;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-icon {
+    font-size: 1.5rem;
+}
+
+.status-title {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.status-description {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+    padding-left: 2.25rem;
+}
+
+.status-toggle-container {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.status-toggle-btn {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: inherit;
+}
+
+.status-toggle-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.status-toggle-btn.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.status-toggle-btn.active:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #818cf8;
+}
+
+.status-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.status-toggle-btn .toggle-label {
+    font-weight: 500;
+}
+
+.status-toggle-btn .toggle-check {
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.status-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.status-error {
+    color: #ef4444;
+    font-size: 0.85rem;
+    padding: 0.5rem 0;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .overall-client-settings-container {
@@ -82,6 +232,24 @@
         width: 36px;
         height: 36px;
         font-size: 1.2rem;
+    }
+
+    .settings-status-card {
+        padding: 1.25rem;
+    }
+
+    .status-title {
+        font-size: 1rem;
+    }
+
+    .status-description {
+        font-size: 0.8rem;
+        padding-left: 2rem;
+    }
+
+    .status-toggle-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -103,6 +271,39 @@
         height: 32px;
         font-size: 1rem;
     }
+
+    .settings-content {
+        gap: 1.5rem;
+    }
+
+    .settings-status-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .status-icon {
+        font-size: 1.2rem;
+    }
+
+    .status-title {
+        font-size: 0.95rem;
+    }
+
+    .status-description {
+        font-size: 0.75rem;
+        padding-left: 1.75rem;
+    }
+
+    .status-toggle-container {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+
+    .status-toggle-btn {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+    }
 }
 
 @media (min-width: 1025px) {
@@ -120,6 +321,19 @@
         width: 44px;
         height: 44px;
         font-size: 1.6rem;
+    }
+
+    .settings-status-card {
+        padding: 1.75rem;
+    }
+
+    .status-title {
+        font-size: 1.15rem;
+    }
+
+    .status-toggle-btn {
+        padding: 0.7rem 1.25rem;
+        font-size: 0.95rem;
     }
 }
 

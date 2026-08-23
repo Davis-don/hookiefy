@@ -21,12 +21,16 @@ def get_user_feed(user):
         else:
             connected_user_ids.append(connection.sender_id)
 
-    # Fetch feed users, excluding current user and pending connections
+    # Fetch feed users, excluding:
+    # - Current user
+    # - Users with private accounts
+    # - Users with pending connections
     all_account_data = Accounts.objects.select_related(
         'profile',
         'preference'
     ).filter(
-        role='user'
+        role='user',
+        account_status='public'  # Only include public accounts
     ).exclude(
         id=user.id
     ).exclude(

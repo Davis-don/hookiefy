@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Profile image upload
     path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
+
+    path('account-status/', views.update_account_status, name='update_account_status'),
+    path('account-status/get/', views.get_account_status, name='get_account_status'),
 ]
