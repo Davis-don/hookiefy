@@ -1,3 +1,8 @@
+// Paymentmodal.tsx - Updated for Paystack
+// ============================================================
+// Paymentmodal.tsx - Paystack Payment Modal
+// ============================================================
+
 import './paymentmodal.css'
 import { usePaymentModalStore } from '../store/modalstore'
 import { useState, useEffect } from 'react'
@@ -25,7 +30,7 @@ interface HookupFeeResponse {
   };
 }
 
-interface PaymentInitResponse {
+interface PaystackPaymentInitResponse {
   success: boolean;
   message: string;
   payment: {
@@ -33,9 +38,9 @@ interface PaymentInitResponse {
     merchant_reference: string;
     amount: number;
     status: string;
-    order_tracking_id: string;
   };
-  redirect_url: string;
+  authorization_url: string;
+  reference: string;
 }
 
 // Fetch hookup fee - just gets the fee and user phone number
@@ -80,24 +85,27 @@ const fetchHookupFee = async (
   return data;
 };
 
-// Initiate payment - amount is fetched from backend, not sent in payload
-const initiatePayment = async ({
+// Initiate Paystack payment
+const initiatePaystackPayment = async ({
   accessToken,
   connectionId,
   phoneNumber,
+  email,
 }: {
   accessToken: string;
   connectionId: string;
   phoneNumber: string;
-}): Promise<PaymentInitResponse> => {
+  email: string;
+}): Promise<PaystackPaymentInitResponse> => {
   const payload = {
     connection_id: connectionId,
     phone_number: phoneNumber,
+    email: email,
   };
 
-  console.log('📤 Initiating payment with payload:', payload);
+  console.log('📤 Initiating Paystack payment with payload:', payload);
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/paystack/initiate/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -108,12 +116,12 @@ const initiatePayment = async ({
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    console.error('❌ Payment initiation failed:', errorData);
+    console.error('❌ Paystack payment initiation failed:', errorData);
     throw new Error(errorData.message || 'Payment initiation failed');
   }
 
   const data = await response.json();
-  console.log('✅ Payment initiated successfully:', data);
+  console.log('✅ Paystack payment initiated successfully:', data);
   return data;
 };
 
@@ -150,12 +158,12 @@ function Paymentmodal() {
     retry: 1,
   });
 
-  // Payment mutation - amount is fetched from backend
+  // Paystack payment mutation
   const paymentMutation = useMutation({
-    mutationFn: initiatePayment,
+    mutationFn: initiatePaystackPayment,
     onSuccess: (data) => {
       toast.success('Payment initiated!', {
-        description: 'Redirecting to payment gateway...',
+        description: 'Redirecting to Paystack checkout...',
         duration: 3000,
         icon: '🔄',
         style: {
@@ -165,12 +173,12 @@ function Paymentmodal() {
         },
       });
 
-      // Redirect to PesaPal payment URL
-      if (data.redirect_url) {
-        console.log('🔀 Redirecting to:', data.redirect_url);
-        window.location.replace(data.redirect_url);
+      // Redirect to Paystack checkout URL
+      if (data.authorization_url) {
+        console.log('🔀 Redirecting to Paystack:', data.authorization_url);
+        window.location.replace(data.authorization_url);
       } else {
-        console.error('❌ No redirect_url in response:', data);
+        console.error('❌ No authorization_url in response:', data);
         toast.error('No redirect URL received', {
           description: 'Please contact support.',
           duration: 4000,
@@ -262,6 +270,7 @@ function Paymentmodal() {
 
     // Auto-fetch phone number from user data
     const phoneNumber = user?.phone_number;
+    const email = user?.email;
     
     if (!phoneNumber) {
       console.error('❌ No phone number found for user');
@@ -269,6 +278,21 @@ function Paymentmodal() {
         description: 'Please update your phone number in profile settings.',
         duration: 4000,
         icon: '📱',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    if (!email) {
+      console.error('❌ No email found for user');
+      toast.error('Email not found', {
+        description: 'Please update your email in profile settings.',
+        duration: 4000,
+        icon: '📧',
         style: {
           background: '#1a1a2e',
           border: '1px solid #ef4444',
@@ -292,17 +316,17 @@ function Paymentmodal() {
 
     console.log('📱 Original phone number:', phoneNumber);
     console.log('📱 Formatted phone number:', formattedPhone);
+    console.log('📧 Email:', email);
     console.log('🔑 Connection ID for payment:', connectionId);
-    console.log('💰 Amount will be fetched from backend');
 
     setIsProcessing(true);
 
     try {
-      // Amount is not sent in payload - backend fetches it
       await paymentMutation.mutateAsync({
         accessToken: accessToken!,
         connectionId: connectionId,
         phoneNumber: formattedPhone,
+        email: email,
       });
     } catch (error) {
       // Error is handled in mutation's onError
@@ -316,6 +340,7 @@ function Paymentmodal() {
   const currency = hookupFeeData?.data?.currency || 'KES';
   const assignedAdmin = hookupFeeData?.data?.assigned_admin;
   const userPhoneNumber = hookupFeeData?.data?.user?.phone_number;
+  const userEmail = hookupFeeData?.data?.user?.email;
 
   // Loading state
   if (isLoadingFee) {
@@ -383,8 +408,8 @@ function Paymentmodal() {
           <div className="payment-modal-icon-wrapper">
             <span className="payment-modal-icon">💳</span>
           </div>
-          <h2 className="payment-modal-title">Secure Payment</h2>
-          <p className="payment-modal-subtitle">Complete your hookup request</p>
+          <h2 className="payment-modal-title">Pay with Paystack</h2>
+          <p className="payment-modal-subtitle">Complete your hookup request securely</p>
         </div>
 
         {/* Divider */}
@@ -407,6 +432,11 @@ function Paymentmodal() {
               📱 Phone: {userPhoneNumber}
             </span>
           )}
+          {userEmail && (
+            <span className="payment-modal-email-info">
+              📧 Email: {userEmail}
+            </span>
+          )}
           {hookupId && (
             <span className="payment-modal-connection-info">
               🔗 Connection: {hookupId.slice(0, 8)}...
@@ -424,11 +454,17 @@ function Paymentmodal() {
           <div className="payment-modal-info-box">
             <div className="payment-modal-info-row">
               <span className="payment-modal-info-label">Payment Method</span>
-              <span className="payment-modal-info-value">M-Pesa</span>
+              <span className="payment-modal-info-value">Card / Bank Transfer</span>
             </div>
+            {userEmail && (
+              <div className="payment-modal-info-row">
+                <span className="payment-modal-info-label">Email</span>
+                <span className="payment-modal-info-value">{userEmail}</span>
+              </div>
+            )}
             {userPhoneNumber && (
               <div className="payment-modal-info-row">
-                <span className="payment-modal-info-label">Phone Number</span>
+                <span className="payment-modal-info-label">Phone</span>
                 <span className="payment-modal-info-value">{userPhoneNumber}</span>
               </div>
             )}
@@ -443,7 +479,7 @@ function Paymentmodal() {
           </div>
           
           <p className="payment-modal-info-hint">
-            🔒 You'll receive a prompt to confirm payment on your phone
+            🔒 Secure payment powered by Paystack
           </p>
         </div>
 
@@ -477,7 +513,7 @@ function Paymentmodal() {
           <button 
             className="payment-modal-btn payment-modal-btn-pay" 
             onClick={handlePayment}
-            disabled={isProcessing || !hookupId || !userPhoneNumber}
+            disabled={isProcessing || !hookupId || !userPhoneNumber || !userEmail}
           >
             {isProcessing ? (
               <span className="payment-modal-spinner">
@@ -494,7 +530,7 @@ function Paymentmodal() {
         {/* Security Footer */}
         <div className="payment-modal-security">
           <span className="payment-modal-security-icon">🔒</span>
-          <span>Secure encrypted payment • 100% protected</span>
+          <span>Secure encrypted payment • Powered by Paystack</span>
         </div>
       </div>
     </div>

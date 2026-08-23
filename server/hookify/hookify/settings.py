@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "UserBalance",
     "stats",
     "commisions",
+    "paystack",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]
@@ -289,7 +290,32 @@ PESAPAL_IPN_URL = os.environ.get(
 )
 
 # ============================================================
-# LOGGING CONFIGURATION (for debugging PesaPal)
+# PAYSTACK CONFIGURATION
+# ============================================================
+
+# Required Paystack credentials
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
+PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY", "")
+
+# Paystack Base URL
+PAYSTACK_BASE_URL = os.environ.get(
+    "PAYSTACK_BASE_URL",
+    "https://api.paystack.co"
+)
+
+# Paystack Callback URLs
+PAYSTACK_CALLBACK_URL = os.environ.get(
+    "PAYSTACK_CALLBACK_URL",
+    f"{BASE_DOMAIN}/paystack/success/"
+)
+
+PAYSTACK_FAILURE_URL = os.environ.get(
+    "PAYSTACK_FAILURE_URL",
+    f"{BASE_DOMAIN}/paystack/failure/"
+)
+
+# ============================================================
+# LOGGING CONFIGURATION (for debugging)
 # ============================================================
 
 LOGGING = {
@@ -312,12 +338,17 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': 'pesapal.log',
+            'filename': 'payments.log',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'payments': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True,
+        },
+        'paystack': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True,
@@ -361,6 +392,12 @@ if DEBUG:
     print(f"  Callback URL: {PESAPAL_CALLBACK_URL}")
     print(f"  Cancellation URL: {PESAPAL_CANCELLATION_URL}")
     print(f"  IPN URL: {PESAPAL_IPN_URL}")
+    print("\n💳 PAYSTACK CONFIGURATION:")
+    print(f"  Secret Key: {'✅ Set' if PAYSTACK_SECRET_KEY else '❌ NOT SET'}")
+    print(f"  Public Key: {'✅ Set' if PAYSTACK_PUBLIC_KEY else '❌ NOT SET'}")
+    print(f"  Base URL: {PAYSTACK_BASE_URL}")
+    print(f"  Callback URL: {PAYSTACK_CALLBACK_URL}")
+    print(f"  Failure URL: {PAYSTACK_FAILURE_URL}")
     print("\n🗄️ DATABASE:")
     print(f"  DATABASE_URL: {'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}")
     print("="*70 + "\n")

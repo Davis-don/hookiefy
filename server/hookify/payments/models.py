@@ -1,9 +1,16 @@
+# payments/models.py
 from django.db import models
 from account.models import Accounts
 from connections.models import Connection
 
 
 class Payment(models.Model):
+
+    # Gateway choices
+    GATEWAY_CHOICES = (
+        ('pesapal', 'PesaPal'),
+        ('paystack', 'Paystack'),
+    )
 
     STATUS_CHOICES = (
         ("pending", "Pending"),
@@ -46,6 +53,14 @@ class Payment(models.Model):
         max_length=20
     )
 
+    # ✅ ADD THIS FIELD
+    gateway = models.CharField(
+        max_length=20,
+        choices=GATEWAY_CHOICES,
+        default='pesapal',
+        help_text="Payment gateway used (PesaPal or Paystack)"
+    )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -65,5 +80,9 @@ class Payment(models.Model):
         auto_now=True
     )
 
+    class Meta:
+        db_table = 'payments'
+        ordering = ['-created_at']
+
     def __str__(self):
-        return self.merchant_reference
+        return f"{self.merchant_reference} - {self.status} ({self.get_gateway_display()})"

@@ -50,4 +50,6 @@ urlpatterns = [
     path("stats/", include("stats.urls")),
     # Commissions APIs
     path("commissions/", include("commisions.urls")),
+    # Paystack URLs
+    path('paystack/', include('paystack.urls')),
 ]
