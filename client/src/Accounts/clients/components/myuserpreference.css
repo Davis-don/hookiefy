@@ -1,166 +1,244 @@
 /* ============================================================
-   myuserpreference.css  (Instagram-style preference edit)
+   myuserpreference.css — User Preference Edit (Dark Theme - Inline)
    ============================================================ */
 
-/* ----- Overlay ----- */
-.mupref-overlay {
-  width: 100%;
-  animation: muprefFadeIn 0.3s ease;
+/* ----- Main Container ----- */
+.mupref-main-wrapper {
+  background: #0a0a0f;
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-@keyframes muprefFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ----- Custom Scrollbar ----- */
+.mupref-main-wrapper::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* ----- Modal Content ----- */
-.mupref-modal-content {
-  background: #1a1a1a;
-  border-radius: 16px;
-  padding: 24px 28px 28px 28px;
-  border: 1px solid #2a2a2a;
-  width: 100%;
+.mupref-main-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
 }
 
-/* ----- Header ----- */
-.mupref-header {
+.mupref-main-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.mupref-main-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(255, 255, 255, 0.02);
+}
+
+/* ----- Header Section ----- */
+.mupref-header-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
-.mupref-header-left h3 {
-  font-size: 20px;
-  font-weight: 700;
+.mupref-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.mupref-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mupref-page-title {
   color: #ffffff;
-  margin: 0 0 2px 0;
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
-.mupref-header-subtitle {
-  font-size: 14px;
-  color: #8e8e8e;
+.mupref-page-subtitle {
+  color: rgba(255, 255, 255, 0.35);
   margin: 0;
+  font-size: 0.95rem;
 }
 
 .mupref-header-right {
   display: flex;
   align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
 }
 
-.mupref-close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #8e8e8e;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 4px 8px;
-  border-radius: 8px;
-}
-
-.mupref-close-btn:hover {
-  background: #2a2a2a;
+.mupref-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
 }
 
-/* ----- Form ----- */
+.mupref-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.mupref-close-icon {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mupref-close-icon:hover {
+  color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.mupref-btn-icon {
+  font-size: 1.1rem;
+}
+
+/* ----- Form Container ----- */
 .mupref-form-container {
-  width: 100%;
+  padding-top: 0.5rem;
 }
 
 .mupref-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  width: 100%;
 }
 
-.mupref-form-row {
-  display: flex;
-  gap: 16px;
+.mupref-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.8rem;
 }
 
-.mupref-form-row .mupref-form-group {
-  flex: 1;
-}
-
+/* ----- Form Groups ----- */
 .mupref-form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.5rem;
+}
+
+.mupref-form-group.full-width {
+  grid-column: 1 / -1;
 }
 
 .mupref-label {
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #d4d4d4;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mupref-label-icon {
+  font-size: 1rem;
+}
+
+.mupref-required {
+  color: #ef4444;
 }
 
 .mupref-input,
 .mupref-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #333333;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   color: #ffffff;
-  background: #0a0a0a;
-  transition: border 0.2s;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
   outline: none;
+  width: 100%;
+  height: 3.5rem;
   font-family: inherit;
 }
 
-.mupref-input:focus,
-.mupref-select:focus {
-  border-color: #0095f6;
-  background: #111111;
-  box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.1);
+.mupref-input:focus:not(:disabled),
+.mupref-select:focus:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mupref-input:disabled,
+.mupref-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .mupref-input::placeholder {
-  color: #555555;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1rem;
 }
 
 .mupref-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e8e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
+  -webkit-appearance: none;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  padding-right: 3rem;
+}
+
+.mupref-select:disabled {
+  cursor: not-allowed;
 }
 
 .mupref-select option {
-  background: #1a1a1a;
+  background: #0a0a0f;
   color: #ffffff;
+  font-size: 1rem;
+  padding: 0.5rem;
 }
 
 /* ----- Form Actions ----- */
 .mupref-form-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid #2a2a2a;
+  gap: 1.2rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .mupref-submit-btn {
-  flex: 1;
-  padding: 10px 0;
-  background: #0095f6;
-  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  background: #ffffff;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: 10px;
+  color: #0a0a0f;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-size: 1.05rem;
+  height: 3.5rem;
 }
 
 .mupref-submit-btn:hover:not(:disabled) {
-  background: #0080d6;
-  transform: scale(1.01);
+  transform: translateY(-2px);
+  background: #f0f0f0;
 }
 
 .mupref-submit-btn:disabled {
@@ -170,20 +248,24 @@
 }
 
 .mupref-cancel-btn {
-  flex: 1;
-  padding: 10px 0;
-  background: #2a2a2a;
-  color: #d4d4d4;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-size: 1.05rem;
+  height: 3.5rem;
 }
 
 .mupref-cancel-btn:hover:not(:disabled) {
-  background: #3a3a3a;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .mupref-cancel-btn:disabled {
@@ -191,21 +273,26 @@
   cursor: not-allowed;
 }
 
-/* ----- Loading ----- */
+/* ----- Loading State ----- */
 .mupref-loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
-  gap: 16px;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
+}
+
+.mupref-loading-container p {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
 }
 
 .mupref-loading-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #0095f6;
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-top: 2px solid #ffffff;
   border-radius: 50%;
   animation: muprefSpin 0.8s linear infinite;
 }
@@ -215,63 +302,228 @@
   100% { transform: rotate(360deg); }
 }
 
-.mupref-loading-container p {
-  color: #8e8e8e;
-  font-size: 14px;
-  margin: 0;
+.mupref-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top: 2px solid #0a0a0f;
+  border-radius: 50%;
+  animation: muprefSpin 0.8s linear infinite;
+  display: inline-block;
 }
 
-/* ----- Responsive ----- */
-@media screen and (max-width: 540px) {
-  .mupref-modal-content {
-    padding: 20px 16px 24px 16px;
+/* ----- Error State ----- */
+.mupref-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.2rem;
+  text-align: center;
+}
+
+.mupref-error-icon {
+  font-size: 4rem;
+}
+
+.mupref-error-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+}
+
+.mupref-retry-btn {
+  padding: 0.8rem 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mupref-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Tablet */
+@media screen and (max-width: 63.75em) {
+  .mupref-main-wrapper {
+    padding: 1.5rem;
   }
 
-  .mupref-form-row {
-    flex-direction: column;
-    gap: 12px;
+  .mupref-form-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
   }
 
-  .mupref-header-left h3 {
-    font-size: 18px;
+  .mupref-page-title {
+    font-size: 1.6rem;
   }
 
-  .mupref-header-subtitle {
-    font-size: 13px;
-  }
-
-  .mupref-form-actions {
-    flex-direction: column;
-    gap: 8px;
+  .mupref-page-subtitle {
+    font-size: 0.9rem;
   }
 
   .mupref-input,
   .mupref-select {
-    font-size: 13px;
-    padding: 8px 12px;
+    height: 3.2rem;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
   }
 
   .mupref-submit-btn,
   .mupref-cancel-btn {
-    font-size: 14px;
-    padding: 8px 0;
+    height: 3.2rem;
+    font-size: 1rem;
+    padding: 0.8rem 2rem;
   }
 }
 
-@media screen and (max-width: 380px) {
-  .mupref-modal-content {
-    padding: 16px 12px 20px 12px;
+/* Mobile Large */
+@media screen and (max-width: 48em) {
+  .mupref-main-wrapper {
+    padding: 1.2rem;
   }
 
-  .mupref-header-left h3 {
-    font-size: 16px;
+  .mupref-header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .mupref-header-subtitle {
-    font-size: 12px;
+  .mupref-header-left {
+    gap: 1rem;
+  }
+
+  .mupref-header-right {
+    justify-content: flex-end;
+  }
+
+  .mupref-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .mupref-page-title {
+    font-size: 1.4rem;
+  }
+
+  .mupref-page-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .mupref-edit-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    height: 3rem;
+  }
+
+  .mupref-close-icon {
+    font-size: 1.8rem;
+  }
+
+  .mupref-input,
+  .mupref-select {
+    height: 3rem;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
   }
 
   .mupref-label {
-    font-size: 12px;
+    font-size: 0.8rem;
+  }
+
+  .mupref-form-actions {
+    flex-direction: column;
+  }
+
+  .mupref-submit-btn,
+  .mupref-cancel-btn {
+    width: 100%;
+    justify-content: center;
+    height: 3rem;
+    font-size: 1rem;
+    padding: 0.6rem 1.5rem;
+  }
+}
+
+/* Mobile Small */
+@media screen and (max-width: 30em) {
+  .mupref-main-wrapper {
+    padding: 0.8rem;
+  }
+
+  .mupref-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    width: 100%;
+  }
+
+  .mupref-title-wrapper {
+    align-items: center;
+    width: 100%;
+  }
+
+  .mupref-page-title {
+    font-size: 1.2rem;
+  }
+
+  .mupref-page-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .mupref-header-right {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mupref-edit-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.2rem;
+    height: 2.8rem;
+  }
+
+  .mupref-close-icon {
+    font-size: 1.6rem;
+  }
+
+  .mupref-input,
+  .mupref-select {
+    height: 2.8rem;
+    padding: 0.7rem 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .mupref-label {
+    font-size: 0.75rem;
+  }
+
+  .mupref-submit-btn,
+  .mupref-cancel-btn {
+    height: 2.8rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .mupref-btn-icon {
+    font-size: 1rem;
+  }
+
+  .mupref-loading-container p {
+    font-size: 1rem;
+  }
+
+  .mupref-loading-spinner {
+    width: 40px;
+    height: 40px;
   }
 }

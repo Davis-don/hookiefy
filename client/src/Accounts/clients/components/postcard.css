@@ -36,11 +36,11 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #3b82f6;
-  display: none;
+  display: block;
 }
 
-.post-avatar-img[src] {
-  display: block;
+.post-avatar-img[src=""] {
+  display: none;
 }
 
 .post-avatar-fallback {
@@ -86,7 +86,6 @@
   margin-top: 2px;
 }
 
-/* 🟢 UPDATED: Post time and location - now larger */
 .post-time {
   font-size: 16px;
   color: #a0a0c0;
@@ -104,23 +103,57 @@
   font-size: 16px;
 }
 
-/* Post Image - Instagram Style - INCREASED HEIGHT */
+/* FIX: Post Image - fills container properly */
 .post-image-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 90%;
+  height: auto;
   background: transparent;
   overflow: hidden;
   cursor: pointer;
 }
 
-.post-image-content {
+.post-image-wrapper img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Alternative: If you want a fixed aspect ratio and fill completely */
+.post-image-wrapper.fixed-ratio {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* 1:1 square */
+  background: #0a0a0f;
+}
+
+.post-image-wrapper.fixed-ratio .post-image-content {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Or use aspect-ratio property (modern browsers) */
+.post-image-wrapper.aspect-ratio {
+  aspect-ratio: 1 / 1;
+  background: #0a0a0f;
+}
+
+.post-image-wrapper.aspect-ratio .post-image-content {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Original style - remove fixed-ratio/aspect-ratio classes to use */
+.post-image-content {
+  width: 100%;
+  height: auto;
+  display: block;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -205,7 +238,6 @@
   color: #6a6a8a;
 }
 
-/* 🟢 UPDATED: Post Caption - Bio text is now larger */
 .post-caption {
   padding: 12px 16px 8px;
   font-size: 18px;
@@ -222,7 +254,6 @@
   color: #e8e8e8;
 }
 
-/* 🟢 NEW: Show more/less as text link (like Instagram/TikTok) */
 .caption-expand-text {
   font-size: 18px;
   color: #8b8ba7;
@@ -237,7 +268,6 @@
   color: #3b82f6;
 }
 
-/* 🟢 UPDATED: See More Details - now text link like Instagram */
 .post-see-more {
   padding: 0 16px 8px;
 }
@@ -255,7 +285,6 @@
   color: #3b82f6;
 }
 
-/* Additional Details Grid */
 .post-additional-details {
   padding: 12px 16px;
   margin: 0 0 12px;
@@ -324,7 +353,6 @@
   text-overflow: ellipsis;
 }
 
-/* Connect Button Section */
 .post-connect-section {
   padding: 12px 16px 16px;
 }
@@ -461,7 +489,7 @@
 }
 
 /* ============================================ */
-/* 🟢 MOBILE RESPONSIVE - UPDATED FOR LARGER TEXT */
+/* RESPONSIVE */
 /* ============================================ */
 
 /* Tablet and smaller laptops */
@@ -483,7 +511,7 @@
   }
 }
 
-/* 🟢 Mobile devices - LARGER TEXT for better readability */
+/* Mobile devices */
 @media screen and (max-width: 768px) {
   .overall-post-card-container {
     margin: 12px 8px;
@@ -504,14 +532,12 @@
     font-size: 14px;
   }
 
-  /* 🟢 Mobile: Post time & location - even larger */
   .post-time,
   .post-location,
   .post-dot {
     font-size: 17px;
   }
 
-  /* 🟢 Mobile: Bio text - significantly larger (almost double) */
   .caption-text,
   .caption-expand-text,
   .post-caption {
@@ -527,13 +553,28 @@
     padding: 12px 14px 8px;
   }
 
-  /* 🟢 Mobile: See more text - larger */
   .see-more-text {
     font-size: 17px;
   }
 
-  .post-image-wrapper {
+  /* FIX: Mobile image fills container */
+  .post-image-wrapper img,
+  .post-image-content {
+    width: 100%;
+    height: auto;
+  }
+
+  .post-image-wrapper.fixed-ratio {
     padding-bottom: 100%;
+  }
+
+  .post-image-wrapper.fixed-ratio .post-image-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .details-grid {
@@ -589,7 +630,7 @@
   }
 }
 
-/* 🟢 Small mobile devices - even larger text */
+/* Small mobile devices */
 @media screen and (max-width: 480px) {
   .overall-post-card-container {
     margin: 8px 4px;
@@ -609,14 +650,12 @@
     font-size: 13px;
   }
 
-  /* 🟢 Small mobile: Post time & location - largest */
   .post-time,
   .post-location,
   .post-dot {
     font-size: 16px;
   }
 
-  /* 🟢 Small mobile: Bio text - largest size (double original) */
   .caption-text,
   .caption-expand-text,
   .post-caption {
@@ -632,7 +671,6 @@
     padding: 10px 12px 6px;
   }
 
-  /* 🟢 Small mobile: See more text */
   .see-more-text {
     font-size: 16px;
   }
@@ -645,10 +683,6 @@
     padding: 10px;
     font-size: 13px;
     border-radius: 10px;
-  }
-
-  .post-image-wrapper {
-    padding-bottom: 100%;
   }
 
   .detail-item {
@@ -666,7 +700,7 @@
 
 /* Landscape orientation for mobile */
 @media screen and (max-height: 500px) and (orientation: landscape) {
-  .post-image-wrapper {
+  .post-image-wrapper.fixed-ratio {
     padding-bottom: 70%;
   }
 

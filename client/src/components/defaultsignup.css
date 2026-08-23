@@ -707,3 +707,26 @@
     }
   }
 }
+
+
+/* Add to defaultsignup.css */
+
+/* Name row - two columns */
+.default-signup-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Ensure input groups in name row work properly */
+.default-signup-name-row .default-signup-input-group {
+  margin-bottom: 0;
+}
+
+/* Responsive: stack name fields on mobile */
+@media screen and (max-width: 480px) {
+  .default-signup-name-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}

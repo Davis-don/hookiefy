@@ -42,31 +42,9 @@ const sendConnectionRequest = async (userId: string, accessToken: string | null)
     },
   });
 
-  // Handle non-OK responses
   if (!response.ok) {
-    let errorMessage = 'Failed to send connection request';
-    try {
-      const errorData = await response.json();
-      console.log('🔴 Server error response:', errorData);
-      
-      // Priority: error > message > statusText
-      if (errorData.error) {
-        errorMessage = errorData.error;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      } else if (errorData.statusText) {
-        errorMessage = errorData.statusText;
-      }
-      
-      // If the error is about role, make it more specific
-      if (errorData.your_role === 'admin' || errorData.your_role === 'superadmin') {
-        errorMessage = `Only regular users can send connection requests. You are logged in as '${errorData.your_role}'. Please use a regular user account.`;
-      }
-    } catch (e) {
-      // If response is not JSON, use status text
-      errorMessage = response.statusText || `Server error (${response.status})`;
-    }
-    throw new Error(errorMessage);
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to send connection request');
   }
 
   return response.json();
@@ -87,14 +65,8 @@ const acceptConnectionRequest = async (userId: string, accessToken: string | nul
   });
 
   if (!response.ok) {
-    let errorMessage = 'Failed to accept connection request';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch (e) {
-      errorMessage = response.statusText || `Server error (${response.status})`;
-    }
-    throw new Error(errorMessage);
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to accept connection request');
   }
 
   return response.json();
@@ -115,14 +87,8 @@ const rejectConnectionRequest = async (userId: string, accessToken: string | nul
   });
 
   if (!response.ok) {
-    let errorMessage = 'Failed to reject connection request';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch (e) {
-      errorMessage = response.statusText || `Server error (${response.status})`;
-    }
-    throw new Error(errorMessage);
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to reject connection request');
   }
 
   return response.json();
@@ -177,25 +143,20 @@ function Postcard({
         },
       });
       console.log('Connection successful:', data);
+      // You might want to refetch the feed here to update the status
     },
     onError: (error: Error) => {
-      // Show the actual error message from the server
-      console.log('🔴 Connection error:', error.message);
-      
-      // Check if the error is about role/permission
-      const errorMsg = error.message || 'Please try again later.';
-      
-      toast.error('Connection request failed', {
-        description: errorMsg,
-        duration: 8000, // Longer duration for important errors
-        icon: '🚫',
+      toast.error('Failed to send connection request', {
+        description: error.message || 'Please try again later.',
+        duration: 6000,
+        icon: '⚠️',
         style: {
           background: '#1a1a2e',
           border: '1px solid #ef4444',
           color: '#ffffff',
-          maxWidth: '400px',
         },
       });
+      console.error('Connection error:', error);
     },
   });
 

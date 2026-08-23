@@ -20,7 +20,7 @@ interface DefaultSignupProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin?: () => void;
-  onSignupSuccess?: () => void; // New prop for success callback
+  onSignupSuccess?: () => void;
 }
 
 interface SignupResponse {
@@ -56,7 +56,8 @@ function DefaultSignup({
   onSignupSuccess 
 }: DefaultSignupProps) {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [gender, setGender] = useState('');
@@ -65,19 +66,6 @@ function DefaultSignup({
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
-
-  // Helper function to split full name into first and last name
-  const splitFullName = (fullName: string): { firstName: string; lastName: string } => {
-    const trimmed = fullName.trim();
-    const spaceIndex = trimmed.indexOf(' ');
-    if (spaceIndex === -1) {
-      return { firstName: trimmed, lastName: '' };
-    }
-    return {
-      firstName: trimmed.substring(0, spaceIndex),
-      lastName: trimmed.substring(spaceIndex + 1).trim(),
-    };
-  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +89,36 @@ function DefaultSignup({
     if (password.length < 8) {
       toast.error('Password too short!', {
         description: 'Password must be at least 8 characters long.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    // Validate first name
+    if (!firstName.trim()) {
+      toast.error('First name is required!', {
+        description: 'Please enter your first name.',
+        duration: 4000,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      });
+      return;
+    }
+
+    // Validate last name
+    if (!lastName.trim()) {
+      toast.error('Last name is required!', {
+        description: 'Please enter your last name.',
         duration: 4000,
         icon: '⚠️',
         style: {
@@ -159,13 +177,10 @@ function DefaultSignup({
 
     setIsLoading(true);
 
-    // Split full name into first and last name
-    const { firstName, lastName } = splitFullName(fullName);
-
-    // Prepare the request data with confirmpassword
+    // Prepare the request data
     const requestData = {
-      first_name: firstName,
-      last_name: lastName || firstName,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       email: email,
       phone_number: phoneNumber,
       gender: gender,
@@ -201,12 +216,10 @@ function DefaultSignup({
         const errorData = await response.json();
         console.log('❌ Error response:', errorData);
         
-        // Handle specific error messages
         if (errorData.message && errorData.message.includes('No superadmin exists')) {
           throw new Error('System is currently unavailable. Please try again later or contact support.');
         }
         
-        // Handle validation errors from the serializer
         if (errorData.errors) {
           const errorMessages = [];
           for (const [field, errors] of Object.entries(errorData.errors)) {
@@ -219,7 +232,6 @@ function DefaultSignup({
           throw new Error(errorMessages.join(' | '));
         }
         
-        // Handle field-specific errors
         if (errorData.email) {
           throw new Error(`Email error: ${Array.isArray(errorData.email) ? errorData.email[0] : errorData.email}`);
         }
@@ -237,7 +249,8 @@ function DefaultSignup({
       console.log('✅ Signup success:', result);
 
       // Reset form
-      setFullName('');
+      setFirstName('');
+      setLastName('');
       setEmail('');
       setPhoneNumber('');
       setGender('');
@@ -245,11 +258,9 @@ function DefaultSignup({
       setConfirmPassword('');
       setIsLoading(false);
 
-      // ✅ Show success toast with the user's name and assignment info
       const assignedTo = result.data?.assignment?.assigned_to_name || 'Super Admin';
       const firstNameResult = result.data?.first_name || 'User';
       
-      // Show a prominent success toast
       toast.success('🎉 Account Created Successfully!', {
         description: `Welcome ${firstNameResult}! Your account has been created and assigned to ${assignedTo}. Please login to continue.`,
         duration: 6000,
@@ -264,23 +275,17 @@ function DefaultSignup({
         className: 'signup-success-toast',
       });
 
-      // ✅ Close the signup modal after showing the toast
-      // First close the signup modal
       onClose();
       
-      // ✅ Call the success callback to open login modal
       if (onSignupSuccess) {
-        // Small delay to ensure modal close animation completes
         setTimeout(() => {
           onSignupSuccess?.();
         }, 300);
       } else if (onSwitchToLogin) {
-        // Fallback: switch to login if no success callback
         setTimeout(() => {
           onSwitchToLogin?.();
         }, 300);
       } else {
-        // Navigate to login page
         setTimeout(() => {
           navigate('/signin');
         }, 1000);
@@ -289,7 +294,6 @@ function DefaultSignup({
     } catch (error) {
       setIsLoading(false);
       
-      // Handle error with appropriate toast
       let errorMessage = 'Failed to create account. Please try again.';
       let toastStyle = {
         background: '#1a1a2e',
@@ -300,7 +304,6 @@ function DefaultSignup({
       if (error instanceof Error) {
         errorMessage = error.message;
         
-        // If the error is about system unavailability, use a different style
         if (error.message.includes('unavailable') || error.message.includes('superadmin')) {
           toastStyle = {
             background: '#1a1a2e',
@@ -347,18 +350,35 @@ function DefaultSignup({
 
         {/* Signup Form */}
         <form className="default-signup-form" onSubmit={handleSignup}>
-          <div className="default-signup-input-group">
-            <div className="default-signup-input-icon">
-              <IoPerson />
+          {/* First Name & Last Name Row */}
+          <div className="default-signup-name-row">
+            <div className="default-signup-input-group">
+              <div className="default-signup-input-icon">
+                <IoPerson />
+              </div>
+              <input
+                type="text"
+                className="default-signup-input"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
             </div>
-            <input
-              type="text"
-              className="default-signup-input"
-              placeholder="Full Name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+
+            <div className="default-signup-input-group">
+              <div className="default-signup-input-icon">
+                <IoPerson />
+              </div>
+              <input
+                type="text"
+                className="default-signup-input"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div className="default-signup-input-group">

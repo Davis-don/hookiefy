@@ -62,7 +62,7 @@ const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUser
   return response.json();
 };
 
-// Logout function
+// Logout function - exactly like Profileheader
 const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
   if (!accessToken) {
     throw new Error('No access token found.');
@@ -109,7 +109,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
     retry: 1,
   });
 
-  // ---- Logout mutation ----
+  // ---- Logout mutation - exactly like Profileheader ----
   const logoutMutation = useMutation({
     mutationFn: () => logoutUser(accessToken, refreshToken),
     onSuccess: () => {
@@ -173,7 +173,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
     );
   };
 
-  // ---- Handle logout ----
+  // ---- Handle logout - exactly like Profileheader ----
   const handleLogout = () => {
     if (isLoggingOut) return;
     

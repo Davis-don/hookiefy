@@ -1,15 +1,15 @@
 /* ============================================
-   generalinfoedit.css — General Info Edit
+   generalinfoedit.css — General Info Edit (Dark Theme)
    ============================================ */
 
 /* --- Main Container --- */
 .gei-main-wrapper {
-  background: #071316;
+  background: #0a0a0f;
   padding: 2rem;
   height: 100%;
   overflow-y: auto;
   border-radius: 12px;
-  border: 1px solid rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* --- Custom Scrollbar --- */
@@ -18,18 +18,18 @@
 }
 
 .gei-main-wrapper::-webkit-scrollbar-track {
-  background: rgba(0, 229, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 10px;
 }
 
 .gei-main-wrapper::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00e5ff, #0099ff);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 10px;
 }
 
 .gei-main-wrapper {
   scrollbar-width: thin;
-  scrollbar-color: #00e5ff rgba(0, 229, 255, 0.03);
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(255, 255, 255, 0.02);
 }
 
 /* --- Header Section --- */
@@ -37,8 +37,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding-bottom: 2rem;
-  border-bottom: 2px solid rgba(0, 229, 255, 0.08);
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1.5rem;
@@ -57,16 +57,17 @@
 }
 
 .gei-page-title {
-  color: #d6f0f5;
+  color: #ffffff;
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .gei-page-subtitle {
-  color: rgba(150, 220, 240, 0.5);
+  color: rgba(255, 255, 255, 0.35);
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .gei-header-right {
@@ -81,43 +82,86 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.8rem 2rem;
-  background: rgba(0, 229, 255, 0.1);
-  border: 1px solid rgba(0, 229, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  color: #00e5ff;
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .gei-edit-btn:hover {
-  background: rgba(0, 229, 255, 0.15);
-  box-shadow: 0 0 40px rgba(0, 229, 255, 0.15);
-  transform: scale(1.03);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
 
 .gei-close-icon {
-  color: rgba(150, 220, 240, 0.4);
-  font-size: 2.2rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 2rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .gei-close-icon:hover {
-  color: #ff5252;
+  color: #ef4444;
   transform: rotate(90deg);
 }
 
 .gei-btn-icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+}
+
+/* --- Refresh Button --- */
+.gei-refresh-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gei-refresh-btn:hover:not(:disabled) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gei-refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.gei-refresh-icon {
+  transition: transform 0.3s ease;
+}
+
+.gei-refresh-icon.gei-spinning {
+  animation: geiSpin 0.8s linear infinite;
+}
+
+@keyframes geiSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.gei-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* --- Success Alert --- */
 .gei-success-alert {
-  background: rgba(0, 230, 118, 0.1);
-  border: 1px solid rgba(0, 230, 118, 0.2);
-  color: #00e676;
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.12);
+  color: #4ade80;
   padding: 1rem 1.5rem;
   border-radius: 10px;
   margin-bottom: 2rem;
@@ -125,12 +169,12 @@
   align-items: center;
   gap: 0.8rem;
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1rem;
   animation: geiSlideDown 0.3s ease;
 }
 
 .gei-success-icon {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
 }
 
 @keyframes geiSlideDown {
@@ -171,25 +215,31 @@
 }
 
 .gei-form-label {
-  color: rgba(150, 220, 240, 0.8);
-  font-size: 1rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .gei-label-icon {
-  font-size: 1.1rem;
+  font-size: 1rem;
+}
+
+.gei-required {
+  color: #ef4444;
 }
 
 .gei-form-input {
   padding: 1rem 1.2rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(0, 229, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  color: #d6f0f5;
-  font-size: 1.1rem;
+  color: #ffffff;
+  font-size: 1.05rem;
   transition: all 0.3s ease;
   outline: none;
   width: 100%;
@@ -197,24 +247,29 @@
 }
 
 .gei-form-input:focus:not(:disabled) {
-  border-color: #00e5ff;
-  box-shadow: 0 0 25px rgba(0, 229, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .gei-form-input:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .gei-form-input::placeholder {
-  color: rgba(150, 220, 240, 0.2);
+  color: rgba(255, 255, 255, 0.2);
   font-size: 1rem;
 }
 
 .gei-form-select {
   appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
   height: 3.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  padding-right: 3rem;
 }
 
 .gei-form-select:disabled {
@@ -222,9 +277,9 @@
 }
 
 .gei-form-select option {
-  background: #071316;
-  color: #d6f0f5;
-  font-size: 1.1rem;
+  background: #0a0a0f;
+  color: #ffffff;
+  font-size: 1rem;
   padding: 0.5rem;
 }
 
@@ -234,7 +289,7 @@
   gap: 1.2rem;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid rgba(0, 229, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .gei-save-btn {
@@ -242,20 +297,26 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.9rem 2.5rem;
-  background: linear-gradient(135deg, #00e5ff, #0099ff);
+  background: #ffffff;
   border: none;
   border-radius: 10px;
-  color: #071316;
+  color: #0a0a0f;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   height: 3.5rem;
 }
 
-.gei-save-btn:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
+.gei-save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #f0f0f0;
+}
+
+.gei-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .gei-cancel-btn {
@@ -263,20 +324,94 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.9rem 2.5rem;
-  background: rgba(255, 82, 82, 0.1);
-  border: 1px solid rgba(255, 82, 82, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  color: #ff5252;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   height: 3.5rem;
 }
 
-.gei-cancel-btn:hover {
-  background: rgba(255, 82, 82, 0.15);
-  transform: scale(1.03);
+.gei-cancel-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.gei-cancel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Loading State --- */
+.gei-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
+}
+
+.gei-loading-container p {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+}
+
+.gei-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: geiSpin 0.8s linear infinite;
+}
+
+.gei-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top: 2px solid #0a0a0f;
+  border-radius: 50%;
+  animation: geiSpin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* --- Error State --- */
+.gei-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.2rem;
+  text-align: center;
+}
+
+.gei-error-icon {
+  font-size: 4rem;
+}
+
+.gei-error-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+}
+
+.gei-retry-btn {
+  padding: 0.8rem 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gei-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================
@@ -376,7 +511,7 @@
   }
 
   .gei-form-label {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
   }
 
   .gei-form-actions {
@@ -450,7 +585,7 @@
   }
 
   .gei-form-label {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
   }
 
   .gei-save-btn,
@@ -467,5 +602,14 @@
 
   .gei-btn-icon {
     font-size: 1rem;
+  }
+
+  .gei-loading-container p {
+    font-size: 1rem;
+  }
+
+  .gei-loading-spinner {
+    width: 40px;
+    height: 40px;
   }
 }
