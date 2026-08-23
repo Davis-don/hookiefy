@@ -1,15 +1,14 @@
 // components/AdminHeader.tsx
 // ============================================================
-// AdminHeader.tsx - Top Header Bar (Instagram style)
+// AdminHeader.tsx - Top Header Bar (Icons only - Centered)
 // ============================================================
 
 import './AdminHeader.css'
-import { IoPerson } from "react-icons/io5";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoLogOutOutline } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { useAuthStore } from '../../../store/authtokenstore';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -22,45 +21,9 @@ interface AdminHeaderProps {
   onNavClick: (tab: string) => void;
 }
 
-interface CurrentUserData {
-  id: number;
-  email: string;
-  role: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  phone_number: string;
-  gender: string;
-  profile_image_url: string | null;
-  profile_image_public_id: string | null;
-  has_profile_image: boolean;
-}
-
 // ============================================================
 // API HELPERS
 // ============================================================
-
-const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUserData> => {
-  if (!accessToken) {
-    throw new Error('No access token found. Please login again.');
-  }
-
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/current-user/`, {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Session expired. Please login again.');
-    }
-    throw new Error(`Failed to fetch user: ${response.status}`);
-  }
-
-  return response.json();
-};
 
 // Logout function
 const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
@@ -95,20 +58,6 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
   const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // ---- Fetch current user data ----
-  const { 
-    data: userData, 
-    isLoading: isLoadingUser,
-  } = useQuery<CurrentUserData>({
-    queryKey: ['currentAdminUser', accessToken],
-    queryFn: () => fetchCurrentUser(accessToken),
-    enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 1,
-  });
-
   // ---- Logout mutation ----
   const logoutMutation = useMutation({
     mutationFn: () => logoutUser(accessToken, refreshToken),
@@ -123,7 +72,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
         },
       });
       
-      clearTokens(); // Clear tokens using the store's clearTokens function
+      clearTokens();
       
       setTimeout(() => {
         window.location.href = '/signin';
@@ -143,35 +92,6 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
       setIsLoggingOut(false);
     },
   });
-
-  // ---- Render profile avatar ----
-  const renderProfileAvatar = () => {
-    if (isLoadingUser) {
-      return (
-        <div className="admin-header-avatar-wrapper admin-header-avatar-loading">
-          <div className="admin-header-avatar-spinner"></div>
-        </div>
-      );
-    }
-
-    if (userData?.profile_image_url) {
-      return (
-        <div className="admin-header-avatar-wrapper">
-          <img 
-            src={userData.profile_image_url} 
-            alt={userData.full_name || 'Admin'}
-            className="admin-header-avatar-img"
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className="admin-header-avatar-wrapper default-bg">
-        <IoPerson className="admin-header-avatar-icon" />
-      </div>
-    );
-  };
 
   // ---- Handle logout ----
   const handleLogout = () => {
@@ -206,29 +126,7 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
 
   return (
     <div className="overall-admin-header-container">
-      <div className="admin-header-left">
-        <div className="admin-header-brand">
-          <h3>Admin Panel</h3>
-        </div>
-        <div className="admin-header-user-name-display">
-          <span className="admin-header-greeting">Welcome,</span>
-          <span className="admin-header-user-fullname">
-            {isLoadingUser ? 'Loading...' : userData?.full_name || 'Admin User'}
-          </span>
-        </div>
-      </div>
-
-      <div className="admin-header-center">
-        <div className="admin-header-search">
-          <input 
-            type="text" 
-            placeholder="Search..." 
-            className="admin-header-search-input"
-          />
-        </div>
-      </div>
-
-      <div className="admin-header-right">
+      <div className="admin-header-icons-wrapper">
         <button 
           className={`admin-header-icon-btn ${activeTab === 'notifications' ? 'active' : ''}`} 
           title="Notifications"
@@ -245,18 +143,6 @@ function AdminHeader({ activeTab, onNavClick }: AdminHeaderProps) {
         >
           <IoSettingsOutline />
         </button>
-
-        <div className="admin-header-user">
-          {renderProfileAvatar()}
-          <div className="admin-header-user-info">
-            <span className="admin-header-user-name">
-              {userData?.full_name || 'Admin User'}
-            </span>
-            <span className="admin-header-user-role">
-              {userData?.role || 'Administrator'}
-            </span>
-          </div>
-        </div>
 
         <button 
           className="admin-header-logout-btn" 
