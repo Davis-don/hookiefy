@@ -1,5 +1,5 @@
 import './profiledatarender.css'
-import Addimageprofile from './Addimageprofile'
+import Addimageprofile from '../../common/components/Addimageprofile'
 import Profiledetailfetchview from './Profiledetailfetchview'
 import Editclientprofile from './Editclientprofile'
 import Profileheader from './Profileheader'

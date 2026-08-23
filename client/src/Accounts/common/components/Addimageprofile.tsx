@@ -6,7 +6,7 @@ import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authtokenstore'
 import { toast } from 'sonner'
-import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
+import Loadingcomponent from './Loading/Loadingcomponent';
 
 interface UserData {
   id: number;
