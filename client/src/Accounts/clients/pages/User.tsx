@@ -7,7 +7,6 @@ import { CiHome } from "react-icons/ci";
 import { IoSearch } from "react-icons/io5";
 import { IoNotifications } from "react-icons/io5";
 import { IoPerson } from "react-icons/io5";
-import { IoLogOutOutline } from "react-icons/io5";
 import { IoCheckmarkCircle } from "react-icons/io5"; // Green tick icon
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -23,8 +22,7 @@ import Profile from '../components/Profile';
 import PaidConnections from '../components/PaidConnections'; // Keep the same component
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { useAuthStore } from '../../../store/authtokenstore';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 // ============================================================
 // TYPES
@@ -105,31 +103,6 @@ const fetchUnreadNotifications = async (accessToken: string | null): Promise<Unr
   return response.json();
 };
 
-// Logout function
-const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
-  if (!accessToken) {
-    throw new Error('No access token found.');
-  }
-
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/account/logout/`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Logout failed');
-  }
-
-  return response.json();
-};
-
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
@@ -143,12 +116,11 @@ function User() {
   const [hasProfile, setHasProfile] = useState(false);
   const [hasPreference, setHasPreference] = useState(false);
   const [hasProfileImage, setHasProfileImage] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // State for successful connections count (can be fetched from API)
   const [successfulConnectionsCount] = useState(0);
 
-  const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
+  const { access: accessToken } = useAuthStore();
   
 
   // ---- Fetch current user data for profile icon ----
@@ -190,41 +162,6 @@ function User() {
       console.error('Error checking unread notifications:', unreadError);
     }
   }, [unreadError]);
-
-  // ---- Logout mutation ----
-  const logoutMutation = useMutation({
-    mutationFn: () => logoutUser(accessToken, refreshToken),
-    onSuccess: () => {
-      toast.success('Logged out successfully!', {
-        duration: 3000,
-        icon: '👋',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #22c55e',
-          color: '#ffffff',
-        },
-      });
-      
-      clearTokens();
-      
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 1500);
-    },
-    onError: (error: Error) => {
-      toast.error('Logout failed', {
-        description: error.message || 'Please try again.',
-        duration: 4000,
-        icon: '⚠️',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #ef4444',
-          color: '#ffffff',
-        },
-      });
-      setIsLoggingOut(false);
-    },
-  });
 
   // Check if user has profile
   const checkProfile = async (): Promise<boolean> => {
@@ -392,27 +329,6 @@ function User() {
     const profileImageExists = await checkProfileImageStatus();
     setHasProfileImage(profileImageExists);
     await refetchUser();
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    if (isLoggingOut) return;
-    
-    setIsLoggingOut(true);
-    const loadingToast = toast.loading('Logging out...', {
-      style: {
-        background: '#1a1a2e',
-        border: '1px solid #3b82f6',
-        color: '#ffffff',
-      },
-    });
-
-    logoutMutation.mutate(undefined, {
-      onSettled: () => {
-        toast.dismiss(loadingToast);
-        setIsLoggingOut(false);
-      }
-    });
   };
 
   // Handle navigation click
@@ -630,20 +546,6 @@ function User() {
               <div className="nav-name">Profile</div>
             </li>
           </ul>
-
-          {/* Logout Button */}
-          <div className="user-logout-section">
-            <button 
-              className="user-logout-btn"
-              onClick={handleLogout}
-              disabled={isLoggingOut || logoutMutation.isPending}
-            >
-              <IoLogOutOutline className="user-logout-icon" />
-              <span className="user-logout-text">
-                {isLoggingOut || logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-              </span>
-            </button>
-          </div>
 
           <div className="user-sidebar-footer">
             <span>© 2026</span>
