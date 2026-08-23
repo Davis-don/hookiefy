@@ -4,16 +4,16 @@
 // ============================================================
 
 import './fetchalladminusers.css'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, } from 'react';
 import { useAuthStore } from '../../../store/authtokenstore';
 import { toast } from 'sonner';
 import { 
   FiUser, 
-  FiLoader,
   FiCheckCircle,
   FiXCircle,
   FiClock,
-  FiUserCheck
+  FiSearch,
+  FiX
 } from 'react-icons/fi';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 
@@ -56,8 +56,10 @@ interface AssignedUsersResponse {
 function Fetchalladminusers() {
   const { access: accessToken } = useAuthStore();
   const [users, setUsers] = useState<AssignedUserData[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<AssignedUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 10,
@@ -100,6 +102,7 @@ function Fetchalladminusers() {
       const result: AssignedUsersResponse = await response.json();
       
       setUsers(result.data);
+      setFilteredUsers(result.data);
       setPagination({
         page: result.page,
         page_size: result.page_size,
@@ -131,10 +134,33 @@ function Fetchalladminusers() {
     fetchAssignedUsers(1);
   }, [accessToken]);
 
+  // ---- Search filter ----
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    const filtered = users.filter(user => 
+      user.full_name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      user.phone_number?.toLowerCase().includes(searchLower) ||
+      user.first_name.toLowerCase().includes(searchLower) ||
+      user.last_name.toLowerCase().includes(searchLower)
+    );
+    setFilteredUsers(filtered);
+  }, [searchTerm, users]);
+
   // ---- Handle page change ----
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.total_pages) return;
     fetchAssignedUsers(newPage);
+  };
+
+  // ---- Clear search ----
+  const clearSearch = () => {
+    setSearchTerm('');
   };
 
   // ---- Format date ----
@@ -203,27 +229,25 @@ function Fetchalladminusers() {
 
   return (
     <div className="fau-main-wrapper">
-      {/* Header */}
-      <div className="fau-header">
-        <div className="fau-header-left">
-          <div className="fau-header-icon-wrapper">
-            <FiUserCheck className="fau-header-icon" />
-          </div>
-          <div>
-            <h2 className="fau-title">Assigned Users</h2>
-            <p className="fau-subtitle">
-              Total: {pagination.total_count} users assigned to you
-            </p>
-          </div>
+      {/* Search Bar */}
+      <div className="fau-search-container">
+        <div className="fau-search-wrapper">
+          <FiSearch className="fau-search-icon" />
+          <input
+            type="text"
+            className="fau-search-input"
+            placeholder="Search by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button className="fau-search-clear" onClick={clearSearch}>
+              <FiX />
+            </button>
+          )}
         </div>
-        <div className="fau-header-right">
-          <button 
-            className="fau-refresh-btn"
-            onClick={() => fetchAssignedUsers(pagination.page)}
-            title="Refresh"
-          >
-            <FiLoader className="fau-refresh-icon" />
-          </button>
+        <div className="fau-search-count">
+          {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
         </div>
       </div>
 
@@ -240,61 +264,72 @@ function Fetchalladminusers() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="fau-table-row">
-                <td className="fau-user-cell">
-                  <div className="fau-user-avatar">
-                    {user.profile_image_url ? (
-                      <img 
-                        src={user.profile_image_url} 
-                        alt={user.full_name}
-                        className="fau-user-avatar-img"
-                      />
-                    ) : (
-                      <div className="fau-user-avatar-fallback">
-                        <FiUser />
-                      </div>
-                    )}
-                  </div>
-                  <div className="fau-user-name">
-                    <span className="fau-user-fullname">{user.full_name}</span>
-                    <span className="fau-user-username">@{user.email.split('@')[0]}</span>
-                  </div>
-                </td>
-                <td className="fau-email-cell">{user.email}</td>
-                <td className="fau-phone-cell">{user.phone_number || '—'}</td>
-                <td>
-                  <span className={`fau-status-badge ${user.is_active ? 'status-active' : 'status-inactive'}`}>
-                    {user.is_active ? (
-                      <>
-                        <FiCheckCircle className="fau-status-icon" />
-                        Active
-                      </>
-                    ) : (
-                      <>
-                        <FiXCircle className="fau-status-icon" />
-                        Inactive
-                      </>
-                    )}
-                  </span>
-                </td>
-                <td className="fau-date-cell">
-                  <div className="fau-date-info">
-                    <FiClock className="fau-date-icon" />
-                    <div>
-                      <div>{formatDate(user.assigned_at)}</div>
-                      <div className="fau-date-time">{formatTime(user.assigned_at)}</div>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user.id} className="fau-table-row">
+                  <td className="fau-user-cell">
+                    <div className="fau-user-avatar">
+                      {user.profile_image_url ? (
+                        <img 
+                          src={user.profile_image_url} 
+                          alt={user.full_name}
+                          className="fau-user-avatar-img"
+                        />
+                      ) : (
+                        <div className="fau-user-avatar-fallback">
+                          <FiUser />
+                        </div>
+                      )}
                     </div>
+                    <div className="fau-user-name">
+                      <span className="fau-user-fullname">{user.full_name}</span>
+                      <span className="fau-user-username">@{user.email.split('@')[0]}</span>
+                    </div>
+                  </td>
+                  <td className="fau-email-cell">{user.email}</td>
+                  <td className="fau-phone-cell">{user.phone_number || '—'}</td>
+                  <td>
+                    <span className={`fau-status-badge ${user.is_active ? 'status-active' : 'status-inactive'}`}>
+                      {user.is_active ? (
+                        <>
+                          <FiCheckCircle className="fau-status-icon" />
+                          Active
+                        </>
+                      ) : (
+                        <>
+                          <FiXCircle className="fau-status-icon" />
+                          Inactive
+                        </>
+                      )}
+                    </span>
+                  </td>
+                  <td className="fau-date-cell">
+                    <div className="fau-date-info">
+                      <FiClock className="fau-date-icon" />
+                      <div>
+                        <div>{formatDate(user.assigned_at)}</div>
+                        <div className="fau-date-time">{formatTime(user.assigned_at)}</div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="fau-no-results">
+                  <div className="fau-no-results-content">
+                    <FiSearch className="fau-no-results-icon" />
+                    <span>No users found matching "{searchTerm}"</span>
                   </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      {pagination.total_pages > 1 && (
+      {pagination.total_pages > 1 && filteredUsers.length === users.length && (
         <div className="fau-pagination">
           <button
             className="fau-pagination-btn"

@@ -96,85 +96,81 @@
   margin: 0;
 }
 
-/* --- Header --- */
-.fau-header {
+/* --- Search Bar --- */
+.fau-search-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-bottom: 1.5rem;
+  gap: 1rem;
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 1.5rem;
   flex-shrink: 0;
   flex-wrap: wrap;
-  gap: 1rem;
 }
 
-.fau-header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.fau-search-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 200px;
 }
 
-.fau-header-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
+.fau-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
 }
 
-.fau-header-icon {
-  font-size: 1.8rem;
-  color: #60a5fa;
-}
-
-.fau-title {
-  color: #ffffff;
-  margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
-.fau-subtitle {
-  color: rgba(255, 255, 255, 0.35);
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.fau-header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.fau-refresh-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.6rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: none;
+.fau-search-input {
+  width: 100%;
+  padding: 0.8rem 2.8rem 0.8rem 3rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
+  color: #ffffff;
+  font-size: 1rem;
+  outline: none;
   transition: all 0.3s ease;
-  font-size: 1.2rem;
+  font-family: inherit;
 }
 
-.fau-refresh-btn:hover {
+.fau-search-input:focus {
+  border-color: rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.fau-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.fau-search-clear {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fau-search-clear:hover {
   color: #ffffff;
 }
 
-.fau-refresh-icon {
-  transition: transform 0.3s ease;
-}
-
-.fau-refresh-btn:hover .fau-refresh-icon {
-  transform: rotate(180deg);
+.fau-search-count {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* --- Table Scroll Container --- */
@@ -185,7 +181,6 @@
   position: relative;
 }
 
-/* Hide scrollbar for cleaner look */
 .fau-table-scroll::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -240,6 +235,25 @@
 
 .fau-table-row:hover {
   background: rgba(255, 255, 255, 0.015);
+}
+
+/* --- No Results --- */
+.fau-no-results {
+  text-align: center;
+  padding: 3rem 1rem !important;
+}
+
+.fau-no-results-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.fau-no-results-icon {
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.15);
 }
 
 /* --- User Cell --- */
@@ -409,21 +423,14 @@
 
 /* Tablet */
 @media screen and (max-width: 63.75em) {
-  .fau-title {
-    font-size: 1.6rem;
+  .fau-search-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
   }
 
-  .fau-subtitle {
-    font-size: 0.9rem;
-  }
-
-  .fau-header-icon-wrapper {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .fau-header-icon {
-    font-size: 1.5rem;
+  .fau-search-count {
+    text-align: right;
   }
 
   .fau-table {
@@ -444,40 +451,39 @@
 
 /* Mobile Large */
 @media screen and (max-width: 48em) {
-  .fau-header {
+  .fau-search-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.8rem;
-    padding-bottom: 1.2rem;
-    margin-bottom: 1.2rem;
+    gap: 0.6rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
   }
 
-  .fau-header-left {
-    gap: 0.8rem;
+  .fau-search-wrapper {
+    min-width: unset;
   }
 
-  .fau-header-right {
-    justify-content: flex-start;
+  .fau-search-input {
+    padding: 1rem 3rem 1rem 3.2rem;
+    font-size: 1.2rem;
+    border-radius: 12px;
   }
 
-  .fau-title {
+  .fau-search-icon {
     font-size: 1.4rem;
+    left: 1.2rem;
   }
 
-  .fau-subtitle {
-    font-size: 0.85rem;
+  .fau-search-clear {
+    font-size: 1.4rem;
+    right: 1rem;
   }
 
-  .fau-header-icon-wrapper {
-    width: 2.8rem;
-    height: 2.8rem;
+  .fau-search-count {
+    font-size: 1rem;
+    text-align: left;
   }
 
-  .fau-header-icon {
-    font-size: 1.3rem;
-  }
-
-  /* --- MOBILE: LARGER TABLE FONTS (almost double) --- */
   .fau-table {
     font-size: 1.4rem;
     min-width: 700px;
@@ -546,6 +552,14 @@
     font-size: 0.9rem;
   }
 
+  .fau-no-results-content {
+    font-size: 1.2rem;
+  }
+
+  .fau-no-results-icon {
+    font-size: 3rem;
+  }
+
   .fau-pagination {
     gap: 1rem;
     flex-wrap: wrap;
@@ -565,24 +579,25 @@
 
 /* Mobile Small */
 @media screen and (max-width: 30em) {
-  .fau-title {
+  .fau-search-input {
+    padding: 0.9rem 2.8rem 0.9rem 3rem;
+    font-size: 1rem;
+  }
+
+  .fau-search-icon {
     font-size: 1.2rem;
+    left: 1rem;
   }
 
-  .fau-subtitle {
-    font-size: 0.8rem;
+  .fau-search-clear {
+    font-size: 1.2rem;
+    right: 0.8rem;
   }
 
-  .fau-header-icon-wrapper {
-    width: 2.4rem;
-    height: 2.4rem;
+  .fau-search-count {
+    font-size: 0.85rem;
   }
 
-  .fau-header-icon {
-    font-size: 1.1rem;
-  }
-
-  /* --- SMALL MOBILE: EVEN LARGER FONTS --- */
   .fau-table {
     font-size: 1.2rem;
     min-width: 600px;
@@ -650,6 +665,14 @@
     font-size: 0.75rem;
   }
 
+  .fau-no-results-content {
+    font-size: 1rem;
+  }
+
+  .fau-no-results-icon {
+    font-size: 2.5rem;
+  }
+
   .fau-pagination-btn {
     padding: 0.4rem 1rem;
     font-size: 0.9rem;
@@ -702,5 +725,10 @@
   .fau-status-badge {
     font-size: 0.75rem;
     padding: 0.2rem 0.6rem;
+  }
+
+  .fau-search-input {
+    font-size: 0.9rem;
+    padding: 0.8rem 2.5rem 0.8rem 2.8rem;
   }
 }
