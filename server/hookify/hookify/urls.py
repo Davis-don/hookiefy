@@ -52,4 +52,6 @@ urlpatterns = [
     path("commissions/", include("commisions.urls")),
     # Paystack URLs
     path('paystack/', include('paystack.urls')),
+    # System configuration
+    path('system-config/', include('system_config.urls')),
 ]

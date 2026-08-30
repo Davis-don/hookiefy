@@ -1,3 +1,4 @@
+# account/urls.py
 from django.urls import path
 from . import views
 
@@ -22,7 +23,10 @@ urlpatterns = [
     path('update-user/', views.update_user_details, name='update_user'),
     path('update-password/', views.update_user_password, name='update_password'),
     
-    # Create user assigned to superadmin
+    # ✅ NEW: Public signup - Assign to System Admin (from environment variables)
+    path('create-user-assigned-to-system-admin/', views.create_user_assigned_to_system_admin, name='create_user_assigned_to_system_admin'),
+    
+    # ⚠️ DEPRECATED: Create user assigned to superadmin (kept for backward compatibility)
     path('create-user-assigned-to-superadmin/', views.create_user_assigned_to_superadmin, name='create_user_assigned_to_superadmin'),
     
     # Delete current user account
@@ -40,6 +44,7 @@ urlpatterns = [
     # Profile image upload
     path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
 
+    # Account status management
     path('account-status/', views.update_account_status, name='update_account_status'),
     path('account-status/get/', views.get_account_status, name='get_account_status'),
 ]

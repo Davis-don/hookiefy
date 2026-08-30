@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from django.db.models import Q
+import os
 
 from .models import Accounts
 from .permissions import is_superadmin, can_create_user, can_create_admin
@@ -17,10 +18,10 @@ from assignments.models import ClientAssignment
 from userprofile.models import UserProfile
 from userpreference.models import Preference
 from UserBalance.models import UserBalance
-from commisions.models import Commission  # Import the Commission model
+from commisions.models import Commission
 from .controllers.cloudinary_utils import (
-    upload_image_to_cloudinary, 
-    delete_image_from_cloudinary, 
+    upload_image_to_cloudinary,
+    delete_image_from_cloudinary,
     upload_or_replace_profile_image,
     delete_user_all_images
 )
@@ -28,16 +29,136 @@ import time
 
 User = get_user_model()
 
-@api_view(['POST'])
-@permission_classes([AllowAny])  # Public endpoint - no authentication required
-@transaction.atomic
-def create_user_assigned_to_superadmin(request):
+
+# ============================================================
+# HELPER: Get System Admin from Environment
+# ============================================================
+
+def get_system_admin():
     """
-    PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to superadmin.
+    Get the system admin user from environment variables.
+    Returns (system_admin, error_message)
+    """
+    system_admin_email = os.environ.get('SYSTEM_ADMIN_EMAIL')
+    
+    if not system_admin_email:
+        print("❌ SYSTEM_ADMIN_EMAIL not set in environment variables")
+        return None, "System is currently unavailable. Please try again later or contact support."
+    
+    try:
+        system_admin = Accounts.objects.get(email=system_admin_email)
+        print(f"✅ System admin found: {system_admin.email} (ID: {system_admin.id})")
+        return system_admin, None
+    except Accounts.DoesNotExist:
+        print(f"❌ System admin not found: {system_admin_email}")
+        return None, "System is currently unavailable. Please try again later or contact support."
+
+
+# ============================================================
+# PUBLIC SIGNUP - ASSIGN TO SYSTEM ADMIN (NEW)
+# ============================================================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@transaction.atomic
+def create_user_assigned_to_system_admin(request):
+    """
+    PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to System Admin.
+    System Admin credentials are read from environment variables (SYSTEM_ADMIN_EMAIL).
     """
     
     print("=" * 60)
-    print("📝 PUBLIC SIGNUP REQUEST RECEIVED")
+    print("📝 PUBLIC SIGNUP REQUEST RECEIVED (SYSTEM ADMIN)")
+    print("=" * 60)
+    print(f"📋 Request data: {request.data}")
+    print("=" * 60)
+    
+    # Get System Admin from environment
+    system_admin, error_message = get_system_admin()
+    
+    if system_admin is None:
+        print(f"❌ {error_message}")
+        return Response(
+            {"message": error_message or "System is currently unavailable. Please try again later or contact support."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+    
+    # Prepare data with role explicitly set to 'user'
+    data = request.data.copy()
+    data['role'] = 'user'
+    
+    # Create the user
+    serializer = CreateNewUserSerializer(data=data)
+    
+    if not serializer.is_valid():
+        print(f"❌ Serializer validation errors: {serializer.errors}")
+        return Response(
+            {
+                "message": "Validation failed",
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Save the user
+    try:
+        user = serializer.save()
+        print(f"✅ User created: {user.email} (ID: {user.id})")
+    except Exception as e:
+        print(f"❌ Error creating user: {str(e)}")
+        return Response(
+            {"message": f"Failed to create user: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Assign the user to the System Admin
+    try:
+        assignment = ClientAssignment.objects.create(
+            user=user,
+            assigned_admin=system_admin
+        )
+        print(f"✅ User {user.email} assigned to System Admin {system_admin.email}")
+    except Exception as e:
+        user.delete()
+        print(f"❌ Failed to assign user to System Admin: {str(e)}")
+        return Response(
+            {"message": f"Failed to complete registration: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Return success response
+    return Response(
+        {
+            "message": "Account created successfully! You can now login.",
+            "data": {
+                **CreateNewUserSerializer(user).data,
+                "assignment": {
+                    "assigned_to_id": assignment.assigned_admin.id,
+                    "assigned_to_email": assignment.assigned_admin.email,
+                    "assigned_to_name": assignment.assigned_admin.full_name,
+                    "assigned_at": assignment.assigned_at
+                }
+            }
+        },
+        status=status.HTTP_201_CREATED
+    )
+
+
+# ============================================================
+# PUBLIC SIGNUP - ASSIGN TO SUPERADMIN (DEPRECATED)
+# ============================================================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@transaction.atomic
+def create_user_assigned_to_superadmin(request):
+    """
+    DEPRECATED - PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to superadmin.
+    This endpoint is deprecated and will be removed. Use create_user_assigned_to_system_admin instead.
+    """
+    
+    print("=" * 60)
+    print("⚠️ DEPRECATED: SUPERADMIN SIGNUP REQUEST RECEIVED")
     print("=" * 60)
     print(f"📋 Request data: {request.data}")
     print("=" * 60)
@@ -58,14 +179,13 @@ def create_user_assigned_to_superadmin(request):
     
     # Prepare data with role explicitly set to 'user'
     data = request.data.copy()
-    data['role'] = 'user'  # Force role to be 'user'
+    data['role'] = 'user'
     
     # Create the user
     serializer = CreateNewUserSerializer(data=data)
     
     if not serializer.is_valid():
         print(f"❌ Serializer validation errors: {serializer.errors}")
-        # Return detailed validation errors
         return Response(
             {
                 "message": "Validation failed",
@@ -115,7 +235,10 @@ def create_user_assigned_to_superadmin(request):
             }
         },
         status=status.HTTP_201_CREATED
-    )# ============================================
+    )
+
+
+# ============================================
 # HELPER: Create user balance
 # ============================================
 
@@ -166,7 +289,7 @@ def create_admin_commission(user):
         commission, created = Commission.objects.get_or_create(
             admin=user,
             defaults={
-                'percentage': 20.00  # Default 20% commission for admin
+                'percentage': 20.00
             }
         )
         
@@ -186,7 +309,6 @@ def get_user_balance(user):
     Get balance info for a user.
     Returns None for regular users (role 'user').
     """
-    # Regular users don't have balances
     if user.role == 'user':
         return None
     
@@ -208,7 +330,6 @@ def get_user_commission(user):
     Get commission info for a user.
     Returns None for regular users (role 'user').
     """
-    # Regular users don't have commissions
     if user.role == 'user':
         return None
     
@@ -254,7 +375,6 @@ def login_view(request):
 
         user = User.objects.get(email=request.data.get("email"))
 
-        # Get assignment info if user is a client
         assignment_info = None
         if user.role == 'user':
             try:
@@ -273,10 +393,7 @@ def login_view(request):
                     'assigned_at': None
                 }
 
-        # Get balance info - only for admin and superadmin
         balance_info = get_user_balance(user)
-        
-        # Get commission info - only for admin and superadmin
         commission_info = get_user_commission(user)
 
         return Response({
@@ -363,7 +480,6 @@ def auth_check(request):
     """
     user = request.user
     
-    # Get assignment info if user is a client
     assignment_info = None
     if user.role == 'user':
         try:
@@ -376,10 +492,7 @@ def auth_check(request):
         except ClientAssignment.DoesNotExist:
             assignment_info = None
     
-    # Get balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
-    
-    # Get commission info - only for admin and superadmin
     commission_info = get_user_commission(user)
     
     return Response({
@@ -412,7 +525,6 @@ def get_current_logged_in_user(request):
     """
     user = request.user
     
-    # Get assignment info if user is a client
     assignment_info = None
     if user.role == 'user':
         try:
@@ -425,10 +537,7 @@ def get_current_logged_in_user(request):
         except ClientAssignment.DoesNotExist:
             assignment_info = None
     
-    # Get balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
-    
-    # Get commission info - only for admin and superadmin
     commission_info = get_user_commission(user)
     
     return Response({
@@ -454,13 +563,9 @@ def get_current_logged_in_user(request):
 def has_profile_image(request):
     """
     Check if the currently authenticated user has a profile image.
-    Returns true if profile_image_url is not null and not empty string,
-    false otherwise.
     """
     user = request.user
     profile_image_url = user.profile_image_url
-    
-    # Check if profile_image_url exists and is not empty string
     has_image = bool(profile_image_url and profile_image_url.strip())
     
     return Response({
@@ -475,40 +580,27 @@ def has_profile_image(request):
 def create_new_user(request):
     """
     Create a new user with assignment, balance, and commission
-    - Superadmin can create admin and user accounts
-    - Admin can only create user accounts (assigned to them)
-    - Only one superadmin can exist
-    - Balance is automatically created for admin and superadmin only
-    - Commission is automatically created for admin and superadmin only (default 20%)
     """
     target_role = request.data.get("role", "user")
     current_user = request.user
 
-    # Check if trying to create superadmin
     if target_role == "superadmin":
-        # Check if superadmin already exists
         if Accounts.objects.filter(role='superadmin').exists():
             return Response(
                 {"message": "A superadmin already exists. Cannot create another one."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Only allow if current user is superadmin
         if not is_superadmin(current_user):
             return Response(
                 {"message": "Only superadmin can create superadmin accounts"},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Create superadmin (no assignment needed)
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            
-            # Create balance for the superadmin
             create_user_balance(user)
-            
-            # Create commission for the superadmin
             create_admin_commission(user)
             
             return Response(
@@ -520,24 +612,17 @@ def create_new_user(request):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check for admin creation
     if target_role == "admin":
-        # Only superadmin can create admin accounts
         if not is_superadmin(current_user):
             return Response(
                 {"message": "Only superadmin can create admin accounts"},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Create admin (no assignment needed)
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            
-            # Create balance for the admin
             create_user_balance(user)
-            
-            # Create commission for the admin (default 20%)
             create_admin_commission(user)
             
             return Response(
@@ -549,34 +634,23 @@ def create_new_user(request):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create user (client) - must be assigned to admin or superadmin
     if target_role == "user":
-        # Check permission: admin or superadmin can create users
         if not (current_user.role in ['admin', 'superadmin']):
             return Response(
                 {"message": "Only admin or superadmin can create user accounts"},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Create the user
         serializer = CreateNewUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             
-            # DO NOT create balance for regular users
-            # Only admin and superadmin have balances
-            
-            # DO NOT create commission for regular users
-            # Only admin and superadmin have commissions
-            
-            # Assign the user to the current admin/superadmin
             try:
                 assignment = ClientAssignment.objects.create(
                     user=user,
                     assigned_admin=current_user
                 )
             except Exception as e:
-                # If assignment fails, delete the user and return error
                 user.delete()
                 return Response(
                     {"message": f"Failed to assign user: {str(e)}"},
@@ -630,10 +704,7 @@ def update_user_details(request):
     user.gender = request.data.get("gender", user.gender)
     user.save()
 
-    # Get updated balance info - only for admin and superadmin
     balance_info = get_user_balance(user)
-    
-    # Get updated commission info - only for admin and superadmin
     commission_info = get_user_commission(user)
 
     return Response({
@@ -686,25 +757,7 @@ def update_user_password(request):
 
 def delete_user_completely(user, reassign_admin=None):
     """
-    Completely delete a user and all associated data including:
-    - Cloudinary images
-    - Profile
-    - Preferences
-    - Balance (only for admin/superadmin)
-    - Commission (only for admin/superadmin)
-    - Assignments
-    - Account
-    
-    Args:
-        user: The user to delete
-        reassign_admin: If provided, reassign clients to this admin (for admin deletion)
-    
-    Returns:
-        dict: {
-            'deleted': bool,
-            'cloudinary_images_deleted': bool,
-            'reassigned_count': int
-        }
+    Completely delete a user and all associated data
     """
     deleted = False
     cloudinary_images_deleted = False
@@ -719,11 +772,9 @@ def delete_user_completely(user, reassign_admin=None):
     print("=" * 60)
     
     try:
-        # --- 1. DELETE CLOUDINARY IMAGES ---
         if user.profile_image_public_id:
             print("\n📸 Deleting Cloudinary images...")
             try:
-                # Delete the profile image
                 delete_result = delete_image_from_cloudinary(user.profile_image_public_id)
                 if delete_result.get('result') == 'ok':
                     print(f"✅ Profile image deleted: {user.profile_image_public_id}")
@@ -732,11 +783,9 @@ def delete_user_completely(user, reassign_admin=None):
                     print(f"⚠️ Failed to delete profile image: {delete_result}")
             except Exception as e:
                 print(f"⚠️ Error deleting profile image: {str(e)}")
-                # Continue with deletion even if Cloudinary fails
         else:
             print("\n📸 No profile image to delete")
         
-        # --- 2. DELETE PROFILE ---
         print("\n📝 Deleting user profile...")
         try:
             profile = UserProfile.objects.get(user=user)
@@ -747,7 +796,6 @@ def delete_user_completely(user, reassign_admin=None):
         except Exception as e:
             print(f"⚠️ Error deleting profile: {str(e)}")
         
-        # --- 3. DELETE PREFERENCES ---
         print("\n⚙️ Deleting user preferences...")
         try:
             preference = Preference.objects.get(user=user)
@@ -758,7 +806,6 @@ def delete_user_completely(user, reassign_admin=None):
         except Exception as e:
             print(f"⚠️ Error deleting preferences: {str(e)}")
         
-        # --- 4. DELETE BALANCE (only for admin and superadmin) ---
         if user.role in ['admin', 'superadmin']:
             print("\n💰 Deleting user balance...")
             try:
@@ -770,7 +817,6 @@ def delete_user_completely(user, reassign_admin=None):
             except Exception as e:
                 print(f"⚠️ Error deleting balance: {str(e)}")
             
-            # --- 5. DELETE COMMISSION (only for admin and superadmin) ---
             print("\n📊 Deleting user commission...")
             try:
                 commission = Commission.objects.get(admin=user)
@@ -783,16 +829,13 @@ def delete_user_completely(user, reassign_admin=None):
         else:
             print("\nℹ️ No balance/commission to delete for regular user")
         
-        # --- 6. HANDLE ASSIGNMENTS ---
         print("\n📋 Handling assignments...")
         if user.role == 'admin' and reassign_admin:
-            # Reassign clients from this admin to the new admin
             reassigned_count = ClientAssignment.objects.filter(assigned_admin=user).update(
                 assigned_admin=reassign_admin
             )
             print(f"✅ Reassigned {reassigned_count} clients to {reassign_admin.email}")
         elif user.role == 'user':
-            # Delete the user's assignment
             try:
                 assignment = ClientAssignment.objects.get(user=user)
                 assignment.delete()
@@ -800,7 +843,6 @@ def delete_user_completely(user, reassign_admin=None):
             except ClientAssignment.DoesNotExist:
                 print("ℹ️ No assignment found")
         
-        # --- 7. DELETE THE ACCOUNT ---
         print("\n🗑️ Deleting user account...")
         user.delete()
         deleted = True
@@ -831,8 +873,6 @@ def delete_user_completely(user, reassign_admin=None):
 def manage_user_by_id(request, id):
     """
     Fetch, update, or delete user by ID (superadmin only)
-    Superadmin cannot be deleted
-    When admin is deleted, their assigned users are reassigned to superadmin
     """
     if not is_superadmin(request.user):
         return Response(
@@ -845,9 +885,7 @@ def manage_user_by_id(request, id):
     except Accounts.DoesNotExist:
         return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # GET - Fetch user
     if request.method == 'GET':
-        # Get assignment info if user is a client
         assignment_info = None
         if user.role == 'user':
             try:
@@ -861,7 +899,6 @@ def manage_user_by_id(request, id):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
-        # Get balance info - only for admin and superadmin
         balance_info = None
         if user.role in ['admin', 'superadmin']:
             try:
@@ -876,7 +913,6 @@ def manage_user_by_id(request, id):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
-        # Get commission info - only for admin and superadmin
         commission_info = None
         if user.role in ['admin', 'superadmin']:
             try:
@@ -912,30 +948,26 @@ def manage_user_by_id(request, id):
             "commission": commission_info,
         })
 
-    # PUT - Update user
     elif request.method == 'PUT':
-        # Don't allow updating yourself
         if user.id == request.user.id:
             return Response(
                 {"message": "You cannot update your own account through this endpoint."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Prevent changing superadmin role
         if user.role == 'superadmin':
             return Response(
                 {"message": "Cannot update superadmin account."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Update fields
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
         email = request.data.get("email")
         phone_number = request.data.get("phone_number")
         role = request.data.get("role")
         is_active = request.data.get("is_active")
-        assigned_admin_id = request.data.get("assigned_admin_id")  # For reassigning users
+        assigned_admin_id = request.data.get("assigned_admin_id")
 
         if email and email != user.email:
             if Accounts.objects.filter(email=email).exclude(id=user.id).exists():
@@ -952,22 +984,17 @@ def manage_user_by_id(request, id):
         if phone_number is not None:
             user.phone_number = phone_number
         
-        # Handle role changes
         if role and role in ['user', 'admin']:
             if user.role != role:
-                # If user is being changed from admin to user
                 if user.role == 'admin' and role == 'user':
-                    # Reassign all clients of this admin to superadmin
                     superadmin = Accounts.objects.get(role='superadmin')
                     ClientAssignment.objects.filter(assigned_admin=user).update(assigned_admin=superadmin)
-                    # Delete the admin's balance
                     try:
                         balance = UserBalance.objects.get(user=user)
                         balance.delete()
                         print(f"💰 Balance deleted for {user.email} (changed to user)")
                     except UserBalance.DoesNotExist:
                         pass
-                    # Delete the admin's commission
                     try:
                         commission = Commission.objects.get(admin=user)
                         commission.delete()
@@ -975,20 +1002,14 @@ def manage_user_by_id(request, id):
                     except Commission.DoesNotExist:
                         pass
                 
-                # If user is being changed from user to admin
                 if user.role == 'user' and role == 'admin':
-                    # Create balance for the new admin
                     create_user_balance(user)
-                    # Create commission for the new admin (default 20%)
                     create_admin_commission(user)
-                    # Remove assignment
                     ClientAssignment.objects.filter(user=user).delete()
                 
                 user.role = role
                 
-                # If changing to user, need assignment
                 if role == 'user':
-                    # Assign to superadmin by default
                     superadmin = Accounts.objects.get(role='superadmin')
                     ClientAssignment.objects.update_or_create(
                         user=user,
@@ -1000,7 +1021,6 @@ def manage_user_by_id(request, id):
 
         user.save()
 
-        # Handle reassignment for users
         if user.role == 'user' and assigned_admin_id:
             try:
                 new_admin = Accounts.objects.get(id=assigned_admin_id, role__in=['admin', 'superadmin'])
@@ -1013,7 +1033,6 @@ def manage_user_by_id(request, id):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # Get updated assignment info
         assignment_info = None
         if user.role == 'user':
             try:
@@ -1026,7 +1045,6 @@ def manage_user_by_id(request, id):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
-        # Get balance info - only for admin and superadmin
         balance_info = None
         if user.role in ['admin', 'superadmin']:
             try:
@@ -1041,7 +1059,6 @@ def manage_user_by_id(request, id):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
-        # Get commission info - only for admin and superadmin
         commission_info = None
         if user.role in ['admin', 'superadmin']:
             try:
@@ -1077,35 +1094,28 @@ def manage_user_by_id(request, id):
             }
         })
 
-    # DELETE - Delete user
     elif request.method == 'DELETE':
-        # Superadmin cannot be deleted
         if user.role == 'superadmin':
             return Response(
                 {"message": "Superadmin cannot be deleted."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Don't allow deleting yourself
         if user.id == request.user.id:
             return Response(
                 {"message": "You cannot delete your own account."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get user info before deletion
         user_email = user.email
         user_name = user.full_name
         user_role = user.role
-        reassigned_count = 0
 
         try:
-            # Get superadmin for reassignment (if needed)
             superadmin = None
             if user_role == 'admin':
                 superadmin = Accounts.objects.get(role='superadmin')
             
-            # Delete user completely with all associated data
             result = delete_user_completely(user, reassign_admin=superadmin)
             
             return Response({
@@ -1123,7 +1133,7 @@ def manage_user_by_id(request, id):
 
 
 # ============================================
-# USERS BY ROLE VIEWS WITH PAGINATION (Superadmin only)
+# USERS BY ROLE VIEWS WITH PAGINATION
 # ============================================
 
 @api_view(['GET'])
@@ -1131,8 +1141,6 @@ def manage_user_by_id(request, id):
 def get_users_by_role_or_all(request, role=None):
     """
     Get users by role with pagination, or all users if 'all' is passed
-    Excludes the current logged-in user
-    (superadmin only)
     """
     if not is_superadmin(request.user):
         return Response(
@@ -1142,7 +1150,6 @@ def get_users_by_role_or_all(request, role=None):
 
     current_user = request.user
 
-    # Base queryset
     if role == 'all' or role is None:
         users = Accounts.objects.exclude(id=current_user.id).order_by('-date_joined')
         message = "All users fetched successfully (excluding current user)"
@@ -1150,7 +1157,6 @@ def get_users_by_role_or_all(request, role=None):
         users = Accounts.objects.filter(role=role).exclude(id=current_user.id).order_by('-date_joined')
         message = f"Users with role '{role}' fetched successfully (excluding current user)"
 
-    # Pagination parameters
     page = request.GET.get('page', 1)
     page_size = request.GET.get('page_size', 5)
 
@@ -1158,12 +1164,11 @@ def get_users_by_role_or_all(request, role=None):
         page = int(page)
         page_size = int(page_size)
         if page_size > 100:
-            page_size = 100  # Limit max page size
+            page_size = 100
     except ValueError:
         page = 1
         page_size = 5
 
-    # Paginate
     paginator = Paginator(users, page_size)
     total_pages = paginator.num_pages
     total_count = paginator.count
@@ -1175,7 +1180,6 @@ def get_users_by_role_or_all(request, role=None):
     except EmptyPage:
         users_page = paginator.page(paginator.num_pages)
 
-    # Serialize data with assignment info
     data = []
     for u in users_page:
         assignment_info = None
@@ -1190,7 +1194,6 @@ def get_users_by_role_or_all(request, role=None):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
-        # Get balance info - only for admin and superadmin
         balance_info = None
         if u.role in ['admin', 'superadmin']:
             try:
@@ -1205,7 +1208,6 @@ def get_users_by_role_or_all(request, role=None):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
-        # Get commission info - only for admin and superadmin
         commission_info = None
         if u.role in ['admin', 'superadmin']:
             try:
@@ -1264,11 +1266,8 @@ def get_all_users_paginated(request):
         )
 
     current_user = request.user
-    
-    # Exclude current user
     users = Accounts.objects.exclude(id=current_user.id).order_by('-date_joined')
 
-    # Pagination parameters
     page = request.GET.get('page', 1)
     page_size = request.GET.get('page_size', 5)
 
@@ -1306,7 +1305,6 @@ def get_all_users_paginated(request):
             except ClientAssignment.DoesNotExist:
                 assignment_info = None
         
-        # Get balance info - only for admin and superadmin
         balance_info = None
         if u.role in ['admin', 'superadmin']:
             try:
@@ -1321,7 +1319,6 @@ def get_all_users_paginated(request):
             except UserBalance.DoesNotExist:
                 balance_info = None
         
-        # Get commission info - only for admin and superadmin
         commission_info = None
         if u.role in ['admin', 'superadmin']:
             try:
@@ -1373,31 +1370,24 @@ def get_all_users_paginated(request):
 def delete_current_user(request):
     """
     Delete the currently logged in user account
-    Superadmin cannot be deleted
-    Also deletes Cloudinary images, profile, preferences, balance, commission, and assignments
     """
     user = request.user
     
-    # Superadmin cannot be deleted
     if user.role == 'superadmin':
         return Response(
             {"message": "Superadmin cannot be deleted."},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Get user info before deletion
     user_email = user.email
     user_name = user.full_name or f"{user.first_name} {user.last_name}"
     user_role = user.role
-    reassigned_count = 0
     
     try:
-        # If user is admin, get superadmin for reassignment
         superadmin = None
         if user_role == 'admin':
             superadmin = Accounts.objects.get(role='superadmin')
         
-        # Delete user completely with all associated data
         result = delete_user_completely(user, reassign_admin=superadmin)
         
         return Response({
@@ -1427,11 +1417,8 @@ def delete_current_user(request):
 def upload_profile_image(request):
     """
     Upload profile image for the current user
-    Uses upload_or_replace_profile_image to handle replace or add
-    No file size limit - any size image can be uploaded
     """
     try:
-        # Check if file was sent
         if 'image' not in request.FILES:
             return Response({
                 "message": "No image file provided"
@@ -1439,17 +1426,12 @@ def upload_profile_image(request):
 
         image_file = request.FILES['image']
         
-        # Validate file type only (no size limit)
         valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         if image_file.content_type not in valid_types:
             return Response({
                 "message": f"Invalid file type. Allowed: {', '.join(valid_types)}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # ✅ NO FILE SIZE LIMIT - removed the 5MB validation
-        # Users can upload images of any size
-        
-        # Log file details to console
         print("=" * 60)
         print("📸 PROFILE IMAGE UPLOAD RECEIVED")
         print("=" * 60)
@@ -1460,7 +1442,6 @@ def upload_profile_image(request):
         print(f"👤 User Email: {request.user.email}")
         print("=" * 60)
         
-        # Upload or replace profile image
         print("\n🔄 Processing profile image...")
         result = upload_or_replace_profile_image(
             image_file=image_file,
@@ -1468,7 +1449,6 @@ def upload_profile_image(request):
             folder="profile_images"
         )
         
-        # Log result
         print("\n✅ Upload Result:")
         print("-" * 40)
         print(f"🔗 URL: {result['url']}")
@@ -1481,7 +1461,6 @@ def upload_profile_image(request):
         print("✅ Profile image processed successfully")
         print("=" * 60)
         
-        # Return success response
         return Response({
             "message": "Profile image uploaded successfully",
             "file_name": image_file.name,
@@ -1523,14 +1502,12 @@ def update_account_status(request):
     user = request.user
     account_status = request.data.get("account_status")
     
-    # Validate the status
     if account_status not in ['public', 'private']:
         return Response(
             {"message": "Invalid account status. Must be 'public' or 'private'."},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Update the status
     user.account_status = account_status
     user.save()
     

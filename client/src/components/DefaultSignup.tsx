@@ -1,5 +1,6 @@
 // ============================================================
 // DefaultSignup.tsx - Signup modal with slide-up animation (Blue theme)
+// Updated to use the new endpoint
 // ============================================================
 
 import './defaultsignup.css'
@@ -201,8 +202,8 @@ function DefaultSignup({
         },
       });
 
-      // Make API call to the new endpoint
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/create-user-assigned-to-superadmin/`, {
+      // Make API call to the NEW endpoint
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/account/create-user-assigned-to-system-admin/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +217,7 @@ function DefaultSignup({
         const errorData = await response.json();
         console.log('❌ Error response:', errorData);
         
-        if (errorData.message && errorData.message.includes('No superadmin exists')) {
+        if (errorData.message && errorData.message.includes('System is currently unavailable')) {
           throw new Error('System is currently unavailable. Please try again later or contact support.');
         }
         
@@ -258,7 +259,7 @@ function DefaultSignup({
       setConfirmPassword('');
       setIsLoading(false);
 
-      const assignedTo = result.data?.assignment?.assigned_to_name || 'Super Admin';
+      const assignedTo = result.data?.assignment?.assigned_to_name || 'System Admin';
       const firstNameResult = result.data?.first_name || 'User';
       
       toast.success('🎉 Account Created Successfully!', {
@@ -304,7 +305,7 @@ function DefaultSignup({
       if (error instanceof Error) {
         errorMessage = error.message;
         
-        if (error.message.includes('unavailable') || error.message.includes('superadmin')) {
+        if (error.message.includes('unavailable') || error.message.includes('System is currently unavailable')) {
           toastStyle = {
             background: '#1a1a2e',
             border: '1px solid #f59e0b',

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "stats",
     "commisions",
     "paystack",
+    "system_config",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]
