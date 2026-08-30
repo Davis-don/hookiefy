@@ -7,6 +7,7 @@ from decimal import Decimal
 import uuid
 import logging
 import json
+import os
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -82,33 +83,47 @@ def ensure_db_connection():
 
 
 # =====================================================
-# SUPERADMIN VALIDATION HELPER
+# SYSTEM ADMIN HELPER
 # =====================================================
 
-def validate_superadmin():
+def get_system_admin():
     """
-    Validate that exactly one superadmin exists.
-    Returns (is_valid, superadmin, error_message)
+    Get the system admin user from environment variables.
+    Returns (system_admin, error_message)
+    """
+    system_admin_email = os.environ.get('SYSTEM_ADMIN_EMAIL')
+    
+    if not system_admin_email:
+        logger.error("❌ SYSTEM_ADMIN_EMAIL not set in environment variables")
+        return None, "SYSTEM_ADMIN_EMAIL not set in environment variables"
+    
+    try:
+        system_admin = Accounts.objects.get(email=system_admin_email)
+        logger.info(f"✅ System admin found: {system_admin.email} (ID: {system_admin.id})")
+        return system_admin, None
+    except Accounts.DoesNotExist:
+        logger.error(f"❌ System admin not found: {system_admin_email}")
+        return None, f"System admin with email '{system_admin_email}' not found"
+
+
+def validate_system_admin():
+    """
+    Validate that system admin exists.
+    Returns (is_valid, system_admin, error_message)
     """
     try:
-        superadmins = Accounts.objects.filter(role='superadmin', is_active=True)
-        count = superadmins.count()
+        system_admin, error = get_system_admin()
         
-        if count == 0:
-            logger.error("❌ No superadmin found in the system")
-            return False, None, "No superadmin configured. Please contact support."
+        if system_admin is None:
+            logger.error(f"❌ System admin validation failed: {error}")
+            return False, None, error or "No system admin configured. Please contact support."
         
-        if count > 1:
-            logger.error(f"❌ Multiple superadmins found: {count}")
-            return False, None, "Multiple superadmins found. Please contact support."
-        
-        superadmin = superadmins.first()
-        logger.info(f"✅ Superadmin validated: {superadmin.email}")
-        return True, superadmin, None
+        logger.info(f"✅ System admin validated: {system_admin.email}")
+        return True, system_admin, None
         
     except Exception as e:
-        logger.error(f"❌ Error validating superadmin: {str(e)}")
-        return False, None, "Unable to validate superadmin configuration."
+        logger.error(f"❌ Error validating system admin: {str(e)}")
+        return False, None, "Unable to validate system admin configuration."
 
 
 # =====================================================
@@ -148,27 +163,27 @@ def get_assigned_admin(user):
 
 
 # =====================================================
-# COMMISSION DISTRIBUTION HELPER (UPDATED - ONLY REGULAR ADMIN)
+# COMMISSION DISTRIBUTION HELPER (UPDATED - SYSTEM ADMIN)
 # =====================================================
 
-def distribute_commission(payment, admin, superadmin):
+def distribute_commission(payment, admin, system_admin):
     """
-    Distribute commission between admin and superadmin.
+    Distribute commission between admin and system admin.
     This function assumes the user is assigned to a regular admin.
     
     Args:
         payment: Payment object
         admin: The assigned regular admin
-        superadmin: The system superadmin
+        system_admin: The system admin (from SYSTEM_ADMIN_EMAIL env)
     
     Returns:
         dict: {
             'success': bool,
             'admin_amount': Decimal,
-            'superadmin_amount': Decimal,
+            'system_admin_amount': Decimal,
             'commission_percentage': Decimal,
             'admin': Accounts,
-            'superadmin': Accounts,
+            'system_admin': Accounts,
             'error': str (if failed)
         }
     """
@@ -181,14 +196,15 @@ def distribute_commission(payment, admin, superadmin):
         
         # Calculate split
         admin_amount = (total_amount * admin_percentage) / 100
-        superadmin_amount = total_amount - admin_amount
+        system_admin_amount = total_amount - admin_amount
         
         logger.info("=" * 60)
         logger.info("💰 COMMISSION DISTRIBUTION")
         logger.info(f"   Admin: {admin.email}")
+        logger.info(f"   System Admin: {system_admin.email if system_admin else 'Not Found'}")
         logger.info(f"   Total amount: {total_amount}")
         logger.info(f"   Admin {admin_percentage}% = {admin_amount}")
-        logger.info(f"   Platform {commission_config.platform_percentage}% = {superadmin_amount}")
+        logger.info(f"   System Admin {commission_config.platform_percentage}% = {system_admin_amount}")
         logger.info("=" * 60)
         
         # ============================================================
@@ -207,29 +223,29 @@ def distribute_commission(payment, admin, superadmin):
             logger.info(f"ℹ️ Admin commission is 0, no balance update needed")
 
         # ============================================================
-        # UPDATE SUPERADMIN BALANCE
+        # UPDATE SYSTEM ADMIN BALANCE
         # ============================================================
-        if superadmin_amount > 0 and superadmin:
-            superadmin_balance, created = UserBalance.objects.get_or_create(
-                user=superadmin,
+        if system_admin_amount > 0 and system_admin:
+            system_admin_balance, created = UserBalance.objects.get_or_create(
+                user=system_admin,
                 defaults={'balance': Decimal('0.00')}
             )
-            superadmin_balance.balance += superadmin_amount
-            superadmin_balance.save()
-            logger.info(f"✅ Superadmin {superadmin.email} balance updated: +{superadmin_amount}")
-            logger.info(f"   New balance: {superadmin_balance.balance}")
-        elif superadmin_amount > 0:
-            logger.warning(f"⚠️ Superadmin amount {superadmin_amount} > 0 but no superadmin found")
+            system_admin_balance.balance += system_admin_amount
+            system_admin_balance.save()
+            logger.info(f"✅ System Admin {system_admin.email} balance updated: +{system_admin_amount}")
+            logger.info(f"   New balance: {system_admin_balance.balance}")
+        elif system_admin_amount > 0:
+            logger.warning(f"⚠️ System admin amount {system_admin_amount} > 0 but no system admin found")
         else:
-            logger.info(f"ℹ️ Platform commission is 0, no balance update needed")
+            logger.info(f"ℹ️ System admin commission is 0, no balance update needed")
 
         return {
             'success': True,
             'admin_amount': admin_amount,
-            'superadmin_amount': superadmin_amount,
+            'system_admin_amount': system_admin_amount,
             'commission_percentage': admin_percentage,
             'admin': admin,
-            'superadmin': superadmin,
+            'system_admin': system_admin,
             'distribution_type': 'REGULAR_ADMIN_SPLIT',
         }
 
@@ -389,9 +405,9 @@ def initiate_paystack_payment(request):
         )
 
     # ============================================================
-    # VALIDATE SUPERADMIN BEFORE PROCEEDING
+    # VALIDATE SYSTEM ADMIN BEFORE PROCEEDING
     # ============================================================
-    is_valid, superadmin, error_msg = validate_superadmin()
+    is_valid, system_admin, error_msg = validate_system_admin()
     if not is_valid:
         return Response(
             {
@@ -527,6 +543,8 @@ def initiate_paystack_payment(request):
             "payment_id": payment.id,
             "admin_id": assigned_admin.id,
             "admin_email": assigned_admin.email,
+            "system_admin_id": system_admin.id if system_admin else None,
+            "system_admin_email": system_admin.email if system_admin else None,
         }
     )
 
@@ -540,6 +558,8 @@ def initiate_paystack_payment(request):
         "phone_number": phone_number,
         "admin_id": assigned_admin.id,
         "admin_email": assigned_admin.email,
+        "system_admin_id": system_admin.id if system_admin else None,
+        "system_admin_email": system_admin.email if system_admin else None,
     }
 
     try:
@@ -674,7 +694,7 @@ def paystack_webhook(request):
 
 
 # =====================================================
-# HANDLE PAYSTACK PAYMENT SUCCESS (UPDATED)
+# HANDLE PAYSTACK PAYMENT SUCCESS (UPDATED - SYSTEM ADMIN)
 # =====================================================
 
 def handle_paystack_success(webhook_data):
@@ -687,13 +707,13 @@ def handle_paystack_success(webhook_data):
 
     try:
         # ============================================================
-        # VALIDATE SUPERADMIN BEFORE PROCESSING PAYMENT
+        # VALIDATE SYSTEM ADMIN BEFORE PROCESSING PAYMENT
         # ============================================================
-        is_valid, superadmin, error_msg = validate_superadmin()
+        is_valid, system_admin, error_msg = validate_system_admin()
         if not is_valid:
-            logger.error(f"❌ Superadmin validation failed: {error_msg}")
+            logger.error(f"❌ System admin validation failed: {error_msg}")
             return Response(
-                {"status": "error", "message": error_msg or "Superadmin validation failed"},
+                {"status": "error", "message": error_msg or "System admin validation failed"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -773,13 +793,13 @@ def handle_paystack_success(webhook_data):
                     logger.info(f"✅ Derived admin from assignment: {admin.email}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION
+            # DISTRIBUTE COMMISSION (UPDATED - SYSTEM ADMIN)
             # ============================================================
             commission_result = None
             
             if admin:
-                # Distribute commission between admin and superadmin
-                commission_result = distribute_commission(payment, admin, superadmin)
+                # Distribute commission between admin and system admin
+                commission_result = distribute_commission(payment, admin, system_admin)
                 logger.info(f"✅ Commission distribution result: {commission_result}")
             else:
                 logger.warning(f"⚠️ Cannot distribute commission - no admin found")
@@ -789,9 +809,9 @@ def handle_paystack_success(webhook_data):
                 }
 
             # ============================================================
-            # CREATE NOTIFICATIONS
+            # CREATE NOTIFICATIONS (UPDATED - SYSTEM ADMIN)
             # ============================================================
-            create_payment_notifications(payment, commission_result, superadmin)
+            create_payment_notifications(payment, commission_result, system_admin)
 
             return Response(
                 {
@@ -893,7 +913,7 @@ def handle_paystack_cancelled(webhook_data):
 
 
 # =====================================================
-# PAYSTACK PAYMENT SUCCESS REDIRECT (UPDATED)
+# PAYSTACK PAYMENT SUCCESS REDIRECT (UPDATED - SYSTEM ADMIN)
 # =====================================================
 
 @api_view(["GET"])
@@ -909,11 +929,11 @@ def paystack_success(request):
         return redirect(error_url)
 
     # ============================================================
-    # VALIDATE SUPERADMIN BEFORE PROCESSING
+    # VALIDATE SYSTEM ADMIN BEFORE PROCESSING
     # ============================================================
-    is_valid, superadmin, error_msg = validate_superadmin()
+    is_valid, system_admin, error_msg = validate_system_admin()
     if not is_valid:
-        logger.error(f"❌ Superadmin validation failed: {error_msg}")
+        logger.error(f"❌ System admin validation failed: {error_msg}")
         error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
@@ -992,10 +1012,10 @@ def paystack_success(request):
                     logger.info(f"✅ Derived admin from assignment: {admin.email}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION
+            # DISTRIBUTE COMMISSION (UPDATED - SYSTEM ADMIN)
             # ============================================================
             if admin:
-                commission_result = distribute_commission(payment, admin, superadmin)
+                commission_result = distribute_commission(payment, admin, system_admin)
                 logger.info(f"✅ Commission distribution result: {commission_result}")
             else:
                 logger.warning(f"⚠️ Cannot distribute commission - no admin found")
@@ -1004,8 +1024,8 @@ def paystack_success(request):
                     'error': 'No admin found for commission distribution'
                 }
 
-            # Create notifications
-            create_payment_notifications(payment, commission_result, superadmin)
+            # Create notifications (UPDATED - SYSTEM ADMIN)
+            create_payment_notifications(payment, commission_result, system_admin)
 
     # Redirect to frontend success page with Paystack-specific path
     redirect_url = (
@@ -1020,7 +1040,7 @@ def paystack_success(request):
     # Add commission info if available
     if commission_result and commission_result.get('success'):
         redirect_url += f"&admin_amount={commission_result.get('admin_amount', 0)}"
-        redirect_url += f"&superadmin_amount={commission_result.get('superadmin_amount', 0)}"
+        redirect_url += f"&system_admin_amount={commission_result.get('system_admin_amount', 0)}"
         redirect_url += f"&commission_percentage={commission_result.get('commission_percentage', 0)}"
 
     logger.info(f"🔀 Redirecting to: {redirect_url}")
@@ -1239,10 +1259,10 @@ def get_paystack_transactions(request):
 
 
 # =====================================================
-# HELPER: Create Payment Notifications
+# HELPER: Create Payment Notifications (UPDATED - SYSTEM ADMIN)
 # =====================================================
 
-def create_payment_notifications(payment, commission_result=None, superadmin=None):
+def create_payment_notifications(payment, commission_result=None, system_admin=None):
     """
     Create notifications for successful payment.
     """
@@ -1251,6 +1271,7 @@ def create_payment_notifications(payment, commission_result=None, superadmin=Non
     # Determine commission details
     if commission_result and commission_result.get('success'):
         admin_amount = commission_result.get('admin_amount', 0)
+        system_admin_amount = commission_result.get('system_admin_amount', 0)
         admin_message = (
             f"{connection.sender.full_name} has completed payment for their hookup. "
             f"You have received KES {admin_amount:.2f} as your commission."
@@ -1284,15 +1305,15 @@ def create_payment_notifications(payment, commission_result=None, superadmin=Non
         is_read=False,
     )
 
-    # 3. Notification for Superadmin
+    # 3. Notification for System Admin
     if commission_result and commission_result.get('success'):
-        superadmin_amount = commission_result.get('superadmin_amount', 0)
-        if superadmin_amount > 0 and superadmin:
+        system_admin_amount = commission_result.get('system_admin_amount', 0)
+        if system_admin_amount > 0 and system_admin:
             Notification.objects.create(
-                user=superadmin,
+                user=system_admin,
                 connection=connection,
-                title="💰 Platform Commission Received!",
-                message=f"Platform received KES {superadmin_amount:.2f} from {connection.sender.full_name}'s payment.",
+                title="💰 System Admin Commission Received!",
+                message=f"System Admin received KES {system_admin_amount:.2f} from {connection.sender.full_name}'s payment.",
                 notification_type=Notification.NotificationType.PAYMENT_SUCCESS,
                 is_read=False,
             )
