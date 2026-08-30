@@ -15,7 +15,8 @@ from rest_framework import status
 
 from django.utils import timezone
 from django.shortcuts import redirect
-from django.db import transaction
+from django.db import connection, close_old_connections, transaction
+from django.db.utils import OperationalError, InterfaceError
 
 from assignments.models import ClientAssignment
 from administration.models import PlatformConfig
@@ -25,12 +26,242 @@ from payments.models import Payment
 from notification.models import Notification
 from account.models import Accounts
 from UserBalance.models import UserBalance
+from commisions.models import Commission
 
 from .services import PaystackService
 from .models import PaystackTransaction
 from .serializers import InitiatePaymentSerializer
 
+# Set up logger
 logger = logging.getLogger(__name__)
+
+
+# =====================================================
+# DATABASE CONNECTION HELPER
+# =====================================================
+
+def ensure_db_connection():
+    """
+    Ensure database connection is healthy before proceeding.
+    Attempts to reconnect if connection is broken.
+    """
+    try:
+        close_old_connections()
+        connection.ensure_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return True
+    except (OperationalError, InterfaceError) as e:
+        logger.warning(f"⚠️ Database connection error detected: {str(e)}")
+        try:
+            connection.close()
+            connection.ensure_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+            logger.info("✅ Database reconnected successfully")
+            return True
+        except Exception as reconnect_error:
+            logger.error(f"❌ Failed to reconnect to database: {str(reconnect_error)}")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Unexpected database error: {str(e)}")
+        return False
+
+
+# =====================================================
+# SUPERADMIN VALIDATION HELPER
+# =====================================================
+
+def validate_superadmin():
+    """
+    Validate that exactly one superadmin exists.
+    Returns (is_valid, superadmin, error_message)
+    """
+    try:
+        superadmins = Accounts.objects.filter(role='superadmin', is_active=True)
+        count = superadmins.count()
+        
+        if count == 0:
+            logger.error("❌ No superadmin found in the system")
+            return False, None, "No superadmin configured. Please contact support."
+        
+        if count > 1:
+            logger.error(f"❌ Multiple superadmins found: {count}")
+            return False, None, "Multiple superadmins found. Please contact support."
+        
+        superadmin = superadmins.first()
+        logger.info(f"✅ Superadmin validated: {superadmin.email}")
+        return True, superadmin, None
+        
+    except Exception as e:
+        logger.error(f"❌ Error validating superadmin: {str(e)}")
+        return False, None, "Unable to validate superadmin configuration."
+
+
+# =====================================================
+# COMMISSION DISTRIBUTION HELPER
+# =====================================================
+
+def distribute_commission(payment, admin, superadmin):
+    """
+    Distribute commission between admin and superadmin.
+    
+    Returns:
+        dict: {
+            'success': bool,
+            'admin_amount': Decimal,
+            'superadmin_amount': Decimal,
+            'commission_percentage': Decimal,
+            'admin': Accounts,
+            'superadmin': Accounts,
+            'error': str (if failed)
+        }
+    """
+    try:
+        total_amount = payment.amount
+        
+        # Get commission configuration for the admin
+        commission_config = Commission.get_admin_commission(admin)
+        admin_percentage = commission_config.percentage
+        
+        # Calculate split
+        admin_amount = (total_amount * admin_percentage) / 100
+        superadmin_amount = total_amount - admin_amount
+        
+        logger.info(f"💰 Commission split: Admin {admin_percentage}% = {admin_amount}, "
+                   f"Platform {commission_config.platform_percentage}% = {superadmin_amount}")
+        
+        # ============================================================
+        # UPDATE ADMIN BALANCE
+        # ============================================================
+        if admin_amount > 0:
+            admin_balance, created = UserBalance.objects.get_or_create(
+                user=admin,
+                defaults={'balance': Decimal('0.00')}
+            )
+            admin_balance.balance += admin_amount
+            admin_balance.save()
+            logger.info(f"✅ Admin {admin.email} balance updated: +{admin_amount}")
+        else:
+            logger.info(f"ℹ️ Admin commission is 0, no balance update needed")
+
+        # ============================================================
+        # UPDATE SUPERADMIN BALANCE
+        # ============================================================
+        if superadmin_amount > 0 and superadmin:
+            superadmin_balance, created = UserBalance.objects.get_or_create(
+                user=superadmin,
+                defaults={'balance': Decimal('0.00')}
+            )
+            superadmin_balance.balance += superadmin_amount
+            superadmin_balance.save()
+            logger.info(f"✅ Superadmin {superadmin.email} balance updated: +{superadmin_amount}")
+        elif superadmin_amount > 0:
+            logger.warning(f"⚠️ Superadmin amount {superadmin_amount} > 0 but no superadmin found")
+        else:
+            logger.info(f"ℹ️ Platform commission is 0, no balance update needed")
+
+        return {
+            'success': True,
+            'admin_amount': admin_amount,
+            'superadmin_amount': superadmin_amount,
+            'commission_percentage': admin_percentage,
+            'admin': admin,
+            'superadmin': superadmin,
+        }
+
+    except Commission.DoesNotExist:
+        logger.error(f"❌ Commission configuration not found for admin: {admin.email}")
+        return {
+            'success': False,
+            'error': f"Commission configuration not found for admin: {admin.email}"
+        }
+    except Exception as e:
+        logger.error(f"❌ Error distributing commission: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+# =====================================================
+# DATABASE HEALTH CHECK
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def database_health_check(request):
+    """
+    Check database connection health.
+    Returns detailed status information.
+    """
+    try:
+        close_old_connections()
+        health_status = {
+            'status': 'ok',
+            'database': 'connected',
+            'timestamp': timezone.now().isoformat(),
+            'details': {}
+        }
+        try:
+            connection.ensure_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        version(),
+                        current_database(),
+                        current_user,
+                        now(),
+                        pg_postmaster_start_time()
+                """)
+                row = cursor.fetchone()
+                health_status['details'] = {
+                    'version': row[0] if row else 'Unknown',
+                    'database_name': row[1] if row else 'Unknown',
+                    'user': row[2] if row else 'Unknown',
+                    'current_time': row[3] if row else 'Unknown',
+                    'postmaster_start': row[4] if row else 'Unknown',
+                }
+                cursor.execute("""
+                    SELECT 
+                        count(*) as total_connections,
+                        count(*) FILTER (WHERE state = 'active') as active_connections,
+                        count(*) FILTER (WHERE state = 'idle') as idle_connections
+                    FROM pg_stat_activity
+                """)
+                stats = cursor.fetchone()
+                health_status['details']['connections'] = {
+                    'total': stats[0] if stats else 0,
+                    'active': stats[1] if stats else 0,
+                    'idle': stats[2] if stats else 0,
+                }
+            health_status['status'] = 'healthy'
+        except (OperationalError, InterfaceError) as e:
+            health_status['status'] = 'error'
+            health_status['database'] = 'disconnected'
+            health_status['error'] = str(e)
+            health_status['reconnecting'] = False
+            try:
+                connection.close()
+                connection.ensure_connection()
+                health_status['reconnecting'] = True
+                health_status['reconnection_status'] = 'success'
+            except Exception as reconnect_error:
+                health_status['reconnection_status'] = 'failed'
+                health_status['reconnection_error'] = str(reconnect_error)
+        return Response(health_status, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Database health check error: {str(e)}")
+        return Response(
+            {
+                'status': 'error',
+                'message': str(e),
+                'timestamp': timezone.now().isoformat()
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # =====================================================
@@ -43,6 +274,16 @@ def paystack_config_status(request):
     """
     Check Paystack configuration status.
     """
+    if not ensure_db_connection():
+        return Response(
+            {
+                "success": False,
+                "message": "Service temporarily unavailable. Please try again.",
+                "error_code": "DB_CONNECTION_ERROR"
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     try:
         config = PaymentConfiguration.objects.get(gateway_name="paystack", is_active=True)
         return Response({
@@ -75,6 +316,30 @@ def initiate_paystack_payment(request):
     """
     Initiate a Paystack payment for a connection.
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        return Response(
+            {
+                "success": False,
+                "message": "Service temporarily unavailable. Please try again.",
+                "error_code": "DB_CONNECTION_ERROR"
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    # ============================================================
+    # VALIDATE SUPERADMIN BEFORE PROCEEDING
+    # ============================================================
+    is_valid, superadmin, error_msg = validate_superadmin()
+    if not is_valid:
+        return Response(
+            {
+                "success": False,
+                "message": error_msg or "Payment service is currently unavailable."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     # Validate request data
     serializer = InitiatePaymentSerializer(data=request.data)
     if not serializer.is_valid():
@@ -86,7 +351,7 @@ def initiate_paystack_payment(request):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     user = request.user
     connection_id = serializer.validated_data.get("connection_id")
     phone_number = serializer.validated_data.get("phone_number")
@@ -100,17 +365,18 @@ def initiate_paystack_payment(request):
         return Response(
             {
                 "success": False,
-                "message": "Connection not found."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_404_NOT_FOUND
         )
 
     # Check ownership
     if connection.sender != user:
+        logger.warning(f"User {user.email} attempted to pay for connection they don't own")
         return Response(
             {
                 "success": False,
-                "message": "You do not have permission to pay for this connection."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_403_FORBIDDEN
         )
@@ -125,33 +391,37 @@ def initiate_paystack_payment(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Get assigned admin
+    # Get assigned admin via ClientAssignment
     try:
         assignment = ClientAssignment.objects.get(user=user)
         assigned_admin = assignment.assigned_admin
+        logger.info(f"✅ Found assigned admin: {assigned_admin.email}")
     except ClientAssignment.DoesNotExist:
+        logger.warning(f"No assignment found for user: {user.email}")
         return Response(
             {
                 "success": False,
-                "message": "User not assigned to any admin."
+                "message": "Payment initiation failed. No admin assigned."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Get hookup fee
+    # Get hookup fee from PlatformConfig
     try:
         platform_config = PlatformConfig.objects.get(owner=assigned_admin)
         hookup_fee = Decimal(platform_config.hookup_fee)
+        logger.info(f"✅ Hookup fee: {hookup_fee}")
     except PlatformConfig.DoesNotExist:
+        logger.warning(f"No platform config for admin: {assigned_admin.email}")
         return Response(
             {
                 "success": False,
-                "message": "Platform configuration not found."
+                "message": "Payment initiation failed."
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # ✅ FIX: Check Paystack configuration with lowercase "paystack"
+    # Check Paystack configuration
     try:
         config = PaymentConfiguration.objects.get(gateway_name="paystack", is_active=True)
         logger.info(f"✅ Paystack config found - ID: {config.id}")
@@ -194,25 +464,43 @@ def initiate_paystack_payment(request):
             "user_id": user.id,
             "phone_number": phone_number,
             "payment_id": payment.id,
+            "admin_id": assigned_admin.id,
+            "admin_email": assigned_admin.email,
         }
     )
 
     # Initialize Paystack transaction
     paystack_service = PaystackService()
-    
+
     metadata = {
         "payment_id": payment.id,
         "connection_id": str(connection.connection_id),
         "user_id": user.id,
         "phone_number": phone_number,
+        "admin_id": assigned_admin.id,
     }
-    
-    paystack_response = paystack_service.initialize_transaction(
-        email=email,
-        amount=hookup_fee,
-        reference=merchant_reference,
-        metadata=metadata
-    )
+
+    try:
+        paystack_response = paystack_service.initialize_transaction(
+            email=email,
+            amount=hookup_fee,
+            reference=merchant_reference,
+            metadata=metadata
+        )
+    except Exception as e:
+        payment.status = "failed"
+        payment.save()
+        paystack_transaction.status = "failed"
+        paystack_transaction.paystack_data = {"error": str(e)}
+        paystack_transaction.save()
+        logger.error(f"❌ Paystack initialization error: {str(e)}")
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initialization failed. Please try again."
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
     if not paystack_response.get("success"):
         payment.status = "failed"
@@ -220,7 +508,7 @@ def initiate_paystack_payment(request):
         paystack_transaction.status = "failed"
         paystack_transaction.paystack_data = paystack_response
         paystack_transaction.save()
-        
+
         return Response(
             {
                 "success": False,
@@ -243,6 +531,7 @@ def initiate_paystack_payment(request):
                 "merchant_reference": payment.merchant_reference,
                 "amount": payment.amount,
                 "status": payment.status,
+                "gateway": payment.gateway,
             },
             "authorization_url": paystack_data.get("authorization_url"),
             "reference": merchant_reference,
@@ -261,27 +550,35 @@ def paystack_webhook(request):
     """
     Handle Paystack webhook events.
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        logger.error("❌ Database connection error in webhook")
+        return Response(
+            {"status": "error", "message": "Service temporarily unavailable."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     # Get signature from header
     signature = request.headers.get("x-paystack-signature")
-    
+
     if not signature:
         logger.error("❌ Missing Paystack signature")
         return Response(
             {"status": "error", "message": "Missing signature"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     # Verify webhook signature
     paystack_service = PaystackService()
     raw_body = request.body
-    
+
     if not paystack_service.verify_webhook_signature(raw_body, signature):
         logger.error("❌ Invalid Paystack webhook signature")
         return Response(
             {"status": "error", "message": "Invalid signature"},
             status=status.HTTP_401_UNAUTHORIZED
         )
-    
+
     # Parse webhook data
     try:
         data = json.loads(raw_body)
@@ -291,17 +588,17 @@ def paystack_webhook(request):
             {"status": "error", "message": "Invalid JSON"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     event = data.get("event")
     webhook_data = data.get("data", {})
     reference = webhook_data.get("reference")
-    
+
     logger.info("=" * 60)
     logger.info("PAYSTACK WEBHOOK RECEIVED")
     logger.info(f"Event: {event}")
     logger.info(f"Reference: {reference}")
     logger.info("=" * 60)
-    
+
     # Handle different events
     if event == "charge.success":
         return handle_paystack_success(webhook_data)
@@ -322,28 +619,37 @@ def handle_paystack_success(webhook_data):
     """
     Handle successful Paystack payment webhook.
     """
-    from commisions.services.commission_service import CommissionService, CommissionDistributionError
-    
     reference = webhook_data.get("reference")
     amount = webhook_data.get("amount", 0) / 100  # Convert back from cents
     metadata = webhook_data.get("metadata", {})
-    
+
     try:
+        # ============================================================
+        # VALIDATE SUPERADMIN BEFORE PROCESSING PAYMENT
+        # ============================================================
+        is_valid, superadmin, error_msg = validate_superadmin()
+        if not is_valid:
+            logger.error(f"❌ Superadmin validation failed: {error_msg}")
+            return Response(
+                {"status": "error", "message": error_msg or "Superadmin validation failed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Find the paystack transaction
         paystack_transaction = PaystackTransaction.objects.get(reference=reference)
-        
+
         # Prevent double processing
         if paystack_transaction.status == "success":
             logger.info(f"ℹ️ Paystack transaction {reference} already processed")
             return Response({"status": "success", "message": "Already processed"}, status=status.HTTP_200_OK)
-        
+
         # Find the related payment
         payment = Payment.objects.get(id=paystack_transaction.payment_id)
-        
+
         # Verify transaction with Paystack
         paystack_service = PaystackService()
         verification = paystack_service.verify_transaction(reference)
-        
+
         if not verification.get("success"):
             logger.error(f"❌ Paystack verification failed: {verification}")
             payment.status = "failed"
@@ -355,50 +661,67 @@ def handle_paystack_success(webhook_data):
                 {"status": "error", "message": "Verification failed"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         verification_data = verification.get("data", {})
         payment_status = verification_data.get("status")
-        
+
         if payment_status == "success":
             # Update payment
             payment.status = "completed"
             payment.paid_at = timezone.now()
             payment.save()
-            
+
             # Update paystack transaction
             paystack_transaction.status = "success"
             paystack_transaction.paid_at = timezone.now()
             paystack_transaction.paystack_data = verification_data
             paystack_transaction.save()
-            
+
             # Update connection
             connection = payment.connection
             connection.status = Connection.Status.COMPLETED
             connection.save()
-            
+
             logger.info(f"✅ Payment {reference} marked as completed")
             logger.info(f"✅ Connection {connection.connection_id} marked as completed")
-            
-            # Distribute commission
+
+            # ============================================================
+            # GET ADMIN FROM CLIENT ASSIGNMENT
+            # ============================================================
             try:
-                commission_result = CommissionService.distribute_commission_for_payment(payment)
-                logger.info(f"✅ Commission distributed: {commission_result}")
-            except CommissionDistributionError as e:
-                logger.error(f"❌ Commission distribution failed: {str(e)}")
-                commission_result = {"success": False, "error": str(e)}
-            except Exception as e:
-                logger.error(f"❌ Unexpected error in commission distribution: {str(e)}")
-                commission_result = {"success": False, "error": str(e)}
-            
-            # Create notifications
-            create_payment_notifications(payment, commission_result)
-            
+                assignment = ClientAssignment.objects.get(user=payment.user)
+                admin = assignment.assigned_admin
+                logger.info(f"✅ Found admin for commission: {admin.email}")
+            except ClientAssignment.DoesNotExist:
+                logger.error(f"❌ No assignment found for user: {payment.user.email}")
+                admin = None
+
+            # ============================================================
+            # DISTRIBUTE COMMISSION
+            # ============================================================
+            commission_result = None
+            if admin and superadmin:
+                commission_result = distribute_commission(payment, admin, superadmin)
+                logger.info(f"✅ Commission distribution result: {commission_result}")
+            else:
+                logger.warning(f"⚠️ Cannot distribute commission - admin: {admin}, superadmin: {superadmin}")
+                commission_result = {
+                    'success': False,
+                    'error': 'Admin or superadmin not found'
+                }
+
+            # ============================================================
+            # CREATE NOTIFICATIONS
+            # ============================================================
+            create_payment_notifications(payment, commission_result, superadmin)
+
             return Response(
                 {
                     "status": "success",
                     "message": "Payment processed successfully",
                     "payment_status": payment.status,
                     "connection_status": connection.status,
+                    "commission": commission_result if commission_result else None,
                 },
                 status=status.HTTP_200_OK
             )
@@ -412,7 +735,7 @@ def handle_paystack_success(webhook_data):
                 {"status": "error", "message": f"Payment status: {payment_status}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     except PaystackTransaction.DoesNotExist:
         logger.error(f"❌ Paystack transaction not found for reference: {reference}")
         return Response(
@@ -438,17 +761,17 @@ def handle_paystack_failure(webhook_data):
     Handle failed Paystack payment webhook.
     """
     reference = webhook_data.get("reference")
-    
+
     try:
         paystack_transaction = PaystackTransaction.objects.get(reference=reference)
         paystack_transaction.status = "failed"
         paystack_transaction.paystack_data = webhook_data
         paystack_transaction.save()
-        
+
         payment = Payment.objects.get(id=paystack_transaction.payment_id)
         payment.status = "failed"
         payment.save()
-        
+
         # Create failure notification
         Notification.objects.create(
             user=payment.user,
@@ -458,12 +781,12 @@ def handle_paystack_failure(webhook_data):
             notification_type=Notification.NotificationType.PAYMENT_FAILED,
             is_read=False,
         )
-        
+
         logger.info(f"❌ Paystack payment failed: {reference}")
-        
+
     except (PaystackTransaction.DoesNotExist, Payment.DoesNotExist) as e:
         logger.error(f"❌ Error handling payment failure: {str(e)}")
-    
+
     return Response({"status": "success", "message": "Failure processed"}, status=status.HTTP_200_OK)
 
 
@@ -472,22 +795,22 @@ def handle_paystack_cancelled(webhook_data):
     Handle cancelled Paystack payment webhook.
     """
     reference = webhook_data.get("reference")
-    
+
     try:
         paystack_transaction = PaystackTransaction.objects.get(reference=reference)
         paystack_transaction.status = "cancelled"
         paystack_transaction.paystack_data = webhook_data
         paystack_transaction.save()
-        
+
         payment = Payment.objects.get(id=paystack_transaction.payment_id)
         payment.status = "cancelled"
         payment.save()
-        
+
         logger.info(f"⚠️ Paystack payment cancelled: {reference}")
-        
+
     except (PaystackTransaction.DoesNotExist, Payment.DoesNotExist) as e:
         logger.error(f"❌ Error handling payment cancellation: {str(e)}")
-    
+
     return Response({"status": "success", "message": "Cancellation processed"}, status=status.HTTP_200_OK)
 
 
@@ -501,31 +824,50 @@ def paystack_success(request):
     """
     Handle Paystack success redirect (frontend).
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        logger.error("❌ Database connection error in payment success")
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        return redirect(error_url)
+
+    # ============================================================
+    # VALIDATE SUPERADMIN BEFORE PROCESSING
+    # ============================================================
+    is_valid, superadmin, error_msg = validate_superadmin()
+    if not is_valid:
+        logger.error(f"❌ Superadmin validation failed: {error_msg}")
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        return redirect(error_url)
+
     reference = request.query_params.get("reference")
     trxref = request.query_params.get("trxref")
-    
+
     logger.info("=" * 60)
     logger.info("PAYSTACK SUCCESS REDIRECT")
     logger.info(f"Reference: {reference}")
     logger.info(f"Trxref: {trxref}")
     logger.info("=" * 60)
-    
+
     ref = reference or trxref
-    
+
     if not ref:
-        return redirect("https://hookiefy.netlify.app/payment-error?message=Payment+failed")
-    
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        return redirect(error_url)
+
     try:
         payment = Payment.objects.get(merchant_reference=ref)
         paystack_transaction = PaystackTransaction.objects.get(reference=ref)
     except (Payment.DoesNotExist, PaystackTransaction.DoesNotExist):
         logger.error(f"❌ Payment not found for reference: {ref}")
-        return redirect("https://hookiefy.netlify.app/payment-error?message=Payment+failed")
-    
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        return redirect(error_url)
+
+    commission_result = None
+
     # Verify payment status
     paystack_service = PaystackService()
     verification = paystack_service.verify_transaction(ref)
-    
+
     if verification.get("success"):
         data = verification.get("data", {})
         if data.get("status") == "success" and payment.status != "completed":
@@ -533,35 +875,47 @@ def paystack_success(request):
             payment.status = "completed"
             payment.paid_at = timezone.now()
             payment.save()
-            
+
             # Update paystack transaction
             paystack_transaction.status = "success"
             paystack_transaction.paid_at = timezone.now()
             paystack_transaction.paystack_data = data
             paystack_transaction.save()
-            
+
             # Update connection
             connection = payment.connection
             connection.status = Connection.Status.COMPLETED
             connection.save()
-            
-            # Distribute commission
-            from commisions.services.commission_service import CommissionService, CommissionDistributionError
+
+            # ============================================================
+            # GET ADMIN FROM CLIENT ASSIGNMENT
+            # ============================================================
             try:
-                commission_result = CommissionService.distribute_commission_for_payment(payment)
-                logger.info(f"✅ Commission distributed: {commission_result}")
-            except CommissionDistributionError as e:
-                logger.error(f"❌ Commission distribution failed: {str(e)}")
-                commission_result = {"success": False, "error": str(e)}
-            except Exception as e:
-                logger.error(f"❌ Unexpected error in commission distribution: {str(e)}")
-                commission_result = {"success": False, "error": str(e)}
-            
+                assignment = ClientAssignment.objects.get(user=payment.user)
+                admin = assignment.assigned_admin
+                logger.info(f"✅ Found admin for commission: {admin.email}")
+            except ClientAssignment.DoesNotExist:
+                logger.error(f"❌ No assignment found for user: {payment.user.email}")
+                admin = None
+
+            # ============================================================
+            # DISTRIBUTE COMMISSION
+            # ============================================================
+            if admin and superadmin:
+                commission_result = distribute_commission(payment, admin, superadmin)
+                logger.info(f"✅ Commission distribution result: {commission_result}")
+            else:
+                logger.warning(f"⚠️ Cannot distribute commission - admin: {admin}, superadmin: {superadmin}")
+                commission_result = {
+                    'success': False,
+                    'error': 'Admin or superadmin not found'
+                }
+
             # Create notifications
-            create_payment_notifications(payment, commission_result)
-    
+            create_payment_notifications(payment, commission_result, superadmin)
+
     # Redirect to frontend success page
-    return redirect(
+    redirect_url = (
         f"https://hookiefy.netlify.app/payment-success"
         f"?reference={ref}"
         f"&payment_status={payment.status}"
@@ -569,6 +923,15 @@ def paystack_success(request):
         f"&connection_id={payment.connection.connection_id}"
         f"&gateway=paystack"
     )
+
+    # Add commission info if available
+    if commission_result and commission_result.get('success'):
+        redirect_url += f"&admin_amount={commission_result.get('admin_amount', 0)}"
+        redirect_url += f"&superadmin_amount={commission_result.get('superadmin_amount', 0)}"
+        redirect_url += f"&commission_percentage={commission_result.get('commission_percentage', 0)}"
+
+    logger.info(f"🔀 Redirecting to: {redirect_url}")
+    return redirect(redirect_url)
 
 
 # =====================================================
@@ -581,31 +944,55 @@ def paystack_failure(request):
     """
     Handle Paystack failure redirect (frontend).
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        logger.error("❌ Database connection error in payment failure")
+        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        return redirect(error_url)
+
     reference = request.query_params.get("reference")
     trxref = request.query_params.get("trxref")
-    
+
     logger.info("=" * 60)
     logger.info("PAYSTACK FAILURE REDIRECT")
     logger.info(f"Reference: {reference}")
     logger.info("=" * 60)
-    
+
     ref = reference or trxref
-    
+
     if ref:
         try:
             payment = Payment.objects.get(merchant_reference=ref)
             payment.status = "failed"
             payment.save()
-            
+
             paystack_transaction = PaystackTransaction.objects.get(reference=ref)
             paystack_transaction.status = "failed"
             paystack_transaction.save()
-            
+
+            # Create failure notification
+            Notification.objects.create(
+                user=payment.user,
+                connection=payment.connection,
+                title="Payment Failed ❌",
+                message=f"Your payment of KES {payment.amount} failed. Please try again or contact support.",
+                notification_type=Notification.NotificationType.PAYMENT_FAILED,
+                is_read=False,
+            )
+
             logger.info(f"❌ Payment {ref} marked as failed")
         except (Payment.DoesNotExist, PaystackTransaction.DoesNotExist):
             logger.warning(f"Payment not found for reference: {ref}")
-    
-    return redirect("https://hookiefy.netlify.app/payment-failure?message=Payment+failed")
+
+    redirect_url = (
+        "https://hookiefy.netlify.app/payment-failure"
+        f"?reference={ref or ''}"
+        f"&message=Payment+failed"
+        f"&gateway=paystack"
+    )
+
+    logger.info(f"🔀 Redirecting to: {redirect_url}")
+    return redirect(redirect_url)
 
 
 # =====================================================
@@ -618,22 +1005,32 @@ def verify_paystack_payment(request, reference):
     """
     Verify a Paystack payment status.
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        return Response(
+            {
+                "success": False,
+                "message": "Service temporarily unavailable. Please try again."
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     try:
         # Find the paystack transaction
         paystack_transaction = PaystackTransaction.objects.get(reference=reference)
         payment = Payment.objects.get(id=paystack_transaction.payment_id)
-        
+
         # Check if user owns this payment
         if payment.user != request.user:
             return Response(
                 {"success": False, "message": "You do not have permission to view this transaction"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Verify with Paystack
         paystack_service = PaystackService()
         verification = paystack_service.verify_transaction(reference)
-        
+
         if verification.get("success"):
             data = verification.get("data", {})
             status_map = {
@@ -642,12 +1039,12 @@ def verify_paystack_payment(request, reference):
                 "pending": "pending",
             }
             paystack_status = status_map.get(data.get("status"), "pending")
-            
+
             # Update paystack transaction
             paystack_transaction.status = paystack_status
             paystack_transaction.paystack_data = data
             paystack_transaction.save()
-            
+
             # Update payment if status changed
             if paystack_status == "success" and payment.status != "completed":
                 payment.status = "completed"
@@ -656,7 +1053,7 @@ def verify_paystack_payment(request, reference):
             elif paystack_status == "failed" and payment.status != "failed":
                 payment.status = "failed"
                 payment.save()
-        
+
         return Response({
             "success": True,
             "payment": {
@@ -672,7 +1069,7 @@ def verify_paystack_payment(request, reference):
                 "paid_at": paystack_transaction.paid_at,
             }
         }, status=status.HTTP_200_OK)
-        
+
     except PaystackTransaction.DoesNotExist:
         return Response(
             {"success": False, "message": "Transaction not found"},
@@ -701,11 +1098,21 @@ def get_paystack_transactions(request):
     """
     Get Paystack transactions for the current user.
     """
+    # Ensure database connection is healthy
+    if not ensure_db_connection():
+        return Response(
+            {
+                "success": False,
+                "message": "Service temporarily unavailable. Please try again."
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     user = request.user
-    
+
     # Get all payments for this user that used paystack
     payments = Payment.objects.filter(user=user, gateway="paystack").order_by('-created_at')
-    
+
     # Get related paystack transactions
     result = []
     for payment in payments:
@@ -716,6 +1123,7 @@ def get_paystack_transactions(request):
                     "id": payment.id,
                     "amount": payment.amount,
                     "status": payment.status,
+                    "gateway": payment.gateway,
                     "merchant_reference": payment.merchant_reference,
                     "created_at": payment.created_at,
                     "paid_at": payment.paid_at,
@@ -729,7 +1137,7 @@ def get_paystack_transactions(request):
         except PaystackTransaction.DoesNotExist:
             # Payment exists but no paystack transaction (shouldn't happen)
             pass
-    
+
     return Response({
         "success": True,
         "count": len(result),
@@ -741,12 +1149,12 @@ def get_paystack_transactions(request):
 # HELPER: Create Payment Notifications
 # =====================================================
 
-def create_payment_notifications(payment, commission_result=None):
+def create_payment_notifications(payment, commission_result=None, superadmin=None):
     """
     Create notifications for successful payment.
     """
     connection = payment.connection
-    
+
     # 1. Notification for SENDER
     Notification.objects.create(
         user=connection.sender,
@@ -756,7 +1164,7 @@ def create_payment_notifications(payment, commission_result=None):
         notification_type=Notification.NotificationType.PAYMENT_SUCCESS,
         is_read=False,
     )
-    
+
     # 2. Notification for RECEIVER (admin)
     admin_amount = commission_result.get('admin_amount', 0) if commission_result and commission_result.get('success') else 0
     admin_message = (
@@ -766,7 +1174,7 @@ def create_payment_notifications(payment, commission_result=None):
         else f"{connection.sender.full_name} has completed payment for their hookup. "
         f"The connection is now ready for service."
     )
-    
+
     Notification.objects.create(
         user=connection.receiver,
         connection=connection,
@@ -775,22 +1183,20 @@ def create_payment_notifications(payment, commission_result=None):
         notification_type=Notification.NotificationType.CONNECTION_COMPLETED,
         is_read=False,
     )
-    
+
     # 3. Notification for Superadmin
     if commission_result and commission_result.get('success'):
         superadmin_amount = commission_result.get('superadmin_amount', 0)
-        if superadmin_amount > 0:
-            superadmin = Accounts.objects.filter(role='superadmin', is_active=True).first()
-            if superadmin:
-                Notification.objects.create(
-                    user=superadmin,
-                    connection=connection,
-                    title="💰 Platform Commission Received!",
-                    message=f"Platform received KES {superadmin_amount:.2f} from {connection.sender.full_name}'s payment.",
-                    notification_type=Notification.NotificationType.PAYMENT_SUCCESS,
-                    is_read=False,
-                )
-    
+        if superadmin_amount > 0 and superadmin:
+            Notification.objects.create(
+                user=superadmin,
+                connection=connection,
+                title="💰 Platform Commission Received!",
+                message=f"Platform received KES {superadmin_amount:.2f} from {connection.sender.full_name}'s payment.",
+                notification_type=Notification.NotificationType.PAYMENT_SUCCESS,
+                is_read=False,
+            )
+
     # 4. Mark pending notifications as read
     Notification.objects.filter(
         connection=connection,
@@ -801,5 +1207,5 @@ def create_payment_notifications(payment, commission_result=None):
             Notification.NotificationType.PAYMENT_PENDING,
         ]
     ).update(is_read=True)
-    
+
     logger.info(f"✅ Notifications created for payment {payment.merchant_reference}")
