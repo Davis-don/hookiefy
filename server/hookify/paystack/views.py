@@ -101,12 +101,61 @@ def validate_superadmin():
 
 
 # =====================================================
-# COMMISSION DISTRIBUTION HELPER
+# GET ASSIGNED ADMIN HELPER (UPDATED)
 # =====================================================
 
-def distribute_commission(payment, admin, superadmin):
+def get_assigned_admin_or_superadmin(user):
     """
-    Distribute commission between admin and superadmin.
+    Get the assigned admin for a user, or return superadmin if the user is directly assigned to superadmin.
+    
+    Returns:
+        tuple: (assigned_person, is_superadmin_direct)
+            - assigned_person: The assigned admin or superadmin
+            - is_superadmin_direct: True if user is directly assigned to superadmin
+    """
+    try:
+        # Check if user has a client assignment
+        assignment = ClientAssignment.objects.get(user=user)
+        assigned_admin = assignment.assigned_admin
+        
+        # Check if assigned admin is a superadmin
+        if assigned_admin.role == 'superadmin':
+            logger.info(f"✅ User {user.email} is directly assigned to superadmin: {assigned_admin.email}")
+            return assigned_admin, True
+        
+        logger.info(f"✅ Found assigned admin for user {user.email}: {assigned_admin.email}")
+        return assigned_admin, False
+        
+    except ClientAssignment.DoesNotExist:
+        logger.warning(f"⚠️ No assignment found for user: {user.email}")
+        
+        # If no assignment exists, check if user is a superadmin themselves
+        if user.role == 'superadmin':
+            logger.info(f"✅ User {user.email} is a superadmin")
+            return user, True
+        
+        return None, False
+
+
+# =====================================================
+# COMMISSION DISTRIBUTION HELPER (UPDATED)
+# =====================================================
+
+def distribute_commission(payment, admin_or_superadmin, is_superadmin_direct=False, superadmin=None):
+    """
+    Distribute commission based on assignment type.
+    
+    If the user is directly assigned to a superadmin (is_superadmin_direct=True),
+    the ENTIRE amount goes to the superadmin.
+    
+    If the user is assigned to a regular admin (is_superadmin_direct=False),
+    commission is split between the admin and superadmin.
+    
+    Args:
+        payment: Payment object
+        admin_or_superadmin: The assigned admin or superadmin
+        is_superadmin_direct: Boolean indicating if assignment is directly to superadmin
+        superadmin: The system superadmin (for regular admin split)
     
     Returns:
         dict: {
@@ -116,11 +165,46 @@ def distribute_commission(payment, admin, superadmin):
             'commission_percentage': Decimal,
             'admin': Accounts,
             'superadmin': Accounts,
+            'is_superadmin_direct': bool,
             'error': str (if failed)
         }
     """
     try:
         total_amount = payment.amount
+        
+        # ============================================================
+        # CASE 1: User is directly assigned to SUPERADMIN
+        # Entire amount goes to superadmin
+        # ============================================================
+        if is_superadmin_direct:
+            logger.info(f"💰 DIRECT SUPERADMIN ASSIGNMENT: {admin_or_superadmin.email}")
+            logger.info(f"   Total amount: {total_amount} goes to superadmin")
+            
+            # Update superadmin balance with FULL amount
+            superadmin_balance, created = UserBalance.objects.get_or_create(
+                user=admin_or_superadmin,
+                defaults={'balance': Decimal('0.00')}
+            )
+            superadmin_balance.balance += total_amount
+            superadmin_balance.save()
+            logger.info(f"✅ Superadmin {admin_or_superadmin.email} balance updated: +{total_amount}")
+            
+            return {
+                'success': True,
+                'admin_amount': Decimal('0.00'),
+                'superadmin_amount': total_amount,
+                'commission_percentage': Decimal('100.00'),  # 100% to superadmin
+                'admin': None,
+                'superadmin': admin_or_superadmin,
+                'is_superadmin_direct': True,
+                'is_commission_split': False,
+            }
+        
+        # ============================================================
+        # CASE 2: User is assigned to a REGULAR ADMIN
+        # Split commission between admin and superadmin
+        # ============================================================
+        admin = admin_or_superadmin
         
         # Get commission configuration for the admin
         commission_config = Commission.get_admin_commission(admin)
@@ -130,8 +214,10 @@ def distribute_commission(payment, admin, superadmin):
         admin_amount = (total_amount * admin_percentage) / 100
         superadmin_amount = total_amount - admin_amount
         
-        logger.info(f"💰 Commission split: Admin {admin_percentage}% = {admin_amount}, "
-                   f"Platform {commission_config.platform_percentage}% = {superadmin_amount}")
+        logger.info(f"💰 REGULAR ADMIN ASSIGNMENT: {admin.email}")
+        logger.info(f"   Total amount: {total_amount}")
+        logger.info(f"   Admin {admin_percentage}% = {admin_amount}")
+        logger.info(f"   Platform {commission_config.platform_percentage}% = {superadmin_amount}")
         
         # ============================================================
         # UPDATE ADMIN BALANCE
@@ -170,6 +256,8 @@ def distribute_commission(payment, admin, superadmin):
             'commission_percentage': admin_percentage,
             'admin': admin,
             'superadmin': superadmin,
+            'is_superadmin_direct': False,
+            'is_commission_split': True,
         }
 
     except Commission.DoesNotExist:
@@ -391,12 +479,10 @@ def initiate_paystack_payment(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Get assigned admin via ClientAssignment
-    try:
-        assignment = ClientAssignment.objects.get(user=user)
-        assigned_admin = assignment.assigned_admin
-        logger.info(f"✅ Found assigned admin: {assigned_admin.email}")
-    except ClientAssignment.DoesNotExist:
+    # Get assigned admin or superadmin (UPDATED)
+    assigned_person, is_superadmin_direct = get_assigned_admin_or_superadmin(user)
+    
+    if assigned_person is None:
         logger.warning(f"No assignment found for user: {user.email}")
         return Response(
             {
@@ -407,12 +493,20 @@ def initiate_paystack_payment(request):
         )
 
     # Get hookup fee from PlatformConfig
+    # If user is directly assigned to superadmin, use superadmin's config
+    # Otherwise, use the assigned admin's config
     try:
-        platform_config = PlatformConfig.objects.get(owner=assigned_admin)
+        if is_superadmin_direct:
+            # Use superadmin's platform config
+            platform_config = PlatformConfig.objects.get(owner=assigned_person)
+        else:
+            # Use assigned admin's platform config
+            platform_config = PlatformConfig.objects.get(owner=assigned_person)
+        
         hookup_fee = Decimal(platform_config.hookup_fee)
-        logger.info(f"✅ Hookup fee: {hookup_fee}")
+        logger.info(f"✅ Hookup fee: {hookup_fee} (using config from {assigned_person.email})")
     except PlatformConfig.DoesNotExist:
-        logger.warning(f"No platform config for admin: {assigned_admin.email}")
+        logger.warning(f"No platform config for: {assigned_person.email}")
         return Response(
             {
                 "success": False,
@@ -464,8 +558,9 @@ def initiate_paystack_payment(request):
             "user_id": user.id,
             "phone_number": phone_number,
             "payment_id": payment.id,
-            "admin_id": assigned_admin.id,
-            "admin_email": assigned_admin.email,
+            "assigned_person_id": assigned_person.id,
+            "assigned_person_email": assigned_person.email,
+            "is_superadmin_direct": is_superadmin_direct,
         }
     )
 
@@ -477,7 +572,8 @@ def initiate_paystack_payment(request):
         "connection_id": str(connection.connection_id),
         "user_id": user.id,
         "phone_number": phone_number,
-        "admin_id": assigned_admin.id,
+        "assigned_person_id": assigned_person.id,
+        "is_superadmin_direct": is_superadmin_direct,
     }
 
     try:
@@ -535,6 +631,7 @@ def initiate_paystack_payment(request):
             },
             "authorization_url": paystack_data.get("authorization_url"),
             "reference": merchant_reference,
+            "is_superadmin_direct": is_superadmin_direct,
         },
         status=status.HTTP_200_OK
     )
@@ -612,7 +709,7 @@ def paystack_webhook(request):
 
 
 # =====================================================
-# HANDLE PAYSTACK PAYMENT SUCCESS
+# HANDLE PAYSTACK PAYMENT SUCCESS (UPDATED)
 # =====================================================
 
 def handle_paystack_success(webhook_data):
@@ -686,34 +783,51 @@ def handle_paystack_success(webhook_data):
             logger.info(f"✅ Connection {connection.connection_id} marked as completed")
 
             # ============================================================
-            # GET ADMIN FROM CLIENT ASSIGNMENT
+            # GET ASSIGNED ADMIN OR SUPERADMIN (UPDATED)
             # ============================================================
-            try:
-                assignment = ClientAssignment.objects.get(user=payment.user)
-                admin = assignment.assigned_admin
-                logger.info(f"✅ Found admin for commission: {admin.email}")
-            except ClientAssignment.DoesNotExist:
-                logger.error(f"❌ No assignment found for user: {payment.user.email}")
-                admin = None
+            # Get from metadata or derive from assignment
+            is_superadmin_direct = metadata.get('is_superadmin_direct', False)
+            
+            # Get the assigned person from metadata, or derive from assignment
+            assigned_person_id = metadata.get('assigned_person_id')
+            
+            if assigned_person_id:
+                try:
+                    assigned_person = Accounts.objects.get(id=assigned_person_id)
+                    logger.info(f"✅ Found assigned person from metadata: {assigned_person.email}")
+                except Accounts.DoesNotExist:
+                    logger.error(f"❌ Assigned person not found: {assigned_person_id}")
+                    assigned_person = None
+            else:
+                # Fallback: derive from assignment
+                assigned_person, is_superadmin_direct = get_assigned_admin_or_superadmin(payment.user)
+                logger.info(f"✅ Derived assigned person: {assigned_person.email if assigned_person else 'None'}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION
+            # DISTRIBUTE COMMISSION (UPDATED)
             # ============================================================
             commission_result = None
-            if admin and superadmin:
-                commission_result = distribute_commission(payment, admin, superadmin)
+            
+            if assigned_person:
+                # Use the updated commission distribution
+                commission_result = distribute_commission(
+                    payment, 
+                    assigned_person, 
+                    is_superadmin_direct,
+                    superadmin
+                )
                 logger.info(f"✅ Commission distribution result: {commission_result}")
             else:
-                logger.warning(f"⚠️ Cannot distribute commission - admin: {admin}, superadmin: {superadmin}")
+                logger.warning(f"⚠️ Cannot distribute commission - no assigned person found")
                 commission_result = {
                     'success': False,
-                    'error': 'Admin or superadmin not found'
+                    'error': 'No assigned person found'
                 }
 
             # ============================================================
-            # CREATE NOTIFICATIONS
+            # CREATE NOTIFICATIONS (UPDATED)
             # ============================================================
-            create_payment_notifications(payment, commission_result, superadmin)
+            create_payment_notifications(payment, commission_result, superadmin, is_superadmin_direct)
 
             return Response(
                 {
@@ -815,7 +929,7 @@ def handle_paystack_cancelled(webhook_data):
 
 
 # =====================================================
-# PAYSTACK PAYMENT SUCCESS REDIRECT
+# PAYSTACK PAYMENT SUCCESS REDIRECT (UPDATED)
 # =====================================================
 
 @api_view(["GET"])
@@ -888,31 +1002,46 @@ def paystack_success(request):
             connection.save()
 
             # ============================================================
-            # GET ADMIN FROM CLIENT ASSIGNMENT
+            # GET ASSIGNED ADMIN OR SUPERADMIN (UPDATED)
             # ============================================================
-            try:
-                assignment = ClientAssignment.objects.get(user=payment.user)
-                admin = assignment.assigned_admin
-                logger.info(f"✅ Found admin for commission: {admin.email}")
-            except ClientAssignment.DoesNotExist:
-                logger.error(f"❌ No assignment found for user: {payment.user.email}")
-                admin = None
+            # Get from metadata or derive from assignment
+            paystack_metadata = paystack_transaction.metadata or {}
+            is_superadmin_direct = paystack_metadata.get('is_superadmin_direct', False)
+            
+            assigned_person_id = paystack_metadata.get('assigned_person_id')
+            
+            if assigned_person_id:
+                try:
+                    assigned_person = Accounts.objects.get(id=assigned_person_id)
+                    logger.info(f"✅ Found assigned person from metadata: {assigned_person.email}")
+                except Accounts.DoesNotExist:
+                    logger.error(f"❌ Assigned person not found: {assigned_person_id}")
+                    assigned_person = None
+            else:
+                # Fallback: derive from assignment
+                assigned_person, is_superadmin_direct = get_assigned_admin_or_superadmin(payment.user)
+                logger.info(f"✅ Derived assigned person: {assigned_person.email if assigned_person else 'None'}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION
+            # DISTRIBUTE COMMISSION (UPDATED)
             # ============================================================
-            if admin and superadmin:
-                commission_result = distribute_commission(payment, admin, superadmin)
+            if assigned_person:
+                commission_result = distribute_commission(
+                    payment, 
+                    assigned_person, 
+                    is_superadmin_direct,
+                    superadmin
+                )
                 logger.info(f"✅ Commission distribution result: {commission_result}")
             else:
-                logger.warning(f"⚠️ Cannot distribute commission - admin: {admin}, superadmin: {superadmin}")
+                logger.warning(f"⚠️ Cannot distribute commission - no assigned person found")
                 commission_result = {
                     'success': False,
-                    'error': 'Admin or superadmin not found'
+                    'error': 'No assigned person found'
                 }
 
             # Create notifications
-            create_payment_notifications(payment, commission_result, superadmin)
+            create_payment_notifications(payment, commission_result, superadmin, is_superadmin_direct)
 
     # Redirect to frontend success page
     redirect_url = (
@@ -929,6 +1058,7 @@ def paystack_success(request):
         redirect_url += f"&admin_amount={commission_result.get('admin_amount', 0)}"
         redirect_url += f"&superadmin_amount={commission_result.get('superadmin_amount', 0)}"
         redirect_url += f"&commission_percentage={commission_result.get('commission_percentage', 0)}"
+        redirect_url += f"&is_superadmin_direct={commission_result.get('is_superadmin_direct', False)}"
 
     logger.info(f"🔀 Redirecting to: {redirect_url}")
     return redirect(redirect_url)
@@ -1146,14 +1276,40 @@ def get_paystack_transactions(request):
 
 
 # =====================================================
-# HELPER: Create Payment Notifications
+# HELPER: Create Payment Notifications (UPDATED)
 # =====================================================
 
-def create_payment_notifications(payment, commission_result=None, superadmin=None):
+def create_payment_notifications(payment, commission_result=None, superadmin=None, is_superadmin_direct=False):
     """
     Create notifications for successful payment.
     """
     connection = payment.connection
+
+    # Determine who the commission went to
+    if commission_result and commission_result.get('success'):
+        if is_superadmin_direct:
+            # Commission went entirely to superadmin
+            superadmin_amount = commission_result.get('superadmin_amount', 0)
+            admin_message = (
+                f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"This connection was directly assigned to you (Superadmin). "
+                f"You have received KES {superadmin_amount:.2f} as the full payment amount."
+            )
+        else:
+            # Split commission
+            admin_amount = commission_result.get('admin_amount', 0)
+            admin_message = (
+                f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"You have received KES {admin_amount:.2f} as your commission."
+                if admin_amount > 0
+                else f"{connection.sender.full_name} has completed payment for their hookup. "
+                f"The connection is now ready for service."
+            )
+    else:
+        admin_message = (
+            f"{connection.sender.full_name} has completed payment for their hookup. "
+            f"The connection is now ready for service."
+        )
 
     # 1. Notification for SENDER
     Notification.objects.create(
@@ -1165,16 +1321,7 @@ def create_payment_notifications(payment, commission_result=None, superadmin=Non
         is_read=False,
     )
 
-    # 2. Notification for RECEIVER (admin)
-    admin_amount = commission_result.get('admin_amount', 0) if commission_result and commission_result.get('success') else 0
-    admin_message = (
-        f"{connection.sender.full_name} has completed payment for their hookup. "
-        f"You have received KES {admin_amount:.2f} as your commission."
-        if admin_amount > 0
-        else f"{connection.sender.full_name} has completed payment for their hookup. "
-        f"The connection is now ready for service."
-    )
-
+    # 2. Notification for RECEIVER (admin or superadmin)
     Notification.objects.create(
         user=connection.receiver,
         connection=connection,
@@ -1184,8 +1331,8 @@ def create_payment_notifications(payment, commission_result=None, superadmin=Non
         is_read=False,
     )
 
-    # 3. Notification for Superadmin
-    if commission_result and commission_result.get('success'):
+    # 3. Notification for Superadmin (if split commission and not direct assignment)
+    if commission_result and commission_result.get('success') and not is_superadmin_direct:
         superadmin_amount = commission_result.get('superadmin_amount', 0)
         if superadmin_amount > 0 and superadmin:
             Notification.objects.create(
