@@ -55,15 +55,16 @@ def get_system_admin():
 
 
 # ============================================================
-# PUBLIC SIGNUP - ASSIGN TO SYSTEM ADMIN (NEW)
+# PUBLIC SIGNUP - ASSIGN TO SYSTEM ADMIN (NO AUTHENTICATION REQUIRED)
 # ============================================================
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny])  # ✅ PUBLIC - No authentication required
 @transaction.atomic
 def create_user_assigned_to_system_admin(request):
     """
     PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to System Admin.
+    NO AUTHENTICATION REQUIRED - Anyone can sign up.
     System Admin credentials are read from environment variables (SYSTEM_ADMIN_EMAIL).
     """
     
@@ -149,11 +150,12 @@ def create_user_assigned_to_system_admin(request):
 # ============================================================
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny])  # ✅ PUBLIC - No authentication required
 @transaction.atomic
 def create_user_assigned_to_superadmin(request):
     """
     DEPRECATED - PUBLIC ENDPOINT - Create a new user with role 'user' and automatically assign to superadmin.
+    NO AUTHENTICATION REQUIRED - Anyone can sign up.
     This endpoint is deprecated and will be removed. Use create_user_assigned_to_system_admin instead.
     """
     
