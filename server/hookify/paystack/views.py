@@ -37,6 +37,17 @@ logger = logging.getLogger(__name__)
 
 
 # =====================================================
+# FRONTEND URL CONSTANTS
+# =====================================================
+
+# Use environment variables or settings for these in production
+FRONTEND_BASE_URL = "https://hookiefy.netlify.app"
+PAYSTACK_SUCCESS_PATH = "/payment-success"  # Or "/paystack-success" if you prefer
+PAYSTACK_FAILURE_PATH = "/payment-failure"  # Or "/paystack-failure" if you prefer
+PAYSTACK_ERROR_PATH = "/payment-error"
+
+
+# =====================================================
 # DATABASE CONNECTION HELPER
 # =====================================================
 
@@ -101,7 +112,7 @@ def validate_superadmin():
 
 
 # =====================================================
-# GET ASSIGNED ADMIN HELPER (UPDATED)
+# GET ASSIGNED ADMIN HELPER
 # =====================================================
 
 def get_assigned_admin_or_superadmin(user):
@@ -138,7 +149,7 @@ def get_assigned_admin_or_superadmin(user):
 
 
 # =====================================================
-# COMMISSION DISTRIBUTION HELPER (UPDATED)
+# COMMISSION DISTRIBUTION HELPER
 # =====================================================
 
 def distribute_commission(payment, admin_or_superadmin, is_superadmin_direct=False, superadmin=None):
@@ -479,7 +490,7 @@ def initiate_paystack_payment(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Get assigned admin or superadmin (UPDATED)
+    # Get assigned admin or superadmin
     assigned_person, is_superadmin_direct = get_assigned_admin_or_superadmin(user)
     
     if assigned_person is None:
@@ -709,7 +720,7 @@ def paystack_webhook(request):
 
 
 # =====================================================
-# HANDLE PAYSTACK PAYMENT SUCCESS (UPDATED)
+# HANDLE PAYSTACK PAYMENT SUCCESS
 # =====================================================
 
 def handle_paystack_success(webhook_data):
@@ -783,7 +794,7 @@ def handle_paystack_success(webhook_data):
             logger.info(f"✅ Connection {connection.connection_id} marked as completed")
 
             # ============================================================
-            # GET ASSIGNED ADMIN OR SUPERADMIN (UPDATED)
+            # GET ASSIGNED ADMIN OR SUPERADMIN
             # ============================================================
             # Get from metadata or derive from assignment
             is_superadmin_direct = metadata.get('is_superadmin_direct', False)
@@ -804,7 +815,7 @@ def handle_paystack_success(webhook_data):
                 logger.info(f"✅ Derived assigned person: {assigned_person.email if assigned_person else 'None'}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION (UPDATED)
+            # DISTRIBUTE COMMISSION
             # ============================================================
             commission_result = None
             
@@ -825,7 +836,7 @@ def handle_paystack_success(webhook_data):
                 }
 
             # ============================================================
-            # CREATE NOTIFICATIONS (UPDATED)
+            # CREATE NOTIFICATIONS
             # ============================================================
             create_payment_notifications(payment, commission_result, superadmin, is_superadmin_direct)
 
@@ -929,7 +940,7 @@ def handle_paystack_cancelled(webhook_data):
 
 
 # =====================================================
-# PAYSTACK PAYMENT SUCCESS REDIRECT (UPDATED)
+# PAYSTACK PAYMENT SUCCESS REDIRECT (UPDATED URLs)
 # =====================================================
 
 @api_view(["GET"])
@@ -941,7 +952,7 @@ def paystack_success(request):
     # Ensure database connection is healthy
     if not ensure_db_connection():
         logger.error("❌ Database connection error in payment success")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
     # ============================================================
@@ -950,7 +961,7 @@ def paystack_success(request):
     is_valid, superadmin, error_msg = validate_superadmin()
     if not is_valid:
         logger.error(f"❌ Superadmin validation failed: {error_msg}")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
     reference = request.query_params.get("reference")
@@ -965,7 +976,7 @@ def paystack_success(request):
     ref = reference or trxref
 
     if not ref:
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
     try:
@@ -973,7 +984,7 @@ def paystack_success(request):
         paystack_transaction = PaystackTransaction.objects.get(reference=ref)
     except (Payment.DoesNotExist, PaystackTransaction.DoesNotExist):
         logger.error(f"❌ Payment not found for reference: {ref}")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
     commission_result = None
@@ -1002,7 +1013,7 @@ def paystack_success(request):
             connection.save()
 
             # ============================================================
-            # GET ASSIGNED ADMIN OR SUPERADMIN (UPDATED)
+            # GET ASSIGNED ADMIN OR SUPERADMIN
             # ============================================================
             # Get from metadata or derive from assignment
             paystack_metadata = paystack_transaction.metadata or {}
@@ -1023,7 +1034,7 @@ def paystack_success(request):
                 logger.info(f"✅ Derived assigned person: {assigned_person.email if assigned_person else 'None'}")
 
             # ============================================================
-            # DISTRIBUTE COMMISSION (UPDATED)
+            # DISTRIBUTE COMMISSION
             # ============================================================
             if assigned_person:
                 commission_result = distribute_commission(
@@ -1043,9 +1054,9 @@ def paystack_success(request):
             # Create notifications
             create_payment_notifications(payment, commission_result, superadmin, is_superadmin_direct)
 
-    # Redirect to frontend success page
+    # Redirect to frontend success page with Paystack-specific path
     redirect_url = (
-        f"https://hookiefy.netlify.app/payment-success"
+        f"{FRONTEND_BASE_URL}{PAYSTACK_SUCCESS_PATH}"
         f"?reference={ref}"
         f"&payment_status={payment.status}"
         f"&amount={payment.amount}"
@@ -1065,7 +1076,7 @@ def paystack_success(request):
 
 
 # =====================================================
-# PAYSTACK PAYMENT FAILURE REDIRECT
+# PAYSTACK PAYMENT FAILURE REDIRECT (UPDATED URLs)
 # =====================================================
 
 @api_view(["GET"])
@@ -1077,7 +1088,7 @@ def paystack_failure(request):
     # Ensure database connection is healthy
     if not ensure_db_connection():
         logger.error("❌ Database connection error in payment failure")
-        error_url = "https://hookiefy.netlify.app/payment-error?message=Payment+failed"
+        error_url = f"{FRONTEND_BASE_URL}{PAYSTACK_ERROR_PATH}?message=Payment+failed"
         return redirect(error_url)
 
     reference = request.query_params.get("reference")
@@ -1115,7 +1126,7 @@ def paystack_failure(request):
             logger.warning(f"Payment not found for reference: {ref}")
 
     redirect_url = (
-        "https://hookiefy.netlify.app/payment-failure"
+        f"{FRONTEND_BASE_URL}{PAYSTACK_FAILURE_PATH}"
         f"?reference={ref or ''}"
         f"&message=Payment+failed"
         f"&gateway=paystack"
@@ -1276,7 +1287,7 @@ def get_paystack_transactions(request):
 
 
 # =====================================================
-# HELPER: Create Payment Notifications (UPDATED)
+# HELPER: Create Payment Notifications
 # =====================================================
 
 def create_payment_notifications(payment, commission_result=None, superadmin=None, is_superadmin_direct=False):
