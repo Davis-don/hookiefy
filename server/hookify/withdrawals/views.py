@@ -1,4 +1,4 @@
-# withdrawals/views.py - Updated with minimum withdrawal restriction removed
+# withdrawals/views.py - Complete updated file with phone number from authenticated user
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -14,17 +14,21 @@ from .services import PaystackTransferService
 
 logger = logging.getLogger(__name__)
 
+# ============================================================
+# WITHDRAW VIEW - Updated to use phone from authenticated user
+# ============================================================
+
 class WithdrawView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
         amount = request.data.get('amount')
-        phone_number = request.data.get('phone_number')
+        # phone_number no longer required from request - fetched from user
         
         # Validate input
-        if not amount or not phone_number:
+        if not amount:
             return Response(
-                {'error': 'Amount and phone number are required'},
+                {'error': 'Amount is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -51,10 +55,20 @@ class WithdrawView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validate phone number
+        # Get user's phone number from the authenticated user's account
+        phone_number = request.user.phone_number
+        
+        # Validate phone number exists
+        if not phone_number:
+            return Response(
+                {'error': 'No phone number registered. Please update your profile to add a phone number.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate phone number format
         if len(phone_number) < 10:
             return Response(
-                {'error': 'Invalid phone number format'},
+                {'error': 'Invalid phone number format. Please update your profile.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -81,7 +95,14 @@ class WithdrawView(APIView):
         user_name = request.user.get_full_name() or request.user.username
         
         # Initialize Paystack service
-        paystack_service = PaystackTransferService()
+        try:
+            paystack_service = PaystackTransferService()
+        except ValueError as e:
+            logger.error(f"❌ Paystack service initialization error: {str(e)}")
+            return Response(
+                {'error': 'Payment service is not properly configured. Please contact support.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         try:
             # Step 1: Create recipient
@@ -89,7 +110,7 @@ class WithdrawView(APIView):
             
             if not recipient_code:
                 return Response(
-                    {'error': 'Failed to create recipient. Please try again.'},
+                    {'error': 'Failed to create recipient. Please ensure your phone number is correct.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -112,7 +133,7 @@ class WithdrawView(APIView):
                 user=request.user,
                 amount=amount,
                 currency='KES',
-                phone_number=phone_number,
+                phone_number=phone_number,  # Using the user's phone number
                 reference=reference,
                 paystack_transfer_code=transfer_result.get('transfer_code'),
                 paystack_recipient_code=recipient_code,
@@ -168,6 +189,10 @@ class WithdrawView(APIView):
             )
 
 
+# ============================================================
+# WITHDRAWAL HISTORY VIEW - Unchanged
+# ============================================================
+
 class WithdrawalHistoryView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -192,6 +217,10 @@ class WithdrawalHistoryView(APIView):
         })
 
 
+# ============================================================
+# WITHDRAWAL STATUS VIEW - Unchanged
+# ============================================================
+
 class WithdrawalStatusView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -205,23 +234,26 @@ class WithdrawalStatusView(APIView):
             )
         
         # Verify status with Paystack
-        paystack_service = PaystackTransferService()
-        transfer_data = paystack_service.verify_transfer(withdrawal.paystack_transfer_code)
-        
-        if transfer_data:
-            paystack_status = transfer_data.get('status')
+        try:
+            paystack_service = PaystackTransferService()
+            transfer_data = paystack_service.verify_transfer(withdrawal.paystack_transfer_code)
             
-            # Update status based on Paystack response
-            if paystack_status == 'success':
-                withdrawal.status = 'completed'
-                withdrawal.completed_at = transfer_data.get('completed_at')
-            elif paystack_status in ['failed', 'reversed']:
-                withdrawal.status = 'failed'
-                withdrawal.error_message = transfer_data.get('failure_reason', 'Transfer failed')
-            elif paystack_status == 'pending':
-                withdrawal.status = 'pending'
-            
-            withdrawal.save()
+            if transfer_data:
+                paystack_status = transfer_data.get('status')
+                
+                # Update status based on Paystack response
+                if paystack_status == 'success':
+                    withdrawal.status = 'completed'
+                    withdrawal.completed_at = transfer_data.get('completed_at')
+                elif paystack_status in ['failed', 'reversed']:
+                    withdrawal.status = 'failed'
+                    withdrawal.error_message = transfer_data.get('failure_reason', 'Transfer failed')
+                elif paystack_status == 'pending':
+                    withdrawal.status = 'pending'
+                
+                withdrawal.save()
+        except Exception as e:
+            logger.error(f"❌ Error verifying withdrawal status: {str(e)}")
         
         return Response({
             'success': True,
@@ -237,3 +269,42 @@ class WithdrawalStatusView(APIView):
                 'error_message': withdrawal.error_message,
             }
         })
+
+
+# ============================================================
+# TEST PAYSTACK VIEW - For debugging (Optional)
+# ============================================================
+
+class TestPaystackView(APIView):
+    """Test endpoint to verify Paystack configuration"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            # Try to initialize the service
+            paystack_service = PaystackTransferService()
+            
+            # Test: Get balance
+            balance = paystack_service.get_balance()
+            
+            return Response({
+                'success': True,
+                'message': 'Paystack is configured',
+                'secret_key_preview': paystack_service.secret_key[:10] + '...' if paystack_service.secret_key else 'Not set',
+                'base_url': paystack_service.BASE_URL,
+                'balance': balance,
+                'status': 'connected'
+            })
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'error': str(e),
+                'status': 'configuration_error'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"❌ Paystack test error: {str(e)}")
+            return Response({
+                'success': False,
+                'error': str(e),
+                'status': 'error'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,4 +1,4 @@
-// Withdraw.tsx - Updated with minimum amount restriction removed
+// Withdraw.tsx - Updated with phone number removed (handled by backend)
 import './withdraw.css'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -12,9 +12,9 @@ import {
   FiCheck,
   FiAlertCircle,
   FiRefreshCw,
-  FiPhone,
   FiDollarSign,
   FiInfo,
+  FiUser,
 } from 'react-icons/fi'
 
 // ============================================================
@@ -37,7 +37,7 @@ interface BalanceData {
 
 interface WithdrawalRequest {
   amount: number
-  phone_number: string
+  // phone_number removed - will be handled by backend
 }
 
 interface WithdrawalResponse {
@@ -158,7 +158,6 @@ function Withdraw() {
   const queryClient = useQueryClient()
 
   const [amount, setAmount] = useState<string>('')
-  const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
 
@@ -211,7 +210,6 @@ function Withdraw() {
 
       setSuccess(`✅ Withdrawal of KES ${data.withdrawal.amount.toLocaleString()} initiated successfully!`)
       setAmount('')
-      setPhoneNumber('')
       setError('')
 
       queryClient.invalidateQueries({ queryKey: ['adminBalance'] })
@@ -269,22 +267,11 @@ function Withdraw() {
       return
     }
 
-    // Removed minimum amount check (was KES 10)
-    // Users can withdraw any positive amount up to their balance
-
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError('Please enter a valid phone number (e.g., 07XXXXXXXX)')
-      toast.error('Invalid phone number', {
-        description: 'Please enter a valid M-Pesa phone number.',
-        duration: 3000,
-        icon: '⚠️',
-      })
-      return
-    }
+    // Phone number is handled by the backend using the user's stored phone number
+    // No need for frontend validation
 
     mutation.mutate({
       amount: withdrawAmount,
-      phone_number: phoneNumber,
     })
   }
 
@@ -383,29 +370,6 @@ function Withdraw() {
       {/* Withdrawal Form */}
       <form className="withdraw-form" onSubmit={handleWithdraw}>
         <div className="form-group">
-          <label htmlFor="phone">
-            <FiPhone className="label-icon" />
-            Phone Number (M-Pesa) <span className="required">*</span>
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            placeholder="07XXXXXXXX or +254XXXXXXXXX"
-            value={phoneNumber}
-            onChange={(e) => {
-              setPhoneNumber(e.target.value)
-              setError('')
-              setSuccess('')
-            }}
-            disabled={mutation.isPending}
-            required
-            className={error && !phoneNumber ? 'input-error' : ''}
-          />
-          <small className="input-hint">Enter the M-Pesa phone number to receive funds</small>
-        </div>
-
-        <div className="form-group">
           <label htmlFor="amount">
             <FiDollarSign className="label-icon" />
             Amount ({currency}) <span className="required">*</span>
@@ -428,6 +392,10 @@ function Withdraw() {
             disabled={mutation.isPending}
             className={error && !amount ? 'input-error' : ''}
           />
+          <small className="input-hint">
+            <FiUser className="hint-icon" />
+            Funds will be sent to your registered M-Pesa number
+          </small>
         </div>
 
         {/* Quick Amount Buttons */}
@@ -507,7 +475,7 @@ function Withdraw() {
                       KES {withdrawal.amount.toLocaleString()}
                     </span>
                     <span className="history-phone">
-                      <FiPhone className="history-phone-icon" />
+                      <FiUser className="history-phone-icon" />
                       {withdrawal.phone_number}
                     </span>
                   </div>

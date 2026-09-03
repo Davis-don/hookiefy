@@ -1148,3 +1148,31 @@
     border-color: rgba(81, 207, 102, 0.2);
   }
 }
+
+/* Add this to your withdraw.css */
+.input-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.hint-icon {
+  font-size: 0.8rem;
+  color: var(--mpesa-green);
+}
+
+.history-phone {
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-phone-icon {
+  font-size: 0.6rem;
+}
