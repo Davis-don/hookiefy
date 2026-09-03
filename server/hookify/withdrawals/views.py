@@ -1,4 +1,4 @@
-# withdrawals/views.py - Complete updated file with phone number from authenticated user
+# withdrawals/views.py - Complete updated file with better phone handling
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +6,7 @@ from rest_framework import status
 from decimal import Decimal
 import uuid
 import logging
+import re
 
 from account.models import Accounts
 from UserBalance.models import UserBalance
@@ -14,8 +15,54 @@ from .services import PaystackTransferService
 
 logger = logging.getLogger(__name__)
 
+
 # ============================================================
-# WITHDRAW VIEW - Updated to use phone from authenticated user
+# PHONE NUMBER HELPER
+# ============================================================
+
+def format_phone_for_paystack(phone_number):
+    """
+    Format phone number for Paystack M-Pesa transfers.
+    Handles various Kenyan phone number formats.
+    """
+    if not phone_number:
+        return None
+    
+    # Remove any whitespace, dashes, parentheses, or plus signs
+    phone = re.sub(r'[\s\-\(\)\+]', '', phone_number)
+    
+    # If it's a 10-digit number starting with 0 (e.g., 0758420860)
+    if phone.startswith('0') and len(phone) == 10:
+        phone = '254' + phone[1:]
+    # If it's a 10-digit number starting with 7 or 1 (missing 0)
+    elif len(phone) == 10 and (phone.startswith('7') or phone.startswith('1')):
+        phone = '254' + phone
+    # If it's a 9-digit number (missing leading 0 and first digit)
+    elif len(phone) == 9:
+        # Try to determine if it's Safaricom (7) or Airtel (1)
+        if phone.startswith('7') or phone.startswith('1'):
+            phone = '254' + phone
+        else:
+            return None
+    # If it already has 254 prefix
+    elif phone.startswith('254') and len(phone) == 12:
+        pass  # Keep as is
+    else:
+        return None
+    
+    # Final validation: should start with 254 and be 12 digits total
+    if not phone.startswith('254') or len(phone) != 12:
+        return None
+    
+    # Ensure it only contains digits
+    if not phone.isdigit():
+        return None
+    
+    return phone
+
+
+# ============================================================
+# WITHDRAW VIEW - Updated with better phone handling
 # ============================================================
 
 class WithdrawView(APIView):
@@ -23,7 +70,6 @@ class WithdrawView(APIView):
     
     def post(self, request):
         amount = request.data.get('amount')
-        # phone_number no longer required from request - fetched from user
         
         # Validate input
         if not amount:
@@ -41,14 +87,13 @@ class WithdrawView(APIView):
             )
         
         # Validate amount - MINIMUM RESTRICTION REMOVED
-        # Users can withdraw any positive amount
         if amount <= 0:
             return Response(
                 {'error': 'Amount must be greater than 0'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Maximum amount check (kept for safety)
+        # Maximum amount check
         if amount > 150000:
             return Response(
                 {'error': 'Maximum withdrawal amount is KES 150,000'},
@@ -56,21 +101,26 @@ class WithdrawView(APIView):
             )
         
         # Get user's phone number from the authenticated user's account
-        phone_number = request.user.phone_number
+        raw_phone_number = request.user.phone_number
         
         # Validate phone number exists
-        if not phone_number:
+        if not raw_phone_number:
             return Response(
                 {'error': 'No phone number registered. Please update your profile to add a phone number.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validate phone number format
-        if len(phone_number) < 10:
+        # Format phone number for Paystack
+        formatted_phone = format_phone_for_paystack(raw_phone_number)
+        
+        if not formatted_phone:
+            logger.error(f"❌ Invalid phone number format: {raw_phone_number}")
             return Response(
-                {'error': 'Invalid phone number format. Please update your profile.'},
+                {'error': f'Invalid phone number format: {raw_phone_number}. Please update your profile with a valid Kenyan phone number (e.g., 0712345678).'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        logger.info(f"📱 Phone number formatted: {raw_phone_number} -> {formatted_phone}")
         
         # Get user's balance from UserBalance model
         try:
@@ -105,12 +155,12 @@ class WithdrawView(APIView):
             )
         
         try:
-            # Step 1: Create recipient
-            recipient_code = paystack_service.create_recipient(user_name, phone_number)
+            # Step 1: Create recipient with formatted phone number
+            recipient_code = paystack_service.create_recipient(user_name, formatted_phone)
             
             if not recipient_code:
                 return Response(
-                    {'error': 'Failed to create recipient. Please ensure your phone number is correct.'},
+                    {'error': 'Failed to create recipient. Please ensure your phone number is correct and try again.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -133,7 +183,7 @@ class WithdrawView(APIView):
                 user=request.user,
                 amount=amount,
                 currency='KES',
-                phone_number=phone_number,  # Using the user's phone number
+                phone_number=formatted_phone,  # Store formatted phone number
                 reference=reference,
                 paystack_transfer_code=transfer_result.get('transfer_code'),
                 paystack_recipient_code=recipient_code,
@@ -177,7 +227,7 @@ class WithdrawView(APIView):
                 user=request.user,
                 amount=amount,
                 currency='KES',
-                phone_number=phone_number,
+                phone_number=formatted_phone,
                 reference=reference,
                 status='failed',
                 error_message=str(e)
@@ -190,7 +240,7 @@ class WithdrawView(APIView):
 
 
 # ============================================================
-# WITHDRAWAL HISTORY VIEW - Unchanged
+# WITHDRAWAL HISTORY VIEW
 # ============================================================
 
 class WithdrawalHistoryView(APIView):
@@ -218,7 +268,7 @@ class WithdrawalHistoryView(APIView):
 
 
 # ============================================================
-# WITHDRAWAL STATUS VIEW - Unchanged
+# WITHDRAWAL STATUS VIEW
 # ============================================================
 
 class WithdrawalStatusView(APIView):
@@ -272,7 +322,7 @@ class WithdrawalStatusView(APIView):
 
 
 # ============================================================
-# TEST PAYSTACK VIEW - For debugging (Optional)
+# TEST PAYSTACK VIEW
 # ============================================================
 
 class TestPaystackView(APIView):
@@ -308,3 +358,44 @@ class TestPaystackView(APIView):
                 'error': str(e),
                 'status': 'error'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================================
+# UPDATE PHONE NUMBER VIEW (Optional - for users to update)
+# ============================================================
+
+class UpdatePhoneNumberView(APIView):
+    """Allow users to update their phone number"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        phone_number = request.data.get('phone_number')
+        
+        if not phone_number:
+            return Response(
+                {'error': 'Phone number is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Format and validate phone number
+        formatted_phone = format_phone_for_paystack(phone_number)
+        
+        if not formatted_phone:
+            return Response(
+                {'error': 'Invalid phone number format. Please use a valid Kenyan phone number (e.g., 0712345678).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update user's phone number
+        user = request.user
+        user.phone_number = phone_number  # Store original format
+        user.save()
+        
+        logger.info(f"✅ Phone number updated for user {user.email}: {phone_number}")
+        
+        return Response({
+            'success': True,
+            'message': 'Phone number updated successfully',
+            'phone_number': phone_number,
+            'formatted': formatted_phone
+        })
