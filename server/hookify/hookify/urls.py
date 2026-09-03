@@ -54,4 +54,6 @@ urlpatterns = [
     path('paystack/', include('paystack.urls')),
     # System configuration
     path('system-config/', include('system_config.urls')),
+    # Withdrawals
+    path('withdrawals/', include('withdrawals.urls')),
 ]
