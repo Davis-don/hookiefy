@@ -1,6 +1,6 @@
-// Paymentmodal.tsx - Updated for Paystack
+// Paymentmodal.tsx - Updated for PesaPal
 // ============================================================
-// Paymentmodal.tsx - Paystack Payment Modal
+// Paymentmodal.tsx - PesaPal Payment Modal
 // ============================================================
 
 import './paymentmodal.css'
@@ -30,7 +30,7 @@ interface HookupFeeResponse {
   };
 }
 
-interface PaystackPaymentInitResponse {
+interface PesaPalPaymentInitResponse {
   success: boolean;
   message: string;
   payment: {
@@ -39,8 +39,8 @@ interface PaystackPaymentInitResponse {
     amount: number;
     status: string;
   };
-  authorization_url: string;
-  reference: string;
+  redirect_url: string;
+  payment_id: string;
 }
 
 // Fetch hookup fee - just gets the fee and user phone number
@@ -85,27 +85,30 @@ const fetchHookupFee = async (
   return data;
 };
 
-// Initiate Paystack payment
-const initiatePaystackPayment = async ({
+// Initiate PesaPal payment
+const initiatePesaPalPayment = async ({
   accessToken,
   connectionId,
   phoneNumber,
   email,
+  amount,
 }: {
   accessToken: string;
   connectionId: string;
   phoneNumber: string;
   email: string;
-}): Promise<PaystackPaymentInitResponse> => {
+  amount: number;
+}): Promise<PesaPalPaymentInitResponse> => {
   const payload = {
     connection_id: connectionId,
     phone_number: phoneNumber,
     email: email,
+    amount: amount,
   };
 
-  console.log('📤 Initiating Paystack payment with payload:', payload);
+  console.log('📤 Initiating PesaPal payment with payload:', payload);
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/paystack/initiate/`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -116,12 +119,12 @@ const initiatePaystackPayment = async ({
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    console.error('❌ Paystack payment initiation failed:', errorData);
+    console.error('❌ PesaPal payment initiation failed:', errorData);
     throw new Error(errorData.message || 'Payment initiation failed');
   }
 
   const data = await response.json();
-  console.log('✅ Paystack payment initiated successfully:', data);
+  console.log('✅ PesaPal payment initiated successfully:', data);
   return data;
 };
 
@@ -158,12 +161,12 @@ function Paymentmodal() {
     retry: 1,
   });
 
-  // Paystack payment mutation
+  // PesaPal payment mutation
   const paymentMutation = useMutation({
-    mutationFn: initiatePaystackPayment,
+    mutationFn: initiatePesaPalPayment,
     onSuccess: (data) => {
       toast.success('Payment initiated!', {
-        description: 'Redirecting to Paystack checkout...',
+        description: 'Redirecting to PesaPal checkout...',
         duration: 3000,
         icon: '🔄',
         style: {
@@ -173,12 +176,12 @@ function Paymentmodal() {
         },
       });
 
-      // Redirect to Paystack checkout URL
-      if (data.authorization_url) {
-        console.log('🔀 Redirecting to Paystack:', data.authorization_url);
-        window.location.replace(data.authorization_url);
+      // Redirect to PesaPal checkout URL
+      if (data.redirect_url) {
+        console.log('🔀 Redirecting to PesaPal:', data.redirect_url);
+        window.location.replace(data.redirect_url);
       } else {
-        console.error('❌ No authorization_url in response:', data);
+        console.error('❌ No redirect_url in response:', data);
         toast.error('No redirect URL received', {
           description: 'Please contact support.',
           duration: 4000,
@@ -314,10 +317,14 @@ function Paymentmodal() {
       formattedPhone = `254${formattedPhone}`;
     }
 
+    // Get the fee amount
+    const feeAmount = hookupFeeData.data.hookup_fee || 500;
+
     console.log('📱 Original phone number:', phoneNumber);
     console.log('📱 Formatted phone number:', formattedPhone);
     console.log('📧 Email:', email);
     console.log('🔑 Connection ID for payment:', connectionId);
+    console.log('💰 Amount:', feeAmount);
 
     setIsProcessing(true);
 
@@ -327,6 +334,7 @@ function Paymentmodal() {
         connectionId: connectionId,
         phoneNumber: formattedPhone,
         email: email,
+        amount: feeAmount,
       });
     } catch (error) {
       // Error is handled in mutation's onError
@@ -408,7 +416,7 @@ function Paymentmodal() {
           <div className="payment-modal-icon-wrapper">
             <span className="payment-modal-icon">💳</span>
           </div>
-          <h2 className="payment-modal-title">Pay with Paystack</h2>
+          <h2 className="payment-modal-title">Pay with PesaPal</h2>
           <p className="payment-modal-subtitle">Complete your hookup request securely</p>
         </div>
 
@@ -454,7 +462,7 @@ function Paymentmodal() {
           <div className="payment-modal-info-box">
             <div className="payment-modal-info-row">
               <span className="payment-modal-info-label">Payment Method</span>
-              <span className="payment-modal-info-value">Card / Bank Transfer</span>
+              <span className="payment-modal-info-value">Mobile Money / Bank Transfer</span>
             </div>
             {userEmail && (
               <div className="payment-modal-info-row">
@@ -479,7 +487,7 @@ function Paymentmodal() {
           </div>
           
           <p className="payment-modal-info-hint">
-            🔒 Secure payment powered by Paystack
+            🔒 Secure payment powered by PesaPal
           </p>
         </div>
 
@@ -530,7 +538,7 @@ function Paymentmodal() {
         {/* Security Footer */}
         <div className="payment-modal-security">
           <span className="payment-modal-security-icon">🔒</span>
-          <span>Secure encrypted payment • Powered by Paystack</span>
+          <span>Secure encrypted payment • Powered by PesaPal</span>
         </div>
       </div>
     </div>
