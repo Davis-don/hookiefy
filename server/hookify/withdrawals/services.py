@@ -1,4 +1,4 @@
-# withdrawals/services.py - Updated with correct Paystack recipient format
+# withdrawals/services.py - Updated with better error logging
 import requests
 import uuid
 import logging
@@ -15,9 +15,16 @@ class PaystackTransferService:
         self.secret_key = settings.PAYSTACK_SECRET_KEY
         
         # Validate secret key
-        if not self.secret_key or self.secret_key == 'sk_test_...' or self.secret_key == '':
+        if not self.secret_key or self.secret_key == '':
             logger.error("❌ Paystack secret key is not configured properly!")
             raise ValueError("Paystack secret key is not configured. Please set PAYSTACK_SECRET_KEY in environment.")
+        
+        # Check if using test key
+        self.is_test = self.secret_key.startswith('sk_test_')
+        if self.is_test:
+            logger.info("🔬 Using Paystack TEST mode")
+        else:
+            logger.info("🔒 Using Paystack LIVE mode")
         
         self.headers = {
             'Authorization': f'Bearer {self.secret_key}',
@@ -27,18 +34,16 @@ class PaystackTransferService:
         logger.info(f"✅ Paystack service initialized with base URL: {self.BASE_URL}")
     
     def format_phone_number(self, phone_number):
-        """
-        Format phone number for Paystack M-Pesa transfers.
-        Handles various Kenyan phone number formats.
-        """
+        """Format phone number for Paystack M-Pesa transfers."""
+        if not phone_number:
+            return None
+        
         # Remove any whitespace, dashes, or parentheses
         phone = re.sub(r'[\s\-\(\)]', '', phone_number)
-        
-        # Remove leading + if present
         phone = phone.replace('+', '')
         
-        # Check if it's a valid Kenyan phone number
-        if phone.startswith('0'):
+        # Format for Kenya
+        if phone.startswith('0') and len(phone) == 10:
             phone = '254' + phone[1:]
         elif not phone.startswith('254') and len(phone) == 10:
             if phone.startswith('7') or phone.startswith('1'):
@@ -59,21 +64,14 @@ class PaystackTransferService:
         return phone
     
     def create_recipient(self, name, phone_number):
-        """
-        Create a transfer recipient for M-Pesa.
-        For Paystack mobile money transfers, we need to use the correct format.
-        """
+        """Create a transfer recipient for M-Pesa."""
         url = f'{self.BASE_URL}/transferrecipient'
         
-        # Format phone number
         formatted_phone = self.format_phone_number(phone_number)
-        
         if not formatted_phone:
             logger.error(f"❌ Failed to format phone number: {phone_number}")
             return None
         
-        # Paystack requires mobile money recipients to use 'mobile_money' type
-        # and the phone number must be in international format without +
         payload = {
             'type': 'mobile_money',
             'name': name[:100],
@@ -84,60 +82,48 @@ class PaystackTransferService:
             }
         }
         
-        logger.info(f"📤 Creating recipient with payload: {payload}")
+        logger.info(f"📤 Creating recipient with phone: {formatted_phone}")
+        logger.info(f"📤 Full payload: {payload}")
         
         try:
             response = requests.post(url, json=payload, headers=self.headers)
             
+            # Log full response for debugging
             logger.info(f"Response status: {response.status_code}")
-            logger.info(f"Response body: {response.text}")
+            logger.info(f"Response text: {response.text}")
             
-            if response.status_code == 401:
-                logger.error("❌ Paystack authentication failed. Check your secret key.")
+            if response.status_code == 200 or response.status_code == 201:
+                data = response.json()
+                if data.get('status'):
+                    recipient_code = data['data']['recipient_code']
+                    logger.info(f"✅ Created recipient: {recipient_code}")
+                    return recipient_code
+                else:
+                    logger.error(f"❌ API returned error: {data.get('message')}")
+                    return None
+            elif response.status_code == 401:
+                logger.error("❌ Unauthorized - Check your secret key")
                 return None
-            
-            if response.status_code == 422:
-                logger.error(f"❌ Unprocessable entity: {response.text}")
+            elif response.status_code == 402:
+                logger.error("❌ Payment Required - Insufficient balance in Paystack account")
+                return None
+            elif response.status_code == 422:
                 error_data = response.json()
-                logger.error(f"Error details: {error_data}")
+                logger.error(f"❌ Validation error: {error_data}")
                 return None
-            
-            if response.status_code == 400:
-                logger.error(f"❌ Bad request: {response.text}")
-                error_data = response.json()
-                logger.error(f"Error details: {error_data}")
-                return None
-            
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('status'):
-                recipient_code = data['data'].get('recipient_code')
-                logger.info(f"✅ Created recipient: {recipient_code}")
-                return recipient_code
             else:
-                logger.error(f"❌ Failed to create recipient: {data.get('message')}")
+                logger.error(f"❌ HTTP {response.status_code}: {response.text}")
                 return None
                 
-        except requests.exceptions.HTTPError as e:
-            logger.error(f"❌ HTTP Error creating recipient: {str(e)}")
-            if hasattr(e, 'response') and e.response:
-                try:
-                    error_data = e.response.json()
-                    logger.error(f"Error details: {error_data}")
-                except:
-                    logger.error(f"Response text: {e.response.text}")
-            return None
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Request Error creating recipient: {str(e)}")
+            logger.error(f"❌ Request error: {str(e)}")
             return None
     
     def initiate_transfer(self, recipient_code, amount, reference, reason='M-Pesa Withdrawal'):
-        """Initiate a transfer to M-Pesa"""
+        """Initiate a transfer to M-Pesa."""
         url = f'{self.BASE_URL}/transfer'
         
-        # Amount in kobo (Paystack uses smallest currency unit)
-        amount_in_kobo = int(amount * 100)
+        amount_in_kobo = int(float(amount) * 100)
         
         payload = {
             'source': 'balance',
@@ -148,87 +134,75 @@ class PaystackTransferService:
             'currency': 'KES',
         }
         
-        logger.info(f"📤 Initiating transfer: {reference} - Amount: {amount} KES ({amount_in_kobo} kobo)")
+        logger.info(f"📤 Initiating transfer: {reference}")
+        logger.info(f"📤 Amount: {amount} KES ({amount_in_kobo} kobo)")
         
         try:
             response = requests.post(url, json=payload, headers=self.headers)
             
             logger.info(f"Transfer response status: {response.status_code}")
-            logger.info(f"Transfer response body: {response.text}")
+            logger.info(f"Transfer response text: {response.text}")
             
-            if response.status_code == 401:
-                logger.error("❌ Paystack authentication failed. Check your secret key.")
+            if response.status_code == 200 or response.status_code == 201:
+                data = response.json()
+                if data.get('status'):
+                    logger.info(f"✅ Transfer initiated: {data['data']['transfer_code']}")
+                    return data['data']
+                else:
+                    logger.error(f"❌ Transfer error: {data.get('message')}")
+                    return None
+            elif response.status_code == 402:
+                logger.error("❌ Insufficient Paystack balance")
                 return None
-            
-            if response.status_code == 422:
-                logger.error(f"❌ Unprocessable entity: {response.text}")
-                error_data = response.json()
-                logger.error(f"Error details: {error_data}")
-                return None
-            
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('status'):
-                logger.info(f"✅ Transfer initiated: {data['data']['transfer_code']}")
-                return data['data']
             else:
-                logger.error(f"❌ Failed to initiate transfer: {data.get('message')}")
+                logger.error(f"❌ HTTP {response.status_code}: {response.text}")
                 return None
                 
-        except requests.exceptions.HTTPError as e:
-            logger.error(f"❌ HTTP Error initiating transfer: {str(e)}")
-            if hasattr(e, 'response') and e.response:
-                try:
-                    error_data = e.response.json()
-                    logger.error(f"Error details: {error_data}")
-                except:
-                    logger.error(f"Response text: {e.response.text}")
-            return None
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Request Error initiating transfer: {str(e)}")
-            return None
-    
-    def verify_transfer(self, transfer_code):
-        """Verify transfer status"""
-        url = f'{self.BASE_URL}/transfer/{transfer_code}'
-        
-        try:
-            response = requests.get(url, headers=self.headers)
-            
-            if response.status_code == 401:
-                logger.error("❌ Paystack authentication failed. Check your secret key.")
-                return None
-            
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('status'):
-                return data['data']
-            return None
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Error verifying transfer: {str(e)}")
+            logger.error(f"❌ Request error: {str(e)}")
             return None
     
     def get_balance(self):
-        """Get Paystack balance"""
+        """Get Paystack balance."""
         url = f'{self.BASE_URL}/balance'
         
         try:
             response = requests.get(url, headers=self.headers)
             
-            if response.status_code == 401:
-                logger.error("❌ Paystack authentication failed. Check your secret key.")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status'):
+                    return data['data']
+                else:
+                    logger.error(f"❌ Balance error: {data.get('message')}")
+                    return None
+            elif response.status_code == 401:
+                logger.error("❌ Unauthorized - Check your secret key")
                 return None
-            
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('status'):
-                return data['data']
-            return None
-            
+            else:
+                logger.error(f"❌ HTTP {response.status_code}: {response.text}")
+                return None
+                
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Error getting balance: {str(e)}")
+            logger.error(f"❌ Request error: {str(e)}")
+            return None
+    
+    def verify_transfer(self, transfer_code):
+        """Verify transfer status."""
+        url = f'{self.BASE_URL}/transfer/{transfer_code}'
+        
+        try:
+            response = requests.get(url, headers=self.headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status'):
+                    return data['data']
+                return None
+            else:
+                logger.error(f"❌ HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Request error: {str(e)}")
             return None
