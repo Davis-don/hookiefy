@@ -1,4 +1,4 @@
-# withdrawals/views.py - Complete updated file with better phone handling
+# withdrawals/views.py - Complete updated file
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -62,7 +62,110 @@ def format_phone_for_paystack(phone_number):
 
 
 # ============================================================
-# WITHDRAW VIEW - Updated with better phone handling
+# DEBUG PAYSTACK VIEW - To test API connection
+# ============================================================
+
+class DebugPaystackView(APIView):
+    """Debug endpoint to test Paystack API connection"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        debug_info = {
+            'status': 'testing',
+            'steps': []
+        }
+        
+        # Step 1: Check environment variables
+        try:
+            from django.conf import settings
+            debug_info['steps'].append({
+                'step': 1,
+                'name': 'Check Paystack Configuration',
+                'secret_key_set': bool(settings.PAYSTACK_SECRET_KEY),
+                'secret_key_preview': settings.PAYSTACK_SECRET_KEY[:10] + '...' if settings.PAYSTACK_SECRET_KEY else 'Not set',
+                'public_key_set': bool(settings.PAYSTACK_PUBLIC_KEY),
+                'base_url': settings.PAYSTACK_BASE_URL
+            })
+        except Exception as e:
+            debug_info['steps'].append({
+                'step': 1,
+                'name': 'Check Paystack Configuration',
+                'error': str(e)
+            })
+            return Response(debug_info)
+        
+        # Step 2: Check user phone number
+        try:
+            raw_phone = request.user.phone_number
+            formatted_phone = format_phone_for_paystack(raw_phone) if raw_phone else None
+            
+            debug_info['steps'].append({
+                'step': 2,
+                'name': 'User Phone Number',
+                'raw_phone': raw_phone,
+                'formatted_phone': formatted_phone,
+                'has_phone': bool(raw_phone),
+                'is_valid': bool(formatted_phone)
+            })
+        except Exception as e:
+            debug_info['steps'].append({
+                'step': 2,
+                'name': 'User Phone Number',
+                'error': str(e)
+            })
+        
+        # Step 3: Test Paystack API directly
+        try:
+            paystack_service = PaystackTransferService()
+            
+            # Test 1: Get balance (simple API call)
+            balance = paystack_service.get_balance()
+            
+            debug_info['steps'].append({
+                'step': 3,
+                'name': 'Paystack API Test - Get Balance',
+                'success': balance is not None,
+                'balance': balance
+            })
+        except Exception as e:
+            debug_info['steps'].append({
+                'step': 3,
+                'name': 'Paystack API Test - Get Balance',
+                'success': False,
+                'error': str(e)
+            })
+        
+        # Step 4: Test creating a recipient (if phone is valid)
+        if formatted_phone:
+            try:
+                paystack_service = PaystackTransferService()
+                user_name = request.user.get_full_name() or request.user.username
+                
+                # Create recipient
+                recipient_code = paystack_service.create_recipient(user_name, formatted_phone)
+                
+                debug_info['steps'].append({
+                    'step': 4,
+                    'name': 'Create Recipient Test',
+                    'success': recipient_code is not None,
+                    'recipient_code': recipient_code,
+                    'phone_used': formatted_phone,
+                    'name_used': user_name
+                })
+            except Exception as e:
+                debug_info['steps'].append({
+                    'step': 4,
+                    'name': 'Create Recipient Test',
+                    'success': False,
+                    'error': str(e)
+                })
+        
+        debug_info['status'] = 'complete'
+        return Response(debug_info)
+
+
+# ============================================================
+# WITHDRAW VIEW
 # ============================================================
 
 class WithdrawView(APIView):
@@ -156,13 +259,17 @@ class WithdrawView(APIView):
         
         try:
             # Step 1: Create recipient with formatted phone number
+            logger.info(f"📤 Creating recipient with phone: {formatted_phone}, name: {user_name}")
             recipient_code = paystack_service.create_recipient(user_name, formatted_phone)
             
             if not recipient_code:
+                logger.error(f"❌ Failed to create recipient for phone: {formatted_phone}")
                 return Response(
                     {'error': 'Failed to create recipient. Please ensure your phone number is correct and try again.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            logger.info(f"✅ Recipient created: {recipient_code}")
             
             # Step 2: Initiate transfer
             transfer_result = paystack_service.initiate_transfer(
@@ -183,7 +290,7 @@ class WithdrawView(APIView):
                 user=request.user,
                 amount=amount,
                 currency='KES',
-                phone_number=formatted_phone,  # Store formatted phone number
+                phone_number=formatted_phone,
                 reference=reference,
                 paystack_transfer_code=transfer_result.get('transfer_code'),
                 paystack_recipient_code=recipient_code,
@@ -322,46 +429,7 @@ class WithdrawalStatusView(APIView):
 
 
 # ============================================================
-# TEST PAYSTACK VIEW
-# ============================================================
-
-class TestPaystackView(APIView):
-    """Test endpoint to verify Paystack configuration"""
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        try:
-            # Try to initialize the service
-            paystack_service = PaystackTransferService()
-            
-            # Test: Get balance
-            balance = paystack_service.get_balance()
-            
-            return Response({
-                'success': True,
-                'message': 'Paystack is configured',
-                'secret_key_preview': paystack_service.secret_key[:10] + '...' if paystack_service.secret_key else 'Not set',
-                'base_url': paystack_service.BASE_URL,
-                'balance': balance,
-                'status': 'connected'
-            })
-        except ValueError as e:
-            return Response({
-                'success': False,
-                'error': str(e),
-                'status': 'configuration_error'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            logger.error(f"❌ Paystack test error: {str(e)}")
-            return Response({
-                'success': False,
-                'error': str(e),
-                'status': 'error'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# ============================================================
-# UPDATE PHONE NUMBER VIEW (Optional - for users to update)
+# UPDATE PHONE NUMBER VIEW
 # ============================================================
 
 class UpdatePhoneNumberView(APIView):
@@ -388,7 +456,7 @@ class UpdatePhoneNumberView(APIView):
         
         # Update user's phone number
         user = request.user
-        user.phone_number = phone_number  # Store original format
+        user.phone_number = phone_number
         user.save()
         
         logger.info(f"✅ Phone number updated for user {user.email}: {phone_number}")
