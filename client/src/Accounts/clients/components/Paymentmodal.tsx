@@ -38,19 +38,19 @@ interface PesaPalPaymentInitResponse {
     merchant_reference: string;
     amount: number;
     status: string;
-    gateway: string;
+    order_tracking_id?: string;
   };
   redirect_url: string;
-  payment_id: string;
-  order_tracking_id?: string;
 }
 
-// PesaPal configuration
+// PesaPal configuration - using the IPN ID from your database
 const PESAPAL_CONFIG = {
-  // Your registered IPN ID
+  // Your registered IPN ID from the database
   IPN_ID: 'e27e0fda-86d5-4c82-a79f-da24fcc9aad4',
-  // Gateway identifier as stored in database
-  GATEWAY: 'pesapal',
+  // Gateway name as stored in database (matches PaymentConfiguration)
+  GATEWAY_NAME: 'Pesapal',
+  // Base URL from environment (sandbox or live)
+  BASE_URL: import.meta.env.VITE_PESAPAL_BASE_URL || 'https://cybqa.pesapal.com/pesapalv3',
 };
 
 // Fetch hookup fee - gets the fee and user details
@@ -95,55 +95,23 @@ const fetchHookupFee = async (
   return data;
 };
 
-// Initiate PesaPal payment
+// Initiate PesaPal payment - matches backend expectations
 const initiatePesaPalPayment = async ({
   accessToken,
   connectionId,
   phoneNumber,
-  email,
-  amount,
-  fullName,
 }: {
   accessToken: string;
   connectionId: string;
   phoneNumber: string;
-  email: string;
-  amount: number;
-  fullName: string;
 }): Promise<PesaPalPaymentInitResponse> => {
-  // Generate merchant reference
-  const timestamp = Date.now();
-  const shortId = connectionId.slice(0, 8);
-  const merchantReference = `HOOK-${shortId}-${timestamp}`;
-
+  // Payload matches what backend initiate_payment expects
   const payload = {
-    // Payment details matching the Payment model
-    merchant_reference: merchantReference,
-    amount: amount,
-    phone_number: phoneNumber,
-    email: email,
-    full_name: fullName,
-    
-    // Connection and gateway info
     connection_id: connectionId,
-    gateway: PESAPAL_CONFIG.GATEWAY,
-    
-    // PesaPal specific
-    ipn_id: PESAPAL_CONFIG.IPN_ID,
-    callback_url: `${window.location.origin}/payment-callback`,
-    
-    // Customer info for PesaPal
-    customer_name: fullName,
-    customer_email: email,
-    customer_phone: phoneNumber,
-    
-    // Additional metadata
-    description: `Hookup fee payment for connection ${shortId}`,
+    phone_number: phoneNumber,
   };
 
   console.log('📤 Initiating PesaPal payment with payload:', payload);
-  console.log('🏷️ Gateway:', PESAPAL_CONFIG.GATEWAY);
-  console.log('🔗 IPN ID:', PESAPAL_CONFIG.IPN_ID);
 
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
@@ -159,7 +127,7 @@ const initiatePesaPalPayment = async ({
       const errorData = await response.json().catch(() => ({}));
       console.error('❌ PesaPal payment initiation failed:', errorData);
       
-      // Handle specific error cases
+      // Handle specific error cases based on backend responses
       if (response.status === 400) {
         throw new Error(errorData.message || 'Invalid payment request. Please check your details.');
       } else if (response.status === 401) {
@@ -167,7 +135,7 @@ const initiatePesaPalPayment = async ({
       } else if (response.status === 403) {
         throw new Error('You do not have permission to make this payment.');
       } else if (response.status === 404) {
-        throw new Error('Payment service temporarily unavailable. Please try again.');
+        throw new Error(errorData.message || 'Payment service temporarily unavailable.');
       } else if (response.status === 500) {
         throw new Error('Server error. Please try again later.');
       }
@@ -178,7 +146,7 @@ const initiatePesaPalPayment = async ({
     const data = await response.json();
     console.log('✅ PesaPal payment initiated successfully:', data);
     console.log('📝 Merchant Reference:', data.payment?.merchant_reference);
-    console.log('📝 Gateway:', data.payment?.gateway);
+    console.log('📝 Redirect URL:', data.redirect_url);
     return data;
   } catch (error) {
     console.error('❌ PesaPal payment initiation error:', error);
@@ -195,6 +163,8 @@ function Paymentmodal() {
   console.log('💳 PaymentModal rendering');
   console.log('📂 isMount:', isMount);
   console.log('🔑 hookupId from store (connection_id):', hookupId);
+  console.log('🌐 PesaPal Base URL:', PESAPAL_CONFIG.BASE_URL);
+  console.log('🔗 IPN ID:', PESAPAL_CONFIG.IPN_ID);
 
   // If modal is not mounted, don't render anything
   if (!isMount) {
@@ -224,7 +194,7 @@ function Paymentmodal() {
     mutationFn: initiatePesaPalPayment,
     onSuccess: (data) => {
       toast.success('Payment initiated!', {
-        description: `Redirecting to PesaPal checkout (${PESAPAL_CONFIG.GATEWAY})...`,
+        description: `Redirecting to ${PESAPAL_CONFIG.GATEWAY_NAME} checkout...`,
         duration: 3000,
         icon: '🔄',
         style: {
@@ -237,18 +207,16 @@ function Paymentmodal() {
       // Redirect to PesaPal checkout URL
       if (data.redirect_url) {
         console.log('🔀 Redirecting to PesaPal:', data.redirect_url);
-        console.log('📋 Payment ID:', data.payment_id);
+        console.log('📋 Payment ID:', data.payment?.id);
         console.log('📋 Merchant Reference:', data.payment?.merchant_reference);
-        console.log('📋 Gateway:', data.payment?.gateway);
-        console.log('📋 Order Tracking ID:', data.order_tracking_id);
+        console.log('📋 Order Tracking ID:', data.payment?.order_tracking_id);
         
         // Store payment info in sessionStorage for recovery
         try {
           const paymentInfo = {
-            payment_id: data.payment_id,
+            payment_id: data.payment?.id,
             merchant_reference: data.payment?.merchant_reference || '',
             connection_id: hookupId || '',
-            gateway: data.payment?.gateway || PESAPAL_CONFIG.GATEWAY,
             amount: data.payment?.amount || 0,
             timestamp: Date.now(),
           };
@@ -278,20 +246,24 @@ function Paymentmodal() {
     onError: (error) => {
       console.error('❌ Payment mutation error:', error);
       
-      let errorMessage = 'Please try again.';
       let errorDescription = 'Payment initiation failed.';
+      let errorMessage = 'Please try again.';
       
       if (error instanceof Error) {
         errorMessage = error.message;
-        // Provide more user-friendly messages
+        // Provide more user-friendly messages based on backend error responses
         if (error.message.includes('Session expired')) {
           errorDescription = 'Your session has expired. Please login again.';
         } else if (error.message.includes('permission')) {
           errorDescription = 'You do not have permission to make this payment.';
-        } else if (error.message.includes('service unavailable')) {
+        } else if (error.message.includes('service temporarily unavailable')) {
           errorDescription = 'The payment service is temporarily unavailable. Please try again later.';
-        } else if (error.message.includes('Invalid payment')) {
-          errorDescription = 'Please check your payment details and try again.';
+        } else if (error.message.includes('already been paid')) {
+          errorDescription = 'This connection has already been paid for.';
+        } else if (error.message.includes('assignment')) {
+          errorDescription = 'You are not assigned to any admin. Please contact support.';
+        } else if (error.message.includes('configuration missing')) {
+          errorDescription = 'Payment configuration is missing. Please contact support.';
         } else {
           errorDescription = error.message;
         }
@@ -371,12 +343,8 @@ function Paymentmodal() {
     
     console.log('👤 User data from hookup fee:', user);
 
-    // Get user full name from hookup fee data
-    const fullName = user?.full_name || user?.email?.split('@')[0] || 'Customer';
-    
     // Auto-fetch phone number from user data
     const phoneNumber = user?.phone_number;
-    const email = user?.email;
     
     if (!phoneNumber) {
       console.error('❌ No phone number found for user');
@@ -384,21 +352,6 @@ function Paymentmodal() {
         description: 'Please update your phone number in profile settings.',
         duration: 4000,
         icon: '📱',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #ef4444',
-          color: '#ffffff',
-        },
-      });
-      return;
-    }
-
-    if (!email) {
-      console.error('❌ No email found for user');
-      toast.error('Email not found', {
-        description: 'Please update your email in profile settings.',
-        duration: 4000,
-        icon: '📧',
         style: {
           background: '#1a1a2e',
           border: '1px solid #ef4444',
@@ -420,17 +373,9 @@ function Paymentmodal() {
       formattedPhone = `254${formattedPhone}`;
     }
 
-    // Get the fee amount
-    const feeAmount = hookupFeeData.data.hookup_fee || 500;
-
     console.log('📱 Original phone number:', phoneNumber);
     console.log('📱 Formatted phone number:', formattedPhone);
-    console.log('📧 Email:', email);
-    console.log('👤 Full Name:', fullName);
     console.log('🔑 Connection ID for payment:', connectionId);
-    console.log('💰 Amount:', feeAmount);
-    console.log('🏷️ Gateway:', PESAPAL_CONFIG.GATEWAY);
-    console.log('🔗 IPN ID:', PESAPAL_CONFIG.IPN_ID);
 
     setIsProcessing(true);
 
@@ -439,9 +384,6 @@ function Paymentmodal() {
         accessToken: accessToken!,
         connectionId: connectionId,
         phoneNumber: formattedPhone,
-        email: email,
-        amount: feeAmount,
-        fullName: fullName,
       });
     } catch (error) {
       // Error is handled in mutation's onError
@@ -526,6 +468,9 @@ function Paymentmodal() {
           </div>
           <h2 className="payment-modal-title">Pay with PesaPal</h2>
           <p className="payment-modal-subtitle">Complete your hookup request securely</p>
+          <span className="payment-modal-env-badge">
+            {PESAPAL_CONFIG.BASE_URL.includes('cybqa') ? '🧪 Sandbox' : '🚀 Live'}
+          </span>
         </div>
 
         {/* Divider */}
@@ -568,7 +513,7 @@ function Paymentmodal() {
         {/* Divider */}
         <div className="payment-modal-divider"></div>
 
-        {/* Payment Method - Simplified since user just clicks pay */}
+        {/* Payment Method */}
         <div className="payment-modal-method-section">
           <h4 className="payment-modal-section-title">Payment Details</h4>
           
@@ -580,7 +525,7 @@ function Paymentmodal() {
             <div className="payment-modal-info-row">
               <span className="payment-modal-info-label">Gateway</span>
               <span className="payment-modal-info-value">
-                <span className="payment-modal-gateway-badge">PesaPal</span>
+                <span className="payment-modal-gateway-badge">{PESAPAL_CONFIG.GATEWAY_NAME}</span>
               </span>
             </div>
             {userFullName && (
@@ -646,7 +591,7 @@ function Paymentmodal() {
           <button 
             className="payment-modal-btn payment-modal-btn-pay" 
             onClick={handlePayment}
-            disabled={isProcessing || !hookupId || !userPhoneNumber || !userEmail}
+            disabled={isProcessing || !hookupId || !userPhoneNumber}
           >
             {isProcessing ? (
               <span className="payment-modal-spinner">
