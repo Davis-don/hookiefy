@@ -1,4 +1,4 @@
-# withdrawals/views.py - Complete updated file
+# withdrawals/views.py - Complete updated file with recipient storage
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -7,6 +7,7 @@ from decimal import Decimal
 import uuid
 import logging
 import re
+from django.utils import timezone
 
 from account.models import Accounts
 from UserBalance.models import UserBalance
@@ -165,7 +166,7 @@ class DebugPaystackView(APIView):
 
 
 # ============================================================
-# WITHDRAW VIEW
+# WITHDRAW VIEW - UPDATED with recipient storage
 # ============================================================
 
 class WithdrawView(APIView):
@@ -258,20 +259,41 @@ class WithdrawView(APIView):
             )
         
         try:
-            # Step 1: Create recipient with formatted phone number
-            logger.info(f"📤 Creating recipient with phone: {formatted_phone}, name: {user_name}")
-            recipient_code = paystack_service.create_recipient(user_name, formatted_phone)
+            # ============================================================
+            # STEP 1: CHECK IF USER ALREADY HAS A RECIPIENT CODE
+            # ============================================================
+            recipient_code = request.user.paystack_recipient_code
             
-            if not recipient_code:
-                logger.error(f"❌ Failed to create recipient for phone: {formatted_phone}")
-                return Response(
-                    {'error': 'Failed to create recipient. Please ensure your phone number is correct and try again.'},
-                    status=status.HTTP_400_BAD_REQUEST
+            if recipient_code:
+                logger.info(f"✅ Using existing recipient code for user {request.user.email}: {recipient_code}")
+            else:
+                # Create new recipient
+                logger.info(f"📤 Creating new recipient for user: {request.user.email}")
+                
+                recipient_code = paystack_service.create_recipient(
+                    name=user_name,
+                    phone_number=formatted_phone
                 )
+                
+                if not recipient_code:
+                    return Response(
+                        {'error': 'Failed to create recipient. Please ensure your phone number is correct and try again.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # ============================================================
+                # STEP 2: SAVE RECIPIENT CODE TO USER MODEL (PERMANENT STORAGE)
+                # ============================================================
+                request.user.paystack_recipient_code = recipient_code
+                request.user.paystack_recipient_phone = formatted_phone
+                request.user.paystack_recipient_created_at = timezone.now()
+                request.user.save()
+                
+                logger.info(f"✅ Recipient saved to user {request.user.email}: {recipient_code}")
             
-            logger.info(f"✅ Recipient created: {recipient_code}")
-            
-            # Step 2: Initiate transfer
+            # ============================================================
+            # STEP 3: INITIATE TRANSFER USING RECIPIENT CODE
+            # ============================================================
             transfer_result = paystack_service.initiate_transfer(
                 recipient_code=recipient_code,
                 amount=float(amount),
@@ -285,7 +307,9 @@ class WithdrawView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Step 3: Create withdrawal record
+            # ============================================================
+            # STEP 4: CREATE WITHDRAWAL RECORD
+            # ============================================================
             withdrawal = Withdrawal.objects.create(
                 user=request.user,
                 amount=amount,
@@ -297,7 +321,9 @@ class WithdrawView(APIView):
                 status='processing'
             )
             
-            # Step 4: Deduct from user's balance
+            # ============================================================
+            # STEP 5: DEDUCT FROM USER'S BALANCE
+            # ============================================================
             user_balance.balance -= amount
             user_balance.save()
             

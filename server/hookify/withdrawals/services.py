@@ -1,4 +1,4 @@
-# withdrawals/services.py - Updated with better error logging
+# withdrawals/services.py - Complete updated file
 import requests
 import uuid
 import logging
@@ -14,12 +14,10 @@ class PaystackTransferService:
     def __init__(self):
         self.secret_key = settings.PAYSTACK_SECRET_KEY
         
-        # Validate secret key
         if not self.secret_key or self.secret_key == '':
             logger.error("❌ Paystack secret key is not configured properly!")
-            raise ValueError("Paystack secret key is not configured. Please set PAYSTACK_SECRET_KEY in environment.")
+            raise ValueError("Paystack secret key is not configured.")
         
-        # Check if using test key
         self.is_test = self.secret_key.startswith('sk_test_')
         if self.is_test:
             logger.info("🔬 Using Paystack TEST mode")
@@ -38,9 +36,8 @@ class PaystackTransferService:
         if not phone_number:
             return None
         
-        # Remove any whitespace, dashes, or parentheses
-        phone = re.sub(r'[\s\-\(\)]', '', phone_number)
-        phone = phone.replace('+', '')
+        # Remove any whitespace, dashes, parentheses, or plus signs
+        phone = re.sub(r'[\s\-\(\)\+]', '', phone_number)
         
         # Format for Kenya
         if phone.startswith('0') and len(phone) == 10:
@@ -53,6 +50,10 @@ class PaystackTransferService:
                 phone = '254' + phone
             else:
                 return None
+        elif phone.startswith('254') and len(phone) == 12:
+            pass  # Keep as is
+        else:
+            return None
         
         # Final validation
         if not phone.startswith('254') or len(phone) != 12:
@@ -64,7 +65,7 @@ class PaystackTransferService:
         return phone
     
     def create_recipient(self, name, phone_number):
-        """Create a transfer recipient for M-Pesa."""
+        """Create a transfer recipient for M-Pesa"""
         url = f'{self.BASE_URL}/transferrecipient'
         
         formatted_phone = self.format_phone_number(phone_number)
@@ -72,25 +73,21 @@ class PaystackTransferService:
             logger.error(f"❌ Failed to format phone number: {phone_number}")
             return None
         
+        # ✅ WORKING FORMAT - uses account_number and bank_code
         payload = {
             'type': 'mobile_money',
             'name': name[:100],
-            'phone_number': formatted_phone,
+            'account_number': formatted_phone,  # ← Key change
+            'bank_code': 'MPESA',               # ← Key change
             'currency': 'KES',
-            'metadata': {
-                'provider': 'MPESA'
-            }
         }
         
-        logger.info(f"📤 Creating recipient with phone: {formatted_phone}")
-        logger.info(f"📤 Full payload: {payload}")
+        logger.info(f"📤 Creating recipient with payload: {payload}")
         
         try:
             response = requests.post(url, json=payload, headers=self.headers)
-            
-            # Log full response for debugging
             logger.info(f"Response status: {response.status_code}")
-            logger.info(f"Response text: {response.text}")
+            logger.info(f"Response body: {response.text}")
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
@@ -99,17 +96,13 @@ class PaystackTransferService:
                     logger.info(f"✅ Created recipient: {recipient_code}")
                     return recipient_code
                 else:
-                    logger.error(f"❌ API returned error: {data.get('message')}")
+                    logger.error(f"❌ API error: {data.get('message')}")
                     return None
             elif response.status_code == 401:
                 logger.error("❌ Unauthorized - Check your secret key")
                 return None
             elif response.status_code == 402:
-                logger.error("❌ Payment Required - Insufficient balance in Paystack account")
-                return None
-            elif response.status_code == 422:
-                error_data = response.json()
-                logger.error(f"❌ Validation error: {error_data}")
+                logger.error("❌ Insufficient Paystack balance")
                 return None
             else:
                 logger.error(f"❌ HTTP {response.status_code}: {response.text}")
@@ -120,9 +113,10 @@ class PaystackTransferService:
             return None
     
     def initiate_transfer(self, recipient_code, amount, reference, reason='M-Pesa Withdrawal'):
-        """Initiate a transfer to M-Pesa."""
+        """Initiate a transfer to M-Pesa"""
         url = f'{self.BASE_URL}/transfer'
         
+        # Amount in kobo
         amount_in_kobo = int(float(amount) * 100)
         
         payload = {
@@ -139,9 +133,8 @@ class PaystackTransferService:
         
         try:
             response = requests.post(url, json=payload, headers=self.headers)
-            
             logger.info(f"Transfer response status: {response.status_code}")
-            logger.info(f"Transfer response text: {response.text}")
+            logger.info(f"Transfer response body: {response.text}")
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
@@ -176,9 +169,6 @@ class PaystackTransferService:
                 else:
                     logger.error(f"❌ Balance error: {data.get('message')}")
                     return None
-            elif response.status_code == 401:
-                logger.error("❌ Unauthorized - Check your secret key")
-                return None
             else:
                 logger.error(f"❌ HTTP {response.status_code}: {response.text}")
                 return None

@@ -1,3 +1,4 @@
+# account/models.py
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
@@ -72,6 +73,33 @@ class Accounts(AbstractUser):
         help_text="Cloudinary public ID for managing the image"
     )
 
+    # ============================================================
+    # PAYSTACK RECIPIENT FIELDS (Added for withdrawals)
+    # ============================================================
+    
+    # Paystack recipient code for M-Pesa withdrawals
+    paystack_recipient_code = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Paystack recipient code for M-Pesa withdrawals (stored after first withdrawal)"
+    )
+    
+    # Phone number used for Paystack recipient (formatted)
+    paystack_recipient_phone = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True,
+        help_text="Formatted phone number used for Paystack recipient"
+    )
+    
+    # When the recipient was created
+    paystack_recipient_created_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Date and time when Paystack recipient was created"
+    )
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -90,3 +118,8 @@ class Accounts(AbstractUser):
     def has_profile_image(self):
         """Returns True if the user has a profile image."""
         return bool(self.profile_image_url)
+    
+    @property
+    def has_paystack_recipient(self):
+        """Returns True if the user has a Paystack recipient code."""
+        return bool(self.paystack_recipient_code)
