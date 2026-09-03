@@ -38,12 +38,22 @@ interface PesaPalPaymentInitResponse {
     merchant_reference: string;
     amount: number;
     status: string;
+    gateway: string;
   };
   redirect_url: string;
   payment_id: string;
+  order_tracking_id?: string;
 }
 
-// Fetch hookup fee - just gets the fee and user phone number
+// PesaPal configuration
+const PESAPAL_CONFIG = {
+  // Your registered IPN ID
+  IPN_ID: 'e27e0fda-86d5-4c82-a79f-da24fcc9aad4',
+  // Gateway identifier as stored in database
+  GATEWAY: 'pesapal',
+};
+
+// Fetch hookup fee - gets the fee and user details
 const fetchHookupFee = async (
   accessToken: string | null
 ): Promise<HookupFeeResponse> => {
@@ -92,40 +102,88 @@ const initiatePesaPalPayment = async ({
   phoneNumber,
   email,
   amount,
+  fullName,
 }: {
   accessToken: string;
   connectionId: string;
   phoneNumber: string;
   email: string;
   amount: number;
+  fullName: string;
 }): Promise<PesaPalPaymentInitResponse> => {
+  // Generate merchant reference
+  const timestamp = Date.now();
+  const shortId = connectionId.slice(0, 8);
+  const merchantReference = `HOOK-${shortId}-${timestamp}`;
+
   const payload = {
-    connection_id: connectionId,
+    // Payment details matching the Payment model
+    merchant_reference: merchantReference,
+    amount: amount,
     phone_number: phoneNumber,
     email: email,
-    amount: amount,
+    full_name: fullName,
+    
+    // Connection and gateway info
+    connection_id: connectionId,
+    gateway: PESAPAL_CONFIG.GATEWAY,
+    
+    // PesaPal specific
+    ipn_id: PESAPAL_CONFIG.IPN_ID,
+    callback_url: `${window.location.origin}/payment-callback`,
+    
+    // Customer info for PesaPal
+    customer_name: fullName,
+    customer_email: email,
+    customer_phone: phoneNumber,
+    
+    // Additional metadata
+    description: `Hookup fee payment for connection ${shortId}`,
   };
 
   console.log('📤 Initiating PesaPal payment with payload:', payload);
+  console.log('🏷️ Gateway:', PESAPAL_CONFIG.GATEWAY);
+  console.log('🔗 IPN ID:', PESAPAL_CONFIG.IPN_ID);
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/payments/initiate-payment/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error('❌ PesaPal payment initiation failed:', errorData);
-    throw new Error(errorData.message || 'Payment initiation failed');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ PesaPal payment initiation failed:', errorData);
+      
+      // Handle specific error cases
+      if (response.status === 400) {
+        throw new Error(errorData.message || 'Invalid payment request. Please check your details.');
+      } else if (response.status === 401) {
+        throw new Error('Session expired. Please login again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to make this payment.');
+      } else if (response.status === 404) {
+        throw new Error('Payment service temporarily unavailable. Please try again.');
+      } else if (response.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw new Error(errorData.message || `Payment initiation failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    console.log('✅ PesaPal payment initiated successfully:', data);
+    console.log('📝 Merchant Reference:', data.payment?.merchant_reference);
+    console.log('📝 Gateway:', data.payment?.gateway);
+    return data;
+  } catch (error) {
+    console.error('❌ PesaPal payment initiation error:', error);
+    throw error;
   }
-
-  const data = await response.json();
-  console.log('✅ PesaPal payment initiated successfully:', data);
-  return data;
 };
 
 function Paymentmodal() {
@@ -166,7 +224,7 @@ function Paymentmodal() {
     mutationFn: initiatePesaPalPayment,
     onSuccess: (data) => {
       toast.success('Payment initiated!', {
-        description: 'Redirecting to PesaPal checkout...',
+        description: `Redirecting to PesaPal checkout (${PESAPAL_CONFIG.GATEWAY})...`,
         duration: 3000,
         icon: '🔄',
         style: {
@@ -179,6 +237,28 @@ function Paymentmodal() {
       // Redirect to PesaPal checkout URL
       if (data.redirect_url) {
         console.log('🔀 Redirecting to PesaPal:', data.redirect_url);
+        console.log('📋 Payment ID:', data.payment_id);
+        console.log('📋 Merchant Reference:', data.payment?.merchant_reference);
+        console.log('📋 Gateway:', data.payment?.gateway);
+        console.log('📋 Order Tracking ID:', data.order_tracking_id);
+        
+        // Store payment info in sessionStorage for recovery
+        try {
+          const paymentInfo = {
+            payment_id: data.payment_id,
+            merchant_reference: data.payment?.merchant_reference || '',
+            connection_id: hookupId || '',
+            gateway: data.payment?.gateway || PESAPAL_CONFIG.GATEWAY,
+            amount: data.payment?.amount || 0,
+            timestamp: Date.now(),
+          };
+          sessionStorage.setItem('pesapal_payment_info', JSON.stringify(paymentInfo));
+          console.log('💾 Payment info stored in sessionStorage:', paymentInfo);
+        } catch (e) {
+          console.warn('Could not store payment info in sessionStorage:', e);
+        }
+        
+        // Redirect to PesaPal
         window.location.replace(data.redirect_url);
       } else {
         console.error('❌ No redirect_url in response:', data);
@@ -197,8 +277,28 @@ function Paymentmodal() {
     },
     onError: (error) => {
       console.error('❌ Payment mutation error:', error);
-      toast.error('Payment initiation failed', {
-        description: error instanceof Error ? error.message : 'Please try again.',
+      
+      let errorMessage = 'Please try again.';
+      let errorDescription = 'Payment initiation failed.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Provide more user-friendly messages
+        if (error.message.includes('Session expired')) {
+          errorDescription = 'Your session has expired. Please login again.';
+        } else if (error.message.includes('permission')) {
+          errorDescription = 'You do not have permission to make this payment.';
+        } else if (error.message.includes('service unavailable')) {
+          errorDescription = 'The payment service is temporarily unavailable. Please try again later.';
+        } else if (error.message.includes('Invalid payment')) {
+          errorDescription = 'Please check your payment details and try again.';
+        } else {
+          errorDescription = error.message;
+        }
+      }
+      
+      toast.error(errorDescription, {
+        description: errorMessage,
         duration: 4000,
         icon: '❌',
         style: {
@@ -269,8 +369,11 @@ function Paymentmodal() {
 
     const { user } = hookupFeeData.data;
     
-    console.log('👤 User data:', user);
+    console.log('👤 User data from hookup fee:', user);
 
+    // Get user full name from hookup fee data
+    const fullName = user?.full_name || user?.email?.split('@')[0] || 'Customer';
+    
     // Auto-fetch phone number from user data
     const phoneNumber = user?.phone_number;
     const email = user?.email;
@@ -323,8 +426,11 @@ function Paymentmodal() {
     console.log('📱 Original phone number:', phoneNumber);
     console.log('📱 Formatted phone number:', formattedPhone);
     console.log('📧 Email:', email);
+    console.log('👤 Full Name:', fullName);
     console.log('🔑 Connection ID for payment:', connectionId);
     console.log('💰 Amount:', feeAmount);
+    console.log('🏷️ Gateway:', PESAPAL_CONFIG.GATEWAY);
+    console.log('🔗 IPN ID:', PESAPAL_CONFIG.IPN_ID);
 
     setIsProcessing(true);
 
@@ -335,6 +441,7 @@ function Paymentmodal() {
         phoneNumber: formattedPhone,
         email: email,
         amount: feeAmount,
+        fullName: fullName,
       });
     } catch (error) {
       // Error is handled in mutation's onError
@@ -349,6 +456,7 @@ function Paymentmodal() {
   const assignedAdmin = hookupFeeData?.data?.assigned_admin;
   const userPhoneNumber = hookupFeeData?.data?.user?.phone_number;
   const userEmail = hookupFeeData?.data?.user?.email;
+  const userFullName = hookupFeeData?.data?.user?.full_name;
 
   // Loading state
   if (isLoadingFee) {
@@ -432,7 +540,12 @@ function Paymentmodal() {
           </div>
           {assignedAdmin && (
             <span className="payment-modal-admin-info">
-              Admin: {assignedAdmin.name}
+              👤 Admin: {assignedAdmin.name}
+            </span>
+          )}
+          {userFullName && (
+            <span className="payment-modal-name-info">
+              👤 Name: {userFullName}
             </span>
           )}
           {userPhoneNumber && (
@@ -464,6 +577,18 @@ function Paymentmodal() {
               <span className="payment-modal-info-label">Payment Method</span>
               <span className="payment-modal-info-value">Mobile Money / Bank Transfer</span>
             </div>
+            <div className="payment-modal-info-row">
+              <span className="payment-modal-info-label">Gateway</span>
+              <span className="payment-modal-info-value">
+                <span className="payment-modal-gateway-badge">PesaPal</span>
+              </span>
+            </div>
+            {userFullName && (
+              <div className="payment-modal-info-row">
+                <span className="payment-modal-info-label">Name</span>
+                <span className="payment-modal-info-value">{userFullName}</span>
+              </div>
+            )}
             {userEmail && (
               <div className="payment-modal-info-row">
                 <span className="payment-modal-info-label">Email</span>
