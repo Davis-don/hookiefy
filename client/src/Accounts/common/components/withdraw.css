@@ -1,0 +1,1150 @@
+/* withdraw.css - Complete Updated CSS */
+
+/* --- CSS Variables --- */
+:root {
+  /* M-Pesa Official Green Palette */
+  --mpesa-green: #00b843;
+  --mpesa-green-dark: #009136;
+  --mpesa-green-light: #e8f5e9;
+  --mpesa-green-gradient: linear-gradient(135deg, #00b843 0%, #008a31 100%);
+  --mpesa-green-glow: 0 4px 20px rgba(0, 184, 67, 0.3);
+  --mpesa-green-shadow: 0 2px 12px rgba(0, 184, 67, 0.15);
+
+  /* Instagram/Base Colors */
+  --insta-primary: #0095f6;
+  --insta-primary-hover: #1877f2;
+  --insta-text-primary: #262626;
+  --insta-text-secondary: #8e8e8e;
+  --insta-text-muted: #c7c7c7;
+  --insta-bg: #fafafa;
+  --insta-white: #ffffff;
+  --insta-border: #dbdbdb;
+  --insta-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --insta-radius: 12px;
+  --insta-radius-sm: 8px;
+  --insta-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --insta-transition: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Message Colors */
+  --error-color: #ed4956;
+  --error-bg: #fde8ea;
+  --success-color: #00c853;
+  --success-bg: #e8f5e9;
+}
+
+/* --- Main Container (Mobile First) --- */
+.withdraw-container {
+  font-family: var(--insta-font);
+  background: var(--insta-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 16px;
+  position: relative;
+}
+
+/* --- Refresh Button --- */
+.withdraw-refresh-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--insta-white);
+  border: 1px solid var(--insta-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--insta-transition);
+  color: var(--insta-text-secondary);
+  font-size: 1.1rem;
+  box-shadow: var(--insta-shadow);
+  z-index: 2;
+}
+
+.withdraw-refresh-btn:hover:not(:disabled) {
+  background: var(--insta-primary);
+  color: #ffffff;
+  border-color: var(--insta-primary);
+  transform: rotate(45deg);
+}
+
+.withdraw-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- M-Pesa Available Amount Card --- */
+.mpesa-available-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--mpesa-green-gradient);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: var(--mpesa-green-glow), var(--mpesa-green-shadow);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  transition: var(--insta-transition);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mpesa-available-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mpesa-available-card::after {
+  content: '✦';
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 80px;
+  color: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.mpesa-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mpesa-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.mpesa-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  opacity: 0.9;
+}
+
+.mpesa-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 4px 0 16px;
+}
+
+.mpesa-currency {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.5px;
+}
+
+.mpesa-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mpesa-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mpesa-status {
+  font-size: 0.7rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+.mpesa-status::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #00ff88;
+  border-radius: 50%;
+  animation: mpesaPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+@keyframes mpesaPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}
+
+.mpesa-update {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* --- Withdrawal Form --- */
+.withdraw-form {
+  width: 100%;
+  max-width: 380px;
+  background: var(--insta-white);
+  border-radius: var(--insta-radius);
+  border: 1px solid var(--insta-border);
+  padding: 20px 16px 24px;
+  box-shadow: var(--insta-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--insta-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.label-icon {
+  font-size: 0.9rem;
+  margin-right: 4px;
+}
+
+.required {
+  color: var(--error-color);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: var(--insta-font);
+  background: var(--insta-bg);
+  border: 1px solid var(--insta-border);
+  border-radius: var(--insta-radius-sm);
+  color: var(--insta-text-primary);
+  transition: var(--insta-transition);
+  box-sizing: border-box;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--insta-primary);
+  background: var(--insta-white);
+  box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.15);
+}
+
+.form-group input::placeholder {
+  color: var(--insta-text-muted);
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.form-group input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.input-error {
+  border-color: var(--error-color) !important;
+  box-shadow: 0 0 0 3px rgba(237, 73, 86, 0.15) !important;
+}
+
+.input-error:focus {
+  border-color: var(--error-color) !important;
+  box-shadow: 0 0 0 4px rgba(237, 73, 86, 0.2) !important;
+}
+
+.input-hint {
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* --- Quick Amount Buttons --- */
+.quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.quick-amount-btn {
+  flex: 1 0 auto;
+  min-width: 60px;
+  padding: 8px 12px;
+  background: var(--mpesa-green-light);
+  border: 1.5px solid var(--mpesa-green);
+  border-radius: var(--insta-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mpesa-green-dark);
+  cursor: pointer;
+  transition: var(--insta-transition);
+  font-family: var(--insta-font);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.quick-amount-btn:hover:not(:disabled) {
+  background: var(--mpesa-green);
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 184, 67, 0.3);
+}
+
+.quick-amount-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.quick-amount-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Messages --- */
+.message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--insta-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+.message-icon {
+  font-size: 1.1rem;
+}
+
+.message.error {
+  background: var(--error-bg);
+  color: var(--error-color);
+  border: 1px solid rgba(237, 73, 86, 0.2);
+}
+
+.message.success {
+  background: var(--success-bg);
+  color: var(--success-color);
+  border: 1px solid rgba(0, 200, 83, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Submit Button --- */
+.withdraw-submit-btn {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--mpesa-green);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--insta-font);
+  border: none;
+  border-radius: var(--insta-radius-sm);
+  cursor: pointer;
+  transition: var(--insta-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+}
+
+.withdraw-submit-btn:hover:not(:disabled) {
+  background: var(--mpesa-green-dark);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 184, 67, 0.35);
+}
+
+.withdraw-submit-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.withdraw-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* --- Footer --- */
+.withdraw-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px solid var(--insta-border);
+}
+
+.withdraw-footer p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  text-align: center;
+  font-weight: 400;
+}
+
+.footer-main {
+  font-weight: 500 !important;
+  color: var(--insta-text-secondary) !important;
+  font-size: 0.75rem !important;
+}
+
+.footer-fee {
+  color: var(--success-color) !important;
+  font-size: 0.65rem !important;
+}
+
+/* --- Withdrawal History --- */
+.withdrawal-history {
+  width: 100%;
+  max-width: 380px;
+  background: var(--insta-white);
+  border-radius: var(--insta-radius);
+  border: 1px solid var(--insta-border);
+  padding: 16px;
+  box-shadow: var(--insta-shadow);
+  margin-top: 0;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--insta-border);
+  margin-bottom: 12px;
+}
+
+.history-header h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--insta-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-icon {
+  font-size: 0.9rem;
+}
+
+.history-count {
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  font-weight: 500;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: var(--insta-bg);
+  border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: var(--insta-border);
+  border-radius: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--insta-bg);
+  border-radius: var(--insta-radius-sm);
+  transition: var(--insta-transition);
+}
+
+.history-item:hover {
+  background: var(--insta-border);
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-amount {
+  font-weight: 600;
+  color: var(--insta-text-primary);
+  font-size: 0.9rem;
+}
+
+.history-phone {
+  font-size: 0.7rem;
+  color: var(--insta-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-phone-icon {
+  font-size: 0.6rem;
+}
+
+.history-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.status-badge {
+  font-size: 0.65rem;
+  padding: 2px 10px;
+  border-radius: var(--insta-radius-full);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.processing {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.status-badge.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.failed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.cancelled {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.history-date {
+  font-size: 0.6rem;
+  color: var(--insta-text-muted);
+}
+
+.history-ref {
+  font-size: 0.55rem;
+  color: var(--insta-text-muted);
+  font-weight: 400;
+}
+
+/* --- History Loading State --- */
+.withdrawal-history.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.history-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--insta-text-muted);
+  font-size: 0.85rem;
+}
+
+/* --- Spinning Animation --- */
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- Loading Shimmer --- */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  color: transparent !important;
+  min-width: 120px;
+  display: inline-block;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* --- Responsive --- */
+
+/* Tablet (min-width: 600px) */
+@media (min-width: 600px) {
+  .withdraw-container {
+    padding: 40px 24px;
+    gap: 20px;
+  }
+
+  .mpesa-available-card {
+    max-width: 420px;
+    padding: 24px 22px;
+    border-radius: 20px;
+  }
+
+  .mpesa-label {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+
+  .mpesa-currency {
+    font-size: 1.1rem;
+  }
+
+  .mpesa-amount {
+    font-size: 2.8rem;
+  }
+
+  .mpesa-footer {
+    padding-top: 14px;
+  }
+
+  .mpesa-status {
+    font-size: 0.75rem;
+  }
+
+  .mpesa-update {
+    font-size: 0.7rem;
+  }
+
+  .withdraw-form {
+    max-width: 420px;
+    padding: 28px 24px 32px;
+    gap: 18px;
+  }
+
+  .form-group input {
+    padding: 14px 16px;
+    font-size: 1.05rem;
+  }
+
+  .quick-amount-btn {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+
+  .withdraw-submit-btn {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+
+  .withdrawal-history {
+    max-width: 420px;
+    padding: 20px;
+  }
+
+  .history-item {
+    padding: 12px 16px;
+  }
+
+  .history-amount {
+    font-size: 1rem;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 3px 12px;
+  }
+
+  .withdraw-refresh-btn {
+    top: 20px;
+    right: 20px;
+  }
+}
+
+/* Desktop (min-width: 1024px) */
+@media (min-width: 1024px) {
+  .withdraw-container {
+    padding: 60px 40px;
+    gap: 24px;
+  }
+
+  .mpesa-available-card {
+    max-width: 460px;
+    padding: 28px 26px;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 184, 67, 0.25), 0 4px 16px rgba(0, 184, 67, 0.1);
+  }
+
+  .mpesa-available-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 184, 67, 0.3), 0 4px 16px rgba(0, 184, 67, 0.15);
+  }
+
+  .mpesa-label {
+    font-size: 0.85rem;
+  }
+
+  .mpesa-currency {
+    font-size: 1.2rem;
+  }
+
+  .mpesa-amount {
+    font-size: 3.2rem;
+  }
+
+  .mpesa-footer {
+    padding-top: 16px;
+  }
+
+  .mpesa-status {
+    font-size: 0.8rem;
+  }
+
+  .mpesa-update {
+    font-size: 0.75rem;
+  }
+
+  .mpesa-available-card::before {
+    width: 300px;
+    height: 300px;
+    top: -60%;
+    right: -30%;
+  }
+
+  .mpesa-available-card::after {
+    font-size: 120px;
+    bottom: -20px;
+    right: -20px;
+  }
+
+  .withdraw-form {
+    max-width: 460px;
+    padding: 32px 28px 36px;
+    gap: 20px;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+    letter-spacing: 0.7px;
+  }
+
+  .form-group input {
+    padding: 16px 18px;
+    font-size: 1.1rem;
+  }
+
+  .form-group input:focus {
+    box-shadow: 0 0 0 4px rgba(0, 149, 246, 0.2);
+  }
+
+  .quick-amount-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    min-width: 80px;
+  }
+
+  .quick-amount-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+  }
+
+  .withdraw-submit-btn {
+    padding: 16px 24px;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+  }
+
+  .withdraw-footer p {
+    font-size: 0.75rem;
+  }
+
+  .withdrawal-history {
+    max-width: 460px;
+    padding: 24px;
+  }
+
+  .withdraw-refresh-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    top: 24px;
+    right: 24px;
+  }
+
+  .history-list {
+    max-height: 400px;
+  }
+}
+
+/* Large Desktop (min-width: 1440px) */
+@media (min-width: 1440px) {
+  .withdraw-container {
+    padding: 80px;
+    gap: 28px;
+  }
+
+  .mpesa-available-card {
+    max-width: 500px;
+    padding: 32px 30px;
+    border-radius: 28px;
+  }
+
+  .mpesa-amount {
+    font-size: 3.6rem;
+  }
+
+  .mpesa-currency {
+    font-size: 1.3rem;
+  }
+
+  .mpesa-label {
+    font-size: 0.9rem;
+  }
+
+  .withdraw-form {
+    max-width: 500px;
+    padding: 36px 32px 40px;
+    gap: 22px;
+  }
+
+  .form-group input {
+    padding: 18px 20px;
+    font-size: 1.15rem;
+  }
+
+  .quick-amount-btn {
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    min-width: 90px;
+  }
+
+  .withdraw-submit-btn {
+    padding: 18px 28px;
+    font-size: 1.1rem;
+  }
+
+  .withdrawal-history {
+    max-width: 500px;
+    padding: 28px;
+  }
+}
+
+/* Mobile Extra Small (<= 380px) */
+@media (max-width: 380px) {
+  .withdraw-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .mpesa-available-card {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  .mpesa-amount {
+    font-size: 2rem;
+  }
+
+  .mpesa-currency {
+    font-size: 0.9rem;
+  }
+
+  .mpesa-label {
+    font-size: 0.65rem;
+  }
+
+  .mpesa-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-top: 10px;
+  }
+
+  .mpesa-status {
+    font-size: 0.65rem;
+  }
+
+  .mpesa-update {
+    font-size: 0.6rem;
+  }
+
+  .withdraw-form {
+    padding: 16px 12px 20px;
+    gap: 14px;
+  }
+
+  .form-group input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .quick-amount-btn {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    min-width: 50px;
+  }
+
+  .withdraw-submit-btn {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .withdrawal-history {
+    padding: 12px;
+  }
+
+  .history-item {
+    padding: 8px 10px;
+  }
+
+  .history-amount {
+    font-size: 0.8rem;
+  }
+
+  .status-badge {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+  }
+
+  .withdraw-refresh-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+/* --- Accessibility --- */
+@media (prefers-reduced-motion: reduce) {
+  .mpesa-status::before {
+    animation: none;
+  }
+
+  .mpesa-available-card {
+    transition: none;
+  }
+
+  .mpesa-available-card:hover {
+    transform: none;
+  }
+
+  .withdraw-container *,
+  .withdraw-container *::before,
+  .withdraw-container *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .spinning {
+    animation: none;
+  }
+
+  .loading-shimmer {
+    animation: none;
+  }
+
+  .message {
+    animation: none;
+  }
+}
+
+/* --- Focus-visible for keyboard navigation --- */
+.withdraw-container input:focus-visible,
+.withdraw-container button:focus-visible {
+  outline: 2px solid var(--insta-primary);
+  outline-offset: 2px;
+}
+
+/* --- Dark Mode --- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --insta-bg: #000000;
+    --insta-white: #121212;
+    --insta-border: #262626;
+    --insta-text-primary: #f5f5f5;
+    --insta-text-secondary: #a8a8a8;
+    --insta-text-muted: #6b6b6b;
+    --insta-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+    --insta-primary: #0095f6;
+    --insta-primary-hover: #1a8cd8;
+    --mpesa-green-glow: 0 4px 20px rgba(0, 184, 67, 0.2);
+    --mpesa-green-shadow: 0 2px 12px rgba(0, 184, 67, 0.08);
+  }
+
+  .withdraw-container {
+    background: var(--insta-bg);
+  }
+
+  .mpesa-available-card {
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .mpesa-available-card::before {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  }
+
+  .mpesa-available-card::after {
+    color: rgba(255, 255, 255, 0.02);
+  }
+
+  .withdraw-form {
+    background: var(--insta-white);
+    border-color: var(--insta-border);
+  }
+
+  .form-group input {
+    background: var(--insta-bg);
+    border-color: var(--insta-border);
+    color: var(--insta-text-primary);
+  }
+
+  .form-group input:focus {
+    background: var(--insta-white);
+    border-color: var(--insta-primary);
+    box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.2);
+  }
+
+  .form-group input::placeholder {
+    color: var(--insta-text-muted);
+  }
+
+  .quick-amount-btn {
+    background: var(--mpesa-green-dark);
+    color: #ffffff;
+    border-color: var(--mpesa-green);
+  }
+
+  .quick-amount-btn:hover:not(:disabled) {
+    background: var(--mpesa-green);
+    color: #ffffff;
+  }
+
+  .withdrawal-history {
+    background: var(--insta-white);
+    border-color: var(--insta-border);
+  }
+
+  .history-item {
+    background: var(--insta-bg);
+  }
+
+  .history-item:hover {
+    background: var(--insta-border);
+  }
+
+  .status-badge.pending {
+    background: #332d1e;
+    color: #ffd700;
+  }
+
+  .status-badge.processing {
+    background: #1a2a3a;
+    color: #4dabf7;
+  }
+
+  .status-badge.completed {
+    background: #1a2e1a;
+    color: #51cf66;
+  }
+
+  .status-badge.failed {
+    background: #2e1a1a;
+    color: #ff6b6b;
+  }
+
+  .status-badge.cancelled {
+    background: #2a2a2a;
+    color: #adb5bd;
+  }
+
+  .loading-shimmer {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  }
+
+  .withdraw-refresh-btn {
+    background: var(--insta-white);
+    border-color: var(--insta-border);
+    color: var(--insta-text-secondary);
+  }
+
+  .withdraw-refresh-btn:hover:not(:disabled) {
+    background: var(--insta-primary);
+    color: #ffffff;
+    border-color: var(--insta-primary);
+  }
+
+  .message.error {
+    background: #2e1a1a;
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.2);
+  }
+
+  .message.success {
+    background: #1a2e1a;
+    color: #51cf66;
+    border-color: rgba(81, 207, 102, 0.2);
+  }
+}
