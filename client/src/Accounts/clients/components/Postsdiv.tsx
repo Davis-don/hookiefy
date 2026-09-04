@@ -3,71 +3,107 @@ import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authtokenstore'
 import Postcard from './Postcard'
+import Advertcard from './Advertcard'
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent'
 import { toast } from 'sonner'
 
-// Define the Post interface - FLAT structure with connection status
-interface Post {
-  id: string | number;
+// ============================================================
+// TYPES
+// ============================================================
+
+// User data structure
+interface UserData {
+  id: number;
+  first_name: string;
+  last_name: string;
   email: string;
-  first_name: string;  // ✅ Changed from full_name
-  last_name: string;   // ✅ Added last_name
-  full_name?: string;  // Optional fallback
-  role: string;
-  gender: string;
-  phone_number: string | null;
-  profile_image_url: string | null;
-  profile_image_public_id: string | null;
-  
-  // Flattened profile fields
-  bio: string | null;
-  city: string;
-  county: string;
   country: string;
-  age: number | null;
-  date_of_birth: string | null;
-  created_at: string;
-  updated_at: string;
-  
-  // Flattened preference fields
+  county: string;
+  city: string;
+  role: string;
+  profile_image_url: string | null;
+  bio: string | null;
   interested_in_gender: string;
   minimum_age: number;
   maximum_age: number;
-  
-  // Connection status
-  has_accepted: boolean;
-  sent_pending: boolean;
-  received_pending: boolean;
-  
-  location_score?: number;
 }
 
-// Extended interface for display purposes
-interface DisplayPost extends Post {
+// Advert data structure
+interface AdvertData {
+  id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  type: 'image' | 'video';
+  public_id: string | null;
+  created_at: string;
+}
+
+// Feed item wrapper
+interface FeedItem {
+  type: 'user' | 'advert';
+  data: UserData | AdvertData;
+}
+
+// Display post for user
+interface DisplayUserPost {
+  id: string | number;
   firstName: string;
   lastName: string;
-  time: string;
+  email: string;
   location: string;
   image: string | null;
+  bio: string | null;
+  gender: string;
+  interested_in_gender: string;
+  minimum_age: number;
+  maximum_age: number;
+  profile_image_url: string | null;
+  phone_number?: string;
+  has_accepted?: boolean;
+  sent_pending?: boolean;
+  received_pending?: boolean;
+  type: 'user';
 }
 
-// Simple in-memory cache
-let cachedPosts: DisplayPost[] | null = null;
+// Display advert
+interface DisplayAdvert {
+  id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  mediaType: 'image' | 'video';
+  public_id: string | null;
+  created_at: string;
+  type: 'advert';
+  time: string;
+}
+
+type DisplayItem = DisplayUserPost | DisplayAdvert;
+
+// ============================================================
+// SIMPLE CACHE
+// ============================================================
+
+let cachedItems: DisplayItem[] | null = null;
 let cacheTimestamp: number | null = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Fetch feed function with caching
-const fetchFeed = async (accessToken: string | null, forceRefresh = false): Promise<DisplayPost[]> => {
+// ============================================================
+// FETCH FUNCTION
+// ============================================================
+
+const fetchFeed = async (accessToken: string | null, forceRefresh = false): Promise<DisplayItem[]> => {
   if (!accessToken) {
     throw new Error('No access token found. Please login again.');
   }
 
-  // Check if cache is valid
+  // Check cache
   const now = Date.now();
-  if (!forceRefresh && cachedPosts && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
-    return cachedPosts;
+  if (!forceRefresh && cachedItems && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+    return cachedItems;
   }
-  
+
   const response = await fetch(`${import.meta.env.VITE_API_URL}/feed/info/`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -87,75 +123,78 @@ const fetchFeed = async (accessToken: string | null, forceRefresh = false): Prom
 
   const result = await response.json();
   
-  // Handle the response structure
-  let users = [];
+  // Extract the users array from the response
+  let items: FeedItem[] = [];
   
-  // Check if result has a 'users' property (your API response)
   if (result.users && Array.isArray(result.users)) {
-    users = result.users;
-  }
-  // Check if result has a 'data' property (alternative format)
-  else if (result.data && Array.isArray(result.data)) {
-    users = result.data;
-  }
-  // Check if result itself is an array
-  else if (Array.isArray(result)) {
-    users = result;
-  }
-  // Check if result has a 'results' property (paginated)
-  else if (result.results && Array.isArray(result.results)) {
-    users = result.results;
-  }
-  else {
+    items = result.users;
+  } else if (result.data && Array.isArray(result.data)) {
+    items = result.data;
+  } else if (Array.isArray(result)) {
+    items = result;
+  } else {
     console.error('Expected array but got:', result);
     return [];
   }
-  
-  // Transform the API data to match the expected Postcard props
-  const transformedPosts: DisplayPost[] = users.map((user: any) => {
-    // ✅ Extract first and last name from API response
-    // API returns: first_name and last_name separately
-    const firstName = user.first_name || 'User';
-    const lastName = user.last_name || '';
-    
-    // Extract location from flattened fields
-    const location = [
-      user.city,
-      user.county,
-      user.country
-    ].filter(Boolean).join(', ') || 'Unknown Location';
-    
-    // Use the profile image URL
-    const imageUrl = user.profile_image_url || null;
-    
-    // Generate a time string
-    const timeOptions = ['2 hours ago', '3 hours ago', '5 hours ago', '7 hours ago', '12 hours ago', '1 day ago', '2 days ago'];
-    const randomTime = timeOptions[Math.floor(Math.random() * timeOptions.length)];
-    
-    return {
-      ...user,
-      firstName,
-      lastName,
-      time: randomTime,
-      location,
-      image: imageUrl,
-      // Ensure connection status fields exist with defaults
-      has_accepted: user.has_accepted || false,
-      sent_pending: user.sent_pending || false,
-      received_pending: user.received_pending || false,
-    };
+
+  // Transform items to display format
+  const transformedItems: DisplayItem[] = items.map((item: FeedItem) => {
+    if (item.type === 'user') {
+      const user = item.data as UserData;
+      const location = [user.city, user.county, user.country].filter(Boolean).join(', ') || 'Unknown Location';
+      
+      return {
+        id: user.id,
+        firstName: user.first_name || 'User',
+        lastName: user.last_name || '',
+        email: user.email,
+        location,
+        image: user.profile_image_url || null,
+        bio: user.bio || null,
+        gender: user.role || 'Not specified',
+        interested_in_gender: user.interested_in_gender || 'Not specified',
+        minimum_age: user.minimum_age || 18,
+        maximum_age: user.maximum_age || 100,
+        profile_image_url: user.profile_image_url || null,
+        type: 'user' as const,
+        has_accepted: false,
+        sent_pending: false,
+        received_pending: false,
+      };
+    } else {
+      // Advert
+      const advert = item.data as AdvertData;
+      const timeOptions = ['2 hours ago', '3 hours ago', '5 hours ago', '7 hours ago', '12 hours ago', '1 day ago', '2 days ago'];
+      const randomTime = timeOptions[Math.floor(Math.random() * timeOptions.length)];
+      
+      return {
+        id: advert.id,
+        title: advert.title,
+        description: advert.description,
+        url: advert.url,
+        mediaType: advert.type,
+        public_id: advert.public_id,
+        created_at: advert.created_at,
+        type: 'advert' as const,
+        time: randomTime,
+      };
+    }
   });
 
   // Update cache
-  cachedPosts = transformedPosts;
+  cachedItems = transformedItems;
   cacheTimestamp = now;
 
-  return transformedPosts;
+  return transformedItems;
 };
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 function Postsdiv() {
   const { access: accessToken } = useAuthStore();
-  const [posts, setPosts] = useState<DisplayPost[]>([]);
+  const [items, setItems] = useState<DisplayItem[]>([]);
   const intervalRef = useRef<number | null>(null);
   const isFirstLoad = useRef(true);
 
@@ -172,23 +211,23 @@ function Postsdiv() {
     queryKey: ['feed', accessToken],
     queryFn: () => fetchFeed(accessToken, false),
     enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 1,
     placeholderData: (previousData) => previousData,
   });
 
-  // Update posts when data changes
+  // Update items when data changes
   useEffect(() => {
     if (data && data.length > 0) {
-      console.log('📦 Setting posts with data:', data);
-      setPosts(data);
+      console.log('📦 Setting items with data:', data);
+      setItems(data);
       isFirstLoad.current = false;
     } else if (data && data.length === 0) {
-      console.log('📭 No posts in feed');
-      setPosts([]);
+      console.log('📭 No items in feed');
+      setItems([]);
       isFirstLoad.current = false;
     }
   }, [data]);
@@ -207,7 +246,7 @@ function Postsdiv() {
         console.log('🔄 Background refresh triggered');
         fetchFeed(accessToken, true)
           .then((freshData) => {
-            setPosts(freshData);
+            setItems(freshData);
           })
           .catch(() => {});
       }
@@ -237,8 +276,8 @@ function Postsdiv() {
     }
   }, [isError, error]);
 
-  // Loading state
-  if (isLoading && !posts.length) {
+  // ---- Loading State ----
+  if (isLoading && !items.length) {
     return (
       <div className="overall-posts-container loading-container">
         <div className="fau-initial-loading">
@@ -256,8 +295,8 @@ function Postsdiv() {
     );
   }
 
-  // Error state
-  if (isError && !posts.length) {
+  // ---- Error State ----
+  if (isError && !items.length) {
     return (
       <div className="overall-posts-container error-container">
         <div className="feed-error">
@@ -275,7 +314,7 @@ function Postsdiv() {
     );
   }
 
-  // No access token
+  // ---- No Access Token ----
   if (!accessToken) {
     return (
       <div className="overall-posts-container error-container">
@@ -288,52 +327,75 @@ function Postsdiv() {
     );
   }
 
-  // Empty state
-  if (posts.length === 0 && !isLoading) {
+  // ---- Empty State ----
+  if (items.length === 0 && !isLoading) {
     return (
       <div className="overall-posts-container empty-container">
         <div className="feed-empty">
           <span className="feed-empty-icon">📭</span>
-          <h3>No users available</h3>
-          <p>Check back later for new connections</p>
+          <h3>No content available</h3>
+          <p>Check back later for new posts and adverts</p>
         </div>
       </div>
     );
   }
 
+  // ---- Render Feed ----
   return (
     <div className="overall-posts-container">
-      {isFetching && posts.length > 0 && (
+      {isFetching && items.length > 0 && (
         <div className="feed-refreshing-indicator">
           <span className="feed-refreshing-dot"></span>
           <span>Refreshing...</span>
         </div>
       )}
       
-      {posts.map((post) => (
-        <Postcard 
-          key={String(post.id)}
-          id={String(post.id)}
-          firstName={post.firstName}
-          lastName={post.lastName}
-          time={post.time}
-          location={post.location}
-          image={post.image}
-          bio={post.bio || 'No bio available'}
-          profile_image_url={post.profile_image_url}
-          preference={{
-            interested_in_gender: post.interested_in_gender || 'Not specified',
-            minimum_age: post.minimum_age || 18,
-            maximum_age: post.maximum_age || 100
-          }}
-          gender={post.gender}
-          email={post.email}
-          phone_number={post.phone_number || ''}
-          has_accepted={post.has_accepted || false}
-          sent_pending={post.sent_pending || false}
-          received_pending={post.received_pending || false}
-        />
-      ))}
+      {items.map((item) => {
+        if (item.type === 'user') {
+          // Render user post
+          const user = item as DisplayUserPost;
+          return (
+            <Postcard
+              key={`user-${user.id}`}
+              id={String(user.id)}
+              firstName={user.firstName}
+              lastName={user.lastName}
+              time="2 hours ago"
+              location={user.location}
+              image={user.image}
+              bio={user.bio || 'No bio available'}
+              profile_image_url={user.profile_image_url}
+              preference={{
+                interested_in_gender: user.interested_in_gender || 'Not specified',
+                minimum_age: user.minimum_age || 18,
+                maximum_age: user.maximum_age || 100
+              }}
+              gender={user.gender}
+              email={user.email}
+              phone_number=""
+              has_accepted={user.has_accepted || false}
+              sent_pending={user.sent_pending || false}
+              received_pending={user.received_pending || false}
+            />
+          );
+        } else {
+          // Render advert
+          const advert = item as DisplayAdvert;
+          return (
+            <Advertcard
+              key={`advert-${advert.id}`}
+              id={advert.id}
+              title={advert.title}
+              description={advert.description}
+              url={advert.url}
+              mediaType={advert.mediaType}
+              publicId={advert.public_id}
+              created_at={advert.created_at}
+              time={advert.time}
+            />
+          );
+        }
+      })}
     </div>
   );
 }
