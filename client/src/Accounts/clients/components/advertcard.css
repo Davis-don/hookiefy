@@ -103,7 +103,7 @@
 .acard-image-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
   background: #0a0a0a;
   overflow: hidden;
   cursor: pointer;
@@ -168,33 +168,66 @@
   opacity: 1;
 }
 
-.acard-image-fallback {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
+/* Image Error State */
+.acard-image-error-state {
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #0a0a0a;
+  width: 100%;
+  height: 100%;
   gap: 12px;
-  color: #8b8ba7;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  text-align: center;
 }
 
-.acard-image-fallback.show {
-  display: flex;
-}
-
-.acard-image-icon {
+.acard-image-error-icon {
   font-size: 48px;
-  color: #4a4a6a;
+  color: rgba(212, 175, 55, 0.3);
 }
 
-.acard-image-fallback-text {
+.acard-image-error-text {
   font-size: 14px;
-  color: #6a6a8a;
+  color: rgba(232, 232, 240, 0.4);
+}
+
+.acard-image-error-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: #d4af37;
+  font-size: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.acard-image-error-link:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Image Source Badges */
+.acard-image-source-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(232, 232, 240, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  letter-spacing: 0.3px;
 }
 
 .acard-cloudinary-badge {
@@ -219,7 +252,7 @@
 .acard-video-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
   background: #0a0a0a;
   overflow: hidden;
   display: flex;
@@ -248,7 +281,6 @@
   gap: 0.5rem;
   padding: 1rem;
   text-align: center;
-  cursor: pointer;
 }
 
 .acard-video-placeholder-icon {
@@ -666,6 +698,19 @@
     font-size: 0.75rem;
     padding: 0.4rem 1rem;
   }
+
+  .acard-image-error-icon {
+    font-size: 36px;
+  }
+
+  .acard-image-error-text {
+    font-size: 12px;
+  }
+
+  .acard-image-error-link {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
 }
 
 @media screen and (max-width: 380px) {
@@ -737,7 +782,8 @@
 .acard-link:focus-visible,
 .acard-description-expand:focus-visible,
 .acard-full-close:focus-visible,
-.acard-video-link-btn:focus-visible {
+.acard-video-link-btn:focus-visible,
+.acard-image-error-link:focus-visible {
   outline: 2px solid #d4af37;
   outline-offset: 2px;
 }
@@ -759,6 +805,10 @@
   }
 
   .acard-video-link-btn:hover {
+    transform: none !important;
+  }
+
+  .acard-image-error-link:hover {
     transform: none !important;
   }
 

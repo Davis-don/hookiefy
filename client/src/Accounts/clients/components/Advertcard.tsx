@@ -4,7 +4,7 @@
 
 import './advertcard.css'
 import { useState } from 'react';
-import { FiImage, FiVideo, FiPlay, FiYoutube, FiExternalLink, FiClock } from 'react-icons/fi'
+import { FiImage, FiVideo, FiPlay, FiYoutube, FiExternalLink, FiClock, FiAlertCircle } from 'react-icons/fi'
 
 interface AdvertcardProps {
   id: string;
@@ -42,6 +42,50 @@ const isDirectVideo = (url: string): boolean => {
   return videoExtensions.some(ext => url.toLowerCase().includes(ext));
 };
 
+// Check if URL is a direct image
+const isDirectImage = (url: string): boolean => {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+  return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+};
+
+// Check if URL is from Unsplash (needs special handling)
+const isUnsplashUrl = (url: string): boolean => {
+  return url.includes('unsplash.com');
+};
+
+// Convert Unsplash URL to direct image URL
+const getUnsplashDirectUrl = (url: string): string | null => {
+  // Extract the photo ID from Unsplash URL
+  // e.g., https://unsplash.com/photos/airplane-wing-above-white-clouds-K1RmYc5pRks
+  const match = url.match(/unsplash\.com\/photos\/([^\/?]+)/);
+  if (match && match[1]) {
+    // Get the last part which is the ID
+    const parts = match[1].split('-');
+    const id = parts[parts.length - 1];
+    if (id) {
+      return `https://images.unsplash.com/photo-${id}?w=800&h=600&fit=crop`;
+    }
+  }
+  return null;
+};
+
+// Check if URL is from a known image hosting service
+const isImageHostingUrl = (url: string): boolean => {
+  const hosts = [
+    'images.unsplash.com',
+    'res.cloudinary.com',
+    'cdn.pixabay.com',
+    'i.imgur.com',
+    'imgur.com',
+    'ibb.co',
+    'postimg.cc',
+    'imgbb.com',
+    'images.pexels.com',
+    'cdn.pexels.com'
+  ];
+  return hosts.some(host => url.includes(host));
+};
+
 function Advertcard({
   title,
   description,
@@ -54,11 +98,39 @@ function Advertcard({
   const [showFullMedia, setShowFullMedia] = useState(false);
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Determine if URL is YouTube
   const isYoutube = isYouTubeUrl(url);
   const youtubeId = extractYouTubeId(url);
   const isDirectVideoFile = isDirectVideo(url);
+  const isUnsplash = isUnsplashUrl(url);
+  const isImageHosting = isImageHostingUrl(url);
+  const isDirectImageFile = isDirectImage(url);
+
+  // Get the actual image URL to display
+  const getDisplayImageUrl = (): string => {
+    // If it's a direct image URL or from Cloudinary, use as is
+    if (isDirectImageFile || (publicId && url.includes('cloudinary'))) {
+      return url;
+    }
+    
+    // If it's Unsplash, try to get direct URL
+    if (isUnsplash) {
+      const directUrl = getUnsplashDirectUrl(url);
+      if (directUrl) return directUrl;
+    }
+    
+    // If it's from an image hosting service, try to use as is
+    if (isImageHosting) {
+      return url;
+    }
+    
+    // Otherwise return the original URL (will show error if not loadable)
+    return url;
+  };
+
+  const displayImageUrl = getDisplayImageUrl();
 
   const DESCRIPTION_MAX_LENGTH = 150;
   const needsTruncation = description && description.length > DESCRIPTION_MAX_LENGTH;
@@ -67,7 +139,9 @@ function Advertcard({
     : description;
 
   const handleMediaClick = () => {
-    setShowFullMedia(true);
+    if (mediaType === 'image' && !imageError) {
+      setShowFullMedia(true);
+    }
   };
 
   const handleCloseFullMedia = () => {
@@ -76,6 +150,12 @@ function Advertcard({
 
   const handleMediaLoad = () => {
     setMediaLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setMediaLoaded(false);
   };
 
   const toggleShowMore = () => {
@@ -85,41 +165,55 @@ function Advertcard({
   // Render media based on type
   const renderMedia = () => {
     if (mediaType === 'image') {
+      // Check if we can display the image
+      const canDisplayImage = !imageError && displayImageUrl;
+      
       return (
         <div className="acard-image-wrapper" onClick={handleMediaClick}>
-          <div className={`acard-image-loader ${mediaLoaded ? 'hidden' : ''}`}>
-            <div className="acard-loader-spinner"></div>
-          </div>
-          <img 
-            src={url} 
-            alt={title}
-            className={`acard-image-content ${mediaLoaded ? 'loaded' : ''}`}
-            loading="lazy"
-            onLoad={handleMediaLoad}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              const parent = (e.target as HTMLImageElement).parentElement;
-              if (parent) {
-                const fallback = parent.querySelector('.acard-image-fallback');
-                if (fallback) {
-                  fallback.classList.add('show');
-                }
-                const loader = parent.querySelector('.acard-image-loader');
-                if (loader) {
-                  loader.classList.add('hidden');
-                }
-              }
-            }}
-          />
+          {canDisplayImage ? (
+            <>
+              <div className={`acard-image-loader ${mediaLoaded ? 'hidden' : ''}`}>
+                <div className="acard-loader-spinner"></div>
+              </div>
+              <img 
+                src={displayImageUrl} 
+                alt={title}
+                className={`acard-image-content ${mediaLoaded ? 'loaded' : ''}`}
+                loading="lazy"
+                onLoad={handleMediaLoad}
+                onError={handleImageError}
+              />
+            </>
+          ) : (
+            <div className="acard-image-error-state">
+              <FiAlertCircle className="acard-image-error-icon" />
+              <span className="acard-image-error-text">Image not available</span>
+              <a 
+                href={url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="acard-image-error-link"
+              >
+                <FiExternalLink /> Open in browser
+              </a>
+            </div>
+          )}
+          
           <div className="acard-image-overlay">
             <span>Tap to view full</span>
           </div>
-          <div className="acard-image-fallback">
-            <FiImage className="acard-image-icon" />
-            <span className="acard-image-fallback-text">Image not available</span>
-          </div>
+          
           {publicId && (
             <span className="acard-cloudinary-badge">☁️ Cloudinary</span>
+          )}
+          
+          {/* Show image source info */}
+          {isUnsplash && (
+            <span className="acard-image-source-badge">📸 Unsplash</span>
+          )}
+          
+          {isImageHosting && !isUnsplash && (
+            <span className="acard-image-source-badge">📸 Image Host</span>
           )}
         </div>
       );
@@ -156,16 +250,13 @@ function Advertcard({
         );
       } else {
         return (
-          <div className="acard-video-wrapper" onClick={handleMediaClick}>
+          <div className="acard-video-wrapper">
             <div className="acard-video-placeholder">
               <FiPlay className="acard-video-placeholder-icon" />
               <span className="acard-video-placeholder-text">Video</span>
               <button 
                 className="acard-video-link-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(url, '_blank');
-                }}
+                onClick={() => window.open(url, '_blank')}
               >
                 <FiExternalLink /> Watch Video
               </button>
@@ -238,14 +329,18 @@ function Advertcard({
       </div>
 
       {/* Full Screen Media Modal */}
-      {showFullMedia && mediaType === 'image' && (
+      {showFullMedia && mediaType === 'image' && !imageError && (
         <div className="acard-full-modal" onClick={handleCloseFullMedia}>
           <div className="acard-full-container">
             <img 
-              src={url} 
+              src={displayImageUrl} 
               alt={title} 
               className="acard-full-image"
               loading="eager"
+              onError={() => {
+                // If full image fails, close modal
+                setShowFullMedia(false);
+              }}
             />
             <button className="acard-full-close" onClick={handleCloseFullMedia}>
               ✕
