@@ -4,7 +4,7 @@
 
 import './advertcard.css'
 import { useState } from 'react';
-import { FiImage, FiVideo, FiPlay, FiYoutube, FiExternalLink, FiClock, FiAlertCircle } from 'react-icons/fi'
+import { FiImage, FiVideo, FiPlay, FiExternalLink, FiClock, FiAlertCircle } from 'react-icons/fi'
 
 interface AdvertcardProps {
   id: string;
@@ -202,15 +202,6 @@ function Advertcard({
           <div className="acard-image-overlay">
             <span>Tap to view full</span>
           </div>
-          
-          {/* Show image source info */}
-          {isUnsplash && (
-            <span className="acard-image-source-badge">📸 Unsplash</span>
-          )}
-          
-          {isImageHosting && !isUnsplash && (
-            <span className="acard-image-source-badge">📸 Image Host</span>
-          )}
         </div>
       );
     } else {
@@ -226,9 +217,6 @@ function Advertcard({
               allowFullScreen
               className="acard-youtube-iframe"
             />
-            <span className="acard-platform-badge youtube">
-              <FiYoutube /> YouTube
-            </span>
           </div>
         );
       } else if (isDirectVideoFile) {
@@ -239,9 +227,6 @@ function Advertcard({
               controls
               className="acard-video-element"
             />
-            <span className="acard-platform-badge direct">
-              <FiVideo /> Video
-            </span>
           </div>
         );
       } else {
@@ -257,9 +242,6 @@ function Advertcard({
                 <FiExternalLink /> Watch Video
               </button>
             </div>
-            <span className="acard-platform-badge external">
-              <FiExternalLink /> External Video
-            </span>
           </div>
         );
       }
