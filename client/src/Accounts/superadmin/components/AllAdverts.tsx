@@ -1,11 +1,12 @@
 // components/adverts/AllAdverts.tsx
-// All Adverts List Component with useQuery and Delete
+// All Adverts List Component with useQuery and Delete - Feed Style UI
 // ============================================================
 
 import './alladverts.css'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
 import { toast } from 'sonner';
+import { useState } from 'react';
 import {
   FiImage,
   FiVideo,
@@ -14,12 +15,12 @@ import {
   FiRefreshCw,
   FiCloud,
   FiLink,
-  FiCalendar,
   FiEye,
   FiLoader,
   FiPlay,
-  FiYoutube,
-  FiExternalLink
+  FiExternalLink,
+  FiX,
+  FiClock
 } from 'react-icons/fi';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 
@@ -120,13 +121,76 @@ const extractYouTubeId = (url: string): string | null => {
   return null;
 };
 
-const isYouTubeUrl = (url: string): boolean => {
-  return url.includes('youtube.com') || url.includes('youtu.be');
-};
 
 const isDirectVideo = (url: string): boolean => {
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
   return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+};
+
+const formatTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+// ============================================================
+// DELETE CONFIRMATION MODAL
+// ============================================================
+
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  title: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting: boolean;
+}
+
+const DeleteConfirmModal = ({ isOpen, title, onConfirm, onCancel, isDeleting }: DeleteConfirmModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="aa-modal-overlay" onClick={onCancel}>
+      <div className="aa-modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="aa-modal-close" onClick={onCancel}>
+          <FiX />
+        </button>
+        <div className="aa-modal-icon-wrapper">
+          <div className="aa-modal-icon">🗑️</div>
+        </div>
+        <h3 className="aa-modal-title">Delete Advert</h3>
+        <p className="aa-modal-message">
+          Are you sure you want to delete "<strong>{title}</strong>"? 
+          <br />
+          <span className="aa-modal-warning">This action cannot be undone.</span>
+        </p>
+        <div className="aa-modal-actions">
+          <button className="aa-modal-cancel" onClick={onCancel} disabled={isDeleting}>
+            Cancel
+          </button>
+          <button className="aa-modal-confirm" onClick={onConfirm} disabled={isDeleting}>
+            {isDeleting ? (
+              <>
+                <FiLoader className="aa-spinning" /> Deleting...
+              </>
+            ) : (
+              <>
+                <FiTrash2 /> Delete
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // ============================================================
@@ -149,6 +213,11 @@ const LoadingSpinner = () => {
 const AllAdverts = () => {
   const { access: accessToken } = useAuthStore();
   const queryClient = useQueryClient();
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; title: string }>({
+    isOpen: false,
+    id: '',
+    title: ''
+  });
 
   // ---- Fetch Adverts ----
   const {
@@ -172,6 +241,7 @@ const AllAdverts = () => {
     mutationFn: (advertId: string) => deleteAdvert(advertId, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adverts'] });
+      setDeleteModal({ isOpen: false, id: '', title: '' });
       
       toast.success('Advert deleted successfully!', {
         description: 'The advert has been removed from the system.',
@@ -199,43 +269,76 @@ const AllAdverts = () => {
   });
 
   // ---- Handle Delete ----
-  const handleDelete = (advertId: string, advertTitle: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${advertTitle}"?`)) {
-      return;
-    }
-    deleteMutation.mutate(advertId);
+  const handleDeleteClick = (advertId: string, advertTitle: string) => {
+    setDeleteModal({ isOpen: true, id: advertId, title: advertTitle });
   };
 
-  // ---- Format Date ----
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return 'Today';
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
+  const handleConfirmDelete = () => {
+    deleteMutation.mutate(deleteModal.id);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModal({ isOpen: false, id: '', title: '' });
+  };
+
+  // ---- Render Media ----
+  const renderMedia = (advert: Advert) => {
+    if (advert.type === 'image') {
+      return (
+        <img
+          src={advert.url}
+          alt={advert.title}
+          loading="lazy"
+          className="aa-media-image"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+            const placeholder = (e.target as HTMLImageElement)
+              .parentElement?.querySelector('.aa-media-error-placeholder');
+            if (placeholder) {
+              (placeholder as HTMLElement).style.display = 'flex';
+            }
+          }}
+        />
+      );
     } else {
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
+      const youtubeId = extractYouTubeId(advert.url);
+      
+      if (youtubeId) {
+        return (
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}`}
+            title={advert.title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="aa-media-video"
+          />
+        );
+      }
+      
+      if (isDirectVideo(advert.url)) {
+        return (
+          <video
+            src={advert.url}
+            controls
+            className="aa-media-video"
+          />
+        );
+      }
+      
+      return (
+        <div className="aa-media-error-placeholder">
+          <FiPlay className="aa-media-placeholder-icon" />
+          <span>Video not available</span>
+          <button 
+            className="aa-media-link-btn"
+            onClick={() => window.open(advert.url, '_blank')}
+          >
+            <FiExternalLink /> Open Video
+          </button>
+        </div>
+      );
     }
-  };
-
-  // ---- Get Type Badge Class ----
-  const getTypeBadgeClass = (type: string) => {
-    return type === 'image' ? 'aa-type-image' : 'aa-type-video';
-  };
-
-  // ---- Get Type Icon ----
-  const getTypeIcon = (type: string) => {
-    return type === 'image' ? <FiImage /> : <FiVideo />;
   };
 
   // ---- Get Source Badge ----
@@ -249,89 +352,9 @@ const AllAdverts = () => {
     }
     return {
       icon: <FiLink />,
-      label: 'External URL',
+      label: 'External',
       className: 'aa-source-url'
     };
-  };
-
-  // ---- Render Video ----
-  const renderVideo = (url: string, title: string) => {
-    const youtubeId = extractYouTubeId(url);
-    
-    if (youtubeId) {
-      // YouTube embed
-      return (
-        <div className="aa-video-wrapper">
-          <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}`}
-            title={title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="aa-video-iframe"
-          />
-          <div className="aa-video-platform-badge youtube">
-            <FiYoutube /> YouTube
-          </div>
-        </div>
-      );
-    }
-    
-    if (isDirectVideo(url)) {
-      // Direct video file
-      return (
-        <div className="aa-video-wrapper">
-          <video
-            src={url}
-            controls
-            className="aa-video-element"
-            poster=""
-          />
-          <div className="aa-video-platform-badge direct">
-            <FiVideo /> Direct Video
-          </div>
-        </div>
-      );
-    }
-    
-    // Generic video link with play button overlay
-    return (
-      <div className="aa-video-wrapper">
-        <div className="aa-video-placeholder">
-          <FiPlay className="aa-video-placeholder-icon" />
-          <span className="aa-video-placeholder-text">Video</span>
-          <button 
-            className="aa-video-link-btn"
-            onClick={() => window.open(url, '_blank')}
-          >
-            <FiExternalLink /> Watch Video
-          </button>
-        </div>
-        <div className="aa-video-platform-badge external">
-          <FiLink /> External Video
-        </div>
-      </div>
-    );
-  };
-
-  // ---- Render Image ----
-  const renderImage = (url: string, title: string) => {
-    return (
-      <img
-        src={url}
-        alt={title}
-        loading="lazy"
-        className="aa-image-element"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-          const placeholder = (e.target as HTMLImageElement)
-            .parentElement?.querySelector('.aa-media-placeholder');
-          if (placeholder) {
-            (placeholder as HTMLElement).style.display = 'flex';
-          }
-        }}
-      />
-    );
   };
 
   // ---- Loading State ----
@@ -367,82 +390,45 @@ const AllAdverts = () => {
 
   // ---- Render Adverts ----
   return (
-    <div className="aa-all-adverts">
-      {/* Header with count */}
-      <div className="aa-list-header">
-        <div className="aa-list-header-left">
+    <>
+      <div className="aa-all-adverts">
+        {/* Header */}
+        <div className="aa-list-header">
           <span className="aa-list-count">{adverts.length} advert{adverts.length !== 1 ? 's' : ''}</span>
+          <button className="aa-refresh-btn" onClick={() => refetch()}>
+            <FiRefreshCw /> Refresh
+          </button>
         </div>
-        <button className="aa-refresh-btn" onClick={() => refetch()}>
-          <FiRefreshCw /> Refresh
-        </button>
-      </div>
 
-      {/* Adverts Grid */}
-      <div className="aa-grid">
-        {adverts.map((advert) => {
-          const source = getSourceBadge(advert.public_id);
-          const isYoutube = isYouTubeUrl(advert.url);
-          
-          return (
-            <div key={advert.id} className="aa-card">
-              {/* Media */}
-              <div className="aa-card-media">
-                {advert.type === 'image' ? (
-                  renderImage(advert.url, advert.title)
-                ) : (
-                  renderVideo(advert.url, advert.title)
-                )}
-                <div className="aa-media-placeholder" style={{ display: 'none' }}>
-                  {getTypeIcon(advert.type)}
-                </div>
-                
-                {/* Type badge overlay */}
-                <span className={`aa-media-type-badge ${getTypeBadgeClass(advert.type)}`}>
-                  {getTypeIcon(advert.type)} {advert.type}
-                  {isYoutube && advert.type === 'video' && ' (YouTube)'}
-                </span>
-              </div>
-
-              {/* Body */}
-              <div className="aa-card-body">
-                <h3 className="aa-card-title" title={advert.title}>
-                  {advert.title}
-                </h3>
-                
-                {advert.description && (
-                  <p className="aa-card-description" title={advert.description}>
-                    {advert.description}
-                  </p>
-                )}
-
-                <div className="aa-card-footer">
-                  <div className="aa-card-footer-left">
-                    {/* Source badge */}
-                    <span className={`aa-source-badge ${source.className}`}>
-                      {source.icon} {source.label}
+        {/* Adverts List - Feed Style */}
+        <div className="aa-feed">
+          {adverts.map((advert) => {
+            const source = getSourceBadge(advert.public_id);
+            
+            return (
+              <div key={advert.id} className="aa-feed-item">
+                {/* Header with time and actions */}
+                <div className="aa-feed-header">
+                  <div className="aa-feed-meta">
+                    <span className="aa-feed-time">
+                      <FiClock /> {formatTime(advert.created_at)}
                     </span>
-                    
-                    {/* Date */}
-                    <span className="aa-card-date">
-                      <FiCalendar /> {formatDate(advert.created_at)}
+                    <span className="aa-feed-dot">•</span>
+                    <span className="aa-feed-type">
+                      {advert.type === 'image' ? <FiImage /> : <FiVideo />} {advert.type}
                     </span>
                   </div>
-
-                  <div className="aa-card-actions">
-                    {/* View button */}
+                  <div className="aa-feed-actions">
                     <button
-                      className="aa-action-btn aa-view-btn"
+                      className="aa-feed-action-btn aa-feed-view-btn"
                       onClick={() => window.open(advert.url, '_blank')}
                       title="View advert"
                     >
                       <FiEye />
                     </button>
-                    
-                    {/* Delete button */}
                     <button
-                      className="aa-action-btn aa-delete-btn"
-                      onClick={() => handleDelete(advert.id, advert.title)}
+                      className="aa-feed-action-btn aa-feed-delete-btn"
+                      onClick={() => handleDeleteClick(advert.id, advert.title)}
                       disabled={deleteMutation.isPending}
                       title="Delete advert"
                     >
@@ -454,17 +440,47 @@ const AllAdverts = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Media - Full width */}
+                <div className="aa-feed-media">
+                  {renderMedia(advert)}
+                </div>
+
+                {/* Content */}
+                <div className="aa-feed-content">
+                  <h3 className="aa-feed-title">{advert.title}</h3>
+                  
+                  {advert.description && (
+                    <p className="aa-feed-description">{advert.description}</p>
+                  )}
+
+                  {/* Footer with source badge */}
+                  <div className="aa-feed-footer">
+                    <span className={`aa-feed-source-badge ${source.className}`}>
+                      {source.icon} {source.label}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="aa-list-footer">
+          <span>Showing {adverts.length} advert{adverts.length !== 1 ? 's' : ''}</span>
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="aa-list-footer">
-        <span>Showing {adverts.length} advert{adverts.length !== 1 ? 's' : ''}</span>
-      </div>
-    </div>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.title}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
   );
 };
 

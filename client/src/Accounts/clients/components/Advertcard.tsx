@@ -283,17 +283,6 @@ function Advertcard({
               )}
             </div>
           )}
-
-          <div className="acard-footer">
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="acard-link"
-            >
-              <FiExternalLink /> View Content
-            </a>
-          </div>
         </div>
       </div>
 
