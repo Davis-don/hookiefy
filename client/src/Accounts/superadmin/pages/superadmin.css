@@ -1,0 +1,351 @@
+/* superadmin.css */
+/* ============================================================
+   superadmin.css — Super Admin Dashboard
+   Gold premium theme - distinct from admin blue theme
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.overall-super-admin-account-page {
+  background: linear-gradient(145deg, #0b0b12 0%, #14141e 100%);
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e8e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+}
+
+/* Background glow effect - gold */
+.overall-super-admin-account-page::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================
+   MAIN LAYOUT (Sidebar + Content)
+========================= */
+.superadmin-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================
+   SIDEBAR / NAVIGATION (Left on desktop)
+========================= */
+.superadmin-account-header-container {
+  height: 100%;
+  width: 220px;
+  padding: 1rem 0.8rem;
+  border-right: 1px solid rgba(212, 175, 55, 0.12);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(11, 11, 18, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%);
+  overflow-y: auto;
+  backdrop-filter: blur(10px);
+}
+
+.superadmin-account-header-container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.superadmin-account-header-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.superadmin-account-header-container::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+}
+
+.superadmin-account-header-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.superadmin-account-header-container ul li {
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  color: rgba(232, 232, 240, 0.4);
+  font-weight: 400;
+  position: relative;
+}
+
+/* Gold accent left border */
+.superadmin-account-header-container ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: transparent;
+  border-radius: 0 3px 3px 0;
+  transition: all 0.3s ease;
+}
+
+.superadmin-account-header-container ul li:hover {
+  background: rgba(212, 175, 55, 0.06);
+  color: #f0e6d0;
+}
+
+.superadmin-account-header-container ul li:hover::before {
+  background: rgba(212, 175, 55, 0.3);
+}
+
+.superadmin-account-header-container ul li.active-nav {
+  background: rgba(212, 175, 55, 0.10);
+  color: #d4af37;
+  font-weight: 500;
+}
+
+.superadmin-account-header-container ul li.active-nav::before {
+  background: #d4af37;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
+  color: #d4af37;
+}
+
+.superadmin-icon-fig {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8rem;
+  color: rgba(232, 232, 240, 0.3);
+  transition: color 0.2s ease;
+}
+
+.superadmin-account-header-container ul li:hover .superadmin-icon-fig {
+  color: #f0e6d0;
+}
+
+.superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
+  color: #d4af37;
+}
+
+.superadmin-nav-name {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Sidebar footer - gold themed */
+.superadmin-sidebar-footer {
+  padding: 0.8rem 0.5rem 0 0.5rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.04);
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.superadmin-sidebar-footer span {
+  font-size: 0.65rem;
+  color: rgba(232, 232, 240, 0.12);
+}
+
+.superadmin-version-badge {
+  font-size: 0.55rem !important;
+  color: rgba(212, 175, 55, 0.3) !important;
+  background: rgba(212, 175, 55, 0.04);
+  padding: 0.1rem 0.5rem;
+  border-radius: 20px;
+  display: inline-block;
+  width: fit-content;
+  border: 1px solid rgba(212, 175, 55, 0.06);
+}
+
+/* =========================
+   BODY CONTENT (Center)
+========================= */
+.overall-superadmin-body-container {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.02) 0%, transparent 60%);
+}
+
+.overall-superadmin-body-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overall-superadmin-body-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overall-superadmin-body-container::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: 10px;
+}
+
+.actual-superadmin-body-content-retainer {
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  padding-bottom: 2rem;
+}
+
+/* =========================
+   RESPONSIVE - Mobile
+========================= */
+@media screen and (max-width: 46.875em) {
+  .overall-super-admin-account-page {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Sidebar becomes bottom nav */
+  .superadmin-account-header-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    height: auto;
+    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
+    border-right: none;
+    border-top: 1px solid rgba(212, 175, 55, 0.06);
+    background: #0b0b12;
+    z-index: 100;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    backdrop-filter: blur(10px);
+  }
+
+  .superadmin-sidebar-footer {
+    display: none;
+  }
+
+  .superadmin-account-header-container ul {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: 0.1rem;
+    padding: 0;
+  }
+
+  .superadmin-account-header-container ul li {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    padding: 0.3rem 0.3rem;
+    font-size: 0.55rem;
+    border-radius: 8px;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .superadmin-account-header-container ul li::before {
+    display: none;
+  }
+
+  .superadmin-icon-fig {
+    font-size: 2.6rem !important;
+    min-width: auto;
+    line-height: 1;
+  }
+
+  .superadmin-nav-name {
+    display: none;
+  }
+
+  .superadmin-account-header-container ul li.active-nav {
+    background: rgba(212, 175, 55, 0.12);
+    border-radius: 8px;
+  }
+
+  .superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
+    color: #d4af37;
+  }
+
+  /* Main body */
+  .overall-superadmin-body-container {
+    padding: 0.8rem 0.8rem;
+    height: calc(100% - 56px);
+    margin-bottom: 56px;
+  }
+
+  .actual-superadmin-body-content-retainer {
+    max-width: 100%;
+    padding-bottom: 0.5rem;
+  }
+
+  .superadmin-main-layout {
+    flex-direction: column;
+  }
+}
+
+/* =========================
+   EXTRA SMALL SCREENS
+========================= */
+@media screen and (max-width: 30em) {
+  .superadmin-account-header-container {
+    padding: 0.3rem 0.1rem 0.5rem 0.1rem;
+  }
+
+  .superadmin-account-header-container ul li {
+    padding: 0.2rem 0.15rem;
+  }
+
+  .superadmin-icon-fig {
+    font-size: 2.2rem !important;
+  }
+
+  .overall-superadmin-body-container {
+    padding: 0.5rem 0.5rem;
+    margin-bottom: 50px;
+    height: calc(100% - 50px);
+  }
+}
+
+/* =========================
+   SAFE AREA FOR NOTCH PHONES
+========================= */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 46.875em) {
+    .superadmin-account-header-container {
+      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+    }
+  }
+}

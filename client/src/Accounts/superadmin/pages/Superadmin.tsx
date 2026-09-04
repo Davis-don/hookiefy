@@ -5,8 +5,6 @@ import './superadmin.css'
 import { IoHome } from "react-icons/io5";
 import { IoPeople } from "react-icons/io5";
 import { IoWalletOutline } from "react-icons/io5";
-import { IoShieldCheckmark } from "react-icons/io5";
-import { IoAnalytics } from "react-icons/io5";
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -18,7 +16,6 @@ import SuperadminFinancials from '../components/SuperadminFinancials';
 import SuperadminProfile from '../components/SuperadminProfile';
 import SuperadminSettings from '../components/SuperadminSettings';
 import SuperadminNotifications from '../components/SuperadminNotifications';
-import SuperadminAnalytics from '../components/SuperadminAnalytics';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { useAuthStore } from '../../../store/authtokenstore';
 
@@ -68,8 +65,6 @@ function Superadmin() {
         return <SuperadminUsers />;
       case 'financials':
         return <SuperadminFinancials />;
-      case 'analytics':
-        return <SuperadminAnalytics />;
       case 'profile':
         return <SuperadminProfile />;
       case 'settings':
@@ -99,8 +94,8 @@ function Superadmin() {
     <div className="overall-super-admin-account-page">
       {/* Header Bar */}
       <SuperadminHeader 
-        // activeTab={activeTab} 
-        // onNavClick={handleNavClick} 
+        activeTab={activeTab} 
+        onNavClick={handleNavClick} 
       />
 
       <div className="superadmin-main-layout">
@@ -127,24 +122,6 @@ function Superadmin() {
             >
               <div className="superadmin-icon-fig"><IoWalletOutline /></div>
               <div className="superadmin-nav-name">Financials</div>
-            </li>
-            <li 
-              className={activeTab === 'analytics' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('analytics')}
-            >
-              <div className="superadmin-icon-fig"><IoAnalytics /></div>
-              <div className="superadmin-nav-name">Analytics</div>
-            </li>
-            <li 
-              className={activeTab === 'profile' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('profile')}
-            >
-              <div className="superadmin-profile-avatar-wrapper default-bg">
-                <div className="superadmin-profile-avatar-icon">
-                  <IoShieldCheckmark />
-                </div>
-              </div>
-              <div className="superadmin-nav-name">Profile</div>
             </li>
           </ul>
 
