@@ -5,6 +5,7 @@ import './superadmin.css'
 import { IoHome } from "react-icons/io5";
 import { IoPeople } from "react-icons/io5";
 import { IoWalletOutline } from "react-icons/io5";
+import { IoImageOutline } from "react-icons/io5"; // Advert icon
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -16,6 +17,7 @@ import SuperadminFinancials from '../components/SuperadminFinancials';
 import SuperadminProfile from '../components/SuperadminProfile';
 import SuperadminSettings from '../components/SuperadminSettings';
 import SuperadminNotifications from '../components/SuperadminNotifications';
+import SuperadminAdverts from '../components/SuperadminAdverts';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 import { useAuthStore } from '../../../store/authtokenstore';
 
@@ -71,6 +73,8 @@ function Superadmin() {
         return <SuperadminSettings />;
       case 'notifications':
         return <SuperadminNotifications />;
+      case 'adverts':
+        return <SuperadminAdverts />;
       default:
         return <SuperadminHome />;
     }
@@ -122,6 +126,13 @@ function Superadmin() {
             >
               <div className="superadmin-icon-fig"><IoWalletOutline /></div>
               <div className="superadmin-nav-name">Financials</div>
+            </li>
+            <li 
+              className={activeTab === 'adverts' ? 'active-nav' : ''}
+              onClick={() => handleNavClick('adverts')}
+            >
+              <div className="superadmin-icon-fig"><IoImageOutline /></div>
+              <div className="superadmin-nav-name">Adverts</div>
             </li>
           </ul>
 

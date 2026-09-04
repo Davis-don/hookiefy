@@ -349,3 +349,270 @@
     }
   }
 }
+
+/* =========================
+   ADVERT NAV ITEM - ACTIVE STATE
+========================= */
+.superadmin-account-header-container ul li.advert-nav {
+  position: relative;
+}
+
+/* Optional: Add a subtle gold dot indicator for adverts */
+.superadmin-account-header-container ul li.advert-nav.active-nav::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: #d4af37;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+}
+
+/* =========================
+   ADVERT COMPONENT STYLES
+   (To be used in SuperadminAdverts component)
+========================= */
+.adverts-container {
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.adverts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.adverts-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.adverts-title-section h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #d4af37, #f5d97e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.adverts-title-section p {
+  color: rgba(232, 232, 240, 0.5);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.adverts-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.adverts-actions button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary-advert {
+  background: linear-gradient(135deg, #d4af37, #c9a030);
+  color: #0b0b12;
+}
+
+.btn-primary-advert:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+}
+
+.btn-secondary-advert {
+  background: rgba(212, 175, 55, 0.08);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.btn-secondary-advert:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.adverts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.advert-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(212, 175, 55, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.advert-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.advert-card-media {
+  width: 100%;
+  height: 200px;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.advert-card-media img,
+.advert-card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.advert-card-media .media-placeholder {
+  color: rgba(232, 232, 240, 0.2);
+  font-size: 3rem;
+}
+
+.advert-card-body {
+  padding: 1.2rem;
+}
+
+.advert-card-body h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e8e8f0;
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.advert-card-body p {
+  font-size: 0.85rem;
+  color: rgba(232, 232, 240, 0.5);
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.advert-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.04);
+}
+
+.advert-type-badge {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  background: rgba(212, 175, 55, 0.08);
+  color: #d4af37;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.advert-type-badge.image {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.advert-type-badge.video {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+.advert-card-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.advert-card-actions button {
+  background: transparent;
+  border: none;
+  color: rgba(232, 232, 240, 0.3);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.advert-card-actions button:hover {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.advert-card-actions button.delete:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* Empty state */
+.adverts-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(232, 232, 240, 0.3);
+}
+
+.adverts-empty .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.adverts-empty h3 {
+  font-size: 1.2rem;
+  color: rgba(232, 232, 240, 0.5);
+  margin-bottom: 0.5rem;
+}
+
+.adverts-empty p {
+  font-size: 0.9rem;
+  color: rgba(232, 232, 240, 0.2);
+}
+
+/* Responsive for advert grid */
+@media screen and (max-width: 46.875em) {
+  .adverts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .adverts-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .adverts-actions {
+    width: 100%;
+  }
+  
+  .adverts-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}

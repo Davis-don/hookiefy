@@ -56,4 +56,6 @@ urlpatterns = [
     path('system-config/', include('system_config.urls')),
     # Withdrawals
     path('withdrawals/', include('withdrawals.urls')),
+    # Adverts
+    path('adverts/', include('adverts.urls')),
 ]

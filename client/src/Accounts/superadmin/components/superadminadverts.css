@@ -1,0 +1,385 @@
+/* SuperadminAdverts.css */
+/* ============================================================
+   Super Admin Adverts Container Component Styles
+   Handles the main container, header, and tabs only
+   Sub-components have their own CSS files
+   ============================================================ */
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.adverts-container {
+  width: 100%;
+  padding: 0.5rem 0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   HEADER
+========================= */
+.adverts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.adverts-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.adverts-title-section h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #d4af37, #f5d97e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.adverts-title-section p {
+  color: rgba(232, 232, 240, 0.5);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* =========================
+   TABS
+========================= */
+.adverts-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.06);
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+
+.adverts-tabs::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+  width: 100%;
+}
+
+.adverts-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  background: transparent;
+  border: none;
+  color: rgba(232, 232, 240, 0.4);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  font-family: inherit;
+}
+
+.adverts-tab:hover {
+  color: rgba(232, 232, 240, 0.7);
+  background: rgba(212, 175, 55, 0.04);
+  transform: translateY(-1px);
+}
+
+.adverts-tab:active {
+  transform: scale(0.97);
+}
+
+.adverts-tab.active {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.adverts-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  border-radius: 2px;
+  animation: tabIndicator 0.3s ease-in-out;
+}
+
+@keyframes tabIndicator {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 60%;
+    opacity: 1;
+  }
+}
+
+.adverts-tab .tab-icon {
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.adverts-tab .tab-badge {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-left: 0.2rem;
+  min-width: 20px;
+  text-align: center;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* =========================
+   TAB CONTENT AREA
+========================= */
+.adverts-tab-content {
+  min-height: 400px;
+  animation: fadeContent 0.3s ease-in-out;
+}
+
+@keyframes fadeContent {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   RESPONSIVE - TABLET
+========================= */
+@media screen and (max-width: 768px) {
+  .adverts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .adverts-title-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .adverts-tabs {
+    gap: 0.3rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .adverts-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .adverts-tab {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .adverts-tab.active::after {
+    width: 40%;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MOBILE
+========================= */
+@media screen and (max-width: 480px) {
+  .adverts-container {
+    padding: 0.25rem 0;
+  }
+
+  .adverts-header {
+    margin-bottom: 1rem;
+  }
+
+  .adverts-title-section h1 {
+    font-size: 1.25rem;
+  }
+
+  .adverts-title-section p {
+    font-size: 0.8rem;
+  }
+
+  .adverts-tabs {
+    gap: 0.2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .adverts-tab {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    gap: 0.3rem;
+  }
+
+  .adverts-tab .tab-icon {
+    font-size: 0.9rem;
+  }
+
+  .adverts-tab .tab-badge {
+    font-size: 0.55rem;
+    padding: 0.05rem 0.4rem;
+    min-width: 16px;
+  }
+
+  .adverts-tab.active::after {
+    width: 30%;
+    bottom: -0.4rem;
+  }
+
+  .adverts-tab-content {
+    min-height: 300px;
+  }
+}
+
+/* =========================
+   EXTRA SMALL SCREENS
+========================= */
+@media screen and (max-width: 360px) {
+  .adverts-tab {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .adverts-tab .tab-icon {
+    font-size: 0.8rem;
+  }
+
+  .adverts-tab .tab-badge {
+    font-size: 0.5rem;
+    padding: 0.05rem 0.3rem;
+    min-width: 14px;
+  }
+
+  .adverts-title-section h1 {
+    font-size: 1.1rem;
+  }
+}
+
+/* =========================
+   DARK MODE SUPPORT
+========================= */
+@media (prefers-color-scheme: dark) {
+  .adverts-tab {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .adverts-tab:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .adverts-tab.active {
+    color: #d4af37;
+  }
+
+  .adverts-title-section p {
+    color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+@media (prefers-reduced-motion: reduce) {
+  .adverts-container,
+  .adverts-tab,
+  .adverts-tab-content {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .adverts-tab.active::after {
+    animation: none !important;
+  }
+
+  .adverts-tab .tab-badge {
+    animation: none !important;
+  }
+}
+
+/* =========================
+   ACCESSIBILITY - FOCUS
+========================= */
+.adverts-tab:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.adverts-tab:focus-visible:not(:focus) {
+  outline: none;
+}
+
+/* =========================
+   PRINT STYLES
+========================= */
+@media print {
+  .adverts-container {
+    padding: 0;
+  }
+
+  .adverts-header {
+    margin-bottom: 1rem;
+  }
+
+  .adverts-tabs {
+    border-bottom: 1px solid #333;
+  }
+
+  .adverts-tab {
+    color: #333 !important;
+  }
+
+  .adverts-tab.active {
+    color: #000 !important;
+    background: #f0f0f0 !important;
+  }
+
+  .adverts-tab.active::after {
+    background: #000 !important;
+  }
+}
