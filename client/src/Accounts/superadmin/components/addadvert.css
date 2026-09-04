@@ -1,6 +1,6 @@
 /* AddAdvert.css */
 /* ============================================================
-   Add Advert Component Styles
+   Add Advert Component Styles - Large Font Version
    ============================================================ */
 
 /* =========================
@@ -11,16 +11,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 2rem;
-  min-height: 300px;
+  padding: 4rem 2.5rem;
+  min-height: 350px;
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid rgba(212, 175, 55, 0.06);
 }
 
 .aa-loading-text {
-  margin-top: 1rem;
-  font-size: 0.95rem;
+  margin-top: 1.2rem;
+  font-size: 1.4rem;
   color: rgba(232, 232, 240, 0.5);
   font-weight: 500;
 }
@@ -31,9 +31,9 @@
 .aa-container {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(212, 175, 55, 0.06);
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 650px;
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 750px;
   margin: 0 auto;
   animation: aaSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -56,8 +56,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
 }
 
 .aa-header-left {
@@ -65,18 +65,19 @@
 }
 
 .aa-title {
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: #e8e8f0;
-  margin: 0 0 0.2rem 0;
+  margin: 0 0 0.4rem 0;
   background: linear-gradient(135deg, #d4af37, #f5d97e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: 0.5px;
 }
 
 .aa-subtitle {
-  font-size: 0.85rem;
+  font-size: 1.2rem;
   color: rgba(232, 232, 240, 0.4);
   margin: 0;
 }
@@ -85,10 +86,10 @@
   background: transparent;
   border: none;
   color: rgba(232, 232, 240, 0.3);
-  font-size: 1.5rem;
+  font-size: 2.2rem;
   cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 6px;
+  padding: 0.4rem;
+  border-radius: 8px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -106,8 +107,8 @@
 ========================= */
 .aa-media-type-toggle {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .aa-media-btn {
@@ -115,14 +116,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
+  gap: 0.75rem;
+  padding: 0.9rem 1.5rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(212, 175, 55, 0.06);
-  border-radius: 8px;
+  border-radius: 12px;
   color: rgba(232, 232, 240, 0.4);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -139,7 +140,7 @@
 }
 
 .aa-media-btn svg {
-  font-size: 1.1rem;
+  font-size: 1.6rem;
 }
 
 /* =========================
@@ -147,8 +148,8 @@
 ========================= */
 .aa-upload-type-toggle {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
 }
 
 .aa-upload-btn {
@@ -156,14 +157,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
+  gap: 0.75rem;
+  padding: 0.9rem 1.5rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(212, 175, 55, 0.06);
-  border-radius: 8px;
+  border-radius: 12px;
   color: rgba(232, 232, 240, 0.4);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -179,39 +180,44 @@
   color: #d4af37;
 }
 
+.aa-upload-btn svg {
+  font-size: 1.6rem;
+}
+
 /* =========================
    FORM
 ========================= */
 .aa-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.8rem;
 }
 
 .aa-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.6rem;
 }
 
 .aa-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(232, 232, 240, 0.6);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(232, 232, 240, 0.7);
 }
 
 .aa-required {
   color: #e74c3c;
   margin-left: 0.2rem;
+  font-size: 1.4rem;
 }
 
 .aa-input {
-  padding: 0.7rem 0.9rem;
+  padding: 1rem 1.2rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(212, 175, 55, 0.08);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #e8e8f0;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
   font-family: inherit;
   width: 100%;
@@ -226,7 +232,8 @@
 }
 
 .aa-input::placeholder {
-  color: rgba(232, 232, 240, 0.2);
+  color: rgba(232, 232, 240, 0.25);
+  font-size: 1.1rem;
 }
 
 .aa-input:disabled {
@@ -236,13 +243,14 @@
 
 .aa-textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 120px;
+  font-size: 1.2rem;
 }
 
 .aa-hint {
-  font-size: 0.75rem;
+  font-size: 1rem;
   color: rgba(232, 232, 240, 0.2);
-  margin-top: 0.2rem;
+  margin-top: 0.3rem;
 }
 
 /* =========================
@@ -251,12 +259,12 @@
 .aa-file-dropzone {
   position: relative;
   border: 2px dashed rgba(212, 175, 55, 0.1);
-  border-radius: 8px;
-  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
   text-align: center;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.01);
-  min-height: 180px;
+  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -291,28 +299,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   pointer-events: none;
 }
 
 .aa-dropzone-icon {
-  font-size: 2.5rem;
+  font-size: 3.5rem;
   color: rgba(232, 232, 240, 0.1);
 }
 
 .aa-dropzone-content p {
   color: rgba(232, 232, 240, 0.3);
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   margin: 0;
 }
 
 .aa-dropzone-hint {
-  font-size: 0.75rem !important;
+  font-size: 1rem !important;
   color: rgba(232, 232, 240, 0.15) !important;
 }
 
 .aa-dropzone-formats {
-  font-size: 0.65rem !important;
+  font-size: 0.9rem !important;
   color: rgba(232, 232, 240, 0.1) !important;
   margin-top: 0.3rem !important;
 }
@@ -322,7 +330,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   width: 100%;
   animation: aaFadeIn 0.3s ease;
 }
@@ -339,9 +347,9 @@
 }
 
 .aa-file-preview img {
-  max-width: 200px;
-  max-height: 150px;
-  border-radius: 8px;
+  max-width: 280px;
+  max-height: 200px;
+  border-radius: 12px;
   object-fit: cover;
   border: 1px solid rgba(212, 175, 55, 0.08);
 }
@@ -349,18 +357,18 @@
 .aa-file-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .aa-file-name {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   color: rgba(232, 232, 240, 0.6);
 }
 
 .aa-file-size {
-  font-size: 0.75rem;
+  font-size: 1rem;
   color: rgba(232, 232, 240, 0.3);
 }
 
@@ -368,13 +376,13 @@
   background: rgba(231, 76, 60, 0.1);
   border: 1px solid rgba(231, 76, 60, 0.15);
   color: #e74c3c;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
 }
 
 .aa-remove-file:hover {
@@ -386,20 +394,21 @@
 ========================= */
 .aa-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 1rem;
+  margin-top: 0.75rem;
 }
 
 .aa-cancel-btn {
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
+  padding: 1rem 2rem;
+  border-radius: 12px;
   border: 1px solid rgba(212, 175, 55, 0.06);
   background: rgba(255, 255, 255, 0.03);
   color: rgba(232, 232, 240, 0.4);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 120px;
 }
 
 .aa-cancel-btn:hover {
@@ -412,14 +421,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #d4af37, #c9a030);
   color: #0b0b12;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -436,21 +445,25 @@
 }
 
 .aa-submit-btn svg {
-  font-size: 1rem;
+  font-size: 1.4rem;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
-@media screen and (max-width: 640px) {
+@media screen and (max-width: 768px) {
   .aa-container {
-    padding: 1.2rem;
+    padding: 1.8rem;
     margin: 0;
-    border-radius: 8px;
+    border-radius: 12px;
   }
 
   .aa-title {
-    font-size: 1.1rem;
+    font-size: 1.6rem;
+  }
+
+  .aa-subtitle {
+    font-size: 1rem;
   }
 
   .aa-media-type-toggle,
@@ -460,7 +473,26 @@
 
   .aa-media-btn,
   .aa-upload-btn {
-    padding: 0.6rem;
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .aa-label {
+    font-size: 1rem;
+  }
+
+  .aa-input {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .aa-input::placeholder {
+    font-size: 0.95rem;
+  }
+
+  .aa-textarea {
+    font-size: 1rem;
+    min-height: 100px;
   }
 
   .aa-actions {
@@ -470,31 +502,51 @@
   .aa-cancel-btn {
     width: 100%;
     justify-content: center;
+    padding: 0.8rem;
+    font-size: 1rem;
   }
 
   .aa-submit-btn {
     width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
   }
 
   .aa-file-dropzone {
-    padding: 1.5rem 1rem;
-    min-height: 140px;
+    padding: 1.8rem 1.2rem;
+    min-height: 180px;
   }
 
   .aa-file-preview img {
-    max-width: 150px;
-    max-height: 120px;
+    max-width: 200px;
+    max-height: 150px;
   }
 
   .aa-file-info {
     flex-direction: column;
     gap: 0.3rem;
   }
+
+  .aa-file-name {
+    font-size: 0.95rem;
+  }
+
+  .aa-file-size {
+    font-size: 0.85rem;
+  }
+
+  .aa-dropzone-content p {
+    font-size: 1rem;
+  }
+
+  .aa-dropzone-icon {
+    font-size: 2.8rem;
+  }
 }
 
-@media screen and (max-width: 400px) {
+@media screen and (max-width: 480px) {
   .aa-container {
-    padding: 1rem;
+    padding: 1.2rem;
   }
 
   .aa-header {
@@ -504,14 +556,97 @@
 
   .aa-close-btn {
     align-self: flex-end;
+    font-size: 1.8rem;
+  }
+
+  .aa-title {
+    font-size: 1.4rem;
+  }
+
+  .aa-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .aa-media-btn,
+  .aa-upload-btn {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .aa-media-btn svg,
+  .aa-upload-btn svg {
+    font-size: 1.2rem;
+  }
+
+  .aa-label {
+    font-size: 0.9rem;
+  }
+
+  .aa-input {
+    font-size: 0.9rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .aa-input::placeholder {
+    font-size: 0.85rem;
+  }
+
+  .aa-textarea {
+    font-size: 0.9rem;
+    min-height: 80px;
+  }
+
+  .aa-cancel-btn {
+    font-size: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .aa-submit-btn {
+    font-size: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .aa-file-dropzone {
+    padding: 1.2rem 0.8rem;
+    min-height: 150px;
+  }
+
+  .aa-file-preview img {
+    max-width: 150px;
+    max-height: 120px;
   }
 
   .aa-dropzone-content p {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .aa-dropzone-icon {
-    font-size: 2rem;
+    font-size: 2.2rem;
+  }
+
+  .aa-dropzone-hint {
+    font-size: 0.8rem !important;
+  }
+
+  .aa-dropzone-formats {
+    font-size: 0.7rem !important;
+  }
+
+  .aa-hint {
+    font-size: 0.85rem;
+  }
+
+  .aa-remove-file {
+    font-size: 1rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .aa-file-name {
+    font-size: 0.85rem;
+  }
+
+  .aa-file-size {
+    font-size: 0.75rem;
   }
 }
 
