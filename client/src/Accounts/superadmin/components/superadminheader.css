@@ -1,6 +1,6 @@
-/* components/SuperadminHeader.css */
+/* components/superadminheader.css */
 /* ============================================================
-   SuperadminHeader.css — Top Header Bar (With Profile, Balance & Icons)
+   superadminheader.css — Top Header Bar (With Profile, Balance & Icons)
    Gold premium theme - distinct from admin blue theme
    ============================================================ */
 
@@ -140,45 +140,7 @@
 }
 
 /* =========================
-   BALANCE SECTION - Wrapper for AdminBalance
-========================= */
-.superadmin-header-balance-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1.5rem;
-  flex-shrink: 0;
-}
-
-/* Override AdminBalance styles for superadmin */
-.superadmin-header-balance-wrapper .admin-header-balance-wrapper {
-  padding: 0;
-}
-
-.superadmin-header-balance-wrapper .admin-header-balance {
-  background: rgba(212, 175, 55, 0.04);
-  border: 1px solid rgba(212, 175, 55, 0.06);
-}
-
-.superadmin-header-balance-wrapper .admin-header-balance:hover {
-  background: rgba(212, 175, 55, 0.06);
-  border-color: rgba(212, 175, 55, 0.1);
-}
-
-.superadmin-header-balance-wrapper .admin-header-balance-icon {
-  color: #d4af37;
-}
-
-.superadmin-header-balance-wrapper .admin-header-balance-amount {
-  color: #f0e6d0;
-}
-
-.superadmin-header-balance-wrapper .admin-header-balance-label {
-  color: rgba(232, 232, 240, 0.3);
-}
-
-/* =========================
-   CENTER SECTION - Icons (LARGER SIZE)
+   ICONS SECTION
 ========================= */
 .superadmin-header-icons-wrapper {
   display: flex;
@@ -320,28 +282,6 @@
     height: 1.6rem;
   }
 
-  /* Balance - Mobile */
-  .superadmin-header-balance-wrapper {
-    padding: 0 0.8rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance {
-    padding: 0.3rem 0.8rem;
-    gap: 0.5rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-icon {
-    font-size: 1.1rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-label {
-    font-size: 0.5rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-amount {
-    font-size: 0.8rem;
-  }
-
   /* Icons - Mobile */
   .superadmin-header-icons-wrapper {
     gap: 0.3rem;
@@ -390,28 +330,6 @@
     height: 1.4rem;
   }
 
-  /* Balance - Small Mobile */
-  .superadmin-header-balance-wrapper {
-    padding: 0 0.4rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance {
-    padding: 0.2rem 0.6rem;
-    gap: 0.3rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-icon {
-    font-size: 0.9rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-amount {
-    font-size: 0.7rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-label {
-    display: none;
-  }
-
   /* Icons - Small Mobile */
   .superadmin-header-icons-wrapper {
     gap: 0.2rem;
@@ -458,24 +376,6 @@
   .superadmin-header-avatar-spinner {
     width: 1.2rem;
     height: 1.2rem;
-  }
-
-  /* Balance - Extra Small */
-  .superadmin-header-balance-wrapper {
-    padding: 0 0.2rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance {
-    padding: 0.15rem 0.4rem;
-    gap: 0.2rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-icon {
-    font-size: 0.8rem;
-  }
-
-  .superadmin-header-balance-wrapper .admin-header-balance-amount {
-    font-size: 0.6rem;
   }
 
   /* Icons - Extra Small */

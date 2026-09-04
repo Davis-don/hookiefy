@@ -13,7 +13,7 @@ import { useAuthStore } from '../../../store/authtokenstore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import AdminBalance from '../../admin/components/AdminBalance'
+import SuperadminBalance from './SuperadminBalance';
 
 // ============================================================
 // TYPES
@@ -228,8 +228,8 @@ function SuperadminHeader({ activeTab, onNavClick }: SuperadminHeaderProps) {
         </div>
       </div>
 
-      {/* Balance Component - Reusing AdminBalance */}
-      <AdminBalance />
+      {/* Balance Component - Separate SuperadminBalance */}
+      <SuperadminBalance />
 
       <div className="superadmin-header-icons-wrapper">
         <button 

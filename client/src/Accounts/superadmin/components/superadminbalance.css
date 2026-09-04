@@ -1,0 +1,127 @@
+/* components/superadminbalance.css */
+/* ============================================================
+   superadminbalance.css - Super Admin Balance Component
+   Gold premium theme - distinct from admin balance
+   ============================================================ */
+
+.superadmin-balance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  flex-shrink: 0;
+}
+
+.superadmin-balance-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #d4af37, #f0e6d0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.superadmin-balance-amount:hover {
+  background: linear-gradient(135deg, #f0e6d0, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading State */
+.superadmin-balance-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0;
+  min-width: 60px;
+}
+
+.superadmin-balance-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(212, 175, 55, 0.05);
+  border-top: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
+  animation: superadminBalanceSpin 0.8s linear infinite;
+}
+
+@keyframes superadminBalanceSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =========================
+   RESPONSIVE - Same as AdminBalance
+========================= */
+@media screen and (max-width: 46.875em) {
+  .superadmin-balance-container {
+    padding: 0 0.8rem;
+  }
+
+  .superadmin-balance-amount {
+    font-size: 2rem;
+  }
+
+  .superadmin-balance-loading {
+    min-width: 50px;
+  }
+
+  .superadmin-balance-spinner {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media screen and (max-width: 30em) {
+  .superadmin-balance-container {
+    padding: 0 0.4rem;
+  }
+
+  .superadmin-balance-amount {
+    font-size: 1.6rem;
+  }
+
+  .superadmin-balance-loading {
+    min-width: 40px;
+  }
+
+  .superadmin-balance-spinner {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media screen and (max-width: 22em) {
+  .superadmin-balance-container {
+    padding: 0 0.2rem;
+  }
+
+  .superadmin-balance-amount {
+    font-size: 1.3rem;
+  }
+
+  .superadmin-balance-loading {
+    min-width: 35px;
+  }
+
+  .superadmin-balance-spinner {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* =========================
+   SAFE AREA FOR NOTCH PHONES
+========================= */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 46.875em) {
+    .superadmin-balance-container {
+      padding-top: max(0.2rem, env(safe-area-inset-top));
+    }
+  }
+}
