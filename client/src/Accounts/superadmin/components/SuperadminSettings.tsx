@@ -1,7 +1,9 @@
-
+import Systemconfig from './Systemconfig'
 function SuperadminSettings() {
   return (
-    <div>SuperadminSettings</div>
+    <div className="overall-system-config-settings">
+      <Systemconfig />
+    </div>
   )
 }
 

@@ -1,0 +1,444 @@
+/* Systemconfig.css */
+/* ============================================================
+   System Configuration Component Styles
+   ============================================================ */
+
+.sc-wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.5rem 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+}
+
+/* =========================
+   HEADER
+========================= */
+.sc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem 1.25rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sc-icon-wrap {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.sc-shield-icon {
+  font-size: 1.4rem;
+  color: #d4af37;
+}
+
+.sc-heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.sc-heading-sub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.1rem 0 0 0;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.sc-content {
+  padding: 0 0.5rem;
+}
+
+/* =========================
+   CARD
+========================= */
+.sc-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1.5rem;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.sc-card:hover {
+  border-color: rgba(212, 175, 55, 0.08);
+}
+
+/* ---- Card Header ---- */
+.sc-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.sc-card-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.06);
+  border-radius: 8px;
+  color: #d4af37;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sc-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.sc-card-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.1rem 0 0 0;
+}
+
+/* ---- Features ---- */
+.sc-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.sc-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sc-feature-icon {
+  font-size: 0.9rem;
+  color: #d4af37;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sc-feature strong {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+/* ---- Button ---- */
+.sc-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 10px;
+  color: #d4af37;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sc-button:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.14);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.06);
+}
+
+.sc-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sc-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.sc-btn-icon {
+  font-size: 1rem;
+}
+
+.sc-spinner {
+  animation: scSpin 0.6s linear infinite;
+  font-size: 1rem;
+}
+
+@keyframes scSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Result Messages ---- */
+.sc-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-top: 1rem;
+  text-align: left;
+  animation: scSlideUp 0.3s ease;
+}
+
+@keyframes scSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sc-result-success {
+  background: rgba(34, 197, 94, 0.04);
+  border: 1px solid rgba(34, 197, 94, 0.08);
+}
+
+.sc-result-error {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+}
+
+.sc-result-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.sc-result-success .sc-result-icon {
+  color: #22c55e;
+}
+
+.sc-result-error .sc-result-icon {
+  color: #ef4444;
+}
+
+.sc-result-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.sc-result-success .sc-result-title {
+  color: #22c55e;
+}
+
+.sc-result-error .sc-result-title {
+  color: #ef4444;
+}
+
+.sc-result-message {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0.1rem 0 0.3rem 0;
+  line-height: 1.4;
+}
+
+.sc-result-details {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+
+.sc-result-details span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sc-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  padding: 0.2rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.2rem;
+}
+
+.sc-retry-btn:hover {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* ---- Footer ---- */
+.sc-footer {
+  padding: 0.75rem 0.5rem 0;
+  margin-top: 0.5rem;
+}
+
+.sc-footer-text {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.3px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .sc-wrapper {
+    padding: 1rem 0;
+  }
+  
+  .sc-header {
+    padding: 0 0.5rem 1rem 0.5rem;
+  }
+  
+  .sc-heading {
+    font-size: 1.2rem;
+  }
+  
+  .sc-card {
+    padding: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sc-wrapper {
+    padding: 0.75rem 0;
+  }
+  
+  .sc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .sc-icon-wrap {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+  
+  .sc-shield-icon {
+    font-size: 1.2rem;
+  }
+  
+  .sc-heading {
+    font-size: 1.1rem;
+  }
+  
+  .sc-heading-sub {
+    font-size: 0.75rem;
+  }
+  
+  .sc-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .sc-card-title {
+    font-size: 0.9rem;
+  }
+  
+  .sc-card-sub {
+    font-size: 0.75rem;
+  }
+  
+  .sc-features {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .sc-feature {
+    font-size: 0.75rem;
+  }
+  
+  .sc-feature-icon {
+    font-size: 0.8rem;
+  }
+  
+  .sc-button {
+    font-size: 0.85rem;
+    padding: 0.7rem 1rem;
+  }
+  
+  .sc-result {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .sc-result-details {
+    justify-content: center;
+  }
+  
+  .sc-footer-text {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .sc-card {
+    padding: 0.75rem;
+  }
+  
+  .sc-heading {
+    font-size: 1rem;
+  }
+  
+  .sc-button {
+    font-size: 0.75rem;
+    padding: 0.6rem 0.75rem;
+  }
+  
+  .sc-feature {
+    font-size: 0.7rem;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+@media (prefers-reduced-motion: reduce) {
+  .sc-spinner {
+    animation: none !important;
+  }
+  
+  .sc-result {
+    animation: none !important;
+  }
+  
+  .sc-button:hover:not(:disabled) {
+    transform: none !important;
+  }
+}
