@@ -1,5 +1,5 @@
 // components/Advertcard.tsx
-// Advert Card Component for Feed - Unique class names
+// Content Card Component for Feed - Unique class names
 // ============================================================
 
 import './advertcard.css'
@@ -203,10 +203,6 @@ function Advertcard({
             <span>Tap to view full</span>
           </div>
           
-          {publicId && (
-            <span className="acard-cloudinary-badge">☁️ Cloudinary</span>
-          )}
-          
           {/* Show image source info */}
           {isUnsplash && (
             <span className="acard-image-source-badge">📸 Unsplash</span>
@@ -273,12 +269,8 @@ function Advertcard({
   return (
     <>
       <div className="acard-container">
-        {/* Advert Header - Shows "Advert" instead of user info */}
+        {/* Header - Removed "Advert" label, now shows just meta info */}
         <div className="acard-header">
-          <div className="acard-advert-badge">
-            <span className="acard-advert-icon">📢</span>
-            <span className="acard-advert-label">Advert</span>
-          </div>
           <div className="acard-meta">
             <span className="acard-time">
               <FiClock /> {time}
@@ -317,13 +309,8 @@ function Advertcard({
               rel="noopener noreferrer"
               className="acard-link"
             >
-              <FiExternalLink /> View Advert
+              <FiExternalLink /> View Content
             </a>
-            {publicId && (
-              <span className="acard-source-badge cloudinary">
-                ☁️ Cloudinary
-              </span>
-            )}
           </div>
         </div>
       </div>
