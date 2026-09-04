@@ -16,7 +16,10 @@ import {
   FiLink,
   FiCalendar,
   FiEye,
-  FiLoader
+  FiLoader,
+  FiPlay,
+  FiYoutube,
+  FiExternalLink
 } from 'react-icons/fi';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 
@@ -99,6 +102,34 @@ const deleteAdvert = async (
 };
 
 // ============================================================
+// HELPERS
+// ============================================================
+
+const extractYouTubeId = (url: string): string | null => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([\w-]+)/,
+    /(?:youtu\.be\/)([\w-]+)/,
+    /(?:youtube\.com\/embed\/)([\w-]+)/,
+    /(?:youtube\.com\/v\/)([\w-]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+const isDirectVideo = (url: string): boolean => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+  return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+};
+
+// ============================================================
 // LOADING SPINNER
 // ============================================================
 
@@ -140,7 +171,6 @@ const AllAdverts = () => {
   const deleteMutation = useMutation({
     mutationFn: (advertId: string) => deleteAdvert(advertId, accessToken),
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['adverts'] });
       
       toast.success('Advert deleted successfully!', {
@@ -224,6 +254,86 @@ const AllAdverts = () => {
     };
   };
 
+  // ---- Render Video ----
+  const renderVideo = (url: string, title: string) => {
+    const youtubeId = extractYouTubeId(url);
+    
+    if (youtubeId) {
+      // YouTube embed
+      return (
+        <div className="aa-video-wrapper">
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}`}
+            title={title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="aa-video-iframe"
+          />
+          <div className="aa-video-platform-badge youtube">
+            <FiYoutube /> YouTube
+          </div>
+        </div>
+      );
+    }
+    
+    if (isDirectVideo(url)) {
+      // Direct video file
+      return (
+        <div className="aa-video-wrapper">
+          <video
+            src={url}
+            controls
+            className="aa-video-element"
+            poster=""
+          />
+          <div className="aa-video-platform-badge direct">
+            <FiVideo /> Direct Video
+          </div>
+        </div>
+      );
+    }
+    
+    // Generic video link with play button overlay
+    return (
+      <div className="aa-video-wrapper">
+        <div className="aa-video-placeholder">
+          <FiPlay className="aa-video-placeholder-icon" />
+          <span className="aa-video-placeholder-text">Video</span>
+          <button 
+            className="aa-video-link-btn"
+            onClick={() => window.open(url, '_blank')}
+          >
+            <FiExternalLink /> Watch Video
+          </button>
+        </div>
+        <div className="aa-video-platform-badge external">
+          <FiLink /> External Video
+        </div>
+      </div>
+    );
+  };
+
+  // ---- Render Image ----
+  const renderImage = (url: string, title: string) => {
+    return (
+      <img
+        src={url}
+        alt={title}
+        loading="lazy"
+        className="aa-image-element"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = 'none';
+          const placeholder = (e.target as HTMLImageElement)
+            .parentElement?.querySelector('.aa-media-placeholder');
+          if (placeholder) {
+            (placeholder as HTMLElement).style.display = 'flex';
+          }
+        }}
+      />
+    );
+  };
+
   // ---- Loading State ----
   if (isLoading) {
     return <LoadingSpinner />;
@@ -272,32 +382,16 @@ const AllAdverts = () => {
       <div className="aa-grid">
         {adverts.map((advert) => {
           const source = getSourceBadge(advert.public_id);
+          const isYoutube = isYouTubeUrl(advert.url);
           
           return (
             <div key={advert.id} className="aa-card">
               {/* Media */}
               <div className="aa-card-media">
                 {advert.type === 'image' ? (
-                  <img
-                    src={advert.url}
-                    alt={advert.title}
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const placeholder = (e.target as HTMLImageElement)
-                        .parentElement?.querySelector('.aa-media-placeholder');
-                      if (placeholder) {
-                        (placeholder as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
+                  renderImage(advert.url, advert.title)
                 ) : (
-                  <video
-                    src={advert.url}
-                    muted
-                    controls
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  renderVideo(advert.url, advert.title)
                 )}
                 <div className="aa-media-placeholder" style={{ display: 'none' }}>
                   {getTypeIcon(advert.type)}
@@ -306,6 +400,7 @@ const AllAdverts = () => {
                 {/* Type badge overlay */}
                 <span className={`aa-media-type-badge ${getTypeBadgeClass(advert.type)}`}>
                   {getTypeIcon(advert.type)} {advert.type}
+                  {isYoutube && advert.type === 'video' && ' (YouTube)'}
                 </span>
               </div>
 
