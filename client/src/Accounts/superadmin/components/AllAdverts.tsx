@@ -15,7 +15,8 @@ import {
   FiCloud,
   FiLink,
   FiCalendar,
-  FiEye
+  FiEye,
+  FiLoader
 } from 'react-icons/fi';
 import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
 
@@ -138,7 +139,7 @@ const AllAdverts = () => {
   // ---- Delete Mutation ----
   const deleteMutation = useMutation({
     mutationFn: (advertId: string) => deleteAdvert(advertId, accessToken),
-    onSuccess: (_, _advertId) => {
+    onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['adverts'] });
       
@@ -351,7 +352,7 @@ const AllAdverts = () => {
                       title="Delete advert"
                     >
                       {deleteMutation.isPending && deleteMutation.variables === advert.id ? (
-                        <span className="aa-spinner-small"></span>
+                        <FiLoader className="aa-spinning" />
                       ) : (
                         <FiTrash2 />
                       )}
