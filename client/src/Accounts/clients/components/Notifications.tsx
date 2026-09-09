@@ -108,7 +108,7 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
   // Connection Request Preview
   if (isMount) {
     return (
-      <div className="notif-wrapper">
+      <div className="notif-container">
         <Connectionrequestdetail />
       </div>
     );
@@ -117,48 +117,34 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
   // Activity Preview
   if (isActivityMount) {
     return (
-      <div className="notif-wrapper">
+      <div className="notif-container">
         <Youractivitydetail />
       </div>
     );
   }
 
   return (
-    <div className="notif-wrapper">
+    <div className="notif-container">
       {/* Fixed Header */}
-      <div className="notif-header-fixed" ref={headerRef}>
-        <div className="notif-header">
+      <div className="notif-header-sticky" ref={headerRef}>
+        <div className="notif-header-inner">
           <div className="notif-header-top">
-            <h2>Notifications</h2>
+            <h2 className="notif-title">Notifications</h2>
           </div>
 
-          <div className="notif-tabs">
+          <div className="notif-tabs-wrapper">
             <button
               className={`notif-tab-btn ${
                 activeTab === "requests" ? "notif-tab-active" : ""
               }`}
               onClick={() => setActiveTab("requests")}
-              style={{ position: 'relative' }}
             >
-              <span>Connection Requests</span>
+              <span className="notif-tab-text">Connection Requests</span>
               {hasUnreadRequests && (
-                <span 
-                  className="notif-tab-dot"
-                  style={{
-                    position: 'absolute',
-                    top: '4px',
-                    right: '-8px',
-                    width: '10px',
-                    height: '10px',
-                    backgroundColor: '#ef4444',
-                    borderRadius: '50%',
-                    border: '2px solid #000000',
-                    animation: 'pulse-dot 2s infinite',
-                  }}
-                />
+                <span className="notif-tab-dot" />
               )}
               {activeTab === "requests" && (
-                <span className="notif-tab-indicator"></span>
+                <span className="notif-tab-indicator" />
               )}
             </button>
 
@@ -167,39 +153,25 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
                 activeTab === "activity" ? "notif-tab-active" : ""
               }`}
               onClick={() => setActiveTab("activity")}
-              style={{ position: 'relative' }}
             >
-              <span>Your Activity</span>
+              <span className="notif-tab-text">Your Activity</span>
               {hasUnreadActivity && (
-                <span 
-                  className="notif-tab-dot"
-                  style={{
-                    position: 'absolute',
-                    top: '4px',
-                    right: '-8px',
-                    width: '10px',
-                    height: '10px',
-                    backgroundColor: '#ef4444',
-                    borderRadius: '50%',
-                    border: '2px solid #000000',
-                    animation: 'pulse-dot 2s infinite',
-                  }}
-                />
+                <span className="notif-tab-dot" />
               )}
               {activeTab === "activity" && (
-                <span className="notif-tab-indicator"></span>
+                <span className="notif-tab-indicator" />
               )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Scrollable Body with top padding to account for fixed header */}
+      {/* Scrollable Body */}
       <div 
-        className="notif-body-scrollable"
-        style={{ paddingTop: `${headerHeight + 16}px` }}
+        className="notif-body-scroll"
+        style={{ paddingTop: `${headerHeight + 20}px` }}
       >
-        <div className="notif-body">
+        <div className="notif-body-content">
           {activeTab === "requests" ? (
             <Connectionrequest />
           ) : (

@@ -10,56 +10,54 @@
 }
 
 /* ============================================
-   WRAPPER
+   CONTAINER - FULL WIDTH
    ============================================ */
-.notif-wrapper {
+.notif-container {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.2);
   min-height: 100vh;
+  background: rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ============================================
-   FIXED HEADER
+   STICKY HEADER - FULL WIDTH
    ============================================ */
-.notif-header-fixed {
+.notif-header-sticky {
   position: fixed;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 600px;
   z-index: 1000;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0 1rem;
-  padding-top: 0.5rem;
+  padding: 12px 16px 0 16px;
 }
 
-/* Header */
-.notif-header {
+.notif-header-inner {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 1rem 1.2rem;
+  padding: 16px 20px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  width: 100%;
+  max-width: 100%;
 }
 
 .notif-header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 12px;
 }
 
-.notif-header-top h2 {
+.notif-title {
   font-size: 1.6rem;
   font-weight: 700;
   color: #ffffff;
@@ -67,19 +65,22 @@
   letter-spacing: -0.5px;
 }
 
-/* Tabs */
-.notif-tabs {
+/* ============================================
+   TABS - FULL WIDTH
+   ============================================ */
+.notif-tabs-wrapper {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 0.5rem;
+  padding-bottom: 8px;
   position: relative;
+  width: 100%;
 }
 
 .notif-tab-btn {
   background: transparent;
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 8px 16px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.95rem;
   font-weight: 500;
@@ -89,7 +90,8 @@
   border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
+  flex: 0 1 auto;
 }
 
 .notif-tab-btn:hover {
@@ -101,9 +103,14 @@
   color: #ffffff !important;
 }
 
+.notif-tab-text {
+  position: relative;
+  z-index: 1;
+}
+
 .notif-tab-indicator {
   position: absolute;
-  bottom: -0.55rem;
+  bottom: -9px;
   left: 50%;
   transform: translateX(-50%);
   width: 30px;
@@ -129,95 +136,100 @@
    ============================================ */
 .notif-tab-dot {
   display: inline-block;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  width: 10px;
+  height: 10px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #000000;
+  animation: pulse-dot 2s infinite;
   flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
   position: relative;
   z-index: 2;
 }
 
-.notif-tab-btn {
-  position: relative;
-  padding-right: 4px !important;
-}
-
-.notif-tab-btn span:first-child {
-  margin-right: 2px;
-}
-
 /* ============================================
-   SCROLLABLE BODY
+   SCROLLABLE BODY - FULL WIDTH
    ============================================ */
-.notif-body-scrollable {
+.notif-body-scroll {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 100vh;
-  padding: 0 1rem 1rem 1rem;
+  padding: 0 16px 20px 16px;
   position: relative;
   scroll-behavior: smooth;
+  margin-top: 0;
 }
 
-/* Custom scrollbar for scrollable body */
-.notif-body-scrollable::-webkit-scrollbar {
+/* Custom scrollbar - positioned at extreme right */
+.notif-body-scroll::-webkit-scrollbar {
   width: 4px;
 }
 
-.notif-body-scrollable::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
+.notif-body-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 0;
 }
 
-.notif-body-scrollable::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+.notif-body-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
+  transition: background 0.3s ease;
 }
 
-.notif-body-scrollable::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+.notif-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* For Firefox */
+.notif-body-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 /* Body content */
-.notif-body {
+.notif-body-content {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  padding: 0.5rem;
+  padding: 8px;
   min-height: 300px;
   transition: all 0.3s ease;
   margin-bottom: 20px;
+  width: 100%;
 }
 
-.notif-body > * {
+.notif-body-content > * {
   width: 100%;
 }
 
 /* Detail view */
-.notif-wrapper .conn-req-detail-wrapper {
+.notif-container .conn-req-detail-wrapper {
   padding: 0;
   max-width: 100%;
 }
 
 /* ============================================
-   RESPONSIVE - TABLETS & SMALL LAPTOPS
+   RESPONSIVE - TABLETS
    ============================================ */
-@media screen and (max-width: 48em) {
-  .notif-header-fixed {
-    padding: 0 0.8rem;
-    padding-top: 0.4rem;
+@media screen and (max-width: 768px) {
+  .notif-header-sticky {
+    padding: 10px 12px 0 12px;
   }
 
-  .notif-header {
-    padding: 0.8rem 1rem;
+  .notif-header-inner {
+    padding: 12px 16px;
   }
 
-  .notif-header-top h2 {
+  .notif-title {
     font-size: 1.4rem;
   }
 
   .notif-tab-btn {
     font-size: 0.85rem;
-    padding: 0.5rem 1rem;
+    padding: 6px 12px;
   }
 
   .notif-tab-indicator {
@@ -236,64 +248,61 @@
   }
 
   .notif-tab-dot {
-    width: 12px !important;
-    height: 12px !important;
-    top: 2px !important;
-    right: -6px !important;
-    border-width: 2.5px !important;
+    width: 12px;
+    height: 12px;
+    border-width: 2.5px;
   }
 
-  .notif-body-scrollable {
-    padding: 0 0.8rem 1rem 0.8rem;
+  .notif-body-scroll {
+    padding: 0 12px 16px 12px;
+  }
+
+  .notif-body-scroll::-webkit-scrollbar {
+    width: 3px;
   }
 }
 
 /* ============================================
    RESPONSIVE - PHONES
    ============================================ */
-@media screen and (max-width: 30em) {
-  .notif-header-fixed {
-    padding: 0 0.5rem;
-    padding-top: 0.3rem;
+@media screen and (max-width: 480px) {
+  .notif-header-sticky {
+    padding: 8px 8px 0 8px;
   }
 
-  .notif-header {
-    padding: 0.6rem 0.8rem;
+  .notif-header-inner {
+    padding: 10px 12px;
     border-radius: 10px;
   }
 
   .notif-header-top {
-    margin-bottom: 0.8rem;
+    margin-bottom: 8px;
   }
 
-  .notif-header-top h2 {
+  .notif-title {
     font-size: 1.2rem;
   }
 
-  .notif-tabs {
-    gap: 0.3rem;
-    padding-bottom: 0.3rem;
-    justify-content: flex-start;
+  .notif-tabs-wrapper {
+    gap: 4px;
+    padding-bottom: 6px;
   }
 
   .notif-tab-btn {
     font-size: 0.7rem;
-    padding: 0.4rem 0.8rem 0.4rem 0.6rem;
+    padding: 6px 10px;
     border-radius: 6px;
-    gap: 0.3rem;
+    gap: 4px;
     flex: 0 1 auto;
-    min-width: 0;
     white-space: nowrap;
   }
 
   .notif-tab-dot {
-    width: 14px !important;
-    height: 14px !important;
-    top: -2px !important;
-    right: -4px !important;
-    border-width: 3px !important;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7) !important;
-    animation: pulse-dot-mobile 1.5s infinite !important;
+    width: 14px;
+    height: 14px;
+    border-width: 3px;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+    animation: pulse-dot-mobile 1.5s infinite;
   }
 
   .notif-tab-btn:first-child {
@@ -304,13 +313,13 @@
     margin-left: 4px;
   }
 
-  .notif-tab-btn span:first-child {
+  .notif-tab-text {
     font-size: 0.7rem;
     letter-spacing: 0.2px;
   }
 
   .notif-tab-indicator {
-    bottom: -0.35rem;
+    bottom: -7px;
     width: 20px;
     height: 2.5px;
   }
@@ -326,40 +335,46 @@
     }
   }
 
-  .notif-body-scrollable {
-    padding: 0 0.5rem 1rem 0.5rem;
+  .notif-body-scroll {
+    padding: 0 8px 12px 8px;
   }
 
-  .notif-body {
-    padding: 0.3rem;
+  .notif-body-content {
+    padding: 6px;
     min-height: 200px;
     border-radius: 10px;
+  }
+
+  .notif-body-scroll::-webkit-scrollbar {
+    width: 3px;
   }
 }
 
 /* ============================================
    EXTRA SMALL SCREENS
    ============================================ */
-@media screen and (max-width: 20em) {
+@media screen and (max-width: 320px) {
   .notif-tab-btn {
     font-size: 0.6rem;
-    padding: 0.3rem 0.6rem 0.3rem 0.4rem;
+    padding: 4px 8px;
   }
 
-  .notif-tab-btn span:first-child {
+  .notif-tab-text {
     font-size: 0.6rem;
   }
 
   .notif-tab-dot {
-    width: 12px !important;
-    height: 12px !important;
-    top: -1px !important;
-    right: -3px !important;
-    border-width: 2.5px !important;
+    width: 12px;
+    height: 12px;
+    border-width: 2.5px;
   }
 
-  .notif-tabs {
-    gap: 0.2rem;
+  .notif-tabs-wrapper {
+    gap: 2px;
+  }
+
+  .notif-body-scroll::-webkit-scrollbar {
+    width: 2px;
   }
 }
 
@@ -400,13 +415,13 @@
    SAFE AREA INSETS FOR NOTCHED PHONES
    ============================================ */
 @supports (padding-top: env(safe-area-inset-top)) {
-  .notif-header-fixed {
+  .notif-header-sticky {
     padding-top: env(safe-area-inset-top);
   }
 }
 
 @supports (padding-top: constant(safe-area-inset-top)) {
-  .notif-header-fixed {
+  .notif-header-sticky {
     padding-top: constant(safe-area-inset-top);
   }
 }
