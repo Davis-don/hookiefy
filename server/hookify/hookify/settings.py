@@ -7,8 +7,10 @@ from datetime import timedelta
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 from decouple import config
 import dj_database_url
+
 
 # ---------------------------------------------------
 # CORE SECURITY SETTINGS
@@ -21,17 +23,31 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-# Updated ALLOWED_HOSTS to include Netlify frontend
+
+# ---------------------------------------------------
+# HOSTS
+# ---------------------------------------------------
+
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,hookiefy-server-7d6d.onrender.com,hookiefy.netlify.app"
+    "localhost,"
+    "127.0.0.1,"
+    "hookiefy-server-7d6d.onrender.com,"
+    "api.hookiefy.kinstryx.co.ke"
 ).split(",")
 
-# Updated CSRF_TRUSTED_ORIGINS to include Netlify frontend
+
+# ---------------------------------------------------
+# CSRF TRUSTED ORIGINS
+# ---------------------------------------------------
+
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://hookiefy-server-7d6d.onrender.com,https://hookiefy.netlify.app"
+    "https://hookiefy-server-7d6d.onrender.com,"
+    "https://api.hookiefy.kinstryx.co.ke,"
+    "https://hookiefy.kinstryx.co.ke"
 ).split(",")
+
 
 # ---------------------------------------------------
 # APPLICATIONS
@@ -39,12 +55,14 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 
 INSTALLED_APPS = [
     "corsheaders",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "account",
     "assignments",
     "userprofile",
@@ -62,43 +80,61 @@ INSTALLED_APPS = [
     "system_config",
     "withdrawals",
     "adverts",
+
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
 ]
 
+
 # ---------------------------------------------------
-# MIDDLEWARE (ORDER IS IMPORTANT)
+# MIDDLEWARE
 # ---------------------------------------------------
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # Must be at the top
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.middleware.security.SecurityMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
+
     "django.middleware.common.CommonMiddleware",
+
     "django.middleware.csrf.CsrfViewMiddleware",
+
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+
     "django.contrib.messages.middleware.MessageMiddleware",
+
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 ROOT_URLCONF = "hookify.urls"
+
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
+
         "DIRS": [],
+
         "APP_DIRS": True,
+
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+
                 "django.contrib.auth.context_processors.auth",
+
                 "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
+
 WSGI_APPLICATION = "hookify.wsgi.application"
+
 
 # ---------------------------------------------------
 # DATABASE
@@ -112,11 +148,13 @@ DATABASES = {
     )
 }
 
+
 # ---------------------------------------------------
 # AUTH USER MODEL
 # ---------------------------------------------------
 
 AUTH_USER_MODEL = "account.Accounts"
+
 
 # ---------------------------------------------------
 # DRF + JWT AUTH
@@ -128,51 +166,82 @@ REST_FRAMEWORK = {
     ),
 }
 
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+
     "ROTATE_REFRESH_TOKENS": True,
+
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-# ---------------------------------------------------
-# CORS - COMPLETE FIX FOR PRODUCTION
-# ---------------------------------------------------
 
-# Get origins from environment variable or use defaults
+# ============================================================
+# CORS CONFIGURATION
+# ============================================================
+
 default_origins = [
     "http://localhost:5173",
+
     "http://127.0.0.1:5173",
+
+    # New Hookiefy frontend
+    "https://hookiefy.kinstryx.co.ke",
+
+    # Old Netlify URL - kept temporarily
     "https://hookiefy.netlify.app",
+
+    # Backend
+    "https://api.hookiefy.kinstryx.co.ke",
+
+    # Old Render URL - kept temporarily
     "https://hookiefy-server-7d6d.onrender.com",
 ]
 
-# Parse CORS origins from environment
+
 cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+
 if cors_env:
-    cors_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+    cors_origins = [
+        origin.strip()
+        for origin in cors_env.split(",")
+        if origin.strip()
+    ]
 else:
-    cors_origins = default_origins
+    cors_origins = default_origins.copy()
 
-# Ensure both frontend and backend URLs are included
-backend_url = "https://hookiefy-server-7d6d.onrender.com"
-frontend_url = "https://hookiefy.netlify.app"
 
-if backend_url not in cors_origins:
-    cors_origins.append(backend_url)
-if frontend_url not in cors_origins:
-    cors_origins.append(frontend_url)
+# ---------------------------------------------------
+# ENSURE REQUIRED ORIGINS EXIST
+# ---------------------------------------------------
+
+required_cors_origins = [
+    "https://hookiefy.kinstryx.co.ke",
+    "https://api.hookiefy.kinstryx.co.ke",
+]
+
+for origin in required_cors_origins:
+    if origin not in cors_origins:
+        cors_origins.append(origin)
+
 
 CORS_ALLOWED_ORIGINS = cors_origins
 
-# For development, allow all origins when DEBUG=True
-# WARNING: Never set this to True in production!
+
+# ---------------------------------------------------
+# CORS DEVELOPMENT MODE
+# ---------------------------------------------------
+
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOW_ALL_ORIGINS = False
 
+
 CORS_ALLOW_CREDENTIALS = True
+
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -182,6 +251,7 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+
 
 CORS_ALLOW_HEADERS = [
     "accept",
@@ -196,211 +266,363 @@ CORS_ALLOW_HEADERS = [
     "x-custom-header",
 ]
 
-# Additional CORS settings for preflight requests
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
-# ---------------------------------------------------
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+
+# ============================================================
 # CSRF CONFIGURATION
-# ---------------------------------------------------
+# ============================================================
 
-# Parse CSRF trusted origins from environment
 csrf_env = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+
 if csrf_env:
-    csrf_origins = [origin.strip() for origin in csrf_env.split(",") if origin.strip()]
-else:
+
     csrf_origins = [
-        "https://hookiefy-server-7d6d.onrender.com",
-        "https://hookiefy.netlify.app",
+        origin.strip()
+        for origin in csrf_env.split(",")
+        if origin.strip()
     ]
+
+else:
+
+    csrf_origins = [
+        "https://hookiefy.kinstryx.co.ke",
+        "https://api.hookiefy.kinstryx.co.ke",
+        "https://hookiefy-server-7d6d.onrender.com",
+    ]
+
 
 CSRF_TRUSTED_ORIGINS = csrf_origins
 
-# ---------------------------------------------------
-# SESSION AND CSRF COOKIE SETTINGS
-# ---------------------------------------------------
 
-SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+# ============================================================
+# SESSION AND CSRF COOKIE SETTINGS
+# ============================================================
+
+SESSION_COOKIE_SECURE = (
+    os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
+)
+
+CSRF_COOKIE_SECURE = (
+    os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+)
+
 SESSION_COOKIE_HTTPONLY = True
+
 CSRF_COOKIE_HTTPONLY = True
+
 SESSION_COOKIE_SAMESITE = "Lax"
+
 CSRF_COOKIE_SAMESITE = "Lax"
 
-# ---------------------------------------------------
+
+# ============================================================
 # INTERNATIONALIZATION
-# ---------------------------------------------------
+# ============================================================
 
 LANGUAGE_CODE = "en-us"
+
 TIME_ZONE = "UTC"
+
 USE_I18N = True
+
 USE_TZ = True
 
-# ---------------------------------------------------
+
+# ============================================================
 # STATIC FILES
-# ---------------------------------------------------
+# ============================================================
 
 STATIC_URL = "static/"
 
-# ---------------------------------------------------
+
+# ============================================================
 # PRODUCTION SETTINGS
-# ---------------------------------------------------
+# ============================================================
 
 if not DEBUG:
+
     SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
+
     SECURE_HSTS_SECONDS = 31536000
+
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
     SECURE_HSTS_PRELOAD = True
+
 
 # ============================================================
 # PESAPAL CONFIGURATION
 # ============================================================
 
-# Required PesaPal credentials
 PESAPAL_CONSUMER_KEY = config("PESAPAL_CONSUMER_KEY")
+
 PESAPAL_CONSUMER_SECRET = config("PESAPAL_CONSUMER_SECRET")
 
-# PesaPal Base URL - Sandbox or Production
-# Sandbox: https://cybqa.pesapal.com/pesapalv3
-# Production: https://pay.pesapal.com/v3
-PESAPAL_BASE_URL = config("PESAPAL_BASE_URL", default="https://cybqa.pesapal.com/pesapalv3")
 
-# ============================================================
-# PESAPAL CALLBACK URLs - Updated with /payments/ prefix
-# ============================================================
-
-# Base domain for your server
-BASE_DOMAIN = os.environ.get(
-    "BASE_DOMAIN",
-    "https://hookiefy-server-7d6d.onrender.com"
+PESAPAL_BASE_URL = config(
+    "PESAPAL_BASE_URL",
+    default="https://cybqa.pesapal.com/pesapalv3"
 )
 
-# Callback URLs - Note the /payments/ prefix to match your URL structure
+
+# ============================================================
+# BASE DOMAIN
+# ============================================================
+
+# New Django backend domain
+BASE_DOMAIN = os.environ.get(
+    "BASE_DOMAIN",
+    "https://api.hookiefy.kinstryx.co.ke"
+)
+
+
+# ============================================================
+# PESAPAL CALLBACK URLs
+# ============================================================
+
 PESAPAL_CALLBACK_URL = os.environ.get(
     "PESAPAL_CALLBACK_URL",
     f"{BASE_DOMAIN}/payments/payment-success/"
 )
+
 
 PESAPAL_CANCELLATION_URL = os.environ.get(
     "PESAPAL_CANCELLATION_URL",
     f"{BASE_DOMAIN}/payments/payment-failure/"
 )
 
-# IPN URL - Where PesaPal sends server-to-server notifications
+
 PESAPAL_IPN_URL = os.environ.get(
     "PESAPAL_IPN_URL",
     f"{BASE_DOMAIN}/payments/ipn/"
 )
 
+
 # ============================================================
 # PAYSTACK CONFIGURATION
 # ============================================================
 
-# Required Paystack credentials
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
-PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY", "")
+PAYSTACK_SECRET_KEY = os.environ.get(
+    "PAYSTACK_SECRET_KEY",
+    ""
+)
 
-# Paystack Base URL
+
+PAYSTACK_PUBLIC_KEY = os.environ.get(
+    "PAYSTACK_PUBLIC_KEY",
+    ""
+)
+
+
 PAYSTACK_BASE_URL = os.environ.get(
     "PAYSTACK_BASE_URL",
     "https://api.paystack.co"
 )
 
-# Paystack Callback URLs
+
+# ============================================================
+# PAYSTACK CALLBACK URLs
+# ============================================================
+
 PAYSTACK_CALLBACK_URL = os.environ.get(
     "PAYSTACK_CALLBACK_URL",
     f"{BASE_DOMAIN}/paystack/success/"
 )
+
 
 PAYSTACK_FAILURE_URL = os.environ.get(
     "PAYSTACK_FAILURE_URL",
     f"{BASE_DOMAIN}/paystack/failure/"
 )
 
+
 # ============================================================
-# LOGGING CONFIGURATION (for debugging)
+# LOGGING CONFIGURATION
 # ============================================================
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+
+    "disable_existing_loggers": False,
+
+    "formatters": {
+
+        "verbose": {
+            "format": (
+                "{levelname} {asctime} "
+                "{module} {process:d} "
+                "{thread:d} {message}"
+            ),
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'payments.log',
-            'formatter': 'verbose',
+
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
-    'loggers': {
-        'payments': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
+
+    "handlers": {
+
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
-        'paystack': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
+
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "payments.log",
+            "formatter": "verbose",
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'ERROR',
-            'propagate': True,
+    },
+
+    "loggers": {
+
+        "payments": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": True,
         },
-        'django.security.csrf': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
+
+        "paystack": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": True,
+        },
+
+        "django.request": {
+            "handlers": ["console"],
+            "level": "DEBUG" if DEBUG else "ERROR",
+            "propagate": True,
+        },
+
+        "django.security.csrf": {
+            "handlers": ["console"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": True,
         },
     },
 }
 
+
 # ============================================================
-# DEBUG LOGGING FOR CONFIGURATION (only in development)
+# DEBUG LOGGING
 # ============================================================
 
 if DEBUG:
-    print("\n" + "="*70)
+
+    print("\n" + "=" * 70)
+
     print("🚀 DJANGO CONFIGURATION LOG")
-    print("="*70)
+
+    print("=" * 70)
+
     print("🔒 SECURITY SETTINGS:")
+
     print(f"  DEBUG: {DEBUG}")
+
     print(f"  ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+
     print(f"  CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+
+
     print("\n🌐 CORS SETTINGS:")
-    print(f"  CORS_ALLOW_ALL_ORIGINS: {CORS_ALLOW_ALL_ORIGINS}")
-    print(f"  CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
-    print(f"  CORS_ALLOW_CREDENTIALS: {CORS_ALLOW_CREDENTIALS}")
-    print(f"  CORS_ALLOW_METHODS: {CORS_ALLOW_METHODS}")
-    print(f"  CORS_ALLOW_HEADERS: {CORS_ALLOW_HEADERS}")
+
+    print(
+        f"  CORS_ALLOW_ALL_ORIGINS: "
+        f"{CORS_ALLOW_ALL_ORIGINS}"
+    )
+
+    print(
+        f"  CORS_ALLOWED_ORIGINS: "
+        f"{CORS_ALLOWED_ORIGINS}"
+    )
+
+    print(
+        f"  CORS_ALLOW_CREDENTIALS: "
+        f"{CORS_ALLOW_CREDENTIALS}"
+    )
+
+    print(
+        f"  CORS_ALLOW_METHODS: "
+        f"{CORS_ALLOW_METHODS}"
+    )
+
+    print(
+        f"  CORS_ALLOW_HEADERS: "
+        f"{CORS_ALLOW_HEADERS}"
+    )
+
+
     print("\n💳 PESAPAL CONFIGURATION:")
-    print(f"  Consumer Key: {'✅ Set' if PESAPAL_CONSUMER_KEY else '❌ NOT SET'}")
-    print(f"  Consumer Secret: {'✅ Set' if PESAPAL_CONSUMER_SECRET else '❌ NOT SET'}")
+
+    print(
+        f"  Consumer Key: "
+        f"{'✅ Set' if PESAPAL_CONSUMER_KEY else '❌ NOT SET'}"
+    )
+
+    print(
+        f"  Consumer Secret: "
+        f"{'✅ Set' if PESAPAL_CONSUMER_SECRET else '❌ NOT SET'}"
+    )
+
     print(f"  Base URL: {PESAPAL_BASE_URL}")
+
     print(f"  BASE_DOMAIN: {BASE_DOMAIN}")
-    print(f"  Callback URL: {PESAPAL_CALLBACK_URL}")
-    print(f"  Cancellation URL: {PESAPAL_CANCELLATION_URL}")
-    print(f"  IPN URL: {PESAPAL_IPN_URL}")
+
+    print(
+        f"  Callback URL: "
+        f"{PESAPAL_CALLBACK_URL}"
+    )
+
+    print(
+        f"  Cancellation URL: "
+        f"{PESAPAL_CANCELLATION_URL}"
+    )
+
+    print(
+        f"  IPN URL: "
+        f"{PESAPAL_IPN_URL}"
+    )
+
+
     print("\n💳 PAYSTACK CONFIGURATION:")
-    print(f"  Secret Key: {'✅ Set' if PAYSTACK_SECRET_KEY else '❌ NOT SET'}")
-    print(f"  Public Key: {'✅ Set' if PAYSTACK_PUBLIC_KEY else '❌ NOT SET'}")
+
+    print(
+        f"  Secret Key: "
+        f"{'✅ Set' if PAYSTACK_SECRET_KEY else '❌ NOT SET'}"
+    )
+
+    print(
+        f"  Public Key: "
+        f"{'✅ Set' if PAYSTACK_PUBLIC_KEY else '❌ NOT SET'}"
+    )
+
     print(f"  Base URL: {PAYSTACK_BASE_URL}")
-    print(f"  Callback URL: {PAYSTACK_CALLBACK_URL}")
-    print(f"  Failure URL: {PAYSTACK_FAILURE_URL}")
+
+    print(
+        f"  Callback URL: "
+        f"{PAYSTACK_CALLBACK_URL}"
+    )
+
+    print(
+        f"  Failure URL: "
+        f"{PAYSTACK_FAILURE_URL}"
+    )
+
+
     print("\n🗄️ DATABASE:")
-    print(f"  DATABASE_URL: {'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}")
-    print("="*70 + "\n")
+
+    print(
+        f"  DATABASE_URL: "
+        f"{'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}"
+    )
+
+    print("=" * 70 + "\n")
