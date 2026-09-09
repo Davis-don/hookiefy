@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://youpata.kinstryx.co.ke/sitemap.xml
