@@ -1,4 +1,3 @@
-
 # payments/views.py
 # ============================================================
 # COMPLETE PAYMENT VIEWS
@@ -15,6 +14,7 @@ from rest_framework import status
 
 from django.utils import timezone
 from django.shortcuts import redirect
+from django.conf import settings
 from django.db import connection as db_connection, close_old_connections
 from django.db.utils import OperationalError, InterfaceError
 
@@ -46,6 +46,45 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# FRONTEND URL HELPER
+# ============================================================
+
+def get_frontend_url(path):
+    """
+    Build a frontend URL using FRONTEND_URL from Django settings.
+
+    Example:
+
+        FRONTEND_URL=https://youpata.kinstryx.co.ke
+
+    get_frontend_url("payment-success")
+
+    returns:
+
+        https://youpata.kinstryx.co.ke/payment-success
+    """
+
+    frontend_url = getattr(
+        settings,
+        "FRONTEND_URL",
+        None
+    )
+
+    if not frontend_url:
+        logger.error(
+            "❌ FRONTEND_URL is not configured in Django settings."
+        )
+
+        raise ValueError(
+            "FRONTEND_URL is not configured in Django settings."
+        )
+
+    frontend_url = frontend_url.rstrip("/")
+
+    return f"{frontend_url}/{path.lstrip('/')}"
+
+
+# ============================================================
 # PESAPAL CONFIGURATION HELPER
 # ============================================================
 
@@ -65,12 +104,14 @@ def get_pesapal_configuration():
     """
 
     try:
+
         config = PaymentConfiguration.objects.filter(
             gateway_name__iexact="Pesapal",
             is_active=True
         ).first()
 
         if config:
+
             logger.info(
                 "✅ Pesapal configuration found | "
                 f"ID={config.id} | "
@@ -97,6 +138,7 @@ def get_pesapal_configuration():
         return None
 
     except Exception as e:
+
         logger.error(
             f"❌ Error loading Pesapal configuration: {str(e)}",
             exc_info=True
@@ -116,11 +158,13 @@ def ensure_db_connection():
     """
 
     try:
+
         close_old_connections()
 
         db_connection.ensure_connection()
 
         with db_connection.cursor() as cursor:
+
             cursor.execute("SELECT 1")
             cursor.fetchone()
 
@@ -133,15 +177,19 @@ def ensure_db_connection():
         )
 
         try:
+
             db_connection.close()
 
             db_connection.ensure_connection()
 
             with db_connection.cursor() as cursor:
+
                 cursor.execute("SELECT 1")
                 cursor.fetchone()
 
-            logger.info("✅ Database reconnected successfully")
+            logger.info(
+                "✅ Database reconnected successfully"
+            )
 
             return True
 
@@ -613,7 +661,10 @@ def initiate_payment(request):
     except Exception as e:
 
         payment.status = "failed"
-        payment.save(update_fields=["status"])
+
+        payment.save(
+            update_fields=["status"]
+        )
 
         logger.error(
             f"❌ Pesapal submit order error: {str(e)}",
@@ -638,7 +689,10 @@ def initiate_payment(request):
     if not pesapal_response:
 
         payment.status = "failed"
-        payment.save(update_fields=["status"])
+
+        payment.save(
+            update_fields=["status"]
+        )
 
         logger.error(
             "❌ Empty response received from Pesapal."
@@ -658,7 +712,10 @@ def initiate_payment(request):
     if pesapal_response.get("status") != "200":
 
         payment.status = "failed"
-        payment.save(update_fields=["status"])
+
+        payment.save(
+            update_fields=["status"]
+        )
 
         logger.error(
             "❌ Pesapal response error: "
@@ -1230,7 +1287,7 @@ def register_ipn(request):
     except Exception as e:
 
         logger.error(
-            f"❌ IPN registration error: {str(e)}",
+            f"❌ Pesapal IPN registration error: {str(e)}",
             exc_info=True
         )
 
@@ -1264,8 +1321,9 @@ def payment_success(request):
         )
 
         return redirect(
-            "https://hookiefy.netlify.app/"
-            "payment-error?message=Payment+failed"
+            get_frontend_url(
+                "/payment-error?message=Payment+failed"
+            )
         )
 
     order_tracking_id = request.query_params.get(
@@ -1289,8 +1347,9 @@ def payment_success(request):
     if not order_tracking_id:
 
         return redirect(
-            "https://hookiefy.netlify.app/"
-            "payment-error?message=Payment+failed"
+            get_frontend_url(
+                "/payment-error?message=Payment+failed"
+            )
         )
 
     try:
@@ -1477,9 +1536,8 @@ def payment_success(request):
         # FRONTEND REDIRECT
         # ----------------------------------------------------
 
-        frontend_url = (
-            "https://hookiefy.netlify.app/"
-            "payment-success"
+        frontend_url = get_frontend_url(
+            "/payment-success"
         )
 
         redirect_url = (
@@ -1527,8 +1585,9 @@ def payment_success(request):
         )
 
         return redirect(
-            "https://hookiefy.netlify.app/"
-            "payment-error?message=Payment+failed"
+            get_frontend_url(
+                "/payment-error?message=Payment+failed"
+            )
         )
 
     except Exception as e:
@@ -1539,8 +1598,9 @@ def payment_success(request):
         )
 
         return redirect(
-            "https://hookiefy.netlify.app/"
-            "payment-error?message=Payment+failed"
+            get_frontend_url(
+                "/payment-error?message=Payment+failed"
+            )
         )
 
 
@@ -1562,8 +1622,9 @@ def payment_failure(request):
         )
 
         return redirect(
-            "https://hookiefy.netlify.app/"
-            "payment-error?message=Payment+failed"
+            get_frontend_url(
+                "/payment-error?message=Payment+failed"
+            )
         )
 
     order_tracking_id = request.query_params.get(
@@ -1630,9 +1691,8 @@ def payment_failure(request):
                 f"{order_tracking_id}"
             )
 
-    frontend_url = (
-        "https://hookiefy.netlify.app/"
-        "payment-failure"
+    frontend_url = get_frontend_url(
+        "/payment-failure"
     )
 
     redirect_url = (
@@ -1771,4 +1831,3 @@ def get_payment_status(request, payment_id):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
