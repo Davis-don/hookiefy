@@ -40,7 +40,7 @@ FRONTEND_URL = os.environ.get(
 # Django API / backend
 API_BASE_URL = os.environ.get(
     "API_BASE_URL",
-    "https://api.hookiefy.kinstryx.co.ke",
+    "https://hookiefy-server-7d6d.onrender.com",  
 ).rstrip("/")
 
 
