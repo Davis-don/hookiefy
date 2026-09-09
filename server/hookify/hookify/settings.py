@@ -1,3 +1,4 @@
+
 """
 Django settings for hookify project.
 """
@@ -26,28 +27,54 @@ DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 
 # ============================================================
+# DOMAIN CONFIGURATION
+# ============================================================
+
+# React frontend
+FRONTEND_URL = os.environ.get(
+    "FRONTEND_URL",
+    "https://youpata.kinstryx.co.ke",
+).rstrip("/")
+
+
+# Django API / backend
+API_BASE_URL = os.environ.get(
+    "API_BASE_URL",
+    "https://api.hookiefy.kinstryx.co.ke",
+).rstrip("/")
+
+
+# ============================================================
 # ALLOWED HOSTS
 # ============================================================
 
-ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS",
-    "localhost,"
-    "127.0.0.1,"
-    "hookiefy-server-7d6d.onrender.com,"
-    "api.hookiefy.kinstryx.co.ke"
-).split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS",
+        "localhost,"
+        "127.0.0.1,"
+        "hookiefy-server-7d6d.onrender.com,"
+        "api.hookiefy.kinstryx.co.ke",
+    ).split(",")
+    if host.strip()
+]
 
 
 # ============================================================
 # CSRF TRUSTED ORIGINS
 # ============================================================
 
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS",
-    "https://hookiefy-server-7d6d.onrender.com,"
-    "https://api.hookiefy.kinstryx.co.ke,"
-    "https://youpata.kinstryx.co.ke"
-).split(",")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "CSRF_TRUSTED_ORIGINS",
+        "https://youpata.kinstryx.co.ke,"
+        "https://api.hookiefy.kinstryx.co.ke,"
+        "https://hookiefy-server-7d6d.onrender.com",
+    ).split(",")
+    if origin.strip()
+]
 
 
 # ============================================================
@@ -204,18 +231,22 @@ default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 
-    # Production frontend
-    "https://youpata.kinstryx.co.ke",
+    # Frontend
+    FRONTEND_URL,
 
-    # Production backend
-    "https://api.hookiefy.kinstryx.co.ke",
+    # Backend
+    API_BASE_URL,
 
-    # Old Render backend URL - kept temporarily
+    # Render backend
     "https://hookiefy-server-7d6d.onrender.com",
 ]
 
 
-cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+cors_env = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "",
+)
+
 
 if cors_env:
 
@@ -231,12 +262,12 @@ else:
 
 
 # ============================================================
-# ENSURE REQUIRED CORS ORIGINS EXIST
+# ENSURE REQUIRED CORS ORIGINS
 # ============================================================
 
 required_cors_origins = [
-    "https://youpata.kinstryx.co.ke",
-    "https://api.hookiefy.kinstryx.co.ke",
+    FRONTEND_URL,
+    API_BASE_URL,
 ]
 
 
@@ -296,7 +327,10 @@ CORS_PREFLIGHT_MAX_AGE = 86400
 # CSRF CONFIGURATION
 # ============================================================
 
-csrf_env = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+csrf_env = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
+    "",
+)
 
 
 if csrf_env:
@@ -310,10 +344,22 @@ if csrf_env:
 else:
 
     csrf_origins = [
-        "https://youpata.kinstryx.co.ke",
-        "https://api.hookiefy.kinstryx.co.ke",
+        FRONTEND_URL,
+        API_BASE_URL,
         "https://hookiefy-server-7d6d.onrender.com",
     ]
+
+
+# Ensure frontend is trusted
+if FRONTEND_URL not in csrf_origins:
+
+    csrf_origins.append(FRONTEND_URL)
+
+
+# Ensure backend is trusted
+if API_BASE_URL not in csrf_origins:
+
+    csrf_origins.append(API_BASE_URL)
 
 
 CSRF_TRUSTED_ORIGINS = csrf_origins
@@ -324,12 +370,18 @@ CSRF_TRUSTED_ORIGINS = csrf_origins
 # ============================================================
 
 SESSION_COOKIE_SECURE = (
-    os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
+    os.environ.get(
+        "SESSION_COOKIE_SECURE",
+        "False",
+    ) == "True"
 )
 
 
 CSRF_COOKIE_SECURE = (
-    os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+    os.environ.get(
+        "CSRF_COOKIE_SECURE",
+        "False",
+    ) == "True"
 )
 
 
@@ -387,12 +439,12 @@ if not DEBUG:
 # ============================================================
 
 PESAPAL_CONSUMER_KEY = config(
-    "PESAPAL_CONSUMER_KEY"
+    "PESAPAL_CONSUMER_KEY",
 )
 
 
 PESAPAL_CONSUMER_SECRET = config(
-    "PESAPAL_CONSUMER_SECRET"
+    "PESAPAL_CONSUMER_SECRET",
 )
 
 
@@ -402,28 +454,30 @@ PESAPAL_CONSUMER_SECRET = config(
 
 PESAPAL_BASE_URL = config(
     "PESAPAL_BASE_URL",
-    default="https://cybqa.pesapal.com/pesapalv3"
-)
-
-
-# ============================================================
-# BASE DOMAIN
-# ============================================================
-
-# Your Django API is now hosted behind this custom domain.
-BASE_DOMAIN = os.environ.get(
-    "BASE_DOMAIN",
-    "https://api.hookiefy.kinstryx.co.ke"
+    default="https://cybqa.pesapal.com/pesapalv3",
 )
 
 
 # ============================================================
 # PESAPAL CALLBACK URL
 # ============================================================
+#
+# Pesapal redirects the customer to Django.
+#
+# Django:
+#   1. Receives OrderTrackingId
+#   2. Receives OrderMerchantReference
+#   3. Verifies the transaction
+#   4. Updates the Payment
+#   5. Updates the Connection
+#   6. Handles commissions/balances
+#   7. Redirects the browser to Youpata
+#
+# ============================================================
 
 PESAPAL_CALLBACK_URL = os.environ.get(
     "PESAPAL_CALLBACK_URL",
-    f"{BASE_DOMAIN}/payments/payment-success/"
+    f"{API_BASE_URL}/payments/payment-success/",
 )
 
 
@@ -433,17 +487,23 @@ PESAPAL_CALLBACK_URL = os.environ.get(
 
 PESAPAL_CANCELLATION_URL = os.environ.get(
     "PESAPAL_CANCELLATION_URL",
-    f"{BASE_DOMAIN}/payments/payment-failure/"
+    f"{API_BASE_URL}/payments/payment-failure/",
 )
 
 
 # ============================================================
 # PESAPAL IPN URL
 # ============================================================
+#
+# IPN is server-to-server.
+#
+# It MUST point to Django.
+#
+# ============================================================
 
 PESAPAL_IPN_URL = os.environ.get(
     "PESAPAL_IPN_URL",
-    f"{BASE_DOMAIN}/payments/ipn/"
+    f"{API_BASE_URL}/payments/ipn/",
 )
 
 
@@ -453,13 +513,13 @@ PESAPAL_IPN_URL = os.environ.get(
 
 PAYSTACK_SECRET_KEY = os.environ.get(
     "PAYSTACK_SECRET_KEY",
-    ""
+    "",
 )
 
 
 PAYSTACK_PUBLIC_KEY = os.environ.get(
     "PAYSTACK_PUBLIC_KEY",
-    ""
+    "",
 )
 
 
@@ -469,7 +529,7 @@ PAYSTACK_PUBLIC_KEY = os.environ.get(
 
 PAYSTACK_BASE_URL = os.environ.get(
     "PAYSTACK_BASE_URL",
-    "https://api.paystack.co"
+    "https://api.paystack.co",
 )
 
 
@@ -479,7 +539,7 @@ PAYSTACK_BASE_URL = os.environ.get(
 
 PAYSTACK_CALLBACK_URL = os.environ.get(
     "PAYSTACK_CALLBACK_URL",
-    f"{BASE_DOMAIN}/paystack/success/"
+    f"{API_BASE_URL}/paystack/success/",
 )
 
 
@@ -489,7 +549,7 @@ PAYSTACK_CALLBACK_URL = os.environ.get(
 
 PAYSTACK_FAILURE_URL = os.environ.get(
     "PAYSTACK_FAILURE_URL",
-    f"{BASE_DOMAIN}/paystack/failure/"
+    f"{API_BASE_URL}/paystack/failure/",
 )
 
 
@@ -533,26 +593,52 @@ LOGGING = {
 
     "loggers": {
         "payments": {
-            "handlers": ["console", "file"],
-            "level": "DEBUG" if DEBUG else "INFO",
+            "handlers": [
+                "console",
+                "file",
+            ],
+            "level": (
+                "DEBUG"
+                if DEBUG
+                else "INFO"
+            ),
             "propagate": True,
         },
 
         "paystack": {
-            "handlers": ["console", "file"],
-            "level": "DEBUG" if DEBUG else "INFO",
+            "handlers": [
+                "console",
+                "file",
+            ],
+            "level": (
+                "DEBUG"
+                if DEBUG
+                else "INFO"
+            ),
             "propagate": True,
         },
 
         "django.request": {
-            "handlers": ["console"],
-            "level": "DEBUG" if DEBUG else "ERROR",
+            "handlers": [
+                "console",
+            ],
+            "level": (
+                "DEBUG"
+                if DEBUG
+                else "ERROR"
+            ),
             "propagate": True,
         },
 
         "django.security.csrf": {
-            "handlers": ["console"],
-            "level": "DEBUG" if DEBUG else "INFO",
+            "handlers": [
+                "console",
+            ],
+            "level": (
+                "DEBUG"
+                if DEBUG
+                else "INFO"
+            ),
             "propagate": True,
         },
     },
@@ -571,15 +657,31 @@ if DEBUG:
 
     print("=" * 70)
 
-    print("🔒 SECURITY SETTINGS:")
+    print("\n🔒 SECURITY SETTINGS:")
 
     print(f"  DEBUG: {DEBUG}")
 
-    print(f"  ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+    print(
+        f"  ALLOWED_HOSTS: "
+        f"{ALLOWED_HOSTS}"
+    )
 
     print(
         f"  CSRF_TRUSTED_ORIGINS: "
         f"{CSRF_TRUSTED_ORIGINS}"
+    )
+
+
+    print("\n🌐 DOMAIN SETTINGS:")
+
+    print(
+        f"  FRONTEND_URL: "
+        f"{FRONTEND_URL}"
+    )
+
+    print(
+        f"  API_BASE_URL: "
+        f"{API_BASE_URL}"
     )
 
 
@@ -623,9 +725,15 @@ if DEBUG:
         f"{'✅ Set' if PESAPAL_CONSUMER_SECRET else '❌ NOT SET'}"
     )
 
-    print(f"  Base URL: {PESAPAL_BASE_URL}")
+    print(
+        f"  Base URL: "
+        f"{PESAPAL_BASE_URL}"
+    )
 
-    print(f"  BASE_DOMAIN: {BASE_DOMAIN}")
+    print(
+        f"  API Base URL: "
+        f"{API_BASE_URL}"
+    )
 
     print(
         f"  Callback URL: "
@@ -655,7 +763,10 @@ if DEBUG:
         f"{'✅ Set' if PAYSTACK_PUBLIC_KEY else '❌ NOT SET'}"
     )
 
-    print(f"  Base URL: {PAYSTACK_BASE_URL}")
+    print(
+        f"  Base URL: "
+        f"{PAYSTACK_BASE_URL}"
+    )
 
     print(
         f"  Callback URL: "
@@ -676,3 +787,4 @@ if DEBUG:
     )
 
     print("=" * 70 + "\n")
+
