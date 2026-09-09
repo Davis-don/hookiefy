@@ -1,790 +1,2263 @@
-
-"""
-Django settings for hookify project.
-"""
-
-from pathlib import Path
-from datetime import timedelta
-import os
-
-from decouple import config
-import dj_database_url
-
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
+```python
+# payments/views.py
 # ============================================================
-# CORE SECURITY SETTINGS
+# COMPLETE PAYMENT VIEWS
 # ============================================================
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-!mq$h7%9*#$=q8kr6$#+n5u&m5h&@0#tk++3keh%s+l12l6ac_",
-)
-
-DEBUG = os.environ.get("DEBUG", "True") == "True"
-
-
-# ============================================================
-# DOMAIN CONFIGURATION
-# ============================================================
-
-# React frontend
-FRONTEND_URL = os.environ.get(
-    "FRONTEND_URL",
-    "https://youpata.kinstryx.co.ke",
-).rstrip("/")
-
-
-# Django API / backend
-API_BASE_URL = os.environ.get(
-    "API_BASE_URL",
-    "https://hookiefy-server-7d6d.onrender.com",  
-).rstrip("/")
-
-
-# ============================================================
-# ALLOWED HOSTS
-# ============================================================
-
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get(
-        "ALLOWED_HOSTS",
-        "localhost,"
-        "127.0.0.1,"
-        "hookiefy-server-7d6d.onrender.com,"
-        "api.hookiefy.kinstryx.co.ke",
-    ).split(",")
-    if host.strip()
-]
-
-
-# ============================================================
-# CSRF TRUSTED ORIGINS
-# ============================================================
-
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get(
-        "CSRF_TRUSTED_ORIGINS",
-        "https://youpata.kinstryx.co.ke,"
-        "https://api.hookiefy.kinstryx.co.ke,"
-        "https://hookiefy-server-7d6d.onrender.com",
-    ).split(",")
-    if origin.strip()
-]
-
-
-# ============================================================
-# APPLICATIONS
-# ============================================================
-
-INSTALLED_APPS = [
-    "corsheaders",
-
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-
-    "account",
-    "assignments",
-    "userprofile",
-    "userpreference",
-    "feed",
-    "connections",
-    "notification",
-    "administration",
-    "payments",
-    "paymentconfigurations",
-    "UserBalance",
-    "stats",
-    "commisions",
-    "paystack",
-    "system_config",
-    "withdrawals",
-    "adverts",
-
-    "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
-]
-
-
-# ============================================================
-# MIDDLEWARE
-# ============================================================
-
-MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-
-    "django.middleware.security.SecurityMiddleware",
-
-    "django.contrib.sessions.middleware.SessionMiddleware",
-
-    "django.middleware.common.CommonMiddleware",
-
-    "django.middleware.csrf.CsrfViewMiddleware",
-
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-
-    "django.contrib.messages.middleware.MessageMiddleware",
-
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
-
-
-# ============================================================
-# URL CONFIGURATION
-# ============================================================
-
-ROOT_URLCONF = "hookify.urls"
-
-
-# ============================================================
-# TEMPLATES
-# ============================================================
-
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-
-        "DIRS": [],
-
-        "APP_DIRS": True,
-
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.request",
-
-                "django.contrib.auth.context_processors.auth",
-
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
-
-# ============================================================
-# WSGI
-# ============================================================
-
-WSGI_APPLICATION = "hookify.wsgi.application"
-
-
-# ============================================================
-# DATABASE
-# ============================================================
-
-DATABASES = {
-    "default": dj_database_url.config(
-        default=config("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True,
-    )
-}
-
-
-# ============================================================
-# AUTH USER MODEL
-# ============================================================
-
-AUTH_USER_MODEL = "account.Accounts"
-
-
-# ============================================================
-# DJANGO REST FRAMEWORK
-# ============================================================
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-}
-
-
-# ============================================================
-# JWT CONFIGURATION
-# ============================================================
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
-
-    "ROTATE_REFRESH_TOKENS": True,
-
-    "BLACKLIST_AFTER_ROTATION": True,
-}
-
-
-# ============================================================
-# CORS CONFIGURATION
-# ============================================================
-
-default_origins = [
-    # Local development
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-
-    # Frontend
-    FRONTEND_URL,
-
-    # Backend
-    API_BASE_URL,
-
-    # Render backend
-    "https://hookiefy-server-7d6d.onrender.com",
-]
-
-
-cors_env = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "",
+from decimal import Decimal
+import uuid
+import logging
+from urllib.parse import urlencode
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
+from django.conf import settings
+from django.utils import timezone
+from django.shortcuts import redirect
+from django.db import connection as db_connection, close_old_connections
+from django.db.utils import OperationalError, InterfaceError
+
+from assignments.models import ClientAssignment
+from administration.models import PlatformConfig
+from paymentconfigurations.models import PaymentConfiguration
+from connections.models import Connection
+from payments.models import Payment
+from notification.models import Notification
+from account.models import Accounts
+from UserBalance.models import UserBalance
+
+from .services.register_ipn import register_ipn_url
+from .services.submit_order import submit_order
+from .services.get_transaction_status import get_transaction_status
+from .services.check_superadmin import SuperAdminValidator
+from .services.commission_service import (
+    CommissionService,
+    CommissionDistributionError,
 )
 
 
-if cors_env:
+# ============================================================
+# LOGGER
+# ============================================================
 
-    cors_origins = [
-        origin.strip()
-        for origin in cors_env.split(",")
-        if origin.strip()
-    ]
-
-else:
-
-    cors_origins = default_origins.copy()
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# ENSURE REQUIRED CORS ORIGINS
+# FRONTEND URL HELPER
 # ============================================================
 
-required_cors_origins = [
-    FRONTEND_URL,
-    API_BASE_URL,
-]
+def get_frontend_url():
+    """
+    Get the frontend URL from Django settings.
 
+    Example:
 
-for origin in required_cors_origins:
+        https://youpata.kinstryx.co.ke
 
-    if origin not in cors_origins:
-        cors_origins.append(origin)
+    Never hardcode the frontend domain inside this file.
+    """
 
-
-CORS_ALLOWED_ORIGINS = cors_origins
-
-
-# ============================================================
-# CORS DEVELOPMENT MODE
-# ============================================================
-
-if DEBUG:
-
-    CORS_ALLOW_ALL_ORIGINS = True
-
-else:
-
-    CORS_ALLOW_ALL_ORIGINS = False
-
-
-CORS_ALLOW_CREDENTIALS = True
-
-
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-    "x-custom-header",
-]
-
-
-CORS_PREFLIGHT_MAX_AGE = 86400
+    return getattr(
+        settings,
+        "FRONTEND_URL",
+        "https://youpata.kinstryx.co.ke",
+    ).rstrip("/")
 
 
 # ============================================================
-# CSRF CONFIGURATION
+# FRONTEND REDIRECT HELPER
 # ============================================================
 
-csrf_env = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS",
-    "",
-)
+def build_frontend_redirect(path, params=None):
+    """
+    Build a frontend redirect URL.
 
+    Example:
 
-if csrf_env:
+        https://youpata.kinstryx.co.ke/payment-success/?...
 
-    csrf_origins = [
-        origin.strip()
-        for origin in csrf_env.split(",")
-        if origin.strip()
-    ]
+    The domain always comes from settings.FRONTEND_URL.
+    """
 
-else:
+    frontend_url = get_frontend_url()
 
-    csrf_origins = [
-        FRONTEND_URL,
-        API_BASE_URL,
-        "https://hookiefy-server-7d6d.onrender.com",
-    ]
+    path = path if path.startswith("/") else f"/{path}"
 
+    url = f"{frontend_url}{path}"
 
-# Ensure frontend is trusted
-if FRONTEND_URL not in csrf_origins:
+    if params:
+        clean_params = {
+            key: value
+            for key, value in params.items()
+            if value is not None
+        }
 
-    csrf_origins.append(FRONTEND_URL)
+        if clean_params:
+            url += "?" + urlencode(clean_params)
 
-
-# Ensure backend is trusted
-if API_BASE_URL not in csrf_origins:
-
-    csrf_origins.append(API_BASE_URL)
-
-
-CSRF_TRUSTED_ORIGINS = csrf_origins
+    return url
 
 
 # ============================================================
-# SESSION AND CSRF COOKIE SETTINGS
+# PESAPAL CONFIGURATION HELPER
 # ============================================================
 
-SESSION_COOKIE_SECURE = (
-    os.environ.get(
-        "SESSION_COOKIE_SECURE",
-        "False",
-    ) == "True"
-)
+def get_pesapal_configuration():
+    """
+    Get the active Pesapal configuration.
 
+    Uses case-insensitive matching so all of these work:
 
-CSRF_COOKIE_SECURE = (
-    os.environ.get(
-        "CSRF_COOKIE_SECURE",
-        "False",
-    ) == "True"
-)
+        Pesapal
+        PesaPal
+        PESAPAL
+        pesapal
 
+    Returns:
+        PaymentConfiguration instance or None
+    """
 
-SESSION_COOKIE_HTTPONLY = True
+    try:
 
-CSRF_COOKIE_HTTPONLY = True
+        config = PaymentConfiguration.objects.filter(
+            gateway_name__iexact="Pesapal",
+            is_active=True,
+        ).first()
 
-SESSION_COOKIE_SAMESITE = "Lax"
+        if config:
 
-CSRF_COOKIE_SAMESITE = "Lax"
+            logger.info(
+                "✅ Pesapal configuration found | "
+                f"ID={config.id} | "
+                f"Gateway={config.gateway_name} | "
+                f"Active={config.is_active}"
+            )
+
+            return config
+
+        available_configs = list(
+            PaymentConfiguration.objects.values(
+                "id",
+                "gateway_name",
+                "is_active",
+            )
+        )
+
+        logger.error(
+            "❌ No active Pesapal configuration found. "
+            f"Available configurations: {available_configs}"
+        )
+
+        return None
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ Error loading Pesapal configuration: {str(e)}",
+            exc_info=True,
+        )
+
+        return None
 
 
 # ============================================================
-# INTERNATIONALIZATION
+# DATABASE CONNECTION HELPER
 # ============================================================
 
-LANGUAGE_CODE = "en-us"
+def ensure_db_connection():
+    """
+    Ensure database connection is healthy before proceeding.
+    Attempts to reconnect if connection is broken.
+    """
 
-TIME_ZONE = "UTC"
+    try:
 
-USE_I18N = True
+        close_old_connections()
 
-USE_TZ = True
+        db_connection.ensure_connection()
+
+        with db_connection.cursor() as cursor:
+
+            cursor.execute("SELECT 1")
+
+            cursor.fetchone()
+
+        return True
+
+    except (OperationalError, InterfaceError) as e:
+
+        logger.warning(
+            f"⚠️ Database connection error detected: {str(e)}"
+        )
+
+        try:
+
+            db_connection.close()
+
+            db_connection.ensure_connection()
+
+            with db_connection.cursor() as cursor:
+
+                cursor.execute("SELECT 1")
+
+                cursor.fetchone()
+
+            logger.info(
+                "✅ Database reconnected successfully"
+            )
+
+            return True
+
+        except Exception as reconnect_error:
+
+            logger.error(
+                "❌ Failed to reconnect to database: "
+                f"{str(reconnect_error)}"
+            )
+
+            return False
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ Unexpected database error: {str(e)}"
+        )
+
+        return False
 
 
 # ============================================================
-# STATIC FILES
+# DATABASE HEALTH CHECK
 # ============================================================
 
-STATIC_URL = "static/"
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def database_health_check(request):
+
+    try:
+
+        close_old_connections()
+
+        health_status = {
+            "status": "ok",
+            "database": "connected",
+            "timestamp": timezone.now().isoformat(),
+            "details": {},
+        }
+
+        try:
+
+            db_connection.ensure_connection()
+
+            with db_connection.cursor() as cursor:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        version(),
+                        current_database(),
+                        current_user,
+                        now(),
+                        pg_postmaster_start_time()
+                    """
+                )
+
+                row = cursor.fetchone()
+
+                health_status["details"] = {
+                    "version": row[0] if row else "Unknown",
+                    "database_name": row[1] if row else "Unknown",
+                    "user": row[2] if row else "Unknown",
+                    "current_time": row[3] if row else "Unknown",
+                    "postmaster_start": row[4] if row else "Unknown",
+                }
+
+                cursor.execute(
+                    """
+                    SELECT
+                        count(*) AS total_connections,
+                        count(*) FILTER (
+                            WHERE state = 'active'
+                        ) AS active_connections,
+                        count(*) FILTER (
+                            WHERE state = 'idle'
+                        ) AS idle_connections
+                    FROM pg_stat_activity
+                    """
+                )
+
+                stats = cursor.fetchone()
+
+                health_status["details"]["connections"] = {
+                    "total": stats[0] if stats else 0,
+                    "active": stats[1] if stats else 0,
+                    "idle": stats[2] if stats else 0,
+                }
+
+            health_status["status"] = "healthy"
+
+        except (OperationalError, InterfaceError) as e:
+
+            health_status["status"] = "error"
+
+            health_status["database"] = "disconnected"
+
+            health_status["error"] = str(e)
+
+            health_status["reconnecting"] = False
+
+            try:
+
+                db_connection.close()
+
+                db_connection.ensure_connection()
+
+                health_status["reconnecting"] = True
+
+                health_status[
+                    "reconnection_status"
+                ] = "success"
+
+            except Exception as reconnect_error:
+
+                health_status[
+                    "reconnection_status"
+                ] = "failed"
+
+                health_status[
+                    "reconnection_error"
+                ] = str(reconnect_error)
+
+        return Response(
+            health_status,
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Database health check error: {str(e)}"
+        )
+
+        return Response(
+            {
+                "status": "error",
+                "message": str(e),
+                "timestamp": timezone.now().isoformat(),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 # ============================================================
-# PRODUCTION SECURITY SETTINGS
+# CHECK SUPERADMIN STATUS
 # ============================================================
 
-if not DEBUG:
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_superadmin_status(request):
 
-    SECURE_SSL_REDIRECT = True
+    if not ensure_db_connection():
 
-    SECURE_PROXY_SSL_HEADER = (
-        "HTTP_X_FORWARDED_PROTO",
-        "https",
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Service temporarily unavailable. "
+                    "Please try again."
+                ),
+                "error_code": "DB_CONNECTION_ERROR",
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    status_data = (
+        SuperAdminValidator
+        .get_superadmin_status()
     )
 
-    SECURE_HSTS_SECONDS = 31536000
+    if status_data.get(
+        "can_initiate_payment"
+    ):
 
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+        return Response(
+            {
+                "success": True,
+                "message": "Payment service is ready.",
+                "can_initiate": True,
+            },
+            status=status.HTTP_200_OK,
+        )
 
-    SECURE_HSTS_PRELOAD = True
-
-
-# ============================================================
-# PESAPAL CONFIGURATION
-# ============================================================
-
-PESAPAL_CONSUMER_KEY = config(
-    "PESAPAL_CONSUMER_KEY",
-)
-
-
-PESAPAL_CONSUMER_SECRET = config(
-    "PESAPAL_CONSUMER_SECRET",
-)
-
-
-# ============================================================
-# PESAPAL BASE URL
-# ============================================================
-
-PESAPAL_BASE_URL = config(
-    "PESAPAL_BASE_URL",
-    default="https://cybqa.pesapal.com/pesapalv3",
-)
-
-
-# ============================================================
-# PESAPAL CALLBACK URL
-# ============================================================
-#
-# Pesapal redirects the customer to Django.
-#
-# Django:
-#   1. Receives OrderTrackingId
-#   2. Receives OrderMerchantReference
-#   3. Verifies the transaction
-#   4. Updates the Payment
-#   5. Updates the Connection
-#   6. Handles commissions/balances
-#   7. Redirects the browser to Youpata
-#
-# ============================================================
-
-PESAPAL_CALLBACK_URL = os.environ.get(
-    "PESAPAL_CALLBACK_URL",
-    f"{API_BASE_URL}/payments/payment-success/",
-)
-
-
-# ============================================================
-# PESAPAL CANCELLATION URL
-# ============================================================
-
-PESAPAL_CANCELLATION_URL = os.environ.get(
-    "PESAPAL_CANCELLATION_URL",
-    f"{API_BASE_URL}/payments/payment-failure/",
-)
-
-
-# ============================================================
-# PESAPAL IPN URL
-# ============================================================
-#
-# IPN is server-to-server.
-#
-# It MUST point to Django.
-#
-# ============================================================
-
-PESAPAL_IPN_URL = os.environ.get(
-    "PESAPAL_IPN_URL",
-    f"{API_BASE_URL}/payments/ipn/",
-)
-
-
-# ============================================================
-# PAYSTACK CONFIGURATION
-# ============================================================
-
-PAYSTACK_SECRET_KEY = os.environ.get(
-    "PAYSTACK_SECRET_KEY",
-    "",
-)
-
-
-PAYSTACK_PUBLIC_KEY = os.environ.get(
-    "PAYSTACK_PUBLIC_KEY",
-    "",
-)
-
-
-# ============================================================
-# PAYSTACK BASE URL
-# ============================================================
-
-PAYSTACK_BASE_URL = os.environ.get(
-    "PAYSTACK_BASE_URL",
-    "https://api.paystack.co",
-)
-
-
-# ============================================================
-# PAYSTACK CALLBACK URL
-# ============================================================
-
-PAYSTACK_CALLBACK_URL = os.environ.get(
-    "PAYSTACK_CALLBACK_URL",
-    f"{API_BASE_URL}/paystack/success/",
-)
-
-
-# ============================================================
-# PAYSTACK FAILURE URL
-# ============================================================
-
-PAYSTACK_FAILURE_URL = os.environ.get(
-    "PAYSTACK_FAILURE_URL",
-    f"{API_BASE_URL}/paystack/failure/",
-)
-
-
-# ============================================================
-# LOGGING CONFIGURATION
-# ============================================================
-
-LOGGING = {
-    "version": 1,
-
-    "disable_existing_loggers": False,
-
-    "formatters": {
-        "verbose": {
-            "format": (
-                "{levelname} {asctime} "
-                "{module} {process:d} "
-                "{thread:d} {message}"
+    return Response(
+        {
+            "success": False,
+            "message": (
+                "Payment service is currently unavailable. "
+                "Please try again later."
             ),
-            "style": "{",
+            "can_initiate": False,
         },
-
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
-        },
-    },
-
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-        },
-
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "payments.log",
-            "formatter": "verbose",
-        },
-    },
-
-    "loggers": {
-        "payments": {
-            "handlers": [
-                "console",
-                "file",
-            ],
-            "level": (
-                "DEBUG"
-                if DEBUG
-                else "INFO"
-            ),
-            "propagate": True,
-        },
-
-        "paystack": {
-            "handlers": [
-                "console",
-                "file",
-            ],
-            "level": (
-                "DEBUG"
-                if DEBUG
-                else "INFO"
-            ),
-            "propagate": True,
-        },
-
-        "django.request": {
-            "handlers": [
-                "console",
-            ],
-            "level": (
-                "DEBUG"
-                if DEBUG
-                else "ERROR"
-            ),
-            "propagate": True,
-        },
-
-        "django.security.csrf": {
-            "handlers": [
-                "console",
-            ],
-            "level": (
-                "DEBUG"
-                if DEBUG
-                else "INFO"
-            ),
-            "propagate": True,
-        },
-    },
-}
+        status=status.HTTP_400_BAD_REQUEST,
+    )
 
 
 # ============================================================
-# DEBUG CONFIGURATION LOG
+# INITIATE PAYMENT
 # ============================================================
 
-if DEBUG:
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def initiate_payment(request):
 
-    print("\n" + "=" * 70)
+    """
+    Initiate a payment for a connection.
+    """
 
-    print("🚀 DJANGO CONFIGURATION LOG")
+    # --------------------------------------------------------
+    # DATABASE CHECK
+    # --------------------------------------------------------
 
-    print("=" * 70)
+    if not ensure_db_connection():
 
-    print("\n🔒 SECURITY SETTINGS:")
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Service temporarily unavailable. "
+                    "Please try again."
+                ),
+                "error_code": "DB_CONNECTION_ERROR",
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    print(f"  DEBUG: {DEBUG}")
+    user = request.user
 
-    print(
-        f"  ALLOWED_HOSTS: "
-        f"{ALLOWED_HOSTS}"
+    connection_id = request.data.get(
+        "connection_id"
     )
 
-    print(
-        f"  CSRF_TRUSTED_ORIGINS: "
-        f"{CSRF_TRUSTED_ORIGINS}"
+    phone_number = request.data.get(
+        "phone_number"
+    )
+
+    # --------------------------------------------------------
+    # VALIDATE REQUEST
+    # --------------------------------------------------------
+
+    if not connection_id:
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Invalid request. "
+                    "Missing connection_id."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not phone_number:
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Invalid request. "
+                    "Missing phone_number."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # VALIDATE SUPERADMIN
+    # --------------------------------------------------------
+
+    eligible, message, data = (
+        SuperAdminValidator
+        .check_payment_eligibility()
+    )
+
+    if not eligible:
+
+        logger.error(
+            f"❌ Payment blocked: {message}"
+        )
+
+        if data and data.get(
+            "count",
+            0
+        ) > 1:
+
+            logger.error(
+                "Multiple superadmins found: "
+                f"{data.get('superadmins', [])}"
+            )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment service is currently unavailable. "
+                    "Please try again later."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # GET CONNECTION
+    # --------------------------------------------------------
+
+    try:
+
+        connection_obj = (
+            Connection.objects.get(
+                connection_id=connection_id
+            )
+        )
+
+    except Connection.DoesNotExist:
+
+        logger.warning(
+            f"Connection not found: {connection_id}"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initiation failed.",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # --------------------------------------------------------
+    # CHECK OWNERSHIP
+    # --------------------------------------------------------
+
+    if connection_obj.sender != user:
+
+        logger.warning(
+            f"User {user.email} attempted to pay for "
+            "a connection they don't own."
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initiation failed.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # --------------------------------------------------------
+    # PREVENT DUPLICATE PAYMENT
+    # --------------------------------------------------------
+
+    if Payment.objects.filter(
+        connection=connection_obj,
+        status="completed",
+    ).exists():
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment initiation failed. "
+                    "This connection has already been paid for."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # FIND ASSIGNED ADMIN
+    # --------------------------------------------------------
+
+    try:
+
+        assignment = (
+            ClientAssignment.objects.get(
+                user=user
+            )
+        )
+
+        assigned_admin = (
+            assignment.assigned_admin
+        )
+
+    except ClientAssignment.DoesNotExist:
+
+        logger.warning(
+            f"No assignment found for user: {user.email}"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initiation failed.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # GET PLATFORM CONFIGURATION
+    # --------------------------------------------------------
+
+    try:
+
+        platform_config = (
+            PlatformConfig.objects.get(
+                owner=assigned_admin
+            )
+        )
+
+        hookup_fee = Decimal(
+            str(platform_config.hookup_fee)
+        )
+
+    except PlatformConfig.DoesNotExist:
+
+        logger.warning(
+            "No platform config for admin: "
+            f"{assigned_admin.email}"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initiation failed.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # GET PESAPAL CONFIGURATION
+    # --------------------------------------------------------
+
+    payment_config = (
+        get_pesapal_configuration()
+    )
+
+    if not payment_config:
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment initiation failed. "
+                    "Please try again later."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    logger.info(
+        "✅ Using PaymentConfiguration ID "
+        f"{payment_config.id}"
+    )
+
+    # --------------------------------------------------------
+    # CREATE MERCHANT REFERENCE
+    # --------------------------------------------------------
+
+    merchant_reference = (
+        f"HOOK-{uuid.uuid4().hex[:12].upper()}"
+    )
+
+    # --------------------------------------------------------
+    # CREATE PAYMENT
+    # --------------------------------------------------------
+
+    try:
+
+        payment = Payment.objects.create(
+            user=user,
+            connection=connection_obj,
+            merchant_reference=merchant_reference,
+            amount=hookup_fee,
+            phone_number=phone_number,
+            status="pending",
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ Failed to create payment: {str(e)}",
+            exc_info=True,
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment initiation failed.",
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    # --------------------------------------------------------
+    # SEND ORDER TO PESAPAL
+    # --------------------------------------------------------
+
+    try:
+
+        pesapal_response = submit_order(
+            payment=payment,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+        )
+
+    except Exception as e:
+
+        payment.status = "failed"
+
+        payment.save(
+            update_fields=["status"]
+        )
+
+        logger.error(
+            f"❌ Pesapal submit order error: {str(e)}",
+            exc_info=True,
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment initiation failed. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    # --------------------------------------------------------
+    # CHECK PESAPAL RESPONSE
+    # --------------------------------------------------------
+
+    if not pesapal_response:
+
+        payment.status = "failed"
+
+        payment.save(
+            update_fields=["status"]
+        )
+
+        logger.error(
+            "❌ Empty response received from Pesapal."
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment initiation failed. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if pesapal_response.get("status") != "200":
+
+        payment.status = "failed"
+
+        payment.save(
+            update_fields=["status"]
+        )
+
+        logger.error(
+            "❌ Pesapal response error: "
+            f"{pesapal_response}"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment initiation failed. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # SAVE TRACKING ID
+    # --------------------------------------------------------
+
+    payment.order_tracking_id = (
+        pesapal_response.get(
+            "order_tracking_id"
+        )
+    )
+
+    payment.save(
+        update_fields=[
+            "order_tracking_id"
+        ]
+    )
+
+    logger.info(
+        "✅ Payment initiated successfully | "
+        f"Payment ID={payment.id} | "
+        f"Tracking ID={payment.order_tracking_id}"
+    )
+
+    # --------------------------------------------------------
+    # RESPONSE
+    # --------------------------------------------------------
+
+    return Response(
+        {
+            "success": True,
+            "message": (
+                "Payment initiated successfully."
+            ),
+            "payment": {
+                "id": payment.id,
+                "merchant_reference": (
+                    payment.merchant_reference
+                ),
+                "amount": payment.amount,
+                "status": payment.status,
+                "order_tracking_id": (
+                    payment.order_tracking_id
+                ),
+            },
+            "redirect_url": (
+                pesapal_response.get(
+                    "redirect_url"
+                )
+            ),
+        },
+        status=status.HTTP_200_OK,
     )
 
 
-    print("\n🌐 DOMAIN SETTINGS:")
+# ============================================================
+# PESAPAL IPN CALLBACK
+# ============================================================
 
-    print(
-        f"  FRONTEND_URL: "
-        f"{FRONTEND_URL}"
+@api_view(["GET", "POST"])
+def ipn_callback(request):
+
+    """
+    Handle Pesapal IPN callbacks.
+
+    Includes commission distribution.
+    """
+
+    if not ensure_db_connection():
+
+        logger.error(
+            "❌ Database connection error in IPN callback"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Service temporarily unavailable."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    data = (
+        request.query_params
+        if request.method == "GET"
+        else request.data
     )
 
-    print(
-        f"  API_BASE_URL: "
-        f"{API_BASE_URL}"
+    logger.info("=" * 60)
+
+    logger.info("PESAPAL IPN")
+
+    logger.info(data)
+
+    logger.info("=" * 60)
+
+    order_tracking_id = (
+        data.get("OrderTrackingId")
+        or data.get("orderTrackingId")
+        or data.get("order_tracking_id")
+    )
+
+    if not order_tracking_id:
+
+        logger.error(
+            "Missing order tracking id in IPN"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Invalid IPN notification."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+
+        payment = Payment.objects.get(
+            order_tracking_id=order_tracking_id
+        )
+
+    except Payment.DoesNotExist:
+
+        logger.error(
+            "❌ Payment not found for tracking ID: "
+            f"{order_tracking_id}"
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment not found.",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    try:
+
+        verification = (
+            get_transaction_status(
+                order_tracking_id
+            )
+        )
+
+        payment_status = (
+            verification.get(
+                "payment_status_description"
+            )
+        )
+
+        logger.info(
+            f"Verified payment status: {payment_status}"
+        )
+
+        commission_result = None
+
+        # ----------------------------------------------------
+        # COMPLETED
+        # ----------------------------------------------------
+
+        if payment_status == "Completed":
+
+            already_completed = (
+                payment.status == "completed"
+            )
+
+            if not already_completed:
+
+                payment.status = "completed"
+
+                payment.paid_at = timezone.now()
+
+                payment.save(
+                    update_fields=[
+                        "status",
+                        "paid_at",
+                    ]
+                )
+
+                connection_obj = (
+                    payment.connection
+                )
+
+                connection_obj.status = (
+                    Connection.Status.COMPLETED
+                )
+
+                connection_obj.save(
+                    update_fields=["status"]
+                )
+
+                logger.info(
+                    f"✅ Payment {order_tracking_id} "
+                    "marked as completed"
+                )
+
+                logger.info(
+                    f"✅ Connection "
+                    f"{connection_obj.connection_id} "
+                    "marked as completed"
+                )
+
+                # ------------------------------------------------
+                # COMMISSION DISTRIBUTION
+                # ------------------------------------------------
+
+                try:
+
+                    commission_result = (
+                        CommissionService
+                        .distribute_commission_for_payment(
+                            payment
+                        )
+                    )
+
+                    logger.info(
+                        "✅ Commission distributed successfully: "
+                        f"{commission_result}"
+                    )
+
+                except CommissionDistributionError as e:
+
+                    logger.error(
+                        "❌ Commission distribution failed: "
+                        f"{str(e)}"
+                    )
+
+                    commission_result = {
+                        "success": False,
+                        "error": str(e),
+                    }
+
+                # ------------------------------------------------
+                # SENDER NOTIFICATION
+                # ------------------------------------------------
+
+                Notification.objects.create(
+                    user=connection_obj.sender,
+                    connection=connection_obj,
+                    title="Payment Successful! 🎉",
+                    message=(
+                        f"Your payment of KES "
+                        f"{payment.amount} for hookup with "
+                        f"{connection_obj.receiver.full_name} "
+                        "has been completed successfully. "
+                        "Your connection is now active!"
+                    ),
+                    notification_type=(
+                        Notification
+                        .NotificationType
+                        .PAYMENT_SUCCESS
+                    ),
+                    is_read=False,
+                )
+
+                # ------------------------------------------------
+                # ADMIN NOTIFICATION
+                # ------------------------------------------------
+
+                admin_amount = (
+                    commission_result.get(
+                        "admin_amount",
+                        0,
+                    )
+                    if commission_result
+                    and commission_result.get(
+                        "success"
+                    )
+                    else 0
+                )
+
+                if admin_amount > 0:
+
+                    admin_message = (
+                        f"{connection_obj.sender.full_name} "
+                        "has completed payment for their hookup. "
+                        f"You have received KES "
+                        f"{admin_amount:.2f} "
+                        "as your commission."
+                    )
+
+                else:
+
+                    admin_message = (
+                        f"{connection_obj.sender.full_name} "
+                        "has completed payment for their hookup. "
+                        "The connection is now ready for service."
+                    )
+
+                Notification.objects.create(
+                    user=connection_obj.receiver,
+                    connection=connection_obj,
+                    title=(
+                        "New Completed Connection! 🎉"
+                    ),
+                    message=admin_message,
+                    notification_type=(
+                        Notification
+                        .NotificationType
+                        .CONNECTION_COMPLETED
+                    ),
+                    is_read=False,
+                )
+
+                # ------------------------------------------------
+                # SUPERADMIN NOTIFICATION
+                # ------------------------------------------------
+
+                if (
+                    commission_result
+                    and commission_result.get(
+                        "success"
+                    )
+                ):
+
+                    superadmin_amount = (
+                        commission_result.get(
+                            "superadmin_amount",
+                            0,
+                        )
+                    )
+
+                    if superadmin_amount > 0:
+
+                        superadmin = (
+                            Accounts.objects
+                            .filter(
+                                role="superadmin",
+                                is_active=True,
+                            )
+                            .first()
+                        )
+
+                        if superadmin:
+
+                            Notification.objects.create(
+                                user=superadmin,
+                                connection=connection_obj,
+                                title=(
+                                    "💰 Platform Commission Received!"
+                                ),
+                                message=(
+                                    "Platform received KES "
+                                    f"{superadmin_amount:.2f} "
+                                    "from "
+                                    f"{connection_obj.sender.full_name}"
+                                    "'s payment."
+                                ),
+                                notification_type=(
+                                    Notification
+                                    .NotificationType
+                                    .PAYMENT_SUCCESS
+                                ),
+                                is_read=False,
+                            )
+
+                # ------------------------------------------------
+                # MARK OLD NOTIFICATIONS AS READ
+                # ------------------------------------------------
+
+                Notification.objects.filter(
+                    connection=connection_obj,
+                    user=connection_obj.sender,
+                    notification_type__in=[
+                        Notification
+                        .NotificationType
+                        .CONNECTION_REQUEST,
+
+                        Notification
+                        .NotificationType
+                        .CONNECTION_ACCEPTED,
+
+                        Notification
+                        .NotificationType
+                        .PAYMENT_PENDING,
+                    ],
+                ).update(
+                    is_read=True
+                )
+
+                logger.info(
+                    "✅ IPN: Notifications created "
+                    "for completed payment"
+                )
+
+        # ----------------------------------------------------
+        # FAILED
+        # ----------------------------------------------------
+
+        elif payment_status == "Failed":
+
+            payment.status = "failed"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+            Notification.objects.create(
+                user=payment.user,
+                connection=payment.connection,
+                title="Payment Failed ❌",
+                message=(
+                    f"Your payment of KES "
+                    f"{payment.amount} failed. "
+                    "Please try again or contact support."
+                ),
+                notification_type=(
+                    Notification
+                    .NotificationType
+                    .PAYMENT_FAILED
+                ),
+                is_read=False,
+            )
+
+            logger.info(
+                "❌ IPN: Payment failed"
+            )
+
+        # ----------------------------------------------------
+        # CANCELLED
+        # ----------------------------------------------------
+
+        elif payment_status == "Cancelled":
+
+            payment.status = "cancelled"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+            logger.info(
+                "⚠️ IPN: Payment cancelled"
+            )
+
+        # ----------------------------------------------------
+        # PENDING / UNKNOWN
+        # ----------------------------------------------------
+
+        else:
+
+            payment.status = "pending"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+            logger.info(
+                "⏳ IPN: Payment still pending"
+            )
+
+        return Response(
+            {
+                "success": True,
+                "message": "IPN processed.",
+                "payment_status": payment.status,
+                "connection_status": (
+                    payment.connection.status
+                ),
+                "commission_distribution": (
+                    commission_result
+                    if commission_result
+                    else None
+                ),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ IPN processing error: {str(e)}",
+            exc_info=True,
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": "IPN processing failed.",
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+# ============================================================
+# REGISTER PESAPAL IPN
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def register_ipn(request):
+
+    """
+    Register IPN URL with Pesapal.
+    """
+
+    try:
+
+        response = register_ipn_url()
+
+        if not response:
+
+            logger.error(
+                "❌ Empty response from Pesapal IPN registration"
+            )
+
+            return Response(
+                {
+                    "success": False,
+                    "message": (
+                        "IPN registration failed. "
+                        "Please try again."
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if response.get("status") != "200":
+
+            logger.error(
+                "❌ Pesapal IPN registration response: "
+                f"{response}"
+            )
+
+            return Response(
+                {
+                    "success": False,
+                    "message": (
+                        "IPN registration failed. "
+                        "Please try again."
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ----------------------------------------------------
+        # FIND EXISTING CONFIGURATION
+        # ----------------------------------------------------
+
+        config = (
+            PaymentConfiguration.objects
+            .filter(
+                gateway_name__iexact="Pesapal"
+            )
+            .first()
+        )
+
+        # ----------------------------------------------------
+        # UPDATE EXISTING CONFIGURATION
+        # ----------------------------------------------------
+
+        if config:
+
+            config.ipn_id = response.get(
+                "ipn_id"
+            )
+
+            config.ipn_url = response.get(
+                "url"
+            )
+
+            config.is_active = True
+
+            config.save()
+
+            logger.info(
+                "✅ Existing Pesapal configuration updated | "
+                f"ID={config.id}"
+            )
+
+        # ----------------------------------------------------
+        # CREATE NEW CONFIGURATION
+        # ----------------------------------------------------
+
+        else:
+
+            config = (
+                PaymentConfiguration.objects.create(
+                    gateway_name="Pesapal",
+                    ipn_id=response.get(
+                        "ipn_id"
+                    ),
+                    ipn_url=response.get(
+                        "url"
+                    ),
+                    is_active=True,
+                )
+            )
+
+            logger.info(
+                "✅ New Pesapal configuration created | "
+                f"ID={config.id}"
+            )
+
+        return Response(
+            {
+                "success": True,
+                "message": (
+                    "IPN registered successfully."
+                ),
+                "data": {
+                    "id": config.id,
+                    "gateway_name": (
+                        config.gateway_name
+                    ),
+                    "ipn_id": config.ipn_id,
+                    "ipn_url": config.ipn_url,
+                    "is_active": (
+                        config.is_active
+                    ),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ IPN registration error: {str(e)}",
+            exc_info=True,
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "IPN registration failed. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+# ============================================================
+# PAYMENT SUCCESS
+# ============================================================
+
+@api_view(["GET"])
+def payment_success(request):
+
+    """
+    Handle redirect from Pesapal after successful payment.
+
+    IMPORTANT:
+
+    Pesapal redirects to the Django API first.
+
+    Django:
+        1. Receives the Pesapal tracking ID.
+        2. Verifies the transaction.
+        3. Updates the Payment.
+        4. Updates the Connection.
+        5. Distributes commissions.
+        6. Creates notifications.
+        7. Redirects the browser to FRONTEND_URL.
+
+    FRONTEND_URL comes from settings.py.
+    """
+
+    # --------------------------------------------------------
+    # DATABASE CHECK
+    # --------------------------------------------------------
+
+    if not ensure_db_connection():
+
+        logger.error(
+            "❌ Database connection error in payment success"
+        )
+
+        return redirect(
+            build_frontend_redirect(
+                "/payment-error/",
+                {
+                    "message": "Payment failed",
+                },
+            )
+        )
+
+    # --------------------------------------------------------
+    # GET PESAPAL PARAMETERS
+    # --------------------------------------------------------
+
+    order_tracking_id = (
+        request.query_params.get(
+            "OrderTrackingId"
+        )
+        or request.query_params.get(
+            "orderTrackingId"
+        )
+        or request.query_params.get(
+            "order_tracking_id"
+        )
+    )
+
+    merchant_reference = (
+        request.query_params.get(
+            "OrderMerchantReference"
+        )
+        or request.query_params.get(
+            "orderMerchantReference"
+        )
+        or request.query_params.get(
+            "merchant_reference"
+        )
+    )
+
+    logger.info("=" * 60)
+
+    logger.info(
+        "PAYMENT SUCCESS REDIRECT"
+    )
+
+    logger.info(
+        f"OrderTrackingId: {order_tracking_id}"
+    )
+
+    logger.info(
+        f"OrderMerchantReference: {merchant_reference}"
+    )
+
+    logger.info("=" * 60)
+
+    # --------------------------------------------------------
+    # MISSING TRACKING ID
+    # --------------------------------------------------------
+
+    if not order_tracking_id:
+
+        return redirect(
+            build_frontend_redirect(
+                "/payment-error/",
+                {
+                    "message": "Payment failed",
+                },
+            )
+        )
+
+    # --------------------------------------------------------
+    # GET PAYMENT
+    # --------------------------------------------------------
+
+    try:
+
+        payment = Payment.objects.get(
+            order_tracking_id=order_tracking_id
+        )
+
+        # ----------------------------------------------------
+        # VERIFY PAYMENT WITH PESAPAL
+        # ----------------------------------------------------
+
+        verification = (
+            get_transaction_status(
+                order_tracking_id
+            )
+        )
+
+        payment_status = (
+            verification.get(
+                "payment_status_description"
+            )
+        )
+
+        logger.info(
+            f"Verified payment status: {payment_status}"
+        )
+
+        commission_result = None
+
+        # ----------------------------------------------------
+        # COMPLETED
+        # ----------------------------------------------------
+
+        if (
+            payment_status == "Completed"
+            and payment.status != "completed"
+        ):
+
+            payment.status = "completed"
+
+            payment.paid_at = timezone.now()
+
+            payment.save(
+                update_fields=[
+                    "status",
+                    "paid_at",
+                ]
+            )
+
+            connection_obj = (
+                payment.connection
+            )
+
+            connection_obj.status = (
+                Connection.Status.COMPLETED
+            )
+
+            connection_obj.save(
+                update_fields=["status"]
+            )
+
+            logger.info(
+                f"✅ Payment {order_tracking_id} "
+                "marked as completed"
+            )
+
+            logger.info(
+                f"✅ Connection "
+                f"{connection_obj.connection_id} "
+                "marked as completed"
+            )
+
+            # ------------------------------------------------
+            # COMMISSION
+            # ------------------------------------------------
+
+            try:
+
+                commission_result = (
+                    CommissionService
+                    .distribute_commission_for_payment(
+                        payment
+                    )
+                )
+
+                logger.info(
+                    "✅ Commission distributed successfully: "
+                    f"{commission_result}"
+                )
+
+            except CommissionDistributionError as e:
+
+                logger.error(
+                    "❌ Commission distribution failed: "
+                    f"{str(e)}"
+                )
+
+                commission_result = {
+                    "success": False,
+                    "error": str(e),
+                }
+
+            # ------------------------------------------------
+            # SENDER NOTIFICATION
+            # ------------------------------------------------
+
+            Notification.objects.create(
+                user=connection_obj.sender,
+                connection=connection_obj,
+                title="Payment Successful! 🎉",
+                message=(
+                    f"Your payment of KES "
+                    f"{payment.amount} for hookup with "
+                    f"{connection_obj.receiver.full_name} "
+                    "has been completed successfully. "
+                    "Your connection is now active!"
+                ),
+                notification_type=(
+                    Notification
+                    .NotificationType
+                    .PAYMENT_SUCCESS
+                ),
+                is_read=False,
+            )
+
+            # ------------------------------------------------
+            # ADMIN NOTIFICATION
+            # ------------------------------------------------
+
+            admin_amount = (
+                commission_result.get(
+                    "admin_amount",
+                    0,
+                )
+                if commission_result
+                and commission_result.get(
+                    "success"
+                )
+                else 0
+            )
+
+            if admin_amount > 0:
+
+                admin_message = (
+                    f"{connection_obj.sender.full_name} "
+                    "has completed payment for their hookup. "
+                    f"You have received KES "
+                    f"{admin_amount:.2f} "
+                    "as your commission."
+                )
+
+            else:
+
+                admin_message = (
+                    f"{connection_obj.sender.full_name} "
+                    "has completed payment for their hookup. "
+                    "The connection is now ready for service."
+                )
+
+            Notification.objects.create(
+                user=connection_obj.receiver,
+                connection=connection_obj,
+                title=(
+                    "New Completed Connection! 🎉"
+                ),
+                message=admin_message,
+                notification_type=(
+                    Notification
+                    .NotificationType
+                    .CONNECTION_COMPLETED
+                ),
+                is_read=False,
+            )
+
+            # ------------------------------------------------
+            # SUPERADMIN NOTIFICATION
+            # ------------------------------------------------
+
+            if (
+                commission_result
+                and commission_result.get(
+                    "success"
+                )
+            ):
+
+                superadmin_amount = (
+                    commission_result.get(
+                        "superadmin_amount",
+                        0,
+                    )
+                )
+
+                if superadmin_amount > 0:
+
+                    superadmin = (
+                        Accounts.objects
+                        .filter(
+                            role="superadmin",
+                            is_active=True,
+                        )
+                        .first()
+                    )
+
+                    if superadmin:
+
+                        Notification.objects.create(
+                            user=superadmin,
+                            connection=connection_obj,
+                            title=(
+                                "💰 Platform Commission Received!"
+                            ),
+                            message=(
+                                "Platform received KES "
+                                f"{superadmin_amount:.2f} "
+                                "from "
+                                f"{connection_obj.sender.full_name}"
+                                "'s payment."
+                            ),
+                            notification_type=(
+                                Notification
+                                .NotificationType
+                                .PAYMENT_SUCCESS
+                            ),
+                            is_read=False,
+                        )
+
+            # ------------------------------------------------
+            # MARK PENDING NOTIFICATIONS AS READ
+            # ------------------------------------------------
+
+            Notification.objects.filter(
+                connection=connection_obj,
+                user=connection_obj.sender,
+                notification_type__in=[
+                    Notification
+                    .NotificationType
+                    .CONNECTION_REQUEST,
+
+                    Notification
+                    .NotificationType
+                    .CONNECTION_ACCEPTED,
+
+                    Notification
+                    .NotificationType
+                    .PAYMENT_PENDING,
+                ],
+            ).update(
+                is_read=True
+            )
+
+            logger.info(
+                "✅ Notifications created for both parties"
+            )
+
+            logger.info(
+                "🎉 Payment and connection completed"
+            )
+
+        # ----------------------------------------------------
+        # ALREADY COMPLETED
+        # ----------------------------------------------------
+
+        elif (
+            payment_status == "Completed"
+            and payment.status == "completed"
+        ):
+
+            logger.info(
+                "ℹ️ Payment already completed. "
+                "Skipping duplicate processing."
+            )
+
+        # ----------------------------------------------------
+        # FAILED
+        # ----------------------------------------------------
+
+        elif payment_status == "Failed":
+
+            payment.status = "failed"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+        # ----------------------------------------------------
+        # CANCELLED
+        # ----------------------------------------------------
+
+        elif payment_status == "Cancelled":
+
+            payment.status = "cancelled"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+        # ----------------------------------------------------
+        # PENDING
+        # ----------------------------------------------------
+
+        else:
+
+            payment.status = "pending"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+        # ====================================================
+        # FINAL FRONTEND REDIRECT
+        # ====================================================
+
+        redirect_params = {
+            "order_tracking_id": order_tracking_id,
+
+            "merchant_reference": (
+                merchant_reference
+                or payment.merchant_reference
+            ),
+
+            "payment_status": payment.status,
+
+            "amount": str(payment.amount),
+
+            "connection_id": str(
+                payment.connection.connection_id
+            ),
+
+            "gateway": "pesapal",
+        }
+
+        # ----------------------------------------------------
+        # ADD COMMISSION INFORMATION
+        # ----------------------------------------------------
+
+        if (
+            commission_result
+            and commission_result.get(
+                "success"
+            )
+        ):
+
+            redirect_params.update(
+                {
+                    "admin_amount": (
+                        commission_result.get(
+                            "admin_amount",
+                            0,
+                        )
+                    ),
+
+                    "superadmin_amount": (
+                        commission_result.get(
+                            "superadmin_amount",
+                            0,
+                        )
+                    ),
+
+                    "commission_percentage": (
+                        commission_result.get(
+                            "commission_percentage",
+                            0,
+                        )
+                    ),
+                }
+            )
+
+        # ----------------------------------------------------
+        # BUILD FINAL URL FROM SETTINGS
+        # ----------------------------------------------------
+
+        redirect_url = build_frontend_redirect(
+            "/payment-success/",
+            redirect_params,
+        )
+
+        logger.info(
+            "🔀 Redirecting customer to frontend:"
+        )
+
+        logger.info(
+            f"   FRONTEND_URL = {get_frontend_url()}"
+        )
+
+        logger.info(
+            f"   Redirect URL = {redirect_url}"
+        )
+
+        return redirect(
+            redirect_url
+        )
+
+    # ========================================================
+    # PAYMENT NOT FOUND
+    # ========================================================
+
+    except Payment.DoesNotExist:
+
+        logger.error(
+            "❌ Payment not found for tracking ID: "
+            f"{order_tracking_id}"
+        )
+
+        return redirect(
+            build_frontend_redirect(
+                "/payment-error/",
+                {
+                    "message": "Payment failed",
+                },
+            )
+        )
+
+    # ========================================================
+    # GENERAL ERROR
+    # ========================================================
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ Error processing payment success: {e}",
+            exc_info=True,
+        )
+
+        return redirect(
+            build_frontend_redirect(
+                "/payment-error/",
+                {
+                    "message": "Payment failed",
+                },
+            )
+        )
+
+
+# ============================================================
+# PAYMENT FAILURE
+# ============================================================
+
+@api_view(["GET"])
+def payment_failure(request):
+
+    """
+    Handle redirect from Pesapal when payment fails.
+
+    Pesapal -> Django API -> Frontend.
+
+    The frontend domain comes from settings.FRONTEND_URL.
+    """
+
+    if not ensure_db_connection():
+
+        logger.error(
+            "❌ Database connection error in payment failure"
+        )
+
+        return redirect(
+            build_frontend_redirect(
+                "/payment-error/",
+                {
+                    "message": "Payment failed",
+                },
+            )
+        )
+
+    # --------------------------------------------------------
+    # GET PARAMETERS
+    # --------------------------------------------------------
+
+    order_tracking_id = (
+        request.query_params.get(
+            "OrderTrackingId"
+        )
+        or request.query_params.get(
+            "orderTrackingId"
+        )
+        or request.query_params.get(
+            "order_tracking_id"
+        )
+    )
+
+    merchant_reference = (
+        request.query_params.get(
+            "OrderMerchantReference"
+        )
+        or request.query_params.get(
+            "orderMerchantReference"
+        )
+        or request.query_params.get(
+            "merchant_reference"
+        )
+    )
+
+    logger.info("=" * 60)
+
+    logger.info(
+        "PAYMENT FAILURE REDIRECT"
+    )
+
+    logger.info(
+        f"OrderTrackingId: {order_tracking_id}"
+    )
+
+    logger.info(
+        f"OrderMerchantReference: {merchant_reference}"
+    )
+
+    logger.info("=" * 60)
+
+    # --------------------------------------------------------
+    # MARK PAYMENT FAILED
+    # --------------------------------------------------------
+
+    if order_tracking_id:
+
+        try:
+
+            payment = Payment.objects.get(
+                order_tracking_id=order_tracking_id
+            )
+
+            payment.status = "failed"
+
+            payment.save(
+                update_fields=["status"]
+            )
+
+            logger.info(
+                f"❌ Payment {order_tracking_id} "
+                "marked as failed"
+            )
+
+            Notification.objects.create(
+                user=payment.user,
+                connection=payment.connection,
+                title="Payment Failed ❌",
+                message=(
+                    f"Your payment of KES "
+                    f"{payment.amount} failed. "
+                    "Please try again or contact support."
+                ),
+                notification_type=(
+                    Notification
+                    .NotificationType
+                    .PAYMENT_FAILED
+                ),
+                is_read=False,
+            )
+
+            logger.info(
+                "✅ Notification created for payment failure"
+            )
+
+        except Payment.DoesNotExist:
+
+            logger.warning(
+                "Payment not found for tracking ID: "
+                f"{order_tracking_id}"
+            )
+
+    # --------------------------------------------------------
+    # FRONTEND FAILURE REDIRECT
+    # --------------------------------------------------------
+
+    redirect_url = build_frontend_redirect(
+        "/payment-failure/",
+        {
+            "order_tracking_id": (
+                order_tracking_id or ""
+            ),
+
+            "merchant_reference": (
+                merchant_reference or ""
+            ),
+
+            "message": (
+                "Payment was not completed"
+            ),
+
+            "gateway": "pesapal",
+        },
+    )
+
+    logger.info(
+        "🔀 Redirecting failed payment to: "
+        f"{redirect_url}"
+    )
+
+    return redirect(
+        redirect_url
     )
 
 
-    print("\n🌐 CORS SETTINGS:")
+# ============================================================
+# GET PAYMENT STATUS
+# ============================================================
 
-    print(
-        f"  CORS_ALLOW_ALL_ORIGINS: "
-        f"{CORS_ALLOW_ALL_ORIGINS}"
-    )
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_payment_status(
+    request,
+    payment_id,
+):
 
-    print(
-        f"  CORS_ALLOWED_ORIGINS: "
-        f"{CORS_ALLOWED_ORIGINS}"
-    )
+    """
+    Get the status of a specific payment.
+    """
 
-    print(
-        f"  CORS_ALLOW_CREDENTIALS: "
-        f"{CORS_ALLOW_CREDENTIALS}"
-    )
+    if not ensure_db_connection():
 
-    print(
-        f"  CORS_ALLOW_METHODS: "
-        f"{CORS_ALLOW_METHODS}"
-    )
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Service temporarily unavailable. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    print(
-        f"  CORS_ALLOW_HEADERS: "
-        f"{CORS_ALLOW_HEADERS}"
-    )
+    try:
 
+        payment = Payment.objects.get(
+            id=payment_id,
+            user=request.user,
+        )
 
-    print("\n💳 PESAPAL CONFIGURATION:")
+        # ----------------------------------------------------
+        # VERIFY WITH PESAPAL
+        # ----------------------------------------------------
 
-    print(
-        f"  Consumer Key: "
-        f"{'✅ Set' if PESAPAL_CONSUMER_KEY else '❌ NOT SET'}"
-    )
+        if payment.order_tracking_id:
 
-    print(
-        f"  Consumer Secret: "
-        f"{'✅ Set' if PESAPAL_CONSUMER_SECRET else '❌ NOT SET'}"
-    )
+            verification = (
+                get_transaction_status(
+                    payment.order_tracking_id
+                )
+            )
 
-    print(
-        f"  Base URL: "
-        f"{PESAPAL_BASE_URL}"
-    )
+            payment_status = (
+                verification.get(
+                    "payment_status_description"
+                )
+            )
 
-    print(
-        f"  API Base URL: "
-        f"{API_BASE_URL}"
-    )
+            if payment_status:
 
-    print(
-        f"  Callback URL: "
-        f"{PESAPAL_CALLBACK_URL}"
-    )
+                status_map = {
+                    "Completed": "completed",
+                    "Failed": "failed",
+                    "Cancelled": "cancelled",
+                    "Pending": "pending",
+                }
 
-    print(
-        f"  Cancellation URL: "
-        f"{PESAPAL_CANCELLATION_URL}"
-    )
+                new_status = status_map.get(
+                    payment_status
+                )
 
-    print(
-        f"  IPN URL: "
-        f"{PESAPAL_IPN_URL}"
-    )
+                if (
+                    new_status
+                    and new_status != payment.status
+                ):
 
+                    payment.status = new_status
 
-    print("\n💳 PAYSTACK CONFIGURATION:")
+                    if new_status == "completed":
 
-    print(
-        f"  Secret Key: "
-        f"{'✅ Set' if PAYSTACK_SECRET_KEY else '❌ NOT SET'}"
-    )
+                        payment.paid_at = (
+                            timezone.now()
+                        )
 
-    print(
-        f"  Public Key: "
-        f"{'✅ Set' if PAYSTACK_PUBLIC_KEY else '❌ NOT SET'}"
-    )
+                    payment.save()
 
-    print(
-        f"  Base URL: "
-        f"{PAYSTACK_BASE_URL}"
-    )
+        return Response(
+            {
+                "success": True,
+                "payment": {
+                    "id": payment.id,
 
-    print(
-        f"  Callback URL: "
-        f"{PAYSTACK_CALLBACK_URL}"
-    )
+                    "merchant_reference": (
+                        payment.merchant_reference
+                    ),
 
-    print(
-        f"  Failure URL: "
-        f"{PAYSTACK_FAILURE_URL}"
-    )
+                    "amount": payment.amount,
 
+                    "status": payment.status,
 
-    print("\n🗄️ DATABASE:")
+                    "order_tracking_id": (
+                        payment.order_tracking_id
+                    ),
 
-    print(
-        f"  DATABASE_URL: "
-        f"{'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}"
-    )
+                    "paid_at": payment.paid_at,
 
-    print("=" * 70 + "\n")
+                    "created_at": payment.created_at,
 
+                    "updated_at": payment.updated_at,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Payment.DoesNotExist:
+
+        return Response(
+            {
+                "success": False,
+                "message": "Payment not found.",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"❌ Error getting payment status: {str(e)}",
+            exc_info=True,
+        )
+
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Unable to retrieve payment status. "
+                    "Please try again."
+                ),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+```
