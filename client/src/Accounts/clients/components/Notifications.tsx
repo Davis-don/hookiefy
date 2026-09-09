@@ -166,7 +166,7 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
         </div>
       </div>
 
-      {/* Scrollable Body */}
+      {/* Scrollable Body - Hidden Scrollbar */}
       <div 
         className="notif-body-scroll"
         style={{ paddingTop: `${headerHeight + 20}px` }}
