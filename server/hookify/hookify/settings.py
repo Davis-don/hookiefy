@@ -6,15 +6,16 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 from decouple import config
 import dj_database_url
 
 
-# ---------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# ============================================================
 # CORE SECURITY SETTINGS
-# ---------------------------------------------------
+# ============================================================
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
@@ -24,9 +25,9 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 
-# ---------------------------------------------------
-# HOSTS
-# ---------------------------------------------------
+# ============================================================
+# ALLOWED HOSTS
+# ============================================================
 
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
@@ -37,21 +38,21 @@ ALLOWED_HOSTS = os.environ.get(
 ).split(",")
 
 
-# ---------------------------------------------------
+# ============================================================
 # CSRF TRUSTED ORIGINS
-# ---------------------------------------------------
+# ============================================================
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "https://hookiefy-server-7d6d.onrender.com,"
     "https://api.hookiefy.kinstryx.co.ke,"
-    "https://hookiefy.kinstryx.co.ke"
+    "https://youpata.kinstryx.co.ke"
 ).split(",")
 
 
-# ---------------------------------------------------
+# ============================================================
 # APPLICATIONS
-# ---------------------------------------------------
+# ============================================================
 
 INSTALLED_APPS = [
     "corsheaders",
@@ -86,9 +87,9 @@ INSTALLED_APPS = [
 ]
 
 
-# ---------------------------------------------------
+# ============================================================
 # MIDDLEWARE
-# ---------------------------------------------------
+# ============================================================
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -109,8 +110,16 @@ MIDDLEWARE = [
 ]
 
 
+# ============================================================
+# URL CONFIGURATION
+# ============================================================
+
 ROOT_URLCONF = "hookify.urls"
 
+
+# ============================================================
+# TEMPLATES
+# ============================================================
 
 TEMPLATES = [
     {
@@ -133,12 +142,16 @@ TEMPLATES = [
 ]
 
 
+# ============================================================
+# WSGI
+# ============================================================
+
 WSGI_APPLICATION = "hookify.wsgi.application"
 
 
-# ---------------------------------------------------
+# ============================================================
 # DATABASE
-# ---------------------------------------------------
+# ============================================================
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -149,16 +162,16 @@ DATABASES = {
 }
 
 
-# ---------------------------------------------------
+# ============================================================
 # AUTH USER MODEL
-# ---------------------------------------------------
+# ============================================================
 
 AUTH_USER_MODEL = "account.Accounts"
 
 
-# ---------------------------------------------------
-# DRF + JWT AUTH
-# ---------------------------------------------------
+# ============================================================
+# DJANGO REST FRAMEWORK
+# ============================================================
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -166,6 +179,10 @@ REST_FRAMEWORK = {
     ),
 }
 
+
+# ============================================================
+# JWT CONFIGURATION
+# ============================================================
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -183,20 +200,17 @@ SIMPLE_JWT = {
 # ============================================================
 
 default_origins = [
+    # Local development
     "http://localhost:5173",
-
     "http://127.0.0.1:5173",
 
-    # New Hookiefy frontend
-    "https://hookiefy.kinstryx.co.ke",
+    # Production frontend
+    "https://youpata.kinstryx.co.ke",
 
-    # Old Netlify URL - kept temporarily
-    "https://hookiefy.netlify.app",
-
-    # Backend
+    # Production backend
     "https://api.hookiefy.kinstryx.co.ke",
 
-    # Old Render URL - kept temporarily
+    # Old Render backend URL - kept temporarily
     "https://hookiefy-server-7d6d.onrender.com",
 ]
 
@@ -204,25 +218,30 @@ default_origins = [
 cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 
 if cors_env:
+
     cors_origins = [
         origin.strip()
         for origin in cors_env.split(",")
         if origin.strip()
     ]
+
 else:
+
     cors_origins = default_origins.copy()
 
 
-# ---------------------------------------------------
-# ENSURE REQUIRED ORIGINS EXIST
-# ---------------------------------------------------
+# ============================================================
+# ENSURE REQUIRED CORS ORIGINS EXIST
+# ============================================================
 
 required_cors_origins = [
-    "https://hookiefy.kinstryx.co.ke",
+    "https://youpata.kinstryx.co.ke",
     "https://api.hookiefy.kinstryx.co.ke",
 ]
 
+
 for origin in required_cors_origins:
+
     if origin not in cors_origins:
         cors_origins.append(origin)
 
@@ -230,13 +249,16 @@ for origin in required_cors_origins:
 CORS_ALLOWED_ORIGINS = cors_origins
 
 
-# ---------------------------------------------------
+# ============================================================
 # CORS DEVELOPMENT MODE
-# ---------------------------------------------------
+# ============================================================
 
 if DEBUG:
+
     CORS_ALLOW_ALL_ORIGINS = True
+
 else:
+
     CORS_ALLOW_ALL_ORIGINS = False
 
 
@@ -276,6 +298,7 @@ CORS_PREFLIGHT_MAX_AGE = 86400
 
 csrf_env = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 
+
 if csrf_env:
 
     csrf_origins = [
@@ -287,7 +310,7 @@ if csrf_env:
 else:
 
     csrf_origins = [
-        "https://hookiefy.kinstryx.co.ke",
+        "https://youpata.kinstryx.co.ke",
         "https://api.hookiefy.kinstryx.co.ke",
         "https://hookiefy-server-7d6d.onrender.com",
     ]
@@ -304,9 +327,11 @@ SESSION_COOKIE_SECURE = (
     os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
 )
 
+
 CSRF_COOKIE_SECURE = (
     os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
 )
+
 
 SESSION_COOKIE_HTTPONLY = True
 
@@ -338,7 +363,7 @@ STATIC_URL = "static/"
 
 
 # ============================================================
-# PRODUCTION SETTINGS
+# PRODUCTION SECURITY SETTINGS
 # ============================================================
 
 if not DEBUG:
@@ -361,10 +386,19 @@ if not DEBUG:
 # PESAPAL CONFIGURATION
 # ============================================================
 
-PESAPAL_CONSUMER_KEY = config("PESAPAL_CONSUMER_KEY")
+PESAPAL_CONSUMER_KEY = config(
+    "PESAPAL_CONSUMER_KEY"
+)
 
-PESAPAL_CONSUMER_SECRET = config("PESAPAL_CONSUMER_SECRET")
 
+PESAPAL_CONSUMER_SECRET = config(
+    "PESAPAL_CONSUMER_SECRET"
+)
+
+
+# ============================================================
+# PESAPAL BASE URL
+# ============================================================
 
 PESAPAL_BASE_URL = config(
     "PESAPAL_BASE_URL",
@@ -376,7 +410,7 @@ PESAPAL_BASE_URL = config(
 # BASE DOMAIN
 # ============================================================
 
-# New Django backend domain
+# Your Django API is now hosted behind this custom domain.
 BASE_DOMAIN = os.environ.get(
     "BASE_DOMAIN",
     "https://api.hookiefy.kinstryx.co.ke"
@@ -384,7 +418,7 @@ BASE_DOMAIN = os.environ.get(
 
 
 # ============================================================
-# PESAPAL CALLBACK URLs
+# PESAPAL CALLBACK URL
 # ============================================================
 
 PESAPAL_CALLBACK_URL = os.environ.get(
@@ -393,11 +427,19 @@ PESAPAL_CALLBACK_URL = os.environ.get(
 )
 
 
+# ============================================================
+# PESAPAL CANCELLATION URL
+# ============================================================
+
 PESAPAL_CANCELLATION_URL = os.environ.get(
     "PESAPAL_CANCELLATION_URL",
     f"{BASE_DOMAIN}/payments/payment-failure/"
 )
 
+
+# ============================================================
+# PESAPAL IPN URL
+# ============================================================
 
 PESAPAL_IPN_URL = os.environ.get(
     "PESAPAL_IPN_URL",
@@ -421,6 +463,10 @@ PAYSTACK_PUBLIC_KEY = os.environ.get(
 )
 
 
+# ============================================================
+# PAYSTACK BASE URL
+# ============================================================
+
 PAYSTACK_BASE_URL = os.environ.get(
     "PAYSTACK_BASE_URL",
     "https://api.paystack.co"
@@ -428,7 +474,7 @@ PAYSTACK_BASE_URL = os.environ.get(
 
 
 # ============================================================
-# PAYSTACK CALLBACK URLs
+# PAYSTACK CALLBACK URL
 # ============================================================
 
 PAYSTACK_CALLBACK_URL = os.environ.get(
@@ -436,6 +482,10 @@ PAYSTACK_CALLBACK_URL = os.environ.get(
     f"{BASE_DOMAIN}/paystack/success/"
 )
 
+
+# ============================================================
+# PAYSTACK FAILURE URL
+# ============================================================
 
 PAYSTACK_FAILURE_URL = os.environ.get(
     "PAYSTACK_FAILURE_URL",
@@ -453,7 +503,6 @@ LOGGING = {
     "disable_existing_loggers": False,
 
     "formatters": {
-
         "verbose": {
             "format": (
                 "{levelname} {asctime} "
@@ -470,7 +519,6 @@ LOGGING = {
     },
 
     "handlers": {
-
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
@@ -484,7 +532,6 @@ LOGGING = {
     },
 
     "loggers": {
-
         "payments": {
             "handlers": ["console", "file"],
             "level": "DEBUG" if DEBUG else "INFO",
@@ -513,7 +560,7 @@ LOGGING = {
 
 
 # ============================================================
-# DEBUG LOGGING
+# DEBUG CONFIGURATION LOG
 # ============================================================
 
 if DEBUG:
@@ -530,7 +577,10 @@ if DEBUG:
 
     print(f"  ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
-    print(f"  CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+    print(
+        f"  CSRF_TRUSTED_ORIGINS: "
+        f"{CSRF_TRUSTED_ORIGINS}"
+    )
 
 
     print("\n🌐 CORS SETTINGS:")
