@@ -1,15 +1,45 @@
-/* ============================================
-   notification.css — Notifications Component
-   ============================================ */
+/* notification.css — Notifications Component */
 
-/* Wrapper */
+/* ============================================
+   RESET & BASE
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   WRAPPER
+   ============================================ */
 .notif-wrapper {
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0;
   background: rgba(0, 0, 0, 0.2);
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================
+   FIXED HEADER
+   ============================================ */
+.notif-header-fixed {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0 1rem;
+  padding-top: 0.5rem;
 }
 
 /* Header */
@@ -18,8 +48,8 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 1rem 1.2rem;
-  margin-bottom: 1.5rem;
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .notif-header-top {
@@ -95,10 +125,8 @@
 }
 
 /* ============================================
-   NOTIFICATION DOTS - Improved Positioning
+   NOTIFICATION DOTS
    ============================================ */
-
-/* Base dot styling */
 .notif-tab-dot {
   display: inline-block;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
@@ -107,18 +135,49 @@
   z-index: 2;
 }
 
-/* Ensure the tab button has proper positioning */
 .notif-tab-btn {
   position: relative;
   padding-right: 4px !important;
 }
 
-/* Adjust tab spacing for dots */
 .notif-tab-btn span:first-child {
   margin-right: 2px;
 }
 
-/* Body */
+/* ============================================
+   SCROLLABLE BODY
+   ============================================ */
+.notif-body-scrollable {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-y: auto;
+  max-height: 100vh;
+  padding: 0 1rem 1rem 1rem;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for scrollable body */
+.notif-body-scrollable::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notif-body-scrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.notif-body-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+.notif-body-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Body content */
 .notif-body {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -126,14 +185,14 @@
   padding: 0.5rem;
   min-height: 300px;
   transition: all 0.3s ease;
+  margin-bottom: 20px;
 }
 
-/* Ensure child components fit well */
 .notif-body > * {
   width: 100%;
 }
 
-/* Detail view - full width */
+/* Detail view */
 .notif-wrapper .conn-req-detail-wrapper {
   padding: 0;
   max-width: 100%;
@@ -143,8 +202,9 @@
    RESPONSIVE - TABLETS & SMALL LAPTOPS
    ============================================ */
 @media screen and (max-width: 48em) {
-  .notif-wrapper {
-    padding: 0.8rem;
+  .notif-header-fixed {
+    padding: 0 0.8rem;
+    padding-top: 0.4rem;
   }
 
   .notif-header {
@@ -175,7 +235,6 @@
     }
   }
 
-  /* Larger dots for tablets */
   .notif-tab-dot {
     width: 12px !important;
     height: 12px !important;
@@ -183,14 +242,19 @@
     right: -6px !important;
     border-width: 2.5px !important;
   }
+
+  .notif-body-scrollable {
+    padding: 0 0.8rem 1rem 0.8rem;
+  }
 }
 
 /* ============================================
-   RESPONSIVE - PHONES (FIXED DOT POSITIONING)
+   RESPONSIVE - PHONES
    ============================================ */
 @media screen and (max-width: 30em) {
-  .notif-wrapper {
-    padding: 0.5rem;
+  .notif-header-fixed {
+    padding: 0 0.5rem;
+    padding-top: 0.3rem;
   }
 
   .notif-header {
@@ -222,7 +286,6 @@
     white-space: nowrap;
   }
 
-  /* Make dots BIGGER and more visible on mobile */
   .notif-tab-dot {
     width: 14px !important;
     height: 14px !important;
@@ -233,7 +296,6 @@
     animation: pulse-dot-mobile 1.5s infinite !important;
   }
 
-  /* Add extra spacing between tabs for clarity */
   .notif-tab-btn:first-child {
     margin-right: 4px;
   }
@@ -242,7 +304,6 @@
     margin-left: 4px;
   }
 
-  /* Make text more readable */
   .notif-tab-btn span:first-child {
     font-size: 0.7rem;
     letter-spacing: 0.2px;
@@ -265,6 +326,10 @@
     }
   }
 
+  .notif-body-scrollable {
+    padding: 0 0.5rem 1rem 0.5rem;
+  }
+
   .notif-body {
     padding: 0.3rem;
     min-height: 200px;
@@ -273,7 +338,7 @@
 }
 
 /* ============================================
-   EXTRA SMALL SCREENS (Very small phones)
+   EXTRA SMALL SCREENS
    ============================================ */
 @media screen and (max-width: 20em) {
   .notif-tab-btn {
@@ -301,8 +366,6 @@
 /* ============================================
    PULSE ANIMATIONS
    ============================================ */
-
-/* Standard pulse for all screens */
 @keyframes pulse-dot {
   0% {
     transform: scale(1);
@@ -318,7 +381,6 @@
   }
 }
 
-/* Mobile-specific pulse - slightly different timing for visibility */
 @keyframes pulse-dot-mobile {
   0% {
     transform: scale(1);
@@ -331,5 +393,20 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* ============================================
+   SAFE AREA INSETS FOR NOTCHED PHONES
+   ============================================ */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .notif-header-fixed {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+@supports (padding-top: constant(safe-area-inset-top)) {
+  .notif-header-fixed {
+    padding-top: constant(safe-area-inset-top);
   }
 }

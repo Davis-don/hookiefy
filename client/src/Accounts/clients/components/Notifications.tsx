@@ -1,5 +1,6 @@
+// Notifications.tsx
 import "./notification.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
 import Connectionrequest from "./Connectionrequest";
@@ -50,11 +51,11 @@ const fetchUnreadActivity = async (accessToken: string | null): Promise<boolean>
 };
 
 function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps) {
-  const [activeTab, setActiveTab] = useState<"requests" | "activity">(
-    "requests"
-  );
+  const [activeTab, setActiveTab] = useState<"requests" | "activity">("requests");
   const { isMount, isActivityMount } = usePreviewStore();
   const { access: accessToken } = useAuthStore();
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // Fetch unread connection requests
   const { data: hasUnreadRequests, refetch: refetchRequests } = useQuery({
@@ -63,7 +64,7 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
     enabled: !!accessToken,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Poll every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Fetch unread activity
@@ -73,7 +74,7 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
     enabled: !!accessToken,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Poll every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Refetch both when tab changes
@@ -84,6 +85,25 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
       refetchActivity();
     }
   }, [activeTab, refetchRequests, refetchActivity]);
+
+  // Measure header height
+  useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, []);
+
+  // Update header height on resize
+  useEffect(() => {
+    const updateHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   // Connection Request Preview
   if (isMount) {
@@ -105,78 +125,87 @@ function Notifications({ onNavigateToSuccessfulConnections }: NotificationsProps
 
   return (
     <div className="notif-wrapper">
-      <div className="notif-header">
-        <div className="notif-header-top">
-          <h2>Notifications</h2>
-        </div>
+      {/* Fixed Header */}
+      <div className="notif-header-fixed" ref={headerRef}>
+        <div className="notif-header">
+          <div className="notif-header-top">
+            <h2>Notifications</h2>
+          </div>
 
-        <div className="notif-tabs">
-          <button
-            className={`notif-tab-btn ${
-              activeTab === "requests" ? "notif-tab-active" : ""
-            }`}
-            onClick={() => setActiveTab("requests")}
-            style={{ position: 'relative' }}
-          >
-            <span>Connection Requests</span>
-            {hasUnreadRequests && (
-              <span 
-                className="notif-tab-dot"
-                style={{
-                  position: 'absolute',
-                  top: '4px',
-                  right: '-8px',
-                  width: '10px',
-                  height: '10px',
-                  backgroundColor: '#ef4444',
-                  borderRadius: '50%',
-                  border: '2px solid #000000',
-                  animation: 'pulse-dot 2s infinite',
-                }}
-              />
-            )}
-            {activeTab === "requests" && (
-              <span className="notif-tab-indicator"></span>
-            )}
-          </button>
+          <div className="notif-tabs">
+            <button
+              className={`notif-tab-btn ${
+                activeTab === "requests" ? "notif-tab-active" : ""
+              }`}
+              onClick={() => setActiveTab("requests")}
+              style={{ position: 'relative' }}
+            >
+              <span>Connection Requests</span>
+              {hasUnreadRequests && (
+                <span 
+                  className="notif-tab-dot"
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '-8px',
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: '#ef4444',
+                    borderRadius: '50%',
+                    border: '2px solid #000000',
+                    animation: 'pulse-dot 2s infinite',
+                  }}
+                />
+              )}
+              {activeTab === "requests" && (
+                <span className="notif-tab-indicator"></span>
+              )}
+            </button>
 
-          <button
-            className={`notif-tab-btn ${
-              activeTab === "activity" ? "notif-tab-active" : ""
-            }`}
-            onClick={() => setActiveTab("activity")}
-            style={{ position: 'relative' }}
-          >
-            <span>Your Activity</span>
-            {hasUnreadActivity && (
-              <span 
-                className="notif-tab-dot"
-                style={{
-                  position: 'absolute',
-                  top: '4px',
-                  right: '-8px',
-                  width: '10px',
-                  height: '10px',
-                  backgroundColor: '#ef4444',
-                  borderRadius: '50%',
-                  border: '2px solid #000000',
-                  animation: 'pulse-dot 2s infinite',
-                }}
-              />
-            )}
-            {activeTab === "activity" && (
-              <span className="notif-tab-indicator"></span>
-            )}
-          </button>
+            <button
+              className={`notif-tab-btn ${
+                activeTab === "activity" ? "notif-tab-active" : ""
+              }`}
+              onClick={() => setActiveTab("activity")}
+              style={{ position: 'relative' }}
+            >
+              <span>Your Activity</span>
+              {hasUnreadActivity && (
+                <span 
+                  className="notif-tab-dot"
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '-8px',
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: '#ef4444',
+                    borderRadius: '50%',
+                    border: '2px solid #000000',
+                    animation: 'pulse-dot 2s infinite',
+                  }}
+                />
+              )}
+              {activeTab === "activity" && (
+                <span className="notif-tab-indicator"></span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="notif-body">
-        {activeTab === "requests" ? (
-          <Connectionrequest />
-        ) : (
-          <Youractivity onNavigateToSuccessfulConnections={onNavigateToSuccessfulConnections} />
-        )}
+      {/* Scrollable Body with top padding to account for fixed header */}
+      <div 
+        className="notif-body-scrollable"
+        style={{ paddingTop: `${headerHeight + 16}px` }}
+      >
+        <div className="notif-body">
+          {activeTab === "requests" ? (
+            <Connectionrequest />
+          ) : (
+            <Youractivity onNavigateToSuccessfulConnections={onNavigateToSuccessfulConnections} />
+          )}
+        </div>
       </div>
     </div>
   );
