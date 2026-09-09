@@ -1,3 +1,4 @@
+// Youractivitypreview.tsx
 import './youractivitypreview.css'
 import { usePaymentModalStore } from '../store/modalstore'
 import type { Activity } from './Youractivity'
@@ -31,14 +32,32 @@ function Youractivitypreview({
   const isDeclined = status === 'rejected';
   const isCompleted = status === 'completed';
 
-  // For completed activities, use the connected user's name instead of sender
-  const displayName = isCompleted && connected_user_name 
-    ? connected_user_name 
-    : senderName || 'Unknown User';
-  
-  const displayAvatar = isCompleted && connected_user_avatar 
-    ? connected_user_avatar 
-    : senderAvatar || '';
+  // Determine which name and avatar to display based on status
+  const getDisplayName = () => {
+    // For accepted status, show the person who accepted the request
+    if (status === 'accepted' && connected_user_name) {
+      return connected_user_name;
+    }
+    // For completed status, show the connected user
+    if (status === 'completed' && connected_user_name) {
+      return connected_user_name;
+    }
+    // For other statuses (pending, rejected), show the original sender
+    return senderName || 'Unknown User';
+  };
+
+  const getDisplayAvatar = () => {
+    if (status === 'accepted' && connected_user_avatar) {
+      return connected_user_avatar;
+    }
+    if (status === 'completed' && connected_user_avatar) {
+      return connected_user_avatar;
+    }
+    return senderAvatar || '';
+  };
+
+  const displayName = getDisplayName();
+  const displayAvatar = getDisplayAvatar();
 
   const handlePreviewClick = () => {
     // Always mark as read if unread, regardless of status
@@ -121,14 +140,15 @@ function Youractivitypreview({
   };
 
   const getStatusMessage = () => {
+    const user = displayName || 'user';
     if (status === 'accepted') {
-      return `Click to complete payment and connect with ${displayName || 'user'}`;
+      return `Click to complete payment and connect with ${user}`;
     }
     if (status === 'rejected') {
-      return `${displayName || 'User'} declined your request`;
+      return `${user} declined your request`;
     }
     if (status === 'completed') {
-      return `Completed with ${displayName || 'user'}`;
+      return `Completed with ${user}`;
     }
     return 'Waiting for response';
   };

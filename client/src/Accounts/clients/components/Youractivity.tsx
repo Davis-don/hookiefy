@@ -34,6 +34,9 @@ interface ConnectionRequestData {
     full_name: string;
     profile_image_url: string | null;
   };
+  connected_user_name?: string;
+  connected_user_avatar?: string;
+  connected_user_id?: string;
 }
 
 // Transformed interface for the preview component
@@ -114,6 +117,36 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
       status = 'completed';
     }
 
+    // CRITICAL FIX: Determine the connected user (the OTHER person in the connection)
+    // This should ALWAYS be the person the current user is connected with
+    // The backend now sends connected_user_name and connected_user_avatar
+    let connectedUserName = '';
+    let connectedUserAvatar = '';
+
+    if (item.connected_user_name) {
+      // Use the backend-provided connected user info (preferred)
+      connectedUserName = item.connected_user_name;
+      connectedUserAvatar = item.connected_user_avatar || '';
+    } else {
+      // Fallback: Determine based on status
+      if (status === 'accepted') {
+        // For accepted, the other person is the receiver (they accepted)
+        // But if the current user is the receiver, the connected user is the sender
+        // We can't determine this here without the current user ID
+        // So we'll use the receiver as the connected user for accepted status
+        connectedUserName = item.receiver.full_name;
+        connectedUserAvatar = item.receiver.profile_image_url || '';
+      } else if (status === 'completed') {
+        // For completed, show the receiver (or whoever the other person is)
+        connectedUserName = item.receiver.full_name;
+        connectedUserAvatar = item.receiver.profile_image_url || '';
+      } else {
+        // For other statuses, use sender
+        connectedUserName = item.sender.full_name;
+        connectedUserAvatar = item.sender.profile_image_url || '';
+      }
+    }
+
     const activity: Activity = {
       id: item.notification_id,
       senderId: String(item.sender.id),
@@ -130,13 +163,11 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
       connection_id: item.connection?.connection_id || '',
       is_read: item.is_read,
       created_at: item.created_at,
+      // Always set connected_user_name and connected_user_avatar
+      // This should be the OTHER person in the connection
+      connected_user_name: connectedUserName,
+      connected_user_avatar: connectedUserAvatar,
     };
-
-    // For completed connections, store the receiver's info as connected user
-    if (status === 'completed') {
-      activity.connected_user_name = item.receiver.full_name;
-      activity.connected_user_avatar = item.receiver.profile_image_url || '';
-    }
 
     return activity;
   });
