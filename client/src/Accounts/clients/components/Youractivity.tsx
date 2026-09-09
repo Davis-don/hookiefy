@@ -131,9 +131,6 @@ const fetchAllConnectionRequests = async (accessToken: string | null): Promise<A
       // Fallback: Determine based on status
       if (status === 'accepted') {
         // For accepted, the other person is the receiver (they accepted)
-        // But if the current user is the receiver, the connected user is the sender
-        // We can't determine this here without the current user ID
-        // So we'll use the receiver as the connected user for accepted status
         connectedUserName = item.receiver.full_name;
         connectedUserAvatar = item.receiver.profile_image_url || '';
       } else if (status === 'completed') {
@@ -352,10 +349,6 @@ function Youractivity({ onNavigateToSuccessfulConnections }: YouractivityProps) 
   if (activities.length === 0 && !isLoading) {
     return (
       <div className="overall-your-activity-container">
-        <div className="your-activity-header">
-          <h1>Your Activity</h1>
-          <span className="your-activity-count">0</span>
-        </div>
         <div className="your-activity-empty">
           <div className="your-activity-empty-icon">📋</div>
           <div className="your-activity-empty-title">No activity yet</div>
@@ -369,13 +362,6 @@ function Youractivity({ onNavigateToSuccessfulConnections }: YouractivityProps) 
 
   return (
     <div className="overall-your-activity-container">
-      <div className="your-activity-header">
-        <h1>Your Activity</h1>
-        <span className="your-activity-count">{activities.length}</span>
-        {isFetching && (
-          <span className="your-activity-updating">Updating...</span>
-        )}
-      </div>
       <div className="your-activity-list">
         {activities.map((activity) => (
           <Youractivitypreview 
