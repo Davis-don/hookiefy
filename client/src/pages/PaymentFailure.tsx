@@ -1,8 +1,9 @@
+// PaymentFailure.tsx
 import React, { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { XCircle, ArrowRight, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import './PaymentPages.css';
+import './PaymentFailure.css';
 
 const PaymentFailure: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -12,7 +13,6 @@ const PaymentFailure: React.FC = () => {
   const message = searchParams.get('message');
 
   useEffect(() => {
-    // Show error toast
     toast.error('Payment Failed ❌', {
       description: message || 'Your payment was not completed. Please try again.',
       duration: 6000,
@@ -21,53 +21,62 @@ const PaymentFailure: React.FC = () => {
   }, [message]);
 
   const handleRetry = () => {
-    // Redirect to initiate payment again - you may need to pass connection_id
     window.location.href = '/user/dashboard';
   };
 
   return (
-    <div className="payment-page-container">
-      <div className="payment-page-card failure-card">
-        <div className="payment-page-icon failure-icon">
-          <XCircle size={64} />
+    <div className="pf-wrapper">
+      <div className="pf-card">
+        <div className="pf-icon-container">
+          <div className="pf-icon-ring">
+            <div className="pf-icon-bg">
+              <XCircle size={64} className="pf-x-icon" />
+            </div>
+          </div>
         </div>
         
-        <h1 className="payment-page-title">Payment Failed ❌</h1>
-        <p className="payment-page-subtitle">
+        <h1 className="pf-title">Payment Failed ❌</h1>
+        <p className="pf-subtitle">
           {message || 'Your payment was not completed. Please try again or contact support.'}
         </p>
 
-        <div className="payment-page-details">
+        <div className="pf-details-grid">
           {merchantReference && (
-            <div className="payment-detail-row">
-              <span className="payment-detail-label">Reference</span>
-              <span className="payment-detail-value">{merchantReference}</span>
+            <div className="pf-detail-item">
+              <span className="pf-detail-label">Reference</span>
+              <div className="pf-detail-value-group">
+                <span className="pf-detail-value pf-ref-value">{merchantReference}</span>
+              </div>
             </div>
           )}
           {orderTrackingId && (
-            <div className="payment-detail-row">
-              <span className="payment-detail-label">Tracking ID</span>
-              <span className="payment-detail-value">{orderTrackingId}</span>
+            <div className="pf-detail-item">
+              <span className="pf-detail-label">Tracking ID</span>
+              <div className="pf-detail-value-group">
+                <span className="pf-detail-value pf-ref-value">{orderTrackingId}</span>
+              </div>
             </div>
           )}
-          <div className="payment-detail-row">
-            <span className="payment-detail-label">Status</span>
-            <span className="payment-detail-value status-failed">Failed</span>
+          <div className="pf-detail-item">
+            <span className="pf-detail-label">Status</span>
+            <div className="pf-detail-value-group">
+              <span className="pf-detail-value pf-status-value">Failed</span>
+            </div>
           </div>
         </div>
 
-        <div className="payment-page-actions">
-          <button onClick={handleRetry} className="payment-primary-button">
+        <div className="pf-actions">
+          <button onClick={handleRetry} className="pf-btn-primary">
             <RefreshCw size={20} />
-            Try Again
+            <span>Try Again</span>
           </button>
-          <Link to="/user/dashboard" className="payment-secondary-button">
+          <Link to="/user/dashboard" className="pf-btn-secondary">
             Go to Dashboard
             <ArrowRight size={20} />
           </Link>
         </div>
 
-        <div className="payment-page-footer">
+        <div className="pf-footer">
           <p>Need help? <a href="/contact">Contact Support</a></p>
         </div>
       </div>

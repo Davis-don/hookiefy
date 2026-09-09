@@ -1,8 +1,9 @@
+// PaymentError.tsx
 import React, { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { AlertTriangle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import './PaymentPages.css';
+import './PaymentError.css';
 
 const PaymentError: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -17,28 +18,32 @@ const PaymentError: React.FC = () => {
   }, [errorMessage]);
 
   return (
-    <div className="payment-page-container">
-      <div className="payment-page-card error-card">
-        <div className="payment-page-icon error-icon">
-          <AlertTriangle size={64} />
+    <div className="pe-wrapper">
+      <div className="pe-card">
+        <div className="pe-icon-container">
+          <div className="pe-icon-ring">
+            <div className="pe-icon-bg">
+              <AlertTriangle size={64} className="pe-alert-icon" />
+            </div>
+          </div>
         </div>
         
-        <h1 className="payment-page-title">Payment Error ⚠️</h1>
-        <p className="payment-page-subtitle">
+        <h1 className="pe-title">Payment Error ⚠️</h1>
+        <p className="pe-subtitle">
           {errorMessage || 'An unexpected error occurred while processing your payment.'}
         </p>
 
-        <div className="payment-page-actions">
-          <Link to="/user/dashboard" className="payment-primary-button">
-            Go to Dashboard
+        <div className="pe-actions">
+          <Link to="/user/dashboard" className="pe-btn-primary">
+            <span>Go to Dashboard</span>
             <ArrowRight size={20} />
           </Link>
-          <Link to="/" className="payment-secondary-button">
+          <Link to="/" className="pe-btn-secondary">
             Return Home
           </Link>
         </div>
 
-        <div className="payment-page-footer">
+        <div className="pe-footer">
           <p>Need help? <a href="/contact">Contact Support</a></p>
         </div>
       </div>
