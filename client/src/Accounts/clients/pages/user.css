@@ -1,285 +1,467 @@
 /* ============================================================
-   user.css — User Dashboard (Instagram-style)
+   USER COMPONENT - MAIN CONTAINER
    ============================================================ */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ----- Root Variables ----- */
+:root {
+  --user-sidebar-width: 260px;
+  --user-bottom-nav-height: 72px;
+  --user-content-max-width: 600px;
+  --user-avatar-size-desktop: 2.8rem;
+  --user-avatar-size-mobile: 3.4rem;
+  --user-icon-size-desktop: 1.6rem;
+  --user-icon-size-mobile: 3.2rem;
+  --user-border-color: rgba(255, 255, 255, 0.08);
+  --user-text-primary: #ffffff;
+  --user-text-secondary: rgba(255, 255, 255, 0.6);
+  --user-text-muted: rgba(255, 255, 255, 0.3);
+  --user-bg-primary: #000000;
+  --user-bg-card: rgba(255, 255, 255, 0.03);
+  --user-bg-hover: rgba(255, 255, 255, 0.06);
+  --user-accent-blue: #3b82f6;
+  --user-accent-red: #ef4444;
+  --user-accent-green: #22c55e;
 }
 
-/* =========================
-   MAIN CONTAINER
-========================= */
-.overall-user-component-container {
-  background-color: #000000;
+/* ============================================================
+   LAYOUT - FLEX CONTAINER
+   ============================================================ */
+
+.user-root-container {
+  display: flex;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
-  display: flex;
-  flex-direction: row;
+  background: var(--user-bg-primary);
   overflow: hidden;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* =========================
-   SIDEBAR / NAVIGATION (Left on desktop)
-========================= */
-.user-account-header-container {
+/* ============================================================
+   SIDEBAR / NAVIGATION (Desktop)
+   ============================================================ */
+
+.user-nav-sidebar {
+  width: var(--user-sidebar-width);
+  min-width: var(--user-sidebar-width);
   height: 100%;
-  width: 240px;
-  padding: 1.5rem 1rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--user-bg-primary);
+  border-right: 1px solid var(--user-border-color);
   display: flex;
   flex-direction: column;
+  padding: 1.5rem 0.8rem 1rem 0.8rem;
   flex-shrink: 0;
+  overflow-y: auto;
   position: sticky;
   top: 0;
-  background: #000000;
-  z-index: 10;
 }
 
-.user-brand {
-  padding: 0 0.5rem 2rem 0.5rem;
+.user-nav-sidebar::-webkit-scrollbar {
+  width: 3px;
 }
 
-.user-brand h3 {
-  font-size: 1.8rem;
+.user-nav-sidebar::-webkit-scrollbar-thumb {
+  background: var(--user-border-color);
+  border-radius: 10px;
+}
+
+/* ----- Brand / Logo ----- */
+.user-nav-brand {
+  padding: 0 0.8rem 2rem 0.8rem;
+  flex-shrink: 0;
+}
+
+.user-nav-brand h3 {
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.5px;
+  color: var(--user-text-primary);
   margin: 0;
-  background: linear-gradient(135deg, #ffffff, #a8a8a8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.5px;
+  font-family: inherit;
 }
 
-.user-account-header-container ul {
+/* ----- Navigation List ----- */
+.user-nav-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.2rem;
   flex: 1;
 }
 
-.user-account-header-container ul li {
-  font-size: 1.1rem;
-  cursor: pointer;
+.user-nav-item {
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 1rem;
   padding: 0.7rem 0.8rem;
   border-radius: 12px;
+  cursor: pointer;
   transition: all 0.2s ease;
-  color: #e5e5e5;
+  color: var(--user-text-secondary);
+  font-size: 1rem;
   font-weight: 400;
+  position: relative;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-decoration: none;
 }
 
-.user-account-header-container ul li:hover {
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+.user-nav-item:hover {
+  background: var(--user-bg-hover);
+  color: var(--user-text-primary);
 }
 
-.user-account-header-container ul li.active-nav {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  font-weight: 600;
+.user-nav-item.active-nav {
+  background: var(--user-bg-hover);
+  color: var(--user-text-primary);
+  font-weight: 500;
 }
 
-.icon-fig {
-  font-size: 2rem;
+/* ----- Navigation Icon Container ----- */
+.user-nav-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: var(--user-icon-size-desktop);
   min-width: 2.2rem;
+  position: relative;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
-.nav-name {
+.user-nav-icon-wrapper svg {
+  display: block;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* ----- Navigation Label ----- */
+.user-nav-label {
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   NOTIFICATION & CONNECTION DOTS
+   ============================================================ */
+
+.user-nav-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--user-bg-primary);
+  animation: user-dot-pulse 2s infinite;
+}
+
+.user-nav-dot--notification {
+  background: var(--user-accent-red);
+}
+
+.user-nav-dot--connection {
+  background: var(--user-accent-green);
+}
+
+/* ----- Badge for connection count ----- */
+.user-nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--user-accent-green);
+  color: var(--user-text-primary);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--user-bg-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   PROFILE AVATAR IN NAV
+   ============================================================ */
+
+.user-nav-avatar-wrapper {
+  width: var(--user-avatar-size-desktop);
+  height: var(--user-avatar-size-desktop);
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-nav-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.user-nav-avatar-wrapper .user-nav-avatar-icon {
+  font-size: 1.4rem;
+  color: var(--user-text-primary);
+}
+
+.user-nav-avatar-wrapper.user-nav-avatar-loading {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.user-nav-avatar-spinner {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--user-text-primary);
+  border-radius: 50%;
+  animation: user-spin 0.8s linear infinite;
+}
+
+/* ----- Profile nav item special styling ----- */
+.user-nav-item--profile {
+  margin-top: auto;
+  border-top: 1px solid var(--user-border-color);
+  padding-top: 0.8rem;
+}
+
+/* ============================================================
+   SIDEBAR FOOTER
+   ============================================================ */
+
+.user-nav-footer {
+  padding: 0.5rem 0.8rem 0 0.8rem;
+  border-top: 1px solid var(--user-border-color);
+  margin-top: 0.3rem;
+  flex-shrink: 0;
+}
+
+.user-nav-footer span {
+  font-size: 0.7rem;
+  color: var(--user-text-muted);
+}
+
+/* ============================================================
+   LOGOUT BUTTON
+   ============================================================ */
+
+.user-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--user-text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.user-logout-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--user-accent-red);
+}
+
+.user-logout-btn:hover:not(:disabled) .user-logout-icon {
+  color: var(--user-accent-red);
+}
+
+.user-logout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.user-logout-icon {
+  font-size: 1.6rem;
+  min-width: 2.2rem;
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+
+.user-logout-text {
   font-size: 1rem;
   white-space: nowrap;
 }
 
-/* =========================
-   PROFILE NAV ITEM WITH IMAGE - UNIQUE CLASSES
-========================= */
-.profile-user-nav {
-  margin-top: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 0.8rem;
-}
+/* ============================================================
+   MAIN BODY CONTENT
+   ============================================================ */
 
-/* Profile avatar wrapper - unique class */
-.user-profile-avatar-wrapper {
-  height: 2.4rem;
-  width: 2.4rem;
-  border-radius: 50% !important;
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #ffffff;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-/* Background for default icon */
-.user-profile-avatar-wrapper.default-bg {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-}
-
-/* Profile image loaded - unique class */
-.user-profile-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50% !important;
-  display: block;
-}
-
-/* Default icon when no image - unique class */
-.user-profile-avatar-icon {
-  font-size: 1.2rem;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-/* Loading state - unique class */
-.user-profile-avatar-loading {
-  background: #1a1a1a;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-profile-avatar-spinner {
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-top: 2px solid #ffffff;
-  border-radius: 50%;
-  animation: userProfileSpin 0.8s linear infinite;
-}
-
-@keyframes userProfileSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Hover effect on profile nav item */
-.profile-user-nav:hover .user-profile-avatar-wrapper {
-  transform: scale(1.05);
-  border-color: #0095f6;
-}
-
-.profile-user-nav.active-nav .user-profile-avatar-wrapper {
-  border-color: #0095f6;
-  box-shadow: 0 0 20px rgba(0, 149, 246, 0.3);
-}
-
-/* =========================
-   SIDEBAR FOOTER
-========================= */
-.user-sidebar-footer {
-  padding: 1rem 0.5rem 0 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  margin-top: 0.5rem;
-}
-
-.user-sidebar-footer span {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-/* =========================
-   BODY CONTENT (Center)
-========================= */
-.overall-user-body-container {
+.user-body-container {
   flex: 1;
   height: 100%;
   overflow-y: auto;
   display: flex;
   justify-content: center;
   padding: 1.5rem 2rem;
-  background: #000000;
+  background: var(--user-bg-primary);
   position: relative;
+  min-width: 0;
 }
 
-.overall-user-body-container::-webkit-scrollbar {
+.user-body-container::-webkit-scrollbar {
   width: 4px;
 }
 
-.overall-user-body-container::-webkit-scrollbar-track {
+.user-body-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.overall-user-body-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+.user-body-container::-webkit-scrollbar-thumb {
+  background: var(--user-border-color);
   border-radius: 10px;
 }
 
-.actual-body-content-retainer-user {
+/* ----- Content Wrapper ----- */
+.user-content-wrapper {
   width: 100%;
-  max-width: 600px;
+  max-width: var(--user-content-max-width);
   height: 100%;
   padding-bottom: 2rem;
+  flex-shrink: 0;
 }
 
-/* =========================
-   SUBMODALS USER - Fixed Overlay
-========================= */
-.statauses-user-container {
+/* ============================================================
+   MODAL OVERLAY (Fixed)
+   ============================================================ */
+
+.user-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
-.statauses-user-container > * {
+.user-modal-overlay > * {
   pointer-events: auto;
 }
 
-/* =========================
-   FEED CONTENT (Home Component)
-========================= */
+/* ============================================================
+   LOADING / ONBOARDING PLACEHOLDER
+   ============================================================ */
+
+.user-loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  width: 100%;
+}
+
+.user-onboarding-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  text-align: center;
+  padding: 2rem;
+  width: 100%;
+}
+
+.user-onboarding-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.user-onboarding-title {
+  color: var(--user-text-primary);
+  margin-bottom: 0.5rem;
+  font-weight: 300;
+  font-size: 1.5rem;
+}
+
+.user-onboarding-desc {
+  color: var(--user-text-secondary);
+  max-width: 400px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   NO TOKEN STATE
+   ============================================================ */
+
+.user-no-token {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+
+.user-no-token-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-no-token-text {
+  color: var(--user-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================================
+   FEED / HOME CONTENT
+   ============================================================ */
+
 .user-feed {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .user-feed-header h4 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--user-text-primary);
   margin: 0 0 0.5rem 0;
 }
 
-/* Stories */
+/* ----- Stories ----- */
 .user-stories {
   display: flex;
   gap: 1rem;
   padding: 0.8rem 0 1.5rem 0;
   overflow-x: auto;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--user-border-color);
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .user-stories::-webkit-scrollbar {
@@ -287,11 +469,11 @@
 }
 
 .user-stories::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--user-border-color);
   border-radius: 10px;
 }
 
-.story-circle {
+.user-story-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -300,7 +482,7 @@
   flex-shrink: 0;
 }
 
-.story-avatar {
+.user-story-avatar {
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
@@ -309,22 +491,20 @@
   padding: 2px;
 }
 
-.story-avatar::after {
-  content: '';
-  display: block;
+.user-story-avatar-inner {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   background: #1a1a1a;
 }
 
-.story-circle:first-child .story-avatar {
-  border-color: #3b82f6;
+.user-story-item:first-child .user-story-avatar {
+  border-color: var(--user-accent-blue);
 }
 
-.story-circle span {
+.user-story-name {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--user-text-secondary);
   text-align: center;
   max-width: 4rem;
   overflow: hidden;
@@ -332,27 +512,28 @@
   white-space: nowrap;
 }
 
-/* Post */
-.user-post {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* ----- Post Cards ----- */
+.user-post-card {
+  background: var(--user-bg-card);
+  border: 1px solid var(--user-border-color);
   border-radius: 12px;
   padding: 1rem;
   transition: all 0.2s ease;
+  width: 100%;
 }
 
-.user-post:hover {
+.user-post-card:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.post-header {
+.user-post-header {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   margin-bottom: 0.8rem;
 }
 
-.post-avatar {
+.user-post-avatar {
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 50%;
@@ -360,19 +541,19 @@
   flex-shrink: 0;
 }
 
-.post-user-info h5 {
+.user-post-user h5 {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--user-text-primary);
   margin: 0;
 }
 
-.post-user-info span {
+.user-post-user span {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--user-text-muted);
 }
 
-.post-image {
+.user-post-image {
   width: 100%;
   height: 280px;
   border-radius: 8px;
@@ -381,13 +562,13 @@
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.post-actions {
+.user-post-actions {
   display: flex;
   gap: 1.5rem;
   margin-bottom: 0.5rem;
 }
 
-.post-actions button {
+.user-post-actions button {
   background: transparent;
   border: none;
   color: #e5e5e5;
@@ -399,32 +580,33 @@
   align-items: center;
 }
 
-.post-actions button:hover {
-  color: #ffffff;
+.user-post-actions button:hover {
+  color: var(--user-text-primary);
   transform: scale(1.05);
 }
 
-.post-likes {
+.user-post-likes {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--user-text-primary);
   margin-bottom: 0.3rem;
 }
 
-.post-caption {
+.user-post-caption {
   font-size: 0.9rem;
   color: #e5e5e5;
 }
 
-.post-caption strong {
-  color: #ffffff;
+.user-post-caption strong {
+  color: var(--user-text-primary);
   font-weight: 600;
   margin-right: 0.3rem;
 }
 
-/* =========================
+/* ============================================================
    PLACEHOLDER PAGES
-========================= */
+   ============================================================ */
+
 .user-page-placeholder {
   display: flex;
   flex-direction: column;
@@ -433,7 +615,8 @@
   height: 100%;
   min-height: 400px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--user-text-muted);
+  width: 100%;
 }
 
 .user-page-placeholder h1 {
@@ -448,276 +631,407 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
-/* =========================
-   RESPONSIVE - Mobile Bottom Nav
-========================= */
-@media screen and (max-width: 46.875em) {
-  .overall-user-component-container {
-    flex-direction: column;
-    overflow: hidden;
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes user-dot-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes user-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET (max-width: 1024px)
+   ============================================================ */
+
+@media screen and (max-width: 64em) {
+  .user-nav-sidebar {
+    width: 80px;
+    min-width: 80px;
+    padding: 1rem 0.4rem;
   }
 
-  /* Sidebar becomes bottom nav */
-  .user-account-header-container {
+  .user-nav-brand {
+    display: none;
+  }
+
+  .user-nav-label {
+    display: none;
+  }
+
+  .user-nav-item {
+    justify-content: center;
+    padding: 0.7rem 0.4rem;
+    gap: 0;
+  }
+
+  .user-nav-icon-wrapper {
+    font-size: 1.8rem;
+    min-width: auto;
+  }
+
+  .user-nav-icon-wrapper svg {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .user-nav-footer {
+    display: none;
+  }
+
+  .user-nav-item--profile {
+    border-top: 1px solid var(--user-border-color);
+    padding-top: 0.6rem;
+    margin-top: auto;
+  }
+
+  .user-nav-avatar-wrapper {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .user-nav-avatar-wrapper .user-nav-avatar-icon {
+    font-size: 1.2rem;
+  }
+
+  .user-logout-btn {
+    justify-content: center;
+    padding: 0.7rem 0.4rem;
+  }
+
+  .user-logout-text {
+    display: none;
+  }
+
+  .user-logout-icon {
+    font-size: 1.8rem;
+    min-width: auto;
+  }
+
+  .user-body-container {
+    padding: 1rem 1.2rem;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - MOBILE (max-width: 768px)
+   ============================================================ */
+
+@media screen and (max-width: 48em) {
+  .user-root-container {
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ----- Sidebar becomes bottom navigation ----- */
+  .user-nav-sidebar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     top: auto;
     width: 100%;
+    min-width: 100%;
     height: auto;
-    padding: 0.6rem 0.3rem 0.8rem 0.3rem;
+    padding: 0.5rem 0.3rem 0.7rem 0.3rem;
     border-right: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: #000000;
+    border-top: 1px solid var(--user-border-color);
+    background: var(--user-bg-primary);
     z-index: 100;
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    overflow-y: visible;
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
   }
 
-  .user-brand {
+  .user-nav-brand {
     display: none;
   }
 
-  .user-sidebar-footer {
+  .user-nav-footer {
     display: none;
   }
 
-  .user-account-header-container ul {
+  .user-nav-list {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
-    gap: 0.2rem;
+    gap: 0.1rem;
     padding: 0;
+    flex: 0 1 auto;
+    align-items: center;
   }
 
-  .user-account-header-container ul li {
+  .user-nav-item {
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem;
-    padding: 0.4rem 0.4rem;
-    font-size: 0.6rem;
+    gap: 0.05rem;
+    padding: 0.3rem 0.2rem;
+    font-size: 0.55rem;
     border-radius: 8px;
-    flex: 1;
+    flex: 1 1 0;
     justify-content: center;
     min-width: 0;
+    max-width: 100%;
   }
 
-  /* INCREASED ICON SIZE FOR MOBILE - Twice the size */
-  .icon-fig {
-    font-size: 3.2rem !important; /* Was 1.8rem, now 3.2rem (almost double) */
+  .user-nav-icon-wrapper {
+    font-size: var(--user-icon-size-mobile);
     min-width: auto;
     line-height: 1;
   }
 
-  /* Notification dot positioning for larger icons */
-  .icon-fig .notification-dot,
-  .icon-fig .connection-dot {
-    top: -2px !important;
-    right: -2px !important;
-    width: 12px !important;
-    height: 12px !important;
-    border-width: 2px !important;
+  .user-nav-icon-wrapper svg {
+    width: var(--user-icon-size-mobile);
+    height: var(--user-icon-size-mobile);
   }
 
-  .nav-name {
+  .user-nav-label {
     display: none;
   }
 
-  .profile-user-nav {
-    margin-top: 0;
-    border-top: none;
-    padding-top: 0;
-  }
-
-  /* Mobile profile avatar sizes - increased */
-  .user-profile-avatar-wrapper {
-    height: 3.2rem !important; /* Was 1.8rem */
-    width: 3.2rem !important; /* Was 1.8rem */
+  /* ----- Dots positioning for mobile (larger icons) ----- */
+  .user-nav-dot {
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
     border-width: 2px;
   }
 
-  .user-profile-avatar-icon {
-    font-size: 1.8rem !important; /* Was 0.9rem */
+  .user-nav-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    top: -3px;
+    right: -3px;
   }
 
-  .user-profile-avatar-spinner {
-    width: 1.8rem !important; /* Was 1rem */
-    height: 1.8rem !important; /* Was 1rem */
+  /* ----- Profile avatar in bottom nav ----- */
+  .user-nav-item--profile {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
   }
 
-  /* Main body */
-  .overall-user-body-container {
-    padding: 1rem 0.8rem;
-    height: calc(100% - 75px);
-    margin-bottom: 75px;
+  .user-nav-avatar-wrapper {
+    width: var(--user-avatar-size-mobile);
+    height: var(--user-avatar-size-mobile);
+  }
+
+  .user-nav-avatar-wrapper .user-nav-avatar-icon {
+    font-size: 1.8rem;
+  }
+
+  .user-nav-avatar-spinner {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  /* ----- Active state for mobile ----- */
+  .user-nav-item.active-nav {
+    background: var(--user-bg-hover);
+    border-radius: 8px;
+  }
+
+  /* ----- Logout button in bottom nav ----- */
+  .user-logout-btn {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    padding: 0.3rem 0.2rem;
+    font-size: 0.55rem;
+    width: 100%;
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+    border-radius: 8px;
+  }
+
+  .user-logout-text {
+    display: none;
+  }
+
+  .user-logout-icon {
+    font-size: var(--user-icon-size-mobile);
+    min-width: auto;
+    line-height: 1;
+  }
+
+  .user-logout-btn::after {
+    content: 'Logout';
+    font-size: 0.5rem;
+    color: var(--user-text-muted);
+    letter-spacing: 0.3px;
+  }
+
+  .user-logout-btn:hover:not(:disabled)::after {
+    color: var(--user-accent-red);
+  }
+
+  .user-logout-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  /* ----- Main body content (with bottom nav offset) ----- */
+  .user-body-container {
+    padding: 0.8rem 0.8rem calc(0.8rem + var(--user-bottom-nav-height) + 8px) 0.8rem;
+    height: 100%;
+    flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
   }
 
-  .actual-body-content-retainer-user {
+  .user-content-wrapper {
     max-width: 100%;
     padding-bottom: 1rem;
+    width: 100%;
   }
 
+  /* ----- Feed adjustments ----- */
   .user-stories {
     gap: 0.6rem;
     padding: 0.5rem 0 1rem 0;
   }
 
-  .story-avatar {
+  .user-story-avatar {
     width: 3.5rem;
     height: 3.5rem;
   }
 
-  .story-circle span {
+  .user-story-name {
     font-size: 0.6rem;
     max-width: 3.5rem;
   }
 
-  .post-image {
+  .user-post-image {
     height: 200px;
   }
 
-  .user-post {
+  .user-post-card {
     padding: 0.8rem;
   }
 
-  .post-actions button {
+  .user-post-actions button {
     font-size: 1.3rem;
   }
 
-  /* Active nav on mobile */
-  .user-account-header-container ul li.active-nav {
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-  }
-
+  /* ----- Placeholder adjustments ----- */
   .user-page-placeholder h1 {
     font-size: 2rem;
   }
 
-  /* Submodal on mobile */
-  .statauses-user-container {
+  .user-onboarding-title {
+    font-size: 1.2rem;
+  }
+
+  .user-onboarding-icon {
+    font-size: 3rem;
+  }
+
+  /* ----- Modal overlay for mobile ----- */
+  .user-modal-overlay {
     z-index: 9999;
-  }
-
-  /* =========================
-     MOBILE LOGOUT BUTTON - NEW
-  ========================= */
-  .user-logout-section {
-    display: flex !important;
-    padding: 0.3rem 0.3rem;
-    border-top: none;
-    margin-top: 0;
-    flex-shrink: 0;
-  }
-
-  .user-logout-btn {
-    display: flex !important;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.1rem;
-    padding: 0.4rem 0.4rem;
-    border-radius: 8px;
-    font-size: 0.6rem;
-    background: transparent;
-    border: none;
-    color: #e5e5e5;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-    width: auto;
-    flex: 1;
-    justify-content: center;
-    min-width: 0;
-  }
-
-  .user-logout-btn:hover:not(:disabled) {
-    background-color: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
-  }
-
-  .user-logout-btn:hover:not(:disabled) .user-logout-icon {
-    color: #ef4444;
-  }
-
-  .user-logout-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .user-logout-icon {
-    font-size: 3.2rem !important;
-    min-width: auto;
-    transition: color 0.2s ease;
-    color: #e5e5e5;
-    line-height: 1;
-  }
-
-  .user-logout-text {
-    display: none; /* Hide text, only show icon on mobile */
-  }
-
-  /* Show a small indicator text below icon */
-  .user-logout-btn::after {
-    content: 'Logout';
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.4);
-    letter-spacing: 0.3px;
-  }
-
-  .user-logout-btn:hover:not(:disabled)::after {
-    color: #ef4444;
   }
 }
 
-/* =========================
-   EXTRA SMALL SCREENS
-========================= */
+/* ============================================================
+   RESPONSIVE - EXTRA SMALL (max-width: 480px)
+   ============================================================ */
+
 @media screen and (max-width: 30em) {
-  .icon-fig {
-    font-size: 2.8rem !important; /* Slightly smaller for very small screens but still large */
+  .user-nav-sidebar {
+    padding: 0.3rem 0.15rem 0.5rem 0.15rem;
+    padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+  }
+
+  .user-nav-item {
+    padding: 0.2rem 0.1rem;
+    flex: 1 1 0;
+  }
+
+  .user-nav-icon-wrapper {
+    font-size: 2.6rem;
+  }
+
+  .user-nav-icon-wrapper svg {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .user-nav-avatar-wrapper {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .user-nav-avatar-wrapper .user-nav-avatar-icon {
+    font-size: 1.5rem;
+  }
+
+  .user-nav-avatar-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .user-nav-dot {
+    width: 10px;
+    height: 10px;
+    top: -1px;
+    right: -1px;
+  }
+
+  .user-nav-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
+    top: -2px;
+    right: -2px;
   }
 
   .user-logout-icon {
-    font-size: 2.8rem !important;
+    font-size: 2.6rem;
   }
 
-  .user-account-header-container {
-    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
+  .user-logout-btn::after {
+    font-size: 0.4rem;
   }
 
-  .user-account-header-container ul li {
-    padding: 0.3rem 0.2rem;
+  .user-body-container {
+    padding: 0.5rem 0.5rem calc(0.5rem + 68px + 4px) 0.5rem;
   }
 
-  .user-profile-avatar-wrapper {
-    height: 2.8rem !important;
-    width: 2.8rem !important;
+  .user-content-wrapper {
+    padding-bottom: 0.5rem;
   }
 
-  .user-profile-avatar-icon {
-    font-size: 1.5rem !important;
-  }
-
-  .user-profile-avatar-spinner {
-    width: 1.5rem !important;
-    height: 1.5rem !important;
-  }
-
-  .overall-user-body-container {
-    padding: 0.8rem 0.5rem;
-    margin-bottom: 70px;
-    height: calc(100% - 70px);
-  }
-
-  .post-image {
+  .user-post-image {
     height: 160px;
   }
 
-  .story-avatar {
+  .user-story-avatar {
     width: 3rem;
     height: 3rem;
   }
@@ -734,135 +1048,57 @@
     font-size: 0.9rem;
   }
 
-  /* Notification dot positioning for extra small screens */
-  .icon-fig .notification-dot,
-  .icon-fig .connection-dot {
-    width: 10px !important;
-    height: 10px !important;
-    top: -1px !important;
-    right: -1px !important;
+  .user-onboarding-title {
+    font-size: 1rem;
   }
 
-  .user-logout-btn::after {
-    font-size: 0.4rem;
+  .user-onboarding-desc {
+    font-size: 0.8rem;
+  }
+
+  .user-onboarding-icon {
+    font-size: 2.5rem;
   }
 }
 
-/* =========================
-   SAFE AREA FOR NOTCH PHONES
-========================= */
+/* ============================================================
+   RESPONSIVE - SAFE AREA SUPPORT (Notch phones)
+   ============================================================ */
+
 @supports (padding: max(0px)) {
-  @media screen and (max-width: 46.875em) {
-    .user-account-header-container {
+  @media screen and (max-width: 48em) {
+    .user-nav-sidebar {
       padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
     }
   }
 }
 
-/* =========================
-   LOGOUT BUTTON (Desktop)
-========================= */
-.user-logout-section {
-  padding: 0.5rem 0.8rem 0.3rem 0.8rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  margin-top: 0.3rem;
+/* ============================================================
+   UTILITY - HIDE ELEMENTS
+   ============================================================ */
+
+.user-hidden-nav-item {
+  display: none !important;
 }
 
-.user-logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.7rem 0.8rem;
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+
+.user-body-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--user-border-color) transparent;
+}
+
+.user-body-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.user-body-container::-webkit-scrollbar-track {
   background: transparent;
-  border: none;
-  border-radius: 12px;
-  color: #e5e5e5;
-  font-size: 1.1rem;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
 }
 
-.user-logout-btn:hover:not(:disabled) {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
-}
-
-.user-logout-btn:hover:not(:disabled) .user-logout-icon {
-  color: #ef4444;
-}
-
-.user-logout-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.user-logout-icon {
-  font-size: 2rem;
-  min-width: 2.2rem;
-  transition: color 0.2s ease;
-  color: #e5e5e5;
-}
-
-.user-logout-text {
-  font-size: 1rem;
-  white-space: nowrap;
-}
-
-/* Hide desktop logout text on mobile, show icon only */
-@media screen and (max-width: 46.875em) {
-  .user-logout-section {
-    display: flex !important;
-    border-top: none;
-    padding: 0.3rem 0.3rem;
-  }
-  
-  .user-logout-btn {
-    flex-direction: column;
-    padding: 0.4rem 0.4rem;
-    font-size: 0.6rem;
-    width: auto;
-    flex: 1;
-  }
-  
-  .user-logout-text {
-    display: none;
-  }
-  
-  .user-logout-icon {
-    font-size: 3.2rem !important;
-    min-width: auto;
-  }
-  
-  .user-logout-btn::after {
-    content: 'Logout';
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.4);
-  }
-}
-
-/* =========================
-   PULSE ANIMATION FOR NOTIFICATION/CONNECTION DOTS
-========================= */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Dot base styles - can be used for both notification and connection dots */
-.notification-dot,
-.connection-dot {
-  animation: pulse 2s infinite;
+.user-body-container::-webkit-scrollbar-thumb {
+  background: var(--user-border-color);
+  border-radius: 10px;
 }

@@ -1,31 +1,22 @@
-/* notification.css — Notifications Component */
+/* ============================================================
+   NOTIFICATIONS COMPONENT - Full CSS
+   ============================================================ */
 
-/* ============================================
-   RESET & BASE
-   ============================================ */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* ============================================
-   CONTAINER - FULL WIDTH
-   ============================================ */
-.notif-container {
+/* ----- Root Container ----- */
+.notif-root-container {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
-/* ============================================
-   STICKY HEADER - FULL WIDTH
-   ============================================ */
-.notif-header-sticky {
+/* ----- Sticky Header ----- */
+.notif-sticky-header {
   position: fixed;
   top: 0;
   left: 0;
@@ -37,9 +28,10 @@
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 12px 16px 0 16px;
+  box-sizing: border-box;
 }
 
-.notif-header-inner {
+.notif-sticky-header-inner {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
@@ -48,35 +40,38 @@
   -webkit-backdrop-filter: blur(10px);
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
-.notif-header-top {
+.notif-header-top-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  width: 100%;
 }
 
-.notif-title {
+.notif-title-text {
   font-size: 1.6rem;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
   letter-spacing: -0.5px;
+  font-family: inherit;
 }
 
-/* ============================================
-   TABS - FULL WIDTH
-   ============================================ */
-.notif-tabs-wrapper {
+/* ----- Tabs Wrapper ----- */
+.notif-tabs-container {
   display: flex;
   gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 8px;
   position: relative;
   width: 100%;
+  box-sizing: border-box;
 }
 
+/* ----- Tab Buttons ----- */
 .notif-tab-btn {
   background: transparent;
   border: none;
@@ -92,6 +87,8 @@
   align-items: center;
   gap: 8px;
   flex: 0 1 auto;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
 .notif-tab-btn:hover {
@@ -99,16 +96,19 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-.notif-tab-active {
+.notif-tab-btn--active {
   color: #ffffff !important;
 }
 
-.notif-tab-text {
+.notif-tab-label {
   position: relative;
   z-index: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.notif-tab-indicator {
+/* ----- Tab Indicator ----- */
+.notif-tab-indicator-line {
   position: absolute;
   bottom: -9px;
   left: 50%;
@@ -117,10 +117,10 @@
   height: 3px;
   background: linear-gradient(90deg, #3b82f6, #8b5cf6);
   border-radius: 3px;
-  animation: notifSlideIn 0.3s ease;
+  animation: notifIndicatorSlide 0.3s ease;
 }
 
-@keyframes notifSlideIn {
+@keyframes notifIndicatorSlide {
   from {
     width: 0;
     opacity: 0;
@@ -131,68 +131,66 @@
   }
 }
 
-/* ============================================
-   NOTIFICATION DOTS
-   ============================================ */
-.notif-tab-dot {
+/* ----- Tab Dot (Unread Indicator) ----- */
+.notif-tab-unread-dot {
   display: inline-block;
   width: 10px;
   height: 10px;
   background-color: #ef4444;
   border-radius: 50%;
   border: 2px solid #000000;
-  animation: pulse-dot 2s infinite;
+  animation: notifDotPulse 2s infinite;
   flex-shrink: 0;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
   position: relative;
   z-index: 2;
+  box-sizing: border-box;
 }
 
-/* ============================================
-   SCROLLABLE BODY - HIDDEN SCROLLBAR COMPLETELY
-   ============================================ */
-.notif-body-scroll {
+/* ----- Scrollable Body (Hidden Scrollbar) ----- */
+.notif-scroll-body {
   width: 100%;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 100vh;
+  max-height: 100dvh;
   padding: 0 16px 20px 16px;
   position: relative;
   scroll-behavior: smooth;
   margin-top: 0;
+  box-sizing: border-box;
   
   /* HIDE SCROLLBAR FOR ALL BROWSERS */
-  -ms-overflow-style: none;  /* Internet Explorer and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* HIDE SCROLLBAR FOR CHROME, SAFARI, OPERA */
-.notif-body-scroll::-webkit-scrollbar {
+/* Hide for Chrome, Safari, Opera */
+.notif-scroll-body::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
   background: transparent;
 }
 
-/* Additional hide for WebKit browsers */
-.notif-body-scroll::-webkit-scrollbar-track {
+.notif-scroll-body::-webkit-scrollbar-track {
   display: none;
   background: transparent;
 }
 
-.notif-body-scroll::-webkit-scrollbar-thumb {
+.notif-scroll-body::-webkit-scrollbar-thumb {
   display: none;
   background: transparent;
 }
 
-/* Firefox - additional hide */
-.notif-body-scroll {
+/* Firefox additional hide */
+.notif-scroll-body {
   scrollbar-color: transparent transparent;
 }
 
-/* Body content */
-.notif-body-content {
+/* ----- Body Content ----- */
+.notif-body-content-wrapper {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
@@ -201,31 +199,34 @@
   transition: all 0.3s ease;
   margin-bottom: 20px;
   width: 100%;
+  box-sizing: border-box;
 }
 
-.notif-body-content > * {
+.notif-body-content-wrapper > * {
   width: 100%;
 }
 
-/* Detail view */
-.notif-container .conn-req-detail-wrapper {
+/* ----- Detail View Wrapper ----- */
+.notif-detail-view-wrapper {
   padding: 0;
   max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ============================================
-   RESPONSIVE - TABLETS
-   ============================================ */
+/* ============================================================
+   RESPONSIVE - TABLETS (max-width: 768px)
+   ============================================================ */
 @media screen and (max-width: 768px) {
-  .notif-header-sticky {
+  .notif-sticky-header {
     padding: 10px 12px 0 12px;
   }
 
-  .notif-header-inner {
+  .notif-sticky-header-inner {
     padding: 12px 16px;
   }
 
-  .notif-title {
+  .notif-title-text {
     font-size: 1.4rem;
   }
 
@@ -234,11 +235,15 @@
     padding: 6px 12px;
   }
 
-  .notif-tab-indicator {
+  .notif-tab-label {
+    font-size: 0.85rem;
+  }
+
+  .notif-tab-indicator-line {
     width: 25px;
   }
 
-  @keyframes notifSlideIn {
+  @keyframes notifIndicatorSlide {
     from {
       width: 0;
       opacity: 0;
@@ -249,39 +254,39 @@
     }
   }
 
-  .notif-tab-dot {
+  .notif-tab-unread-dot {
     width: 12px;
     height: 12px;
     border-width: 2.5px;
   }
 
-  .notif-body-scroll {
+  .notif-scroll-body {
     padding: 0 12px 16px 12px;
   }
 }
 
-/* ============================================
-   RESPONSIVE - PHONES
-   ============================================ */
+/* ============================================================
+   RESPONSIVE - PHONES (max-width: 480px)
+   ============================================================ */
 @media screen and (max-width: 480px) {
-  .notif-header-sticky {
+  .notif-sticky-header {
     padding: 8px 8px 0 8px;
   }
 
-  .notif-header-inner {
+  .notif-sticky-header-inner {
     padding: 10px 12px;
     border-radius: 10px;
   }
 
-  .notif-header-top {
+  .notif-header-top-row {
     margin-bottom: 8px;
   }
 
-  .notif-title {
+  .notif-title-text {
     font-size: 1.2rem;
   }
 
-  .notif-tabs-wrapper {
+  .notif-tabs-container {
     gap: 4px;
     padding-bottom: 6px;
   }
@@ -295,34 +300,26 @@
     white-space: nowrap;
   }
 
-  .notif-tab-dot {
-    width: 14px;
-    height: 14px;
-    border-width: 3px;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
-    animation: pulse-dot-mobile 1.5s infinite;
-  }
-
-  .notif-tab-btn:first-child {
-    margin-right: 4px;
-  }
-
-  .notif-tab-btn:last-child {
-    margin-left: 4px;
-  }
-
-  .notif-tab-text {
+  .notif-tab-label {
     font-size: 0.7rem;
     letter-spacing: 0.2px;
   }
 
-  .notif-tab-indicator {
+  .notif-tab-unread-dot {
+    width: 14px;
+    height: 14px;
+    border-width: 3px;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+    animation: notifDotPulseMobile 1.5s infinite;
+  }
+
+  .notif-tab-indicator-line {
     bottom: -7px;
     width: 20px;
     height: 2.5px;
   }
 
-  @keyframes notifSlideIn {
+  @keyframes notifIndicatorSlide {
     from {
       width: 0;
       opacity: 0;
@@ -333,45 +330,54 @@
     }
   }
 
-  .notif-body-scroll {
+  .notif-scroll-body {
     padding: 0 8px 12px 8px;
   }
 
-  .notif-body-content {
+  .notif-body-content-wrapper {
     padding: 6px;
     min-height: 200px;
     border-radius: 10px;
   }
+
+  /* Tab button specific spacing */
+  .notif-tab-btn:first-child {
+    margin-right: 4px;
+  }
+
+  .notif-tab-btn:last-child {
+    margin-left: 4px;
+  }
 }
 
-/* ============================================
-   EXTRA SMALL SCREENS
-   ============================================ */
+/* ============================================================
+   RESPONSIVE - EXTRA SMALL (max-width: 320px)
+   ============================================================ */
 @media screen and (max-width: 320px) {
   .notif-tab-btn {
     font-size: 0.6rem;
     padding: 4px 8px;
   }
 
-  .notif-tab-text {
+  .notif-tab-label {
     font-size: 0.6rem;
   }
 
-  .notif-tab-dot {
+  .notif-tab-unread-dot {
     width: 12px;
     height: 12px;
     border-width: 2.5px;
   }
 
-  .notif-tabs-wrapper {
+  .notif-tabs-container {
     gap: 2px;
   }
 }
 
-/* ============================================
-   PULSE ANIMATIONS
-   ============================================ */
-@keyframes pulse-dot {
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes notifDotPulse {
   0% {
     transform: scale(1);
     opacity: 1;
@@ -386,7 +392,7 @@
   }
 }
 
-@keyframes pulse-dot-mobile {
+@keyframes notifDotPulseMobile {
   0% {
     transform: scale(1);
     opacity: 1;
@@ -401,17 +407,46 @@
   }
 }
 
-/* ============================================
+/* ============================================================
    SAFE AREA INSETS FOR NOTCHED PHONES
-   ============================================ */
+   ============================================================ */
 @supports (padding-top: env(safe-area-inset-top)) {
-  .notif-header-sticky {
+  .notif-sticky-header {
     padding-top: env(safe-area-inset-top);
   }
 }
 
 @supports (padding-top: constant(safe-area-inset-top)) {
-  .notif-header-sticky {
+  .notif-sticky-header {
     padding-top: constant(safe-area-inset-top);
   }
+}
+
+/* ============================================================
+   SAFE AREA INSETS FOR BOTTOM (iOS)
+   ============================================================ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .notif-scroll-body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@supports (padding-bottom: constant(safe-area-inset-bottom)) {
+  .notif-scroll-body {
+    padding-bottom: constant(safe-area-inset-bottom);
+  }
+}
+
+/* ============================================================
+   UTILITY - Hide scrollbar for all browsers (fallback)
+   ============================================================ */
+.notif-scroll-body {
+  scrollbar-width: none !important;
+}
+
+.notif-scroll-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
