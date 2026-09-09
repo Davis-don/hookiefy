@@ -1,12 +1,52 @@
-import requests
 import logging
+import requests
+
 from django.conf import settings
 
 from .get_pesapal_token import get_pesapal_token
 from paymentconfigurations.models import PaymentConfiguration
 
-# Set up logging
+
 logger = logging.getLogger(__name__)
+
+
+def get_pesapal_configuration():
+    """
+    Get the active Pesapal payment configuration.
+
+    Uses case-insensitive matching so values such as:
+    Pesapal, PesaPal, PESAPAL, pesapal
+    are treated as the same gateway.
+    """
+
+    try:
+        config = (
+            PaymentConfiguration.objects
+            .filter(
+                gateway_name__iexact="Pesapal",
+                is_active=True,
+            )
+            .first()
+        )
+
+        if config:
+            logger.info(
+                f"✅ Active Pesapal configuration found. "
+                f"IPN ID: {config.ipn_id}"
+            )
+            return config
+
+        logger.error(
+            "❌ No active Pesapal Payment Configuration found."
+        )
+
+        return None
+
+    except Exception as e:
+        logger.exception(
+            f"❌ Error while loading Pesapal configuration: {str(e)}"
+        )
+        return None
 
 
 def submit_order(
@@ -17,17 +57,21 @@ def submit_order(
 ):
     """
     Creates a payment order on Pesapal.
-    
+
     Args:
-        payment: Payment object with amount, merchant_reference, phone_number
-        first_name: User's first name
-        last_name: User's last name
-        email: User's email address
-    
+        payment: Payment object containing:
+            - amount
+            - merchant_reference
+            - phone_number
+
+        first_name: Customer first name
+        last_name: Customer last name
+        email: Customer email
+
     Returns:
-        dict: Response from Pesapal with status, order_tracking_id, redirect_url
+        dict: Pesapal response
     """
-    
+
     logger.info("=" * 60)
     logger.info("SUBMITTING ORDER TO PESAPAL")
     logger.info(f"Merchant Reference: {payment.merchant_reference}")
@@ -35,174 +79,419 @@ def submit_order(
     logger.info(f"Phone: {payment.phone_number}")
     logger.info("=" * 60)
 
-    # Get authentication token
-    token_response = get_pesapal_token()
+    # ============================================================
+    # STEP 1: GET PESAPAL TOKEN
+    # ============================================================
 
-    if token_response.get("status") != "200":
-        logger.error(f"Failed to get Pesapal token: {token_response}")
-        return token_response
-
-    token = token_response["token"]
-    logger.info("✅ Pesapal token obtained successfully")
-
-    # Get active payment configuration
     try:
-        config = PaymentConfiguration.objects.get(
-            gateway_name="Pesapal",
-            is_active=True,
+        token_response = get_pesapal_token()
+
+    except Exception as e:
+        logger.exception(
+            f"❌ Exception while getting Pesapal token: {str(e)}"
         )
-        logger.info(f"✅ Active configuration found with IPN ID: {config.ipn_id}")
-    except PaymentConfiguration.DoesNotExist:
-        logger.error("❌ No active Payment Configuration found")
+
         return {
-            "status": "400",
-            "message": "No active Payment Configuration found."
+            "status": "500",
+            "message": f"Failed to get Pesapal token: {str(e)}",
         }
 
-    # Build the request URL
+    if not token_response:
+        logger.error(
+            "❌ Empty response received while getting Pesapal token."
+        )
+
+        return {
+            "status": "500",
+            "message": "Empty response while getting Pesapal token.",
+        }
+
+    if token_response.get("status") != "200":
+        logger.error(
+            f"❌ Failed to get Pesapal token: {token_response}"
+        )
+
+        return token_response
+
+    token = token_response.get("token")
+
+    if not token:
+        logger.error(
+            "❌ Pesapal token was not returned."
+        )
+
+        return {
+            "status": "500",
+            "message": "Pesapal authentication token was not returned.",
+        }
+
+    logger.info(
+        "✅ Pesapal token obtained successfully"
+    )
+
+    # ============================================================
+    # STEP 2: GET ACTIVE PESAPAL CONFIGURATION
+    # ============================================================
+
+    config = get_pesapal_configuration()
+
+    if not config:
+        return {
+            "status": "400",
+            "message": (
+                "No active Pesapal Payment Configuration found. "
+                "Please configure Pesapal in Django admin."
+            ),
+        }
+
+    # ============================================================
+    # STEP 3: CHECK IPN ID
+    # ============================================================
+
+    if not config.ipn_id:
+        logger.error(
+            "❌ Pesapal configuration does not have an IPN ID."
+        )
+
+        return {
+            "status": "400",
+            "message": (
+                "Pesapal IPN ID is missing. "
+                "Register the Pesapal IPN before initiating payments."
+            ),
+        }
+
+    logger.info(
+        f"✅ Pesapal IPN ID available: {config.ipn_id}"
+    )
+
+    # ============================================================
+    # STEP 4: GET PESAPAL BASE URL
+    # ============================================================
+
+    base_url = getattr(
+        settings,
+        "PESAPAL_BASE_URL",
+        None,
+    )
+
+    if not base_url:
+        logger.error(
+            "❌ PESAPAL_BASE_URL is not configured."
+        )
+
+        return {
+            "status": "500",
+            "message": "PESAPAL_BASE_URL is not configured.",
+        }
+
+    base_url = base_url.rstrip("/")
+
     url = (
-        f"{settings.PESAPAL_BASE_URL}"
+        f"{base_url}"
         "/api/Transactions/SubmitOrderRequest"
     )
-    logger.info(f"📡 Submitting order to: {url}")
+
+    logger.info(
+        f"📡 Submitting order to: {url}"
+    )
 
     # ============================================================
-    # GET CALLBACK URLs FROM SETTINGS (with fallbacks)
+    # STEP 5: CALLBACK URLS
     # ============================================================
-    
-    # Try to get from settings, with fallback to hardcoded production URLs
+
     callback_url = getattr(
-        settings, 
-        'PESAPAL_CALLBACK_URL', 
-        'https://hookiefy-server.onrender.com/payments/payment-success/'  # Updated with /payments/ prefix
+        settings,
+        "PESAPAL_CALLBACK_URL",
+        "https://hookiefy-server.onrender.com/payments/payment-success/",
     )
-    
-    cancellation_url = getattr(
-        settings, 
-        'PESAPAL_CANCELLATION_URL', 
-        'https://hookiefy-server.onrender.com/payments/payment-failure/'  # Updated with /payments/ prefix
-    )
-    
-    # Log the URLs being used
-    logger.info(f"🔗 Callback URL: {callback_url}")
-    logger.info(f"❌ Cancellation URL: {cancellation_url}")
 
-    # Prepare the payload
+    cancellation_url = getattr(
+        settings,
+        "PESAPAL_CANCELLATION_URL",
+        "https://hookiefy-server.onrender.com/payments/payment-failure/",
+    )
+
+    logger.info(
+        f"🔗 Callback URL: {callback_url}"
+    )
+
+    logger.info(
+        f"❌ Cancellation URL: {cancellation_url}"
+    )
+
+    # ============================================================
+    # STEP 6: VALIDATE PHONE NUMBER
+    # ============================================================
+
+    phone_number = getattr(
+        payment,
+        "phone_number",
+        None,
+    )
+
+    if not phone_number:
+        logger.error(
+            "❌ Payment does not contain a phone number."
+        )
+
+        return {
+            "status": "400",
+            "message": "Customer phone number is required.",
+        }
+
+    # ============================================================
+    # STEP 7: NORMALIZE CUSTOMER DATA
+    # ============================================================
+
+    first_name = first_name or ""
+    last_name = last_name or ""
+    email = email or ""
+
+    # ============================================================
+    # STEP 8: BUILD PESAPAL PAYLOAD
+    # ============================================================
+
     payload = {
         "id": payment.merchant_reference,
+
         "currency": "KES",
+
         "amount": float(payment.amount),
+
         "description": "Hookup payment",
-        
-        # Success and failure redirect URLs - Now using settings
+
         "callback_url": callback_url,
+
         "cancellation_url": cancellation_url,
-        
-        # IPN notification ID
+
         "notification_id": config.ipn_id,
 
         "billing_address": {
             "email_address": email,
-            "phone_number": payment.phone_number,
+
+            "phone_number": phone_number,
+
             "country_code": "KE",
-            "first_name": first_name or "",
+
+            "first_name": first_name,
+
             "middle_name": "",
-            "last_name": last_name or "",
+
+            "last_name": last_name,
+
             "line_1": "",
+
             "line_2": "",
+
             "city": "",
+
             "state": "",
+
             "postal_code": "",
+
             "zip_code": "",
         },
     }
 
-    logger.info(f"📤 Payload: {payload}")
+    logger.info(
+        f"📤 Pesapal payload: {payload}"
+    )
 
-    # Prepare headers
+    # ============================================================
+    # STEP 9: REQUEST HEADERS
+    # ============================================================
+
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
 
-    # Make the request to Pesapal
+    # ============================================================
+    # STEP 10: SEND REQUEST
+    # ============================================================
+
     try:
         response = requests.post(
             url,
             json=payload,
             headers=headers,
-            timeout=30,  # 30 second timeout
+            timeout=30,
         )
-        
-        logger.info(f"📥 Response Status Code: {response.status_code}")
-        
-        # Try to parse the response
+
+        logger.info(
+            f"📥 Pesapal response status: {response.status_code}"
+        )
+
+        # ========================================================
+        # STEP 11: PARSE RESPONSE
+        # ========================================================
+
         try:
             response_data = response.json()
-            logger.info(f"📥 Response Data: {response_data}")
+
+            logger.info(
+                f"📥 Pesapal response data: {response_data}"
+            )
+
         except ValueError:
-            logger.error(f"❌ Failed to parse JSON response: {response.text}")
+            logger.error(
+                "❌ Pesapal returned a non-JSON response."
+            )
+
+            logger.error(
+                f"Raw response: {response.text}"
+            )
+
             return {
                 "status": str(response.status_code),
-                "message": "Invalid response from Pesapal",
-                "raw_response": response.text
+                "message": "Invalid response received from Pesapal.",
+                "raw_response": response.text,
             }
 
-        # Check if the request was successful
+        # ========================================================
+        # STEP 12: SUCCESS
+        # ========================================================
+
         if response.status_code == 200:
-            # PesaPal returns order_tracking_id and redirect_url
-            order_tracking_id = response_data.get("order_tracking_id")
-            redirect_url = response_data.get("redirect_url")
-            
-            if order_tracking_id and redirect_url:
-                logger.info(f"✅ Order submitted successfully")
-                logger.info(f"🔑 Order Tracking ID: {order_tracking_id}")
-                logger.info(f"🔀 Redirect URL: {redirect_url}")
-                return response_data
-            else:
-                logger.error(f"❌ Missing order_tracking_id or redirect_url in response")
+
+            order_tracking_id = response_data.get(
+                "order_tracking_id"
+            )
+
+            redirect_url = response_data.get(
+                "redirect_url"
+            )
+
+            if not order_tracking_id:
+                logger.error(
+                    "❌ Pesapal response missing order_tracking_id."
+                )
+
                 return {
                     "status": "400",
-                    "message": "Incomplete response from Pesapal",
-                    "response": response_data
+                    "message": (
+                        "Pesapal did not return an "
+                        "order_tracking_id."
+                    ),
+                    "response": response_data,
                 }
-        else:
-            logger.error(f"❌ Pesapal returned error status: {response.status_code}")
-            return {
-                "status": str(response.status_code),
-                "message": response_data.get("message", "Pesapal request failed"),
-                "error": response_data
-            }
+
+            if not redirect_url:
+                logger.error(
+                    "❌ Pesapal response missing redirect_url."
+                )
+
+                return {
+                    "status": "400",
+                    "message": (
+                        "Pesapal did not return a redirect URL."
+                    ),
+                    "response": response_data,
+                }
+
+            logger.info(
+                "✅ Pesapal order submitted successfully."
+            )
+
+            logger.info(
+                f"🔑 Order Tracking ID: {order_tracking_id}"
+            )
+
+            logger.info(
+                f"🔀 Redirect URL: {redirect_url}"
+            )
+
+            return response_data
+
+        # ========================================================
+        # STEP 13: PESAPAL ERROR
+        # ========================================================
+
+        logger.error(
+            f"❌ Pesapal returned HTTP {response.status_code}"
+        )
+
+        logger.error(
+            f"Pesapal error response: {response_data}"
+        )
+
+        return {
+            "status": str(response.status_code),
+
+            "message": response_data.get(
+                "message",
+                "Pesapal request failed.",
+            ),
+
+            "error": response_data,
+        }
+
+    # ============================================================
+    # STEP 14: TIMEOUT
+    # ============================================================
 
     except requests.exceptions.Timeout:
-        logger.error("❌ Request to Pesapal timed out")
+
+        logger.error(
+            "❌ Request to Pesapal timed out."
+        )
+
         return {
             "status": "408",
-            "message": "Request to Pesapal timed out"
-        }
-    
-    except requests.exceptions.ConnectionError:
-        logger.error("❌ Connection error to Pesapal")
-        return {
-            "status": "503",
-            "message": "Could not connect to Pesapal"
-        }
-    
-    except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Request error: {str(e)}")
-        return {
-            "status": "500",
-            "message": f"Request error: {str(e)}"
-        }
-    
-    except Exception as e:
-        logger.error(f"❌ Unexpected error: {str(e)}")
-        return {
-            "status": "500",
-            "message": f"Unexpected error: {str(e)}"
+            "message": "Request to Pesapal timed out.",
         }
 
+    # ============================================================
+    # STEP 15: CONNECTION ERROR
+    # ============================================================
+
+    except requests.exceptions.ConnectionError:
+
+        logger.error(
+            "❌ Could not connect to Pesapal."
+        )
+
+        return {
+            "status": "503",
+            "message": "Could not connect to Pesapal.",
+        }
+
+    # ============================================================
+    # STEP 16: REQUEST ERROR
+    # ============================================================
+
+    except requests.exceptions.RequestException as e:
+
+        logger.exception(
+            f"❌ Pesapal request error: {str(e)}"
+        )
+
+        return {
+            "status": "500",
+            "message": f"Pesapal request error: {str(e)}",
+        }
+
+    # ============================================================
+    # STEP 17: UNEXPECTED ERROR
+    # ============================================================
+
+    except Exception as e:
+
+        logger.exception(
+            f"❌ Unexpected Pesapal error: {str(e)}"
+        )
+
+        return {
+            "status": "500",
+            "message": f"Unexpected Pesapal error: {str(e)}",
+        }
+
+
+# ============================================================
+# SUBMIT ORDER WITH RETRY
+# ============================================================
 
 def submit_order_with_retry(
     payment,
@@ -212,51 +501,126 @@ def submit_order_with_retry(
     max_retries=3,
 ):
     """
-    Submits an order to Pesapal with retry logic.
-    
-    Args:
-        payment: Payment object
-        first_name: User's first name
-        last_name: User's last name
-        email: User's email address
-        max_retries: Maximum number of retry attempts
-    
-    Returns:
-        dict: Response from Pesapal
+    Submit a Pesapal order with retry logic.
+
+    4xx errors are returned immediately.
+    Other errors are retried.
     """
-    
+
+    if max_retries < 1:
+        max_retries = 1
+
     retry_count = 0
     last_error = None
-    
+
     while retry_count < max_retries:
+
+        retry_count += 1
+
+        logger.info(
+            f"🔄 Pesapal order attempt "
+            f"{retry_count}/{max_retries}"
+        )
+
         try:
+
             result = submit_order(
-                payment,
-                first_name,
-                last_name,
-                email,
+                payment=payment,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
             )
-            
-            # If successful, return immediately
-            if result.get("status") == "200":
-                return result
-            
-            # If it's a client error (4xx), don't retry
-            status = result.get("status", "")
-            if status.startswith("4"):
-                return result
-            
-            # Otherwise, retry
-            retry_count += 1
-            logger.warning(f"Retry {retry_count}/{max_retries} for order submission")
-            
+
+            if not result:
+
+                last_error = (
+                    "Empty response from submit_order."
+                )
+
+                logger.warning(
+                    f"⚠️ {last_error}"
+                )
+
+            else:
+
+                status = str(
+                    result.get("status", "")
+                )
+
+                # ==================================================
+                # SUCCESS
+                # ==================================================
+
+                if status == "200":
+
+                    logger.info(
+                        "✅ Pesapal order submission successful."
+                    )
+
+                    return result
+
+                # ==================================================
+                # CLIENT ERROR - DO NOT RETRY
+                # ==================================================
+
+                if status.startswith("4"):
+
+                    logger.error(
+                        "❌ Pesapal returned a client/configuration "
+                        f"error: {result}"
+                    )
+
+                    return result
+
+                # ==================================================
+                # SERVER/OTHER ERROR - RETRY
+                # ==================================================
+
+                last_error = result.get(
+                    "message",
+                    "Pesapal order submission failed.",
+                )
+
+                logger.warning(
+                    f"⚠️ Pesapal attempt failed: {result}"
+                )
+
         except Exception as e:
+
             last_error = str(e)
-            retry_count += 1
-            logger.warning(f"Retry {retry_count}/{max_retries} due to error: {last_error}")
-    
-    # If we've exhausted all retries
+
+            logger.exception(
+                f"❌ Exception during Pesapal attempt "
+                f"{retry_count}: {last_error}"
+            )
+
+        # ========================================================
+        # RETRY
+        # ========================================================
+
+        if retry_count < max_retries:
+
+            logger.warning(
+                f"⏳ Retrying Pesapal order submission "
+                f"({retry_count}/{max_retries})..."
+            )
+
+    # ============================================================
+    # ALL RETRIES FAILED
+    # ============================================================
+
+    logger.error(
+        f"❌ Pesapal order failed after "
+        f"{max_retries} attempt(s)."
+    )
+
     return {
         "status": "500",
-        "message": f"Failed after {max_retries} retries. Last error: {last_error}"
+
+        "message": (
+            f"Failed after {max_retries} Pesapal "
+            f"order submission attempt(s)."
+        ),
+
+        "error": last_error,
     }
