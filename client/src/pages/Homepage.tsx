@@ -13,19 +13,40 @@ import DefaultFeed from '../components/DefaultFeed';
 import DefaultLogin from '../components/DefaultLogin';
 import DefaultSignup from '../components/DefaultSignup';
 
+// ✅ Import the redirect hook
+import { useRedirectIfAuthenticated } from '../hooks/useRedirectIfAuthenticated';
+
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
 
 function Homepage() {
+  // ✅ If a valid token exists, navigate to the role dashboard
+  //    and never render the landing page.
+  const { isLoading: isAuthChecking } = useRedirectIfAuthenticated();
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
 
+  // ✅ While verifying the stored token, show nothing (prevents flash of homepage)
+  if (isAuthChecking) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        <p>⏳ Loading…</p>
+      </div>
+    );
+  }
+
   // Handle navigation - opens login modal for non-authenticated users
   const handleNavClick = (tab: string) => {
     setActiveTab(tab);
-    
+
     // If not home tab, show login modal
     if (tab !== 'home') {
       setIsLoginModalOpen(true);
@@ -67,8 +88,6 @@ function Homepage() {
 
   // ✅ Handle successful signup - show login modal
   const handleSignupSuccess = () => {
-    // The signup success toast is already shown in the Signup component
-    // Now we just open the login modal so user can login
     setIsLoginModalOpen(true);
   };
 
@@ -80,28 +99,28 @@ function Homepage() {
           <h3>Hookiefy</h3>
         </div>
         <ul>
-          <li 
+          <li
             className={activeTab === 'home' ? 'active-nav' : ''}
             onClick={() => handleNavClick('home')}
           >
             <div className="icon-fig"><CiHome /></div>
             <div className="nav-name">Home</div>
           </li>
-          <li 
+          <li
             className={activeTab === 'search' ? 'active-nav' : ''}
             onClick={() => handleNavClick('search')}
           >
             <div className="icon-fig"><IoSearch /></div>
             <div className="nav-name">Search</div>
           </li>
-          <li 
+          <li
             className={activeTab === 'notifications' ? 'active-nav' : ''}
             onClick={() => handleNavClick('notifications')}
           >
             <div className="icon-fig"><IoNotifications /></div>
             <div className="nav-name">Notifications</div>
           </li>
-          <li 
+          <li
             className={`profile-nav-item ${activeTab === 'profile' ? 'active-nav' : ''}`}
             onClick={() => handleNavClick('profile')}
           >
@@ -114,7 +133,7 @@ function Homepage() {
 
         {/* Login Button - TikTok style */}
         <div className="homepage-login-section">
-          <button 
+          <button
             className="homepage-login-btn"
             onClick={handleLoginClick}
           >
@@ -139,14 +158,14 @@ function Homepage() {
       </div>
 
       {/* Login Modal - Slides up from bottom */}
-      <DefaultLogin 
+      <DefaultLogin
         isOpen={isLoginModalOpen}
         onClose={handleModalClose}
         onSwitchToSignup={handleSwitchToSignup}
       />
 
       {/* Signup Modal - Slides up from bottom */}
-      <DefaultSignup 
+      <DefaultSignup
         isOpen={isSignupModalOpen}
         onClose={handleModalClose}
         onSwitchToLogin={handleSwitchToLogin}

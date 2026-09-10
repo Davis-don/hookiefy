@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const API_URL = import.meta.env.VITE_API_URL 
   
   // ✅ Get auth state from store - only tokens needed
   const { access, refresh, clearTokens } = useAuthStore();

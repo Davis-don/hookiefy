@@ -8,9 +8,9 @@ import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";
-// ============================================================
-// IMPORT PAYMENT PAGES
-// ============================================================
+// ❌ Remove IsAuthenticated import — Homepage handles redirect via the hook
+// import IsAuthenticated from "./components/Isuserauhenticated/Isuserautheticated";
+
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import PaymentError from "./pages/PaymentError";
@@ -21,73 +21,61 @@ function App() {
     <div className="app">
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={
-            <Homepage />} />
-              
+          {/* ✅ Public — Homepage handles its own auth-based redirect */}
+          <Route path="/" element={<Homepage />} />
+
           <Route path="/signin" element={
             <Toastlayout>
-              <Homepage/>
+              <Homepage />
             </Toastlayout>
           } />
+
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />
-          
-          // ============================================================
-          // PAYMENT ROUTES - Public (no authentication required)
-          // ============================================================
-          <Route path="/payment-success" element={
-              <PaymentSuccess />
-          } />
-          <Route path="/payment-failure" element={
-              <PaymentFailure />
-          } />
-          <Route path="/payment-error" element={
-              <PaymentError />
-          } />
 
-          {/* Protected routes - Superadmin only */}
+          {/* Payment routes — public */}
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-failure" element={<PaymentFailure />} />
+          <Route path="/payment-error"   element={<PaymentError />} />
+
+          {/* ✅ Protected — now role-gated */}
           <Route
             path="/superadmin/dashboard"
             element={
-              <Protectedroute>
+              <Protectedroute allowedRoles={["superadmin"]}>
                 <Toastlayout>
                   <Superadmin />
                 </Toastlayout>
               </Protectedroute>
             }
           />
-          
-          {/* Protected routes - Admin only */}
+
           <Route
             path="/admin/dashboard"
             element={
-              <Protectedroute>
+              <Protectedroute allowedRoles={["admin", "superadmin"]}>
                 <Toastlayout>
                   <Admin />
                 </Toastlayout>
               </Protectedroute>
             }
           />
-          
-          {/* Protected routes - User only */}
+
           <Route
             path="/user/dashboard"
             element={
-              <Protectedroute>
+              <Protectedroute allowedRoles={["user"]}>
                 <Toastlayout>
                   <User />
                 </Toastlayout>
               </Protectedroute>
             }
           />
-          
-          {/* Catch all route - 404 */}
+
           <Route path="*" element={<Unauthorized />} />
         </Routes>
-        
-        {/* Sonner Toaster - Placed outside Routes so it's available everywhere */}
-        <Toaster 
+
+        <Toaster
           position="top-right"
           richColors
           closeButton
