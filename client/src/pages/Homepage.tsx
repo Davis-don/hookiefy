@@ -15,6 +15,7 @@ import DefaultSignup from '../components/DefaultSignup';
 
 // ✅ Import the redirect hook
 import { useRedirectIfAuthenticated } from '../hooks/useRedirectIfAuthenticated';
+import Spinner from '../components/Publicspinner/Spinner';
 
 // ============================================================
 // MAIN COMPONENT
@@ -32,13 +33,8 @@ function Homepage() {
   // ✅ While verifying the stored token, show nothing (prevents flash of homepage)
   if (isAuthChecking) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        <p>⏳ Loading…</p>
+      <div>
+        <Spinner />
       </div>
     );
   }

@@ -1,0 +1,85 @@
+/* spinner.css */
+
+/* ---------- Layout ---------- */
+
+.spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(
+    circle at 50% 40%,
+    #141a33 0%,
+    #0b0e1c 55%,
+    #05060d 100%
+  );
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- The spinner itself ---------- */
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #4d8bff;
+  border-right-color: #7bc6ff;
+  animation: spin 0.9s linear infinite;
+  box-shadow: 0 0 24px rgba(77, 139, 255, 0.35);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Main text ---------- */
+
+.spinner-text {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.85);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+/* Animated ellipsis */
+
+.spinner-dots span {
+  display: inline-block;
+  animation: dot-pulse 1.4s infinite;
+  opacity: 0;
+}
+
+.spinner-dots span:nth-child(1) { animation-delay: 0s; }
+.spinner-dots span:nth-child(2) { animation-delay: 0.2s; }
+.spinner-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-pulse {
+  0%, 20%   { opacity: 0; }
+  50%       { opacity: 1; }
+  100%      { opacity: 0; }
+}
+
+/* ---------- Slow-warning message ---------- */
+
+.spinner-slow {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+
+.spinner-slow--visible {
+  opacity: 1;
+  transform: translateY(0);
+}

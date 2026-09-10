@@ -8,8 +8,6 @@ import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";
-// ❌ Remove IsAuthenticated import — Homepage handles redirect via the hook
-// import IsAuthenticated from "./components/Isuserauhenticated/Isuserautheticated";
 
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
