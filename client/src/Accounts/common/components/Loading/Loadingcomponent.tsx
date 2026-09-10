@@ -1,14 +1,11 @@
 import './loadingcomponent.css'
+import Spinner from '../../../../components/Publicspinner/Spinner'
 
 function Loadingcomponent() {
   return (
-    <div className="overall-loading-component-container">
-      <div className="loading-spinner-wrapper">
-        <div className="loading-spinner">
-          <div className="loading-spinner-dot"></div>
-        </div>
-      </div>
-    </div>
+    
+      <Spinner message="Loading content..." slowMessage="This is taking longer than expected…" slowAfter={4000} />
+    
   )
 }
 
