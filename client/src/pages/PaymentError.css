@@ -1,353 +1,252 @@
-/* PaymentError.css - Additional CE (Error Enhancement) styles */
-/* ============================================
-   These styles complement the existing error design
-   without modifying global variables or layout
-   ============================================ */
+/* PaymentError.css */
 
-/* ===== CE - Error Details Card ===== */
-.pe-card .pe-error-details {
-  background: rgba(255, 0, 0, 0.04);
-  border-radius: 16px;
-  padding: 16px 20px;
-  margin: -8px 0 24px 0;
-  border: 1px solid rgba(255, 0, 0, 0.08);
-}
-
-.pe-card .pe-error-details.ce-compact {
-  padding: 12px 16px;
-}
-
-.pe-card .pe-error-details .ce-error-code {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.pe-card .pe-error-details .ce-error-message {
-  color: #ff6d00;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.6;
-}
-
-.pe-card .pe-error-details .ce-error-timestamp {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 11px;
-  margin-top: 6px;
-  font-family: 'Courier New', monospace;
-}
-
-/* ===== CE - Error Suggestions ===== */
-.pe-card .ce-suggestions {
-  margin: 0 0 24px 0;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pe-card .ce-suggestions .ce-suggestion-title {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-}
-
-.pe-card .ce-suggestions .ce-suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.pe-card .ce-suggestions .ce-suggestion-item .ce-suggestion-icon {
-  width: 20px;
-  height: 20px;
+/* ---------- Wrapper (black page background) ---------- */
+.pe-wrapper {
+  min-height: 100vh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  color: rgba(255, 145, 0, 0.4);
-  font-size: 14px;
+  padding: 24px 16px;
+  background: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  box-sizing: border-box;
+  color: #f5f5f5;
 }
 
-.pe-card .ce-suggestions .ce-suggestion-item:hover {
-  color: rgba(255, 255, 255, 0.7);
+/* ---------- Card (distinct elevated surface) ---------- */
+.pe-card {
+  width: 100%;
+  max-width: 460px;
+  background: linear-gradient(180deg, #16181c 0%, #101215 100%);
+  border: 1px solid #262a30;
+  border-radius: 18px;
+  padding: 40px 32px 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 60px -20px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(245, 158, 11, 0.06),
+    0 0 80px -30px rgba(245, 158, 11, 0.25);
+  text-align: center;
+  box-sizing: border-box;
+  animation: pe-fade-up 0.45s ease-out both;
 }
 
-.pe-card .ce-suggestions .ce-suggestion-item:hover .ce-suggestion-icon {
-  color: #ff9100;
-}
-
-/* ===== CE - Error Icon Variants ===== */
-.pe-icon-bg.ce-warning {
-  background: linear-gradient(135deg, #ff9100, #ff6d00);
-}
-
-.pe-icon-bg.ce-critical {
-  background: linear-gradient(135deg, #ff1744, #d50000);
-  animation: ceCriticalPulse 1.2s ease-in-out infinite;
-}
-
-.pe-icon-bg.ce-info {
-  background: linear-gradient(135deg, #2979ff, #0d47a1);
-}
-
-@keyframes ceCriticalPulse {
-  0%, 100% {
-    box-shadow: 
-      0 0 0 0 rgba(255, 23, 68, 0.4),
-      0 0 60px rgba(255, 23, 68, 0.15);
-  }
-  50% {
-    box-shadow: 
-      0 0 0 16px rgba(255, 23, 68, 0),
-      0 0 80px rgba(255, 23, 68, 0.25);
-  }
-}
-
-/* ===== CE - Staggered Actions ===== */
-.pe-actions .ce-stagger {
-  opacity: 0;
-  animation: ceStaggerIn 0.5s ease forwards;
-}
-
-.pe-actions .ce-stagger:nth-child(1) { animation-delay: 0.2s; }
-.pe-actions .ce-stagger:nth-child(2) { animation-delay: 0.35s; }
-
-@keyframes ceStaggerIn {
-  0% {
+@keyframes pe-fade-up {
+  from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* ===== CE - Error Countdown ===== */
-.pe-card .ce-countdown {
+/* ---------- Error Icon ---------- */
+.pe-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.pe-icon-ring {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(245, 158, 11, 0.12);
+  animation: pe-pulse-ring 2.2s ease-out infinite;
 }
 
-.pe-card .ce-countdown .ce-countdown-number {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 18px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  min-width: 32px;
-  text-align: center;
-}
-
-.pe-card .ce-countdown .ce-countdown-label {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 13px;
-}
-
-/* ===== CE - Error Timeline ===== */
-.pe-card .ce-timeline {
-  margin: 0 0 24px 0;
-  padding: 0 4px;
-}
-
-.pe-card .ce-timeline .ce-timeline-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 8px 0;
-  border-left: 2px solid rgba(255, 255, 255, 0.04);
-  padding-left: 16px;
-  margin-left: 8px;
-}
-
-.pe-card .ce-timeline .ce-timeline-item.ce-active {
-  border-left-color: #ff9100;
-}
-
-.pe-card .ce-timeline .ce-timeline-item .ce-timeline-dot {
-  width: 8px;
-  height: 8px;
+.pe-icon-bg {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  margin-left: -20px;
-  margin-top: 6px;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow:
+    0 8px 24px -8px rgba(245, 158, 11, 0.7),
+    0 0 40px -10px rgba(245, 158, 11, 0.5);
 }
 
-.pe-card .ce-timeline .ce-timeline-item.ce-active .ce-timeline-dot {
-  background: #ff9100;
-  box-shadow: 0 0 12px rgba(255, 145, 0, 0.3);
-  animation: ceDotPulse 1.5s ease-in-out infinite;
+.pe-alert-icon {
+  color: #ffffff;
+  stroke-width: 2.2;
 }
 
-.pe-card .ce-timeline .ce-timeline-item .ce-timeline-text {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
+@keyframes pe-pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.07);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+}
+
+/* ---------- Title & Subtitle ---------- */
+.pe-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.pe-subtitle {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin: 0 0 26px;
   line-height: 1.5;
 }
 
-.pe-card .ce-timeline .ce-timeline-item.ce-active .ce-timeline-text {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-@keyframes ceDotPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.5;
-  }
-}
-
-/* ===== CE - Quick Actions Row ===== */
-.pe-card .ce-quick-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 0 0 20px 0;
-}
-
-.pe-card .ce-quick-actions .ce-quick-btn {
+/* ---------- Actions ---------- */
+.pe-actions {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.pe-btn-primary,
+.pe-btn-secondary {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 14px 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s ease;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease,
+    border-color 0.15s ease;
+  box-sizing: border-box;
+  border: none;
+  font-family: inherit;
 }
 
-.pe-card .ce-quick-actions .ce-quick-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+.pe-btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: #ffffff;
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px -8px rgba(245, 158, 11, 0.6);
 }
 
-.pe-card .ce-quick-actions .ce-quick-btn .ce-quick-icon {
-  font-size: 20px;
+.pe-btn-primary:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 10px 28px -8px rgba(245, 158, 11, 0.75);
 }
 
-/* ===== CE - Responsive Tweaks ===== */
-@media (max-width: 480px) {
-  .pe-card .pe-error-details {
-    padding: 12px 16px;
-    margin: -4px 0 20px 0;
+.pe-btn-primary:active {
+  transform: scale(0.99);
+}
+
+.pe-btn-primary svg {
+  transition: transform 0.2s ease;
+}
+
+.pe-btn-primary:hover svg {
+  transform: translateX(3px);
+}
+
+.pe-btn-secondary {
+  background: #16181c;
+  color: #e4e4e7;
+  border: 1px solid #2a2e34;
+}
+
+.pe-btn-secondary:hover {
+  background: #1f2227;
+  border-color: #3a3f46;
+}
+
+.pe-btn-primary:focus-visible,
+.pe-btn-secondary:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* ---------- Footer ---------- */
+.pe-footer {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #1f2227;
+}
+
+.pe-footer p {
+  font-size: 13px;
+  color: #8b8b93;
+  margin: 0;
+}
+
+.pe-footer a {
+  color: #fbbf24;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pe-footer a:hover {
+  text-decoration: underline;
+  color: #f59e0b;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 520px) {
+  .pe-wrapper {
+    padding: 16px 12px;
+    align-items: flex-start;
+    padding-top: 32px;
   }
-  
-  .pe-card .pe-error-details .ce-error-message {
-    font-size: 13px;
+
+  .pe-card {
+    padding: 32px 20px 22px;
+    border-radius: 16px;
   }
-  
-  .pe-card .ce-suggestions {
-    padding: 12px 16px;
+
+  .pe-title {
+    font-size: 21px;
   }
-  
-  .pe-card .ce-suggestions .ce-suggestion-item {
-    font-size: 12px;
+
+  .pe-subtitle {
+    font-size: 13.5px;
   }
-  
-  .pe-card .ce-quick-actions {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+
+  .pe-icon-ring {
+    width: 88px;
+    height: 88px;
   }
-  
-  .pe-card .ce-quick-actions .ce-quick-btn {
-    padding: 12px 6px;
-    font-size: 11px;
+
+  .pe-icon-bg {
+    width: 68px;
+    height: 68px;
   }
-  
-  .pe-card .ce-timeline .ce-timeline-item .ce-timeline-text {
-    font-size: 12px;
+
+  .pe-icon-bg svg {
+    width: 48px;
+    height: 48px;
   }
 }
 
-@media (max-width: 380px) {
-  .pe-card .ce-quick-actions {
-    grid-template-columns: 1fr;
-  }
-  
-  .pe-card .ce-timeline .ce-timeline-item {
-    padding-left: 12px;
-    margin-left: 4px;
-  }
-}
-
-/* ===== CE - Dark Mode Enhancements ===== */
-@media (prefers-color-scheme: dark) {
-  .pe-card .pe-error-details {
-    background: rgba(255, 0, 0, 0.06);
-  }
-  
-  .pe-card .ce-suggestions {
-    background: rgba(255, 255, 255, 0.03);
-  }
-}
-
-/* ===== CE - Reduced Motion ===== */
+/* ---------- Reduced Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .pe-actions .ce-stagger {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  
-  @keyframes ceStaggerIn {
-    0%, 100% {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  
-  @keyframes ceCriticalPulse {
-    0%, 100% {
-      box-shadow: 0 0 60px rgba(255, 23, 68, 0.15);
-    }
-    50% {
-      box-shadow: 0 0 60px rgba(255, 23, 68, 0.15);
-    }
-  }
-}
-
-/* ===== CE - Print Styles ===== */
-@media print {
-  .pe-card .pe-error-details {
-    background: rgba(255, 0, 0, 0.02);
-    border-color: rgba(255, 0, 0, 0.1);
-  }
-  
-  .pe-card .ce-suggestions {
-    background: rgba(255, 255, 255, 0.01);
-  }
-  
-  .pe-actions .ce-stagger {
-    opacity: 1 !important;
-    animation: none !important;
+  .pe-card,
+  .pe-icon-ring,
+  .pe-btn-primary,
+  .pe-btn-primary svg {
+    animation: none;
+    transition: none;
   }
 }

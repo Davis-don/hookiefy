@@ -7,9 +7,7 @@ import './PaymentFailure.css';
 
 const PaymentFailure: React.FC = () => {
   const [searchParams] = useSearchParams();
-  
-  const orderTrackingId = searchParams.get('order_tracking_id');
-  const merchantReference = searchParams.get('merchant_reference');
+
   const message = searchParams.get('message');
 
   useEffect(() => {
@@ -34,29 +32,14 @@ const PaymentFailure: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <h1 className="pf-title">Payment Failed ❌</h1>
         <p className="pf-subtitle">
-          {message || 'Your payment was not completed. Please try again or contact support.'}
+          {message ||
+            'Your payment was not completed. Please try again or contact support.'}
         </p>
 
         <div className="pf-details-grid">
-          {merchantReference && (
-            <div className="pf-detail-item">
-              <span className="pf-detail-label">Reference</span>
-              <div className="pf-detail-value-group">
-                <span className="pf-detail-value pf-ref-value">{merchantReference}</span>
-              </div>
-            </div>
-          )}
-          {orderTrackingId && (
-            <div className="pf-detail-item">
-              <span className="pf-detail-label">Tracking ID</span>
-              <div className="pf-detail-value-group">
-                <span className="pf-detail-value pf-ref-value">{orderTrackingId}</span>
-              </div>
-            </div>
-          )}
           <div className="pf-detail-item">
             <span className="pf-detail-label">Status</span>
             <div className="pf-detail-value-group">
@@ -71,13 +54,15 @@ const PaymentFailure: React.FC = () => {
             <span>Try Again</span>
           </button>
           <Link to="/user/dashboard" className="pf-btn-secondary">
-            Go to Dashboard
+            <span>Go to Dashboard</span>
             <ArrowRight size={20} />
           </Link>
         </div>
 
         <div className="pf-footer">
-          <p>Need help? <a href="/contact">Contact Support</a></p>
+          <p>
+            Need help? <a href="/contact">Contact Support</a>
+          </p>
         </div>
       </div>
     </div>

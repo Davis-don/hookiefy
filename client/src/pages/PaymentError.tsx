@@ -27,10 +27,11 @@ const PaymentError: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <h1 className="pe-title">Payment Error ⚠️</h1>
         <p className="pe-subtitle">
-          {errorMessage || 'An unexpected error occurred while processing your payment.'}
+          {errorMessage ||
+            'An unexpected error occurred while processing your payment.'}
         </p>
 
         <div className="pe-actions">
@@ -44,7 +45,9 @@ const PaymentError: React.FC = () => {
         </div>
 
         <div className="pe-footer">
-          <p>Need help? <a href="/contact">Contact Support</a></p>
+          <p>
+            Need help? <a href="/contact">Contact Support</a>
+          </p>
         </div>
       </div>
     </div>

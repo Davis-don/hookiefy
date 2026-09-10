@@ -1,429 +1,330 @@
-/* PaymentFailure.css - Additional CF (Critical Failure) styles */
-/* ============================================
-   These styles complement the existing failure design
-   without modifying global variables or layout
-   ============================================ */
+/* PaymentFailure.css */
 
-/* ===== CF - Critical Alert Banner ===== */
-.pf-card .cf-alert-banner {
-  background: linear-gradient(135deg, rgba(255, 23, 68, 0.08), rgba(213, 0, 0, 0.05));
-  border-radius: 16px;
-  padding: 16px 20px;
-  margin: -8px 0 20px 0;
-  border: 1px solid rgba(255, 23, 68, 0.12);
-  border-left: 4px solid #ff1744;
-  position: relative;
-  overflow: hidden;
+/* ---------- Wrapper (black page background) ---------- */
+.pf-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  box-sizing: border-box;
+  color: #f5f5f5;
 }
 
-.pf-card .cf-alert-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 60px;
-  height: 60px;
-  background: radial-gradient(circle, rgba(255, 23, 68, 0.1), transparent);
+/* ---------- Card (distinct elevated surface) ---------- */
+.pf-card {
+  width: 100%;
+  max-width: 460px;
+  background: linear-gradient(180deg, #16181c 0%, #101215 100%);
+  border: 1px solid #262a30;
+  border-radius: 18px;
+  padding: 40px 32px 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 60px -20px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(239, 68, 68, 0.06),
+    0 0 80px -30px rgba(239, 68, 68, 0.25);
+  text-align: center;
+  box-sizing: border-box;
+  animation: pf-fade-up 0.45s ease-out both;
+}
+
+@keyframes pf-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Failure Icon ---------- */
+.pf-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.pf-icon-ring {
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
-  transform: translate(20px, -20px);
-}
-
-.pf-card .cf-alert-banner .cf-alert-code {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 11px;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.pf-card .cf-alert-banner .cf-alert-message {
-  color: #ff5252;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.6;
-  position: relative;
-  z-index: 1;
-}
-
-.pf-card .cf-alert-banner .cf-alert-timestamp {
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 11px;
-  margin-top: 6px;
-  font-family: 'Courier New', monospace;
-}
-
-/* ===== CF - Error Code Display ===== */
-.pf-card .cf-error-code-display {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px 16px;
-  margin: 0 0 20px 0;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(239, 68, 68, 0.12);
+  animation: pf-pulse-ring 2.2s ease-out infinite;
 }
 
-.pf-card .cf-error-code-display .cf-code-label {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.pf-card .cf-error-code-display .cf-code-value {
-  color: rgba(255, 255, 255, 0.8);
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 2px 10px;
-  background: rgba(255, 23, 68, 0.1);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 23, 68, 0.1);
-}
-
-.pf-card .cf-error-code-display .cf-code-copy {
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: rgba(255, 255, 255, 0.3);
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pf-card .cf-error-code-display .cf-code-copy:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* ===== CF - Action Suggestions ===== */
-.pf-card .cf-action-suggestions {
-  margin: 0 0 24px 0;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pf-card .cf-action-suggestions .cf-suggestion-title {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-}
-
-.pf-card .cf-action-suggestions .cf-suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 13px;
-  line-height: 1.5;
-  transition: color 0.2s ease;
-}
-
-.pf-card .cf-action-suggestions .cf-suggestion-item .cf-suggestion-icon {
-  width: 20px;
-  height: 20px;
+.pf-icon-bg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  color: rgba(255, 23, 68, 0.3);
-  font-size: 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow:
+    0 8px 24px -8px rgba(239, 68, 68, 0.7),
+    0 0 40px -10px rgba(239, 68, 68, 0.5);
 }
 
-.pf-card .cf-action-suggestions .cf-suggestion-item:hover {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.pf-card .cf-action-suggestions .cf-suggestion-item:hover .cf-suggestion-icon {
-  color: #ff1744;
-}
-
-/* ===== CF - Quick Actions Grid ===== */
-.pf-card .cf-quick-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin: 0 0 20px 0;
-}
-
-.pf-card .cf-quick-actions .cf-quick-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 12px 8px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.4);
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.pf-card .cf-quick-actions .cf-quick-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+.pf-x-icon {
   color: #ffffff;
-  transform: translateY(-2px);
-  border-color: rgba(255, 23, 68, 0.2);
+  stroke-width: 2.2;
 }
 
-.pf-card .cf-quick-actions .cf-quick-btn .cf-quick-icon {
-  font-size: 18px;
-}
-
-/* ===== CF - Failure Timeline ===== */
-.pf-card .cf-timeline {
-  margin: 0 0 24px 0;
-  padding: 0 4px;
-}
-
-.pf-card .cf-timeline .cf-timeline-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 6px 0;
-  border-left: 2px solid rgba(255, 255, 255, 0.04);
-  padding-left: 16px;
-  margin-left: 8px;
-}
-
-.pf-card .cf-timeline .cf-timeline-item.cf-failed {
-  border-left-color: #ff1744;
-}
-
-.pf-card .cf-timeline .cf-timeline-item .cf-timeline-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  margin-left: -20px;
-  margin-top: 6px;
-  flex-shrink: 0;
-}
-
-.pf-card .cf-timeline .cf-timeline-item.cf-failed .cf-timeline-dot {
-  background: #ff1744;
-  box-shadow: 0 0 12px rgba(255, 23, 68, 0.3);
-  animation: cfDotPulse 1.5s ease-in-out infinite;
-}
-
-.pf-card .cf-timeline .cf-timeline-item .cf-timeline-text {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.pf-card .cf-timeline .cf-timeline-item.cf-failed .cf-timeline-text {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-@keyframes cfDotPulse {
-  0%, 100% {
-    transform: scale(1);
+@keyframes pf-pulse-ring {
+  0% {
+    transform: scale(0.95);
     opacity: 1;
   }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.4;
-  }
-}
-
-/* ===== CF - Retry Counter ===== */
-.pf-card .cf-retry-counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.pf-card .cf-retry-counter .cf-retry-number {
-  color: #ff1744;
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  min-width: 28px;
-  text-align: center;
-}
-
-.pf-card .cf-retry-counter .cf-retry-label {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 13px;
-}
-
-.pf-card .cf-retry-counter .cf-retry-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 23, 68, 0.1);
-  border-top-color: #ff1744;
-  border-radius: 50%;
-  animation: cfSpin 0.8s linear infinite;
-}
-
-@keyframes cfSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* ===== CF - Staggered Buttons ===== */
-.pf-actions .cf-stagger {
-  opacity: 0;
-  animation: cfStaggerIn 0.5s ease forwards;
-}
-
-.pf-actions .cf-stagger:nth-child(1) { animation-delay: 0.2s; }
-.pf-actions .cf-stagger:nth-child(2) { animation-delay: 0.35s; }
-
-@keyframes cfStaggerIn {
-  0% {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
+  70% {
+    transform: scale(1.07);
+    opacity: 0.55;
   }
   100% {
+    transform: scale(0.95);
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
-/* ===== CF - Responsive Tweaks ===== */
-@media (max-width: 480px) {
-  .pf-card .cf-alert-banner {
-    padding: 12px 16px;
-    margin: -4px 0 16px 0;
+/* ---------- Title & Subtitle ---------- */
+.pf-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.pf-subtitle {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin: 0 0 26px;
+  line-height: 1.5;
+}
+
+/* ---------- Details ---------- */
+.pf-details-grid {
+  display: flex;
+  flex-direction: column;
+  background: #0a0b0d;
+  border: 1px solid #23262b;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 26px;
+  text-align: left;
+}
+
+.pf-detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.pf-detail-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8b8b93;
+  flex-shrink: 0;
+}
+
+.pf-detail-value-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pf-detail-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f5f5f5;
+  word-break: break-all;
+  text-align: right;
+}
+
+.pf-status-value {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Actions ---------- */
+.pf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-btn-primary,
+.pf-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease,
+    border-color 0.15s ease;
+  box-sizing: border-box;
+  border: none;
+  font-family: inherit;
+}
+
+.pf-btn-primary {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -8px rgba(239, 68, 68, 0.6);
+}
+
+.pf-btn-primary:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 10px 28px -8px rgba(239, 68, 68, 0.75);
+}
+
+.pf-btn-primary:active {
+  transform: scale(0.99);
+}
+
+.pf-btn-primary svg {
+  transition: transform 0.3s ease;
+}
+
+.pf-btn-primary:hover svg {
+  transform: rotate(180deg);
+}
+
+.pf-btn-secondary {
+  background: #16181c;
+  color: #e4e4e7;
+  border: 1px solid #2a2e34;
+}
+
+.pf-btn-secondary:hover {
+  background: #1f2227;
+  border-color: #3a3f46;
+}
+
+.pf-btn-secondary svg {
+  transition: transform 0.2s ease;
+}
+
+.pf-btn-secondary:hover svg {
+  transform: translateX(3px);
+}
+
+.pf-btn-primary:focus-visible,
+.pf-btn-secondary:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+/* ---------- Footer ---------- */
+.pf-footer {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #1f2227;
+}
+
+.pf-footer p {
+  font-size: 13px;
+  color: #8b8b93;
+  margin: 0;
+}
+
+.pf-footer a {
+  color: #f87171;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pf-footer a:hover {
+  text-decoration: underline;
+  color: #ef4444;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 520px) {
+  .pf-wrapper {
+    padding: 16px 12px;
+    align-items: flex-start;
+    padding-top: 32px;
   }
-  
-  .pf-card .cf-alert-banner .cf-alert-message {
-    font-size: 13px;
+
+  .pf-card {
+    padding: 32px 20px 22px;
+    border-radius: 16px;
   }
-  
-  .pf-card .cf-action-suggestions {
-    padding: 12px 16px;
+
+  .pf-title {
+    font-size: 21px;
   }
-  
-  .pf-card .cf-action-suggestions .cf-suggestion-item {
-    font-size: 12px;
+
+  .pf-subtitle {
+    font-size: 13.5px;
   }
-  
-  .pf-card .cf-quick-actions {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+
+  .pf-icon-ring {
+    width: 88px;
+    height: 88px;
   }
-  
-  .pf-card .cf-quick-actions .cf-quick-btn {
-    padding: 10px 6px;
-    font-size: 10px;
+
+  .pf-icon-bg {
+    width: 68px;
+    height: 68px;
   }
-  
-  .pf-card .cf-timeline .cf-timeline-item .cf-timeline-text {
-    font-size: 12px;
+
+  .pf-icon-bg svg {
+    width: 48px;
+    height: 48px;
   }
-  
-  .pf-card .cf-error-code-display {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 14px;
+
+  .pf-detail-item {
+    padding: 14px 16px;
   }
-  
-  .pf-card .cf-retry-counter .cf-retry-number {
-    font-size: 18px;
+
+  .pf-detail-label {
+    font-size: 12.5px;
+  }
+
+  .pf-detail-value {
+    font-size: 14px;
   }
 }
 
-@media (max-width: 380px) {
-  .pf-card .cf-quick-actions {
-    grid-template-columns: 1fr;
-  }
-  
-  .pf-card .cf-timeline .cf-timeline-item {
-    padding-left: 12px;
-    margin-left: 4px;
-  }
-  
-  .pf-card .cf-error-code-display .cf-code-value {
-    font-size: 12px;
-    padding: 2px 8px;
-  }
-}
-
-/* ===== CF - Dark Mode Enhancements ===== */
-@media (prefers-color-scheme: dark) {
-  .pf-card .cf-alert-banner {
-    background: linear-gradient(135deg, rgba(255, 23, 68, 0.12), rgba(213, 0, 0, 0.08));
-  }
-  
-  .pf-card .cf-action-suggestions {
-    background: rgba(255, 255, 255, 0.03);
-  }
-  
-  .pf-card .cf-error-code-display {
-    background: rgba(0, 0, 0, 0.4);
-  }
-}
-
-/* ===== CF - Reduced Motion ===== */
+/* ---------- Reduced Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .pf-actions .cf-stagger {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  
-  .pf-card .cf-retry-counter .cf-retry-spinner {
-    animation: none !important;
-  }
-  
-  @keyframes cfStaggerIn {
-    0%, 100% {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  
-  @keyframes cfDotPulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-}
-
-/* ===== CF - Print Styles ===== */
-@media print {
-  .pf-card .cf-alert-banner {
-    background: rgba(255, 23, 68, 0.05);
-    border-color: rgba(255, 23, 68, 0.2);
-  }
-  
-  .pf-card .cf-action-suggestions {
-    background: rgba(255, 255, 255, 0.01);
-  }
-  
-  .pf-actions .cf-stagger {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  
-  .pf-card .cf-error-code-display {
-    background: rgba(0, 0, 0, 0.1);
+  .pf-card,
+  .pf-icon-ring,
+  .pf-btn-primary,
+  .pf-btn-secondary,
+  .pf-btn-primary svg,
+  .pf-btn-secondary svg {
+    animation: none;
+    transition: none;
   }
 }
