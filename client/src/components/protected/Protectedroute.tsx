@@ -1,86 +1,74 @@
 // ProtectedRoute.tsx
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authtokenstore";
+import Spinner from "../Publicspinner/Spinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
 }
 
+interface AuthCheckResponse {
+  authenticated: boolean;
+  user: {
+    id: number;
+    email: string;
+    role: string; // "user" | "admin" | "superadmin"
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+    profile_image_url?: string | null;
+    has_profile_image?: boolean;
+  };
+}
+
 function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL 
-  
-  // ✅ Get auth state from store - only tokens needed
-  const { access, refresh, clearTokens } = useAuthStore();
+  const location = useLocation();
+  const API_URL = import.meta.env.VITE_API_URL;
 
-  const { data, isLoading, isError, error } = useQuery({
+  // ✅ Only tokens matter
+  const { access, refresh, clearTokens, setTokens } = useAuthStore();
+
+  const { data, isLoading, isError, error } = useQuery<AuthCheckResponse, Error>({
     queryKey: ["auth-check", access],
     queryFn: async () => {
-      // ✅ Check if we have an access token
-      if (!access) {
-        throw new Error("No access token found");
-      }
+      if (!access) throw new Error("No access token found");
 
-      // ✅ Simple auth check - NO user ID in URL, just token
-      const response = await fetch(`${API_URL}/account/auth-check/`, {
+      // 🔑 Only the token is sent
+      let response = await fetch(`${API_URL}/account/auth-check/`, {
         method: "GET",
         headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${access}`, // 🔑 Only the token matters
+          Accept: "application/json",
+          Authorization: `Bearer ${access}`,
         },
       });
 
-      // ✅ If token is invalid/expired, try to refresh
-      if (response.status === 401) {
-        try {
-          // Attempt to refresh the token
-          const refreshResponse = await fetch(`${API_URL}/account/refresh/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ refresh_token: refresh }),
-          });
+      // 🔄 Expired → refresh once → retry
+      if (response.status === 401 && refresh) {
+        const refreshResponse = await fetch(`${API_URL}/account/refresh/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refresh }),
+        });
 
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            // Update tokens in store
-            const { setTokens } = useAuthStore.getState();
-            setTokens({
-              access: refreshData.access,
-              refresh: refresh || "",
-            });
-            
-            // Retry the original request with new token
-            const retryResponse = await fetch(`${API_URL}/account/auth-check/`, {
-              method: "GET",
-              headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${refreshData.access}`,
-              },
-            });
-
-            if (!retryResponse.ok) {
-              throw new Error(`Auth failed with status: ${retryResponse.status}`);
-            }
-
-            return retryResponse.json();
-          } else {
-            // Refresh failed, clear tokens and redirect to login
-            clearTokens();
-            navigate("/");
-            throw new Error("Session expired. Please login again.");
-          }
-        } catch (refreshError) {
+        if (!refreshResponse.ok) {
           clearTokens();
-          navigate("/");
-          throw refreshError;
+          throw new Error("Session expired. Please login again.");
         }
+
+        const refreshData = await refreshResponse.json();
+        setTokens({ access: refreshData.access, refresh });
+
+        response = await fetch(`${API_URL}/account/auth-check/`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${refreshData.access}`,
+          },
+        });
       }
 
       if (!response.ok) {
@@ -90,74 +78,92 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
       return response.json();
     },
     retry: false,
-    enabled: !!access, // ✅ Only run query if we have an access token
+    enabled: !!access,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
-  // ✅ Check role-based access from the response data
+  // 🔀 Single redirect effect — no races
   useEffect(() => {
-    if (data?.user && allowedRoles) {
-      const userRole = data.user.role;
-      if (!allowedRoles.includes(userRole)) {
-        console.warn(`User role "${userRole}" not allowed. Required: ${allowedRoles.join(", ")}`);
-        navigate("/unauthorized");
-      }
-    }
-  }, [data, allowedRoles, navigate]);
+    if (isLoading) return;
 
-  // ✅ Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && (isError || !data?.authenticated)) {
+    // No token → signin (remember where they wanted to go)
+    if (!access) {
+      navigate("/signin", {
+        replace: true,
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    // Auth failed / refresh failed
+    if (isError) {
+      console.error("❌ Auth check failed:", error?.message);
       clearTokens();
-      navigate("/signin");
+      navigate("/signin", {
+        replace: true,
+        state: { from: location.pathname },
+      });
+      return;
     }
-  }, [isLoading, isError, data, navigate, clearTokens]);
 
-  // ✅ Log success data
+    // Not authenticated
+    if (data && !data.authenticated) {
+      clearTokens();
+      navigate("/signin", {
+        replace: true,
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    // Wrong role
+    if (data?.user && allowedRoles && !allowedRoles.includes(data.user.role)) {
+      console.warn(
+        `Role "${data.user.role}" not allowed. Required: ${allowedRoles.join(", ")}`
+      );
+      navigate("/unauthorized", { replace: true });
+    }
+  }, [
+    isLoading,
+    isError,
+    error,
+    access,
+    data,
+    allowedRoles,
+    navigate,
+    clearTokens,
+    location.pathname,
+  ]);
+
+  // 📝 Log role on success
   useEffect(() => {
-    if (data) {
-      console.log("✅ Auth check successful:", data);
+    if (data?.user) {
+      console.log("✅ Auth check successful — role:", data.user.role);
     }
   }, [data]);
 
-  // ❌ Log errors
-  useEffect(() => {
-    if (isError) {
-      console.error("❌ ERROR FETCHING AUTH:", error);
-    }
-  }, [isError, error]);
-
-  // ✅ Show loading state
+  // ⏳ Loading
   if (isLoading) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100vh" 
-      }}>
-        <p>⏳ Loading authentication status...</p>
-      </div>
+      <Spinner
+        message="Checking authentication"
+        slowMessage="Almost there — verifying your session…"
+        slowAfter={4000}
+      />
     );
   }
 
-  // ✅ If not authenticated, return null (will redirect via useEffect)
-  if (isError || !data?.authenticated) {
+  // 🚫 Failures → return null (redirect effect handles nav)
+  if (isError || !data?.authenticated) return null;
+
+  // 🚫 Wrong role
+  if (allowedRoles && data.user && !allowedRoles.includes(data.user.role)) {
     return null;
   }
 
-  // ✅ Check role-based access from response data
-  if (allowedRoles && data?.user) {
-    const userRole = data.user.role;
-    if (!allowedRoles.includes(userRole)) {
-      return null;
-    }
-  }
-
-  return (
-    <div className="overall-protected-route">
-      {children}
-    </div>
-  );
+  // ✅ Authenticated (+ role OK)
+  return <div className="overall-protected-route">{children}</div>;
 }
 
 export default ProtectedRoute;

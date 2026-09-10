@@ -1,85 +1,230 @@
-/* spinner.css */
+/* ============================================================
+   SPINNER.CSS
+   ============================================================ */
 
-/* ---------- Layout ---------- */
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
 
 .spinner-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   gap: 1.25rem;
+
   min-height: 100vh;
   width: 100%;
+
   background: radial-gradient(
     circle at 50% 40%,
     #141a33 0%,
     #0b0e1c 55%,
     #05060d 100%
   );
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+
+  color: #ffffff;
+
+  box-sizing: border-box;
 }
 
-/* ---------- The spinner itself ---------- */
+
+/* ============================================================
+   SPINNER
+   ============================================================ */
 
 .spinner {
   width: 56px;
   height: 56px;
+
+  flex-shrink: 0;
+
   border-radius: 50%;
+
   border: 3px solid rgba(255, 255, 255, 0.08);
+
   border-top-color: #4d8bff;
   border-right-color: #7bc6ff;
+
   animation: spin 0.9s linear infinite;
-  box-shadow: 0 0 24px rgba(77, 139, 255, 0.35);
+
+  box-shadow:
+    0 0 24px rgba(77, 139, 255, 0.35);
+
+  box-sizing: border-box;
 }
+
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ---------- Main text ---------- */
+
+/* ============================================================
+   MAIN TEXT
+   ============================================================ */
 
 .spinner-text {
   margin: 0;
+
   font-size: 0.95rem;
   font-weight: 500;
+
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.85);
+
+  color: #ffffff !important;
+
   display: inline-flex;
   align-items: baseline;
+
   gap: 2px;
+
+  line-height: 1.5;
+
+  opacity: 1 !important;
+
+  visibility: visible !important;
+
+  text-align: center;
 }
 
-/* Animated ellipsis */
+
+/* ============================================================
+   ANIMATED DOTS
+   ============================================================ */
+
+.spinner-dots {
+  display: inline-flex;
+  align-items: baseline;
+
+  color: #ffffff !important;
+}
+
 
 .spinner-dots span {
   display: inline-block;
+
+  color: #ffffff !important;
+
   animation: dot-pulse 1.4s infinite;
+
   opacity: 0;
 }
 
-.spinner-dots span:nth-child(1) { animation-delay: 0s; }
-.spinner-dots span:nth-child(2) { animation-delay: 0.2s; }
-.spinner-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes dot-pulse {
-  0%, 20%   { opacity: 0; }
-  50%       { opacity: 1; }
-  100%      { opacity: 0; }
+.spinner-dots span:nth-child(1) {
+  animation-delay: 0s;
 }
 
-/* ---------- Slow-warning message ---------- */
+
+.spinner-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+
+.spinner-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+
+@keyframes dot-pulse {
+  0%,
+  20% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
+/* ============================================================
+   SLOW WARNING MESSAGE
+   ============================================================ */
 
 .spinner-slow {
   margin: 0;
+
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.45);
+  font-weight: 400;
+
+  color: rgba(255, 255, 255, 0.65) !important;
+
   opacity: 0;
+
   transform: translateY(-4px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+
   pointer-events: none;
+
+  text-align: center;
+
+  visibility: hidden;
 }
 
+
+/* ============================================================
+   SHOW SLOW WARNING
+   ============================================================ */
+
 .spinner-slow--visible {
-  opacity: 1;
+  opacity: 1 !important;
+
   transform: translateY(0);
+
+  visibility: visible;
+}
+
+
+/* ============================================================
+   PREVENT GLOBAL P / DIV COLOR RULES FROM HIDING TEXT
+   ============================================================ */
+
+.spinner-wrap p.spinner-text {
+  color: #ffffff !important;
+}
+
+
+.spinner-wrap p.spinner-slow {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .spinner-wrap {
+    gap: 1rem;
+
+    padding: 1.5rem;
+  }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+  }
+
+  .spinner-text {
+    font-size: 0.9rem;
+  }
+
+  .spinner-slow {
+    font-size: 0.8rem;
+  }
 }
