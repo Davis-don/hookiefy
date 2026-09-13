@@ -31,7 +31,7 @@ function Contact() {
 
         {/* Website / Developer */}
         <a
-          href="https://nstryx.co.ke"
+          href="https://kinstryx.co.ke"
           target="_blank"
           rel="noopener noreferrer"
           className="contact-card"
