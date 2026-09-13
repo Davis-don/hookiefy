@@ -12,6 +12,8 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import PaymentError from "./pages/PaymentError";
 import Mainlayout from "./layouts/Mainlayout";
+import Serviceseeker from "./pages/Seviceseeker";
+import Serviceprovider from "./pages/Serviceprovider";
 
 import "./App.css";
 
@@ -22,6 +24,8 @@ function App() {
         <Routes>
           {/* ✅ Public — Homepage handles its own auth-based redirect */}
           <Route path="/" element={<Mainlayout><Homepage /></Mainlayout>} />
+          <Route path="/serviceseeker" element={<Mainlayout><Serviceseeker /></Mainlayout>} />
+          <Route path="/serviceprovider" element={<Mainlayout><Serviceprovider /></Mainlayout>} />
 
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />

@@ -72,12 +72,10 @@ function Header(): ReactElement {
 
   const handleNavClick = (id: string): void => {
     closeAll();
-    // If we're not on the homepage, navigate first (Link handles that),
-    // then give the browser a moment to mount the target section.
     setTimeout(() => scrollToSection(id), 60);
   };
 
-  // Nav items now point to homepage sections
+  // Nav items point to homepage sections
   const navItems: { label: string; id: string; className: string }[] = [
     { label: 'Home',      id: '',              className: 'nav-link-home' },
     { label: 'About Us',  id: 'how-it-works',  className: 'nav-link-about' },
@@ -115,7 +113,6 @@ function Header(): ReactElement {
                 <Link
                   to={id ? `/#${id}` : '/'}
                   onClick={(e) => {
-                    // If already on the homepage, prevent default and just scroll
                     if (location.pathname === '/') {
                       e.preventDefault();
                       handleNavClick(id);
@@ -159,7 +156,7 @@ function Header(): ReactElement {
           {dropdownOpen && (
             <div className="register-dropdown" role="menu">
               <Link
-                to="/signup/service-seeker"
+                to="/serviceseeker"
                 className="dropdown-item dropdown-item-seeker"
                 role="menuitem"
                 onClick={closeAll}
@@ -168,7 +165,7 @@ function Header(): ReactElement {
               </Link>
 
               <Link
-                to="/signup/service-provider"
+                to="/serviceprovider"
                 className="dropdown-item dropdown-item-provider"
                 role="menuitem"
                 onClick={closeAll}
@@ -217,14 +214,14 @@ function Header(): ReactElement {
 
         <div className="mobile-register-group">
           <Link
-            to="/signup/service-seeker"
+            to="/serviceseeker"
             className="mobile-cta mobile-cta-seeker"
             onClick={closeAll}
           >
             Service Seeker
           </Link>
           <Link
-            to="/signup/service-provider"
+            to="/serviceprovider"
             className="mobile-cta mobile-cta-provider"
             onClick={closeAll}
           >
