@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './hero.css';
 
 function Hero() {
@@ -13,34 +13,34 @@ function Hero() {
   }, [services.length]);
 
   return (
-    <section className="overall-homepage-hero-container">
+    <section className="yp-hero-section">
       {/* Full-area background image */}
-      <div className="hero-bg" />
-      <div className="hero-overlay" />
+      <div className="yp-hero-bg" />
+      <div className="yp-hero-overlay" />
 
       {/* Left text side */}
-      <div className="hero-content">
-        <div className="hero-text">
-          <span className="hero-eyebrow">Youpata — Your Neighbourhood Pros</span>
+      <div className="yp-hero-content">
+        <div className="yp-hero-text">
+          <span className="yp-hero-eyebrow">Youpata — Your Neighbourhood Pros</span>
 
-          <h1 className="hero-title">
+          <h1 className="yp-hero-title">
             Your Reliable
             <br />
-            <span className="highlight">{services[index]} Near You</span>
+            <span className="yp-hero-highlight">{services[index]} Near You</span>
           </h1>
 
-          <p className="hero-tagline">Fast • Safe • Affordable</p>
+          <p className="yp-hero-tagline">Fast • Safe • Affordable</p>
 
-          <p className="hero-subtitle">
+          <p className="yp-hero-subtitle">
             Find a teacher, book a plumber or hire any skilled pro you need —
             anytime, anywhere, right in your neighbourhood with Youpata.
           </p>
 
-          <div className="hero-buttons">
-            <button type="button" className="hero-btn hero-btn-primary">
+          <div className="yp-hero-buttons">
+            <button type="button" className="yp-hero-btn yp-hero-btn-primary">
               Find a Service
             </button>
-            <button type="button" className="hero-btn hero-btn-secondary">
+            <button type="button" className="yp-hero-btn yp-hero-btn-secondary">
               Become a Provider
             </button>
           </div>
@@ -48,7 +48,7 @@ function Hero() {
       </div>
 
       {/* Right arc cut-out — image arching from the right edge */}
-      <div className="hero-arc">
+      <div className="yp-hero-arc">
         <img
           src="https://images.unsplash.com/photo-1753892208868-a26e9966e770?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="African teacher teaching at a chalkboard"
