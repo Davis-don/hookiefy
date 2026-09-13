@@ -41,7 +41,7 @@
 .overall-homepage-header-container::before {
   content: '';
   display: block;
-  height: 3px;
+  height: 4px;
   background: linear-gradient(
     90deg,
     var(--yp-blue)    0%,
@@ -63,7 +63,7 @@
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 20px 36px;
+  padding: 18px 36px;
   gap: 28px;
   position: relative;
 }
@@ -80,15 +80,17 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  line-height: 1;
 }
 
 .logo-wordmark {
   font-family: 'Pacifico', cursive;
   font-weight: 400;
-  font-size: 2.6rem;
-  line-height: 1;
-  letter-spacing: 1px;
+  font-size: 3.4rem;
+  line-height: 1.05;
+  letter-spacing: 1.2px;
   margin: 0;
+  padding: 4px 0;
   transition: transform 0.25s ease;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
@@ -137,7 +139,6 @@
   transition: width 0.25s ease;
 }
 
-/* single hover color — blue for every link */
 .nav-links-section ul li a:hover,
 .nav-links-section ul li a:focus-visible {
   color: var(--yp-blue);
@@ -148,7 +149,6 @@
   width: 100%;
 }
 
-/* active route — persistent blue text + full underline */
 .nav-links-section ul li a.active {
   color: var(--yp-blue);
 }
@@ -260,8 +260,8 @@
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   background: transparent;
   border: 1px solid var(--yp-line);
   border-radius: 12px;
@@ -334,14 +334,12 @@
   transition: color 0.2s ease, padding-left 0.2s ease;
 }
 
-/* single hover color for all mobile links */
 .mobile-nav-list li a:hover,
 .mobile-nav-list li a:focus-visible {
   color: var(--yp-blue);
   padding-left: 10px;
 }
 
-/* active mobile link */
 .mobile-nav-list li a.active {
   color: var(--yp-blue);
   padding-left: 10px;
@@ -394,14 +392,14 @@
   }
   .nav-links-section ul { gap: 26px; }
   .nav-links-section ul li a { font-size: 1.08rem; }
-  .logo-wordmark { font-size: 2.4rem; }
+  .logo-wordmark { font-size: 3.1rem; }
 }
 
 /* Tablets */
 @media (max-width: 1024px) {
   .nav-links-section ul { gap: 20px; }
   .nav-links-section ul li a { font-size: 1.02rem; }
-  .logo-wordmark { font-size: 2.2rem; }
+  .logo-wordmark { font-size: 2.9rem; }
   .register-btn { padding: 11px 20px; font-size: 0.95rem; }
 }
 
@@ -413,7 +411,7 @@
   }
   .nav-links-section ul { gap: 16px; }
   .nav-links-section ul li a { font-size: 0.98rem; }
-  .logo-wordmark { font-size: 2.1rem; }
+  .logo-wordmark { font-size: 2.7rem; }
 }
 
 /* Mobile — hide nav, show hamburger */
@@ -428,12 +426,48 @@
   .header-content-data-container {
     padding: 14px 18px;
   }
-  .logo-wordmark { font-size: 2rem; }
+  /* 📱 MUCH bigger logo on phones */
+  .logo-wordmark {
+    font-size: 3.4rem;
+    letter-spacing: 1px;
+    padding: 6px 0;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .header-content-data-container {
+    padding: 12px 16px;
+  }
+  /* 📱 still big on small phones */
+  .logo-wordmark {
+    font-size: 3.2rem;
+    letter-spacing: 0.9px;
+    padding: 5px 0;
+  }
+  .mobile-menu-toggle {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 /* Very small phones */
 @media (max-width: 380px) {
-  .logo-wordmark { font-size: 1.75rem; }
-  .header-content-data-container { padding: 12px 14px; }
+  .header-content-data-container { padding: 10px 14px; }
+  .logo-wordmark {
+    font-size: 2.9rem;
+    letter-spacing: 0.6px;
+    padding: 4px 0;
+  }
+  .mobile-menu-toggle {
+    width: 44px;
+    height: 44px;
+  }
   .mobile-nav-list li a { font-size: 1.05rem; }
+}
+
+/* Tiny phones */
+@media (max-width: 320px) {
+  .logo-wordmark { font-size: 2.55rem; }
+  .header-content-data-container { padding: 10px 12px; }
 }
