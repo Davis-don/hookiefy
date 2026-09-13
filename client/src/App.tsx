@@ -8,10 +8,10 @@ import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";
-
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import PaymentError from "./pages/PaymentError";
+import Mainlayout from "./layouts/Mainlayout";
 import "./App.css";
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
       <Router>
         <Routes>
           {/* ✅ Public — Homepage handles its own auth-based redirect */}
-          <Route path="/" element={<Homepage />} />
+          <Route path="/" element={<Mainlayout><Homepage /></Mainlayout>} />
 
           <Route path="/signin" element={
             <Toastlayout>

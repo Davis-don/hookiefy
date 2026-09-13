@@ -1,0 +1,424 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ─────────────────────────────────────────────────────────
+   YOUPATA PALETTE
+   Blue    #2563EB   Emerald #10B981
+   Amber   #F59E0B   Coral   #F97316
+   Ink     #0F172A
+   ───────────────────────────────────────────────────────── */
+:root {
+  --yp-blue:      #2563EB;
+  --yp-blue-2:    #1D4ED8;
+  --yp-emerald:   #10B981;
+  --yp-emerald-2: #059669;
+  --yp-amber:     #F59E0B;
+  --yp-coral:     #F97316;
+  --yp-ink:       #0F172A;
+  --yp-ink-soft:  #475569;
+  --yp-line:      rgba(15, 23, 42, 0.08);
+  --yp-white:     #FFFFFF;
+  --yp-bg:        #FBFCFE;
+}
+
+/* ── GLOBAL FONT ────────────────────────────────────────── */
+.overall-homepage-header-container,
+.overall-homepage-header-container button,
+.overall-homepage-header-container a {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── HEADER SHELL ───────────────────────────────────────── */
+.overall-homepage-header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  background: var(--yp-white);
+  border-bottom: 1px solid var(--yp-line);
+}
+
+/* multicolor brand ribbon */
+.overall-homepage-header-container::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--yp-blue)    0%,
+    var(--yp-blue)    22%,
+    var(--yp-emerald) 22%,
+    var(--yp-emerald) 48%,
+    var(--yp-amber)   48%,
+    var(--yp-amber)   72%,
+    var(--yp-coral)   72%,
+    var(--yp-coral)   100%
+  );
+}
+
+.header-content-data-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;              /* a touch wider so nav has room */
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 36px;
+  gap: 28px;
+  position: relative;
+}
+
+/* ── LOGO ───────────────────────────────────────────────── */
+.logo-header-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.logo-wordmark {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 2.6rem;              /* big, clear */
+  line-height: 1;
+  letter-spacing: 1px;
+  margin: 0;
+  transition: transform 0.25s ease;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.logo-link:hover .logo-wordmark {
+  transform: scale(1.03);
+}
+
+.logo-you { color: var(--yp-blue); }
+.logo-p   { color: var(--yp-emerald); }
+.logo-ata { color: var(--yp-amber); }
+
+/* ── NAV LINKS (larger, clearer) ────────────────────────── */
+.nav-links-section ul {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 34px;                      /* more air between links */
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links-section ul li a {
+  position: relative;
+  display: inline-block;
+  font-size: 1.15rem;             /* ← was 0.95rem — clearly bigger */
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  color: var(--yp-ink);
+  text-decoration: none;
+  padding: 8px 2px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-links-section ul li a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: width 0.25s ease;
+}
+
+.nav-links-section ul li a:hover::after {
+  width: 100%;
+}
+
+.nav-link-home a:hover        { color: var(--yp-blue); }
+.nav-link-about a:hover       { color: var(--yp-amber); }
+.nav-link-services a:hover    { color: var(--yp-emerald-2); }
+.nav-link-connections a:hover { color: var(--yp-coral); }
+.nav-link-contact a:hover     { color: var(--yp-blue-2); }
+
+/* ── REGISTER BUTTON ────────────────────────────────────── */
+.call-to-action-header-button {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.register-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--yp-ink);
+  color: var(--yp-white) !important;
+  font-size: 1rem;                /* match nav weight */
+  font-weight: 700;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.register-btn:hover,
+.register-btn:focus,
+.register-btn.is-open {
+  background: var(--yp-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35);
+  color: var(--yp-white) !important;
+}
+
+.dropdown-arrow {
+  transition: transform 0.25s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* ── SIMPLE DROPDOWN ────────────────────────────────────── */
+.register-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 200px;
+  background: var(--yp-white);
+  border: 1px solid var(--yp-line);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+  padding: 6px;
+  animation: dropdownFade 0.16s ease-out;
+  z-index: 1001;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.register-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 22px;
+  width: 12px;
+  height: 12px;
+  background: var(--yp-white);
+  border-left: 1px solid var(--yp-line);
+  border-top: 1px solid var(--yp-line);
+  transform: rotate(45deg);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--yp-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.dropdown-item + .dropdown-item {
+  margin-top: 2px;
+}
+
+.dropdown-item-seeker:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--yp-blue-2);
+}
+
+.dropdown-item-provider:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--yp-emerald-2);
+}
+
+/* ── MOBILE HAMBURGER ───────────────────────────────────── */
+.mobile-menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--yp-line);
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+  background: var(--yp-bg);
+}
+
+.mobile-menu-toggle span {
+  display: block;
+  height: 2px;
+  background: var(--yp-ink);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.mobile-menu-toggle.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+  background: var(--yp-blue);
+}
+.mobile-menu-toggle.is-open span:nth-child(2) {
+  opacity: 0;
+}
+.mobile-menu-toggle.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+  background: var(--yp-blue);
+}
+
+/* ── MOBILE PANEL ───────────────────────────────────────── */
+.mobile-menu-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--yp-white);
+  border-bottom: 1px solid var(--yp-line);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
+  padding: 0 24px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease, padding 0.28s ease;
+}
+
+.mobile-menu-panel.open {
+  max-height: 560px;
+  padding: 12px 24px 24px;
+}
+
+.mobile-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.mobile-nav-list li a {
+  display: block;
+  padding: 14px 4px;
+  font-size: 1.15rem;             /* bigger mobile nav too */
+  font-weight: 600;
+  color: var(--yp-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--yp-line);
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+
+.mobile-nav-list li a:hover {
+  padding-left: 10px;
+}
+
+.mobile-nav-list .nav-link-home a:hover        { color: var(--yp-blue); }
+.mobile-nav-list .nav-link-about a:hover       { color: var(--yp-amber); }
+.mobile-nav-list .nav-link-services a:hover    { color: var(--yp-emerald-2); }
+.mobile-nav-list .nav-link-connections a:hover { color: var(--yp-coral); }
+.mobile-nav-list .nav-link-contact a:hover     { color: var(--yp-blue-2); }
+
+.mobile-register-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.mobile-cta {
+  display: block;
+  padding: 15px 16px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mobile-cta-seeker {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--yp-blue-2);
+}
+.mobile-cta-seeker:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.mobile-cta-provider {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--yp-emerald-2);
+}
+.mobile-cta-provider:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.2);
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+
+/* Large laptops — keep nav big */
+@media (max-width: 1200px) {
+  .header-content-data-container {
+    padding: 18px 28px;
+    gap: 22px;
+  }
+  .nav-links-section ul { gap: 26px; }
+  .nav-links-section ul li a { font-size: 1.08rem; }
+  .logo-wordmark { font-size: 2.4rem; }
+}
+
+/* Tablets — still comfortable */
+@media (max-width: 1024px) {
+  .nav-links-section ul { gap: 20px; }
+  .nav-links-section ul li a { font-size: 1.02rem; }
+  .logo-wordmark { font-size: 2.2rem; }
+  .register-btn { padding: 11px 20px; font-size: 0.95rem; }
+}
+
+/* Small tablets — start dropping padding before collapsing */
+@media (max-width: 900px) {
+  .header-content-data-container {
+    padding: 16px 22px;
+    gap: 16px;
+  }
+  .nav-links-section ul { gap: 16px; }
+  .nav-links-section ul li a { font-size: 0.98rem; }
+  .logo-wordmark { font-size: 2.1rem; }
+}
+
+/* Mobile — hide nav, show hamburger */
+@media (max-width: 768px) {
+  .nav-links-section,
+  .call-to-action-header-button {
+    display: none;
+  }
+  .mobile-menu-toggle { display: flex; }
+  .mobile-menu-panel  { display: block; }
+
+  .header-content-data-container {
+    padding: 14px 18px;
+  }
+  .logo-wordmark { font-size: 2rem; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .logo-wordmark { font-size: 1.75rem; }
+  .header-content-data-container { padding: 12px 14px; }
+  .mobile-nav-list li a { font-size: 1.05rem; }
+}
