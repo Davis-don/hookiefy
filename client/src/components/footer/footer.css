@@ -1,0 +1,178 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA FOOTER
+   ───────────────────────────────────────────────────────── */
+
+.yp-footer {
+  width: 100%;
+  background: #0F172A;
+  color: #CBD5E1;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* top multicolor ribbon matching header */
+.yp-footer::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #2563EB 0%,
+    #2563EB 22%,
+    #10B981 22%,
+    #10B981 48%,
+    #F59E0B 48%,
+    #F59E0B 72%,
+    #F97316 72%,
+    #F97316 100%
+  );
+}
+
+.yp-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 60px 36px 24px;
+}
+
+/* ── Top section ──────────────────────────────────────── */
+.yp-footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 60px;
+  justify-content: space-between;
+  padding-bottom: 44px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Brand column */
+.yp-footer-brand {
+  flex: 1 1 280px;
+  max-width: 380px;
+}
+
+.yp-footer-logo {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+  margin: 0 0 16px;
+  line-height: 1;
+}
+
+.yp-footer-you { color: #2563EB; }
+.yp-footer-p   { color: #10B981; }
+.yp-footer-ata { color: #F59E0B; }
+
+.yp-footer-tagline {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #94A3B8;
+  margin: 0;
+}
+
+/* Links wrapper */
+.yp-footer-links {
+  display: flex;
+  flex: 2 1 500px;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: space-between;
+}
+
+.yp-footer-col {
+  min-width: 160px;
+}
+
+.yp-footer-col h4 {
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+
+.yp-footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.yp-footer-col ul li a {
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+
+.yp-footer-col ul li a:hover {
+  color: #10B981;
+  padding-left: 4px;
+}
+
+/* ── Bottom bar ───────────────────────────────────────── */
+.yp-footer-bottom {
+  padding-top: 24px;
+  text-align: center;
+}
+
+.yp-footer-bottom p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94A3B8;
+  line-height: 1.6;
+}
+
+.yp-footer-credit {
+  color: #F59E0B;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.yp-footer-credit:hover {
+  color: #F97316;
+  text-decoration: underline;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .yp-footer-top {
+    gap: 40px;
+  }
+  .yp-footer-links {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .yp-footer-inner {
+    padding: 44px 22px 20px;
+  }
+  .yp-footer-top {
+    flex-direction: column;
+    gap: 36px;
+    padding-bottom: 32px;
+  }
+  .yp-footer-brand {
+    max-width: 100%;
+  }
+  .yp-footer-logo {
+    font-size: 1.95rem;
+  }
+  .yp-footer-links {
+    flex-direction: column;
+    gap: 26px;
+  }
+  .yp-footer-col h4 {
+    margin-bottom: 12px;
+  }
+  .yp-footer-bottom p {
+    font-size: 0.85rem;
+  }
+}
