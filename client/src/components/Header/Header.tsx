@@ -53,28 +53,36 @@ function Header(): ReactElement {
     setMobileOpen(false);
   };
 
-  const scrollToTop = (): void => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  /**
+   * Scroll smoothly to a section by id.
+   * If the id is empty, we scroll to the top (Home).
+   */
+  const scrollToSection = (id: string): void => {
+    if (!id) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      const headerOffset = 90; // account for sticky header height
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   };
 
-  const handleNavClick = (): void => {
+  const handleNavClick = (id: string): void => {
     closeAll();
-    scrollToTop();
+    // If we're not on the homepage, navigate first (Link handles that),
+    // then give the browser a moment to mount the target section.
+    setTimeout(() => scrollToSection(id), 60);
   };
 
-  /** Returns true when the given path matches the current route */
-  const isActive = (path: string): boolean => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
-
-  // Nav items in one place so desktop + mobile stay in sync
-  const navItems: { label: string; to: string; className: string }[] = [
-    { label: 'Home',            to: '/',            className: 'nav-link-home' },
-    { label: 'About Us',        to: '/about',       className: 'nav-link-about' },
-    { label: 'Services',        to: '/services',    className: 'nav-link-services' },
-    { label: 'Connection Types',to: '/connections', className: 'nav-link-connections' },
-    { label: 'Contact Us',      to: '/contact',     className: 'nav-link-contact' },
+  // Nav items now point to homepage sections
+  const navItems: { label: string; id: string; className: string }[] = [
+    { label: 'Home',      id: '',              className: 'nav-link-home' },
+    { label: 'About Us',  id: 'how-it-works',  className: 'nav-link-about' },
+    { label: 'Services',  id: 'services',      className: 'nav-link-services' },
+    { label: 'Contact Us',id: 'contact',       className: 'nav-link-contact' },
   ];
 
   return (
@@ -83,7 +91,14 @@ function Header(): ReactElement {
 
         {/* ── LOGO ────────────────────────────────────────────── */}
         <div className="logo-header-section">
-          <Link to="/" className="logo-link" onClick={handleNavClick}>
+          <Link
+            to="/"
+            className="logo-link"
+            onClick={() => {
+              closeAll();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
             <h1 className="logo-wordmark pacifico-regular">
               <span className="logo-you">You</span>
               <span className="logo-p">p</span>
@@ -95,13 +110,19 @@ function Header(): ReactElement {
         {/* ── NAV LINKS ───────────────────────────────────────── */}
         <nav className="nav-links-section">
           <ul className="list-unstyled">
-            {navItems.map(({ label, to, className }) => (
-              <li key={to} className={className}>
+            {navItems.map(({ label, id, className }) => (
+              <li key={label} className={className}>
                 <Link
-                  to={to}
-                  onClick={handleNavClick}
-                  className={isActive(to) ? 'active' : ''}
-                  aria-current={isActive(to) ? 'page' : undefined}
+                  to={id ? `/#${id}` : '/'}
+                  onClick={(e) => {
+                    // If already on the homepage, prevent default and just scroll
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      handleNavClick(id);
+                    } else {
+                      handleNavClick(id);
+                    }
+                  }}
                 >
                   {label}
                 </Link>
@@ -141,7 +162,7 @@ function Header(): ReactElement {
                 to="/signup/service-seeker"
                 className="dropdown-item dropdown-item-seeker"
                 role="menuitem"
-                onClick={handleNavClick}
+                onClick={closeAll}
               >
                 Service Seeker
               </Link>
@@ -150,7 +171,7 @@ function Header(): ReactElement {
                 to="/signup/service-provider"
                 className="dropdown-item dropdown-item-provider"
                 role="menuitem"
-                onClick={handleNavClick}
+                onClick={closeAll}
               >
                 Service Provider
               </Link>
@@ -175,13 +196,18 @@ function Header(): ReactElement {
       {/* ── MOBILE MENU ──────────────────────────────────────── */}
       <div className={`mobile-menu-panel ${mobileOpen ? 'open' : ''}`}>
         <ul className="list-unstyled mobile-nav-list">
-          {navItems.map(({ label, to, className }) => (
-            <li key={to} className={className}>
+          {navItems.map(({ label, id, className }) => (
+            <li key={label} className={className}>
               <Link
-                to={to}
-                onClick={handleNavClick}
-                className={isActive(to) ? 'active' : ''}
-                aria-current={isActive(to) ? 'page' : undefined}
+                to={id ? `/#${id}` : '/'}
+                onClick={(e) => {
+                  if (location.pathname === '/') {
+                    e.preventDefault();
+                    handleNavClick(id);
+                  } else {
+                    handleNavClick(id);
+                  }
+                }}
               >
                 {label}
               </Link>
@@ -193,14 +219,14 @@ function Header(): ReactElement {
           <Link
             to="/signup/service-seeker"
             className="mobile-cta mobile-cta-seeker"
-            onClick={handleNavClick}
+            onClick={closeAll}
           >
             Service Seeker
           </Link>
           <Link
             to="/signup/service-provider"
             className="mobile-cta mobile-cta-provider"
-            onClick={handleNavClick}
+            onClick={closeAll}
           >
             Service Provider
           </Link>
