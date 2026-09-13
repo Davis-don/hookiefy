@@ -1,0 +1,261 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA NINCHE — service categories section
+   ───────────────────────────────────────────────────────── */
+
+.ninche-section {
+  width: 100%;
+  padding: 90px 36px;
+  background: #FBFCFE;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.ninche-header {
+  max-width: 780px;
+  margin: 0 auto 64px;
+  text-align: center;
+}
+
+.ninche-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin: 0 0 16px;
+}
+
+.ninche-title {
+  font-size: clamp(2.3rem, 4vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  color: #0F172A;
+  margin: 0 0 18px;
+  line-height: 1.18;
+}
+
+.ninche-subtitle {
+  font-size: clamp(1.1rem, 1.5vw, 1.28rem);
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+.ninche-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 26px;
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.ninche-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  padding: 32px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.ninche-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563EB, #10B981);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.ninche-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 24px 50px -22px rgba(15, 23, 42, 0.28);
+}
+
+.ninche-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Card top row ─────────────────────────────────────── */
+.ninche-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ninche-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.12));
+  font-size: 1.85rem;
+}
+
+.ninche-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #B45309;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Card text ────────────────────────────────────────── */
+.ninche-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.ninche-tagline {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #2563EB;
+  margin: 0 0 14px;
+}
+
+.ninche-desc {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #475569;
+  margin: 0 0 22px;
+  flex-grow: 1;
+}
+
+/* ── Stat pill ────────────────────────────────────────── */
+.ninche-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #0F172A;
+  padding: 9px 16px;
+  background: #F8FAFC;
+  border-radius: 999px;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+.ninche-stat-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+/* ── Button ───────────────────────────────────────────── */
+.ninche-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #FFFFFF;
+  padding: 15px 22px;
+  border-radius: 999px;
+  background: #0F172A;
+  transition: background 0.22s ease, transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.ninche-btn:hover {
+  background: #2563EB;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -10px rgba(37, 99, 235, 0.6);
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Large laptops */
+@media (max-width: 1200px) {
+  .ninche-section { padding: 80px 30px; }
+  .ninche-grid {
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 22px;
+  }
+  .ninche-name { font-size: 1.4rem; }
+}
+
+/* Tablets */
+@media (max-width: 900px) {
+  .ninche-section { padding: 70px 24px; }
+  .ninche-header { margin-bottom: 48px; }
+  .ninche-title { font-size: clamp(2.1rem, 5vw, 2.8rem); }
+  .ninche-subtitle { font-size: 1.15rem; }
+  .ninche-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .ninche-name { font-size: 1.35rem; }
+  .ninche-desc { font-size: 1rem; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .ninche-section { padding: 58px 20px; }
+  .ninche-header { margin-bottom: 38px; }
+  .ninche-eyebrow { font-size: 0.88rem; }
+  .ninche-title { font-size: 2.15rem; }
+  .ninche-subtitle { font-size: 1.1rem; line-height: 1.65; }
+
+  .ninche-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .ninche-card { padding: 26px 22px 22px; }
+
+  .ninche-icon {
+    width: 54px;
+    height: 54px;
+    font-size: 1.7rem;
+  }
+
+  .ninche-badge { font-size: 0.76rem; padding: 5px 10px; }
+
+  .ninche-name { font-size: 1.4rem; }
+  .ninche-tagline { font-size: 1rem; }
+  .ninche-desc { font-size: 1.02rem; }
+
+  .ninche-stat { font-size: 0.95rem; }
+
+  .ninche-btn {
+    font-size: 1.05rem;
+    padding: 16px 22px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .ninche-section { padding: 50px 16px; }
+  .ninche-title { font-size: 1.9rem; }
+  .ninche-subtitle { font-size: 1.02rem; }
+  .ninche-name { font-size: 1.3rem; }
+  .ninche-desc { font-size: 0.98rem; }
+  .ninche-btn { font-size: 1rem; padding: 15px 20px; }
+}
