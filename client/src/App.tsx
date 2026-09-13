@@ -12,6 +12,10 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import PaymentError from "./pages/PaymentError";
 import Mainlayout from "./layouts/Mainlayout";
+import About from "./pages/About";
+import Services from "./pages/Services";
+import Connections from "./pages/Connections";
+import Contact from "./pages/Contact";
 import "./App.css";
 
 function App() {
@@ -21,12 +25,10 @@ function App() {
         <Routes>
           {/* ✅ Public — Homepage handles its own auth-based redirect */}
           <Route path="/" element={<Mainlayout><Homepage /></Mainlayout>} />
-
-          <Route path="/signin" element={
-            <Toastlayout>
-              <Homepage />
-            </Toastlayout>
-          } />
+          <Route path="/about" element={<Mainlayout><About /></Mainlayout>} />
+          <Route path="/services" element={<Mainlayout><Services /></Mainlayout>} />
+          <Route path="/connections" element={<Mainlayout><Connections /></Mainlayout>} />
+          <Route path="/contact" element={<Mainlayout><Contact /></Mainlayout>} />
 
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/spinner" element={<CenteredSpinner />} />

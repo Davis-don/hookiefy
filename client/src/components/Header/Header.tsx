@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import type { ReactElement } from 'react';
 import './Header.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 function Header(): ReactElement {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
 
   // Close dropdown on outside click + Escape
   useEffect(() => {
@@ -41,10 +42,40 @@ function Header(): ReactElement {
     };
   }, [mobileOpen]);
 
+  // Close menus whenever route changes
+  useEffect(() => {
+    setMobileOpen(false);
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
   const closeAll = (): void => {
     setDropdownOpen(false);
     setMobileOpen(false);
   };
+
+  const scrollToTop = (): void => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavClick = (): void => {
+    closeAll();
+    scrollToTop();
+  };
+
+  /** Returns true when the given path matches the current route */
+  const isActive = (path: string): boolean => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  // Nav items in one place so desktop + mobile stay in sync
+  const navItems: { label: string; to: string; className: string }[] = [
+    { label: 'Home',            to: '/',            className: 'nav-link-home' },
+    { label: 'About Us',        to: '/about',       className: 'nav-link-about' },
+    { label: 'Services',        to: '/services',    className: 'nav-link-services' },
+    { label: 'Connection Types',to: '/connections', className: 'nav-link-connections' },
+    { label: 'Contact Us',      to: '/contact',     className: 'nav-link-contact' },
+  ];
 
   return (
     <header className="overall-homepage-header-container">
@@ -52,7 +83,7 @@ function Header(): ReactElement {
 
         {/* ── LOGO ────────────────────────────────────────────── */}
         <div className="logo-header-section">
-          <Link to="/" className="logo-link" onClick={closeAll}>
+          <Link to="/" className="logo-link" onClick={handleNavClick}>
             <h1 className="logo-wordmark pacifico-regular">
               <span className="logo-you">You</span>
               <span className="logo-p">p</span>
@@ -64,11 +95,18 @@ function Header(): ReactElement {
         {/* ── NAV LINKS ───────────────────────────────────────── */}
         <nav className="nav-links-section">
           <ul className="list-unstyled">
-            <li className="nav-link-home"><a href="#home">Home</a></li>
-            <li className="nav-link-about"><a href="#about">About Us</a></li>
-            <li className="nav-link-services"><a href="#services">Services</a></li>
-            <li className="nav-link-connections"><a href="#connections">Connection Types</a></li>
-            <li className="nav-link-contact"><a href="#contact">Contact Us</a></li>
+            {navItems.map(({ label, to, className }) => (
+              <li key={to} className={className}>
+                <Link
+                  to={to}
+                  onClick={handleNavClick}
+                  className={isActive(to) ? 'active' : ''}
+                  aria-current={isActive(to) ? 'page' : undefined}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -103,7 +141,7 @@ function Header(): ReactElement {
                 to="/signup/service-seeker"
                 className="dropdown-item dropdown-item-seeker"
                 role="menuitem"
-                onClick={closeAll}
+                onClick={handleNavClick}
               >
                 Service Seeker
               </Link>
@@ -112,7 +150,7 @@ function Header(): ReactElement {
                 to="/signup/service-provider"
                 className="dropdown-item dropdown-item-provider"
                 role="menuitem"
-                onClick={closeAll}
+                onClick={handleNavClick}
               >
                 Service Provider
               </Link>
@@ -137,25 +175,32 @@ function Header(): ReactElement {
       {/* ── MOBILE MENU ──────────────────────────────────────── */}
       <div className={`mobile-menu-panel ${mobileOpen ? 'open' : ''}`}>
         <ul className="list-unstyled mobile-nav-list">
-          <li className="nav-link-home"><a href="#home" onClick={closeAll}>Home</a></li>
-          <li className="nav-link-about"><a href="#about" onClick={closeAll}>About Us</a></li>
-          <li className="nav-link-services"><a href="#services" onClick={closeAll}>Services</a></li>
-          <li className="nav-link-connections"><a href="#connections" onClick={closeAll}>Connection Types</a></li>
-          <li className="nav-link-contact"><a href="#contact" onClick={closeAll}>Contact Us</a></li>
+          {navItems.map(({ label, to, className }) => (
+            <li key={to} className={className}>
+              <Link
+                to={to}
+                onClick={handleNavClick}
+                className={isActive(to) ? 'active' : ''}
+                aria-current={isActive(to) ? 'page' : undefined}
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
         </ul>
 
         <div className="mobile-register-group">
           <Link
             to="/signup/service-seeker"
             className="mobile-cta mobile-cta-seeker"
-            onClick={closeAll}
+            onClick={handleNavClick}
           >
             Service Seeker
           </Link>
           <Link
             to="/signup/service-provider"
             className="mobile-cta mobile-cta-provider"
-            onClick={closeAll}
+            onClick={handleNavClick}
           >
             Service Provider
           </Link>
