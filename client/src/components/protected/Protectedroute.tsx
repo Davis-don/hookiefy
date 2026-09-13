@@ -87,38 +87,42 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   useEffect(() => {
     if (isLoading) return;
 
+    // 🔐 Centralized sign-out: clear store + redirect to /signin
+    const redirectToSignin = () => {
+      clearTokens();
+      navigate("/signin", {
+        replace: true,
+        state: { from: location.pathname },
+      });
+    };
+
     // No token → signin (remember where they wanted to go)
     if (!access) {
-      navigate("/signin", {
-        replace: true,
-        state: { from: location.pathname },
-      });
+      redirectToSignin();
       return;
     }
 
-    // Auth failed / refresh failed
+    // Auth failed / refresh failed → wipe store, force re-login
     if (isError) {
       console.error("❌ Auth check failed:", error?.message);
-      clearTokens();
-      navigate("/signin", {
-        replace: true,
-        state: { from: location.pathname },
-      });
+      redirectToSignin();
       return;
     }
 
-    // Not authenticated
+    // Server said not authenticated → wipe store, force re-login
     if (data && !data.authenticated) {
-      clearTokens();
-      navigate("/signin", {
-        replace: true,
-        state: { from: location.pathname },
-      });
+      redirectToSignin();
       return;
     }
 
-    // Wrong role
-    if (data?.user && allowedRoles && !allowedRoles.includes(data.user.role)) {
+    // Wrong role — only when we actually have a live session
+    // (`access &&` guards against stale `data` after clearTokens sets access=null)
+    if (
+      access &&
+      data?.user &&
+      allowedRoles &&
+      !allowedRoles.includes(data.user.role)
+    ) {
       console.warn(
         `Role "${data.user.role}" not allowed. Required: ${allowedRoles.join(", ")}`
       );
@@ -157,8 +161,13 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   // 🚫 Failures → return null (redirect effect handles nav)
   if (isError || !data?.authenticated) return null;
 
-  // 🚫 Wrong role
-  if (allowedRoles && data.user && !allowedRoles.includes(data.user.role)) {
+  // 🚫 Wrong role — also guard with access to avoid stale-data flash
+  if (
+    access &&
+    allowedRoles &&
+    data.user &&
+    !allowedRoles.includes(data.user.role)
+  ) {
     return null;
   }
 

@@ -4,7 +4,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../store/authtokenstore";
 
-const API_URL = import.meta.env.VITE_API_URL 
+const API_URL = import.meta.env.VITE_API_URL;
+
+/**
+ * 🔒 Module-level set of tokens we've already confirmed are dead.
+ * Lives OUTSIDE React, OUTSIDE Zustand, OUTSIDE localStorage.
+ * Prevents infinite 401 → clearTokens → rehydrate → refetch loops,
+ * even if Zustand persist briefly flickers the old token back in.
+ */
+const deadTokens = new Set<string>();
 
 export const roleHome: Record<string, string> = {
   superadmin: "/superadmin/dashboard",
@@ -32,10 +40,20 @@ export function useRedirectIfAuthenticated() {
   const { access, refresh, clearTokens, setTokens } = useAuthStore();
 
   const { data, isSuccess, isError } = useQuery<AuthCheckResponse, Error>({
-    queryKey: ["auth-check", access],
+    // ✅ STABLE key — never key on `access`.
+    // Keying on the token creates a new observer on every token change,
+    // which is what was driving the infinite fetch loop.
+    queryKey: ["auth-check"],
+
     queryFn: async () => {
       if (!access) throw new Error("NO_TOKEN");
 
+      // 🚫 Short-circuit: if we already know this token is dead, don't even fetch.
+      if (deadTokens.has(access)) {
+        throw new Error("TOKEN_DEAD");
+      }
+
+      // ── Initial auth-check ─────────────────────────────────────────────
       let res = await fetch(`${API_URL}/account/auth-check/`, {
         headers: {
           Accept: "application/json",
@@ -43,7 +61,7 @@ export function useRedirectIfAuthenticated() {
         },
       });
 
-      // 🔄 Expired → try refresh once, then retry
+      // ── Expired → try refresh once, then retry ─────────────────────────
       if (res.status === 401 && refresh) {
         const refreshRes = await fetch(`${API_URL}/account/refresh/`, {
           method: "POST",
@@ -52,6 +70,8 @@ export function useRedirectIfAuthenticated() {
         });
 
         if (!refreshRes.ok) {
+          // Refresh itself failed → mark old token dead + clear store
+          deadTokens.add(access);
           clearTokens();
           throw new Error("REFRESH_FAILED");
         }
@@ -59,23 +79,50 @@ export function useRedirectIfAuthenticated() {
         const { access: newAccess } = await refreshRes.json();
         setTokens({ access: newAccess, refresh });
 
+        // Retry auth-check with the new access token
         res = await fetch(`${API_URL}/account/auth-check/`, {
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${newAccess}`,
           },
         });
+
+        // ✅ If the retry ALSO 401s → mark the NEW token dead too
+        if (!res.ok) {
+          deadTokens.add(newAccess);
+          clearTokens();
+          throw new Error(`AUTH_${res.status}`);
+        }
+
+        return res.json();
       }
 
-      if (!res.ok) throw new Error(`AUTH_${res.status}`);
+      // ── Any other non-ok response (401 without refresh, 403, 5xx, …) ───
+      // ✅ Mark dead + clear store BEFORE throwing, so the next render sees
+      //    access === null and the query stays disabled.
+      if (!res.ok) {
+        deadTokens.add(access);
+        clearTokens();
+        throw new Error(`AUTH_${res.status}`);
+      }
+
       return res.json();
     },
-    enabled: !!access,
+
+    // ✅ Only run if:
+    //    - we have a token, AND
+    //    - that exact token isn't already blacklisted
+    enabled: !!access && !deadTokens.has(access!),
+
     retry: false,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,        // ✅ don't refetch on every mount
+    refetchOnReconnect: false,    // ✅ don't refetch on network blips
+    gcTime: 0,                    // ✅ don't cache failed results
   });
 
+  // ── Redirect if authenticated ─────────────────────────────────────────
   useEffect(() => {
     if (!isSuccess || !data?.authenticated) return;
 
@@ -92,12 +139,19 @@ export function useRedirectIfAuthenticated() {
     navigate(dest, { replace: true });
   }, [isSuccess, data, navigate, location.pathname]);
 
+  // ── Belt-and-suspenders: clear on any query error ─────────────────────
   useEffect(() => {
-    if (isError) {
-      console.warn("Stored token invalid — clearing");
+    if (isError && access) {
+      deadTokens.add(access);
       clearTokens();
     }
-  }, [isError, clearTokens]);
+  }, [isError, access, clearTokens]);
 
-  return { isLoading: !isSuccess && !isError && !!access };
+  // Loading only if we have a live (non-dead) token and no result yet
+  const isLoading =
+    !!access && !deadTokens.has(access) && !isSuccess && !isError;
+
+  return { isLoading };
 }
+
+export default useRedirectIfAuthenticated;
