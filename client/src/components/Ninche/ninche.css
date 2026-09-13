@@ -1,15 +1,16 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA NINCHE — service categories section
+   Natural, calm card design · doubled fonts
    ───────────────────────────────────────────────────────── */
 
 .ninche-section {
   width: 100%;
-  padding: 90px 36px;
+  padding: 110px 36px;
   background: #FBFCFE;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* ── Header ───────────────────────────────────────────── */
+/* ── Header (reverted to original sizes) ──────────────── */
 .ninche-header {
   max-width: 780px;
   margin: 0 auto 64px;
@@ -44,47 +45,33 @@
 
 /* ── Grid ─────────────────────────────────────────────── */
 .ninche-grid {
-  max-width: 1280px;
+  max-width: 1500px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 26px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 36px;
 }
 
-/* ── Card ─────────────────────────────────────────────── */
+/* ── Card (natural, calm) ─────────────────────────────── */
 .ninche-card {
   position: relative;
   background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 22px;
-  padding: 32px 28px 28px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 26px;
+  padding: 40px 34px 34px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease,
-    border-color 0.25s ease;
-  overflow: hidden;
-}
-
-.ninche-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #2563EB, #10B981);
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -18px rgba(15, 23, 42, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .ninche-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(37, 99, 235, 0.25);
-  box-shadow: 0 24px 50px -22px rgba(15, 23, 42, 0.28);
-}
-
-.ninche-card:hover::before {
-  opacity: 1;
+  transform: translateY(-4px);
+  border-color: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05),
+    0 22px 44px -20px rgba(15, 23, 42, 0.22);
 }
 
 /* ── Card top row ─────────────────────────────────────── */
@@ -92,125 +79,143 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .ninche-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.12));
-  font-size: 1.85rem;
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  background: #F4F7FB;
+  font-size: 2.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.05);
 }
 
 .ninche-badge {
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   color: #B45309;
-  background: rgba(245, 158, 11, 0.15);
-  padding: 6px 12px;
+  background: #FEF3C7;
+  padding: 8px 16px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
 /* ── Card text ────────────────────────────────────────── */
 .ninche-name {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #0F172A;
-  margin: 0 0 8px;
-  letter-spacing: -0.3px;
-  line-height: 1.25;
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
 .ninche-tagline {
-  font-size: 1.02rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #2563EB;
-  margin: 0 0 14px;
+  margin: 0 0 18px;
 }
 
 .ninche-desc {
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   line-height: 1.65;
   color: #475569;
-  margin: 0 0 22px;
+  margin: 0 0 28px;
   flex-grow: 1;
 }
 
-/* ── Stat pill ────────────────────────────────────────── */
+/* ── Footer row (stat + button) ───────────────────────── */
+.ninche-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
 .ninche-stat {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  font-size: 0.98rem;
+  gap: 10px;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #0F172A;
-  padding: 9px 16px;
-  background: #F8FAFC;
-  border-radius: 999px;
-  margin-bottom: 20px;
-  align-self: flex-start;
 }
 
 .ninche-stat-dot {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: #10B981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16);
 }
 
 /* ── Button ───────────────────────────────────────────── */
 .ninche-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: none;
   cursor: pointer;
   font-family: inherit;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   color: #FFFFFF;
-  padding: 15px 22px;
+  padding: 15px 26px;
   border-radius: 999px;
   background: #0F172A;
   transition: background 0.22s ease, transform 0.22s ease,
     box-shadow 0.22s ease;
 }
 
+.ninche-btn-arrow {
+  display: inline-block;
+  transition: transform 0.22s ease;
+}
+
 .ninche-btn:hover {
   background: #2563EB;
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px -10px rgba(37, 99, 235, 0.6);
+  box-shadow: 0 14px 30px -10px rgba(37, 99, 235, 0.55);
+}
+
+.ninche-btn:hover .ninche-btn-arrow {
+  transform: translateX(4px);
 }
 
 /* ── Responsive ───────────────────────────────────────── */
 
 /* Large laptops */
 @media (max-width: 1200px) {
-  .ninche-section { padding: 80px 30px; }
+  .ninche-section { padding: 90px 30px; }
   .ninche-grid {
-    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-    gap: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
   }
-  .ninche-name { font-size: 1.4rem; }
+  .ninche-name { font-size: 1.85rem; }
 }
 
 /* Tablets */
 @media (max-width: 900px) {
-  .ninche-section { padding: 70px 24px; }
+  .ninche-section { padding: 80px 24px; }
   .ninche-header { margin-bottom: 48px; }
   .ninche-title { font-size: clamp(2.1rem, 5vw, 2.8rem); }
   .ninche-subtitle { font-size: 1.15rem; }
   .ninche-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 26px;
   }
-  .ninche-name { font-size: 1.35rem; }
-  .ninche-desc { font-size: 1rem; }
+  .ninche-name { font-size: 1.75rem; }
+  .ninche-desc { font-size: 1.25rem; }
+  .ninche-icon { width: 74px; height: 74px; font-size: 2.3rem; }
 }
 
 /* Phones */
@@ -223,31 +228,38 @@
 
   .ninche-grid {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 22px;
   }
 
-  .ninche-card { padding: 26px 22px 22px; }
+  .ninche-card { padding: 30px 26px 26px; border-radius: 22px; }
 
   .ninche-icon {
-    width: 54px;
-    height: 54px;
-    font-size: 1.7rem;
+    width: 68px;
+    height: 68px;
+    font-size: 2.1rem;
+    border-radius: 18px;
   }
 
-  .ninche-badge { font-size: 0.76rem; padding: 5px 10px; }
+  .ninche-badge { font-size: 0.95rem; padding: 6px 12px; }
 
-  .ninche-name { font-size: 1.4rem; }
-  .ninche-tagline { font-size: 1rem; }
-  .ninche-desc { font-size: 1.02rem; }
+  .ninche-name { font-size: 1.7rem; }
+  .ninche-tagline { font-size: 1.2rem; }
+  .ninche-desc { font-size: 1.2rem; }
 
-  .ninche-stat { font-size: 0.95rem; }
+  .ninche-stat { font-size: 1.1rem; }
 
   .ninche-btn {
-    font-size: 1.05rem;
-    padding: 16px 22px;
-    width: 100%;
-    text-align: center;
+    font-size: 1.15rem;
+    padding: 14px 22px;
   }
+
+  .ninche-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .ninche-btn { width: 100%; justify-content: center; }
 }
 
 /* Very small phones */
@@ -255,7 +267,8 @@
   .ninche-section { padding: 50px 16px; }
   .ninche-title { font-size: 1.9rem; }
   .ninche-subtitle { font-size: 1.02rem; }
-  .ninche-name { font-size: 1.3rem; }
-  .ninche-desc { font-size: 0.98rem; }
-  .ninche-btn { font-size: 1rem; padding: 15px 20px; }
+  .ninche-name { font-size: 1.5rem; }
+  .ninche-desc { font-size: 1.12rem; }
+  .ninche-icon { width: 60px; height: 60px; font-size: 1.9rem; }
+  .ninche-btn { font-size: 1.1rem; padding: 13px 20px; }
 }

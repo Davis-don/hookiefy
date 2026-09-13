@@ -56,7 +56,7 @@ function Ninche() {
 
       <div className="ninche-grid">
         {categories.map((cat) => (
-          <div className="ninche-card" key={cat.name}>
+          <article className="ninche-card" key={cat.name}>
             <div className="ninche-card-top">
               <span className="ninche-icon" aria-hidden="true">
                 {cat.icon}
@@ -68,15 +68,18 @@ function Ninche() {
             <p className="ninche-tagline">{cat.tagline}</p>
             <p className="ninche-desc">{cat.description}</p>
 
-            <div className="ninche-stat">
-              <span className="ninche-stat-dot" />
-              {cat.stat}
-            </div>
+            <div className="ninche-card-footer">
+              <div className="ninche-stat">
+                <span className="ninche-stat-dot" />
+                {cat.stat}
+              </div>
 
-            <button type="button" className="ninche-btn">
-              Book Now →
-            </button>
-          </div>
+              <button type="button" className="ninche-btn" aria-label={`Book ${cat.name}`}>
+                Book
+                <span className="ninche-btn-arrow">→</span>
+              </button>
+            </div>
+          </article>
         ))}
       </div>
     </section>

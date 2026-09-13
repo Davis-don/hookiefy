@@ -1,0 +1,159 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — How It Works
+   Row layout on desktop · stacked on phones
+   ───────────────────────────────────────────────────────── */
+
+.hiw-section {
+  width: 100%;
+  padding: 90px 36px 100px;
+  background: #FFFFFF;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.hiw-header {
+  max-width: 900px;
+  margin: 0 auto 72px;
+  text-align: center;
+}
+
+.hiw-title {
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  color: #0F172A;
+  margin: 0 0 22px;
+  line-height: 1.15;
+}
+
+.hiw-subtitle {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  line-height: 1.6;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Steps container ──────────────────────────────────── */
+.hiw-steps {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 36px;
+}
+
+/* ── One step ─────────────────────────────────────────── */
+.hiw-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Colored number circle */
+.hiw-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  font-size: 2.6rem;
+  font-weight: 800;
+  box-shadow: 0 16px 36px -12px rgba(37, 99, 235, 0.6);
+  flex-shrink: 0;
+}
+
+/* Text block */
+.hiw-step-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.hiw-step-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 12px;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+
+.hiw-step-desc {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Laptops — 3 in a row */
+@media (max-width: 1200px) {
+  .hiw-section { padding: 80px 28px 90px; }
+  .hiw-steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  .hiw-step-number { width: 84px; height: 84px; font-size: 2.4rem; }
+  .hiw-step-title { font-size: 1.75rem; }
+  .hiw-step-desc { font-size: 1.4rem; }
+}
+
+/* Tablets — 2 in a row */
+@media (max-width: 900px) {
+  .hiw-section { padding: 70px 24px 80px; }
+  .hiw-header { margin-bottom: 56px; }
+  .hiw-title { font-size: 3.2rem; }
+  .hiw-subtitle { font-size: 1.6rem; }
+
+  .hiw-steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+
+  .hiw-step-number { width: 80px; height: 80px; font-size: 2.3rem; }
+  .hiw-step-title { font-size: 1.7rem; }
+  .hiw-step-desc { font-size: 1.38rem; }
+}
+
+/* Phones — 1 column stacked */
+@media (max-width: 640px) {
+  .hiw-section { padding: 60px 20px 70px; }
+  .hiw-header { margin-bottom: 44px; }
+  .hiw-title { font-size: 2.5rem; }
+  .hiw-subtitle { font-size: 1.35rem; }
+
+  .hiw-steps {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .hiw-step {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 22px;
+  }
+
+  .hiw-step-number {
+    width: 74px;
+    height: 74px;
+    font-size: 2.1rem;
+  }
+
+  .hiw-step-title { font-size: 1.6rem; }
+  .hiw-step-desc { font-size: 1.35rem; line-height: 1.6; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .hiw-section { padding: 50px 16px 60px; }
+  .hiw-title { font-size: 2.15rem; }
+  .hiw-subtitle { font-size: 1.2rem; }
+
+  .hiw-step-number { width: 66px; height: 66px; font-size: 1.9rem; }
+  .hiw-step-title { font-size: 1.45rem; }
+  .hiw-step-desc { font-size: 1.25rem; }
+}
