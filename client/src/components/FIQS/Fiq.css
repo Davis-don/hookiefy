@@ -1,0 +1,248 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — Frequently Asked Questions
+   Column on big screens · Row on small screens
+   ───────────────────────────────────────────────────────── */
+
+.fiq-section {
+  width: 100%;
+  padding: 110px 36px;
+  background: #FBFCFE;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.fiq-header {
+  max-width: 780px;
+  margin: 0 auto 64px;
+  text-align: center;
+}
+
+.fiq-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin: 0 0 16px;
+}
+
+.fiq-title {
+  font-size: clamp(2.3rem, 4vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  color: #0F172A;
+  margin: 0 0 16px;
+  line-height: 1.18;
+}
+
+.fiq-subtitle {
+  font-size: clamp(1.1rem, 1.5vw, 1.28rem);
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── List ─────────────────────────────────────────────── */
+/* Big screens: single column, centered, readable width */
+.fiq-list {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── One item ─────────────────────────────────────────── */
+.fiq-item {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.fiq-item:hover {
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 12px 30px -18px rgba(15, 23, 42, 0.2);
+}
+
+.fiq-item.is-open {
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 16px 40px -22px rgba(37, 99, 235, 0.35);
+}
+
+/* ── Question button ──────────────────────────────────── */
+.fiq-question {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 30px;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.fiq-question:hover {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.fiq-question-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.4;
+}
+
+/* plus / minus icon */
+.fiq-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: background 0.25s ease, color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.fiq-item.is-open .fiq-icon {
+  background: #2563EB;
+  color: #FFFFFF;
+  transform: rotate(180deg);
+}
+
+/* ── Answer ───────────────────────────────────────────── */
+.fiq-answer-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+  padding: 0 30px;
+}
+
+.fiq-item.is-open .fiq-answer-wrap {
+  max-height: 480px;
+  padding: 0 30px 26px;
+}
+
+.fiq-answer {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding-top: 20px;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Large laptops */
+@media (max-width: 1200px) {
+  .fiq-section { padding: 100px 30px; }
+  .fiq-list { max-width: 900px; }
+  .fiq-question { padding: 22px 26px; }
+  .fiq-question-text { font-size: 1.25rem; }
+  .fiq-answer { font-size: 1.1rem; }
+}
+
+/* Tablets */
+@media (max-width: 900px) {
+  .fiq-section { padding: 90px 24px; }
+  .fiq-header { margin-bottom: 48px; }
+  .fiq-title { font-size: clamp(2.1rem, 5vw, 2.8rem); }
+  .fiq-subtitle { font-size: 1.15rem; }
+
+  .fiq-list { max-width: 100%; gap: 16px; }
+
+  .fiq-question-text { font-size: 1.18rem; }
+  .fiq-answer { font-size: 1.05rem; }
+}
+
+/* Phones — switch to ROW layout (two per line when they fit) */
+@media (max-width: 640px) {
+  .fiq-section { padding: 60px 20px; }
+  .fiq-header { margin-bottom: 38px; }
+  .fiq-eyebrow { font-size: 0.88rem; }
+  .fiq-title { font-size: 2.15rem; }
+  .fiq-subtitle { font-size: 1.1rem; line-height: 1.65; }
+
+  .fiq-list {
+    max-width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  /* Each item takes ~half the row, but can grow if content forces it */
+  .fiq-item {
+    flex: 1 1 calc(50% - 7px);
+    min-width: 260px;
+    border-radius: 16px;
+  }
+
+  .fiq-question {
+    padding: 18px 20px;
+    gap: 12px;
+  }
+
+  .fiq-question-text {
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  .fiq-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.35rem;
+  }
+
+  .fiq-answer-wrap {
+    padding: 0 20px;
+  }
+
+  .fiq-item.is-open .fiq-answer-wrap {
+    padding: 0 20px 20px;
+  }
+
+  .fiq-answer {
+    font-size: 1.02rem;
+    line-height: 1.6;
+    padding-top: 16px;
+  }
+}
+
+/* Very small phones — go back to a single column so items aren't crushed */
+@media (max-width: 520px) {
+  .fiq-list {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fiq-item {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* Tiny phones */
+@media (max-width: 380px) {
+  .fiq-section { padding: 50px 16px; }
+  .fiq-title { font-size: 1.9rem; }
+  .fiq-subtitle { font-size: 1.02rem; }
+  .fiq-question { padding: 16px 18px; }
+  .fiq-question-text { font-size: 1.05rem; }
+  .fiq-icon { width: 30px; height: 30px; font-size: 1.25rem; }
+  .fiq-answer { font-size: 1rem; }
+}
