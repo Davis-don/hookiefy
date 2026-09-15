@@ -1,16 +1,33 @@
 import React from 'react';
-import './header.css'
+import './header.css';
 
 interface HeaderProps {
   onProfileClick: () => void;
+  onBrandClick?: () => void;
   userName?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ onProfileClick, userName = 'SP' }) => {
+const Header: React.FC<HeaderProps> = ({
+  onProfileClick,
+  onBrandClick,
+  userName = 'SP',
+}) => {
   return (
     <header className="yp-dash-header">
       <div className="yp-dash-header-content">
-        <h1 className="yp-dash-wordmark">
+        <h1
+          className="yp-dash-wordmark"
+          onClick={onBrandClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onBrandClick?.();
+            }
+          }}
+          role="link"
+          tabIndex={0}
+          aria-label="Go to home"
+        >
           <span className="yp-logo-you">You</span>
           <span className="yp-logo-p">p</span>
           <span className="yp-logo-ata">ata</span>

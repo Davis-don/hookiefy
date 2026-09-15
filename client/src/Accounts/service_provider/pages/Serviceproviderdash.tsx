@@ -48,6 +48,12 @@ const Serviceproviderdash = () => {
     setActiveTab(id);
   };
 
+  const handleBrandClick = () => {
+    setShowProfile(false);
+    setActiveTab('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -61,18 +67,36 @@ const Serviceproviderdash = () => {
 
   return (
     <div className="yp-dash-container">
-      {/* Mobile Top Header — avatar opens Profile */}
-      {isMobile && <Header onProfileClick={handleHeaderProfileClick} />}
+      {/* Mobile Top Header — brand = Home, avatar = Profile */}
+      {isMobile && (
+        <Header
+          onProfileClick={handleHeaderProfileClick}
+          onBrandClick={handleBrandClick}
+        />
+      )}
 
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside className={`yp-dash-sidebar ${sidebarOpen ? 'yp-dash-sidebar-open' : ''}`}>
           <div className="yp-dash-sidebar-header">
-            <h2 className="yp-dash-sidebar-logo">
+            <h2
+              className="yp-dash-sidebar-logo"
+              onClick={handleBrandClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleBrandClick();
+                }
+              }}
+              role="link"
+              tabIndex={0}
+              aria-label="Go to home"
+            >
               <span className="yp-logo-you">You</span>
               <span className="yp-logo-p">p</span>
               <span className="yp-logo-ata">ata</span>
             </h2>
+
             <button
               className="yp-dash-sidebar-toggle"
               onClick={toggleSidebar}
@@ -119,7 +143,7 @@ const Serviceproviderdash = () => {
         <div className="yp-dash-content-wrapper">{renderActiveComponent()}</div>
       </main>
 
-      {/* Mobile Bottom Nav — ICON ONLY, no labels */}
+      {/* Mobile Bottom Nav — ICON ONLY */}
       {isMobile && (
         <nav className="yp-dash-bottom-nav">
           {mobileNavItems.map((item) => (

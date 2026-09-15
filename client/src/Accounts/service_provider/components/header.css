@@ -148,3 +148,27 @@
 @media (min-width: 769px) {
   .yp-dash-header { display: none; }
 }
+/* ── Clickable wordmark (added traits only) ─────────────── */
+.yp-dash-wordmark {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin-left: -6px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.yp-dash-wordmark:hover {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
+
+.yp-dash-wordmark:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+.yp-dash-wordmark:active {
+  transform: scale(0.98);
+}

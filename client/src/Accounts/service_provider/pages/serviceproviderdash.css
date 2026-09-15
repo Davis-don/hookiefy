@@ -506,3 +506,27 @@
   .yp-card { padding: 16px; border-radius: 12px; }
   .yp-grid { grid-template-columns: 1fr; gap: 16px; }
 }
+/* ── Clickable sidebar wordmark (added traits only) ─────── */
+.yp-dash-sidebar-logo {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+  padding: 2px 4px;
+  margin-left: -4px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.yp-dash-sidebar-logo:hover {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
+
+.yp-dash-sidebar-logo:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+.yp-dash-sidebar-logo:active {
+  transform: scale(0.98);
+}
