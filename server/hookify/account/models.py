@@ -1,125 +1,259 @@
 # account/models.py
+
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 
+# ============================================================
+# ACCOUNTS MANAGER
+# ============================================================
+
 class AccountsManager(UserManager):
+
     def create_user(self, email, password=None, **extra_fields):
-        """Create and save a user with the given email and password."""
+        """
+        Create and save a user using email instead of username.
+        """
+
         if not email:
             raise ValueError("The Email field must be set")
+
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+
+        user = self.model(
+            email=email,
+            **extra_fields
+        )
+
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+
         user.save(using=self._db)
+
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Create and save a superuser.
+        """
+
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", "superadmin")
 
         if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
+            raise ValueError(
+                "Superuser must have is_staff=True."
+            )
+
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
+            raise ValueError(
+                "Superuser must have is_superuser=True."
+            )
 
-        return self.create_user(email=email, password=password, **extra_fields)
+        return self.create_user(
+            email=email,
+            password=password,
+            **extra_fields
+        )
 
+
+# ============================================================
+# ACCOUNTS MODEL
+# ============================================================
 
 class Accounts(AbstractUser):
-    username = None  # remove username completely
+
+    # --------------------------------------------------------
+    # REMOVE USERNAME
+    # --------------------------------------------------------
+
+    username = None
+
+    # --------------------------------------------------------
+    # GENDER
+    # --------------------------------------------------------
 
     GENDER_CHOICES = (
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('O', 'Other'),
+        ("M", "Male"),
+        ("F", "Female"),
+        ("O", "Other"),
     )
 
-    ROLE_CHOICES = (
-        ('user', 'User'),
-        ('admin', 'Admin'),
-        ('superadmin', 'Super Admin'),
-    )
-
-    ACCOUNT_STATUS_CHOICES = (
-        ('public', 'Public'),
-        ('private', 'Private'),
-    )
-
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
-    email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-    
-    # Account status: public or private
-    account_status = models.CharField(
-        max_length=10, 
-        choices=ACCOUNT_STATUS_CHOICES, 
-        default='public',
-        help_text="Whether the user's account is public or private"
-    )
-    
-    # Profile image fields for Cloudinary
-    profile_image_url = models.URLField(
-        max_length=500, 
-        blank=True, 
-        null=True,
-        help_text="Public URL of the profile image from Cloudinary"
-    )
-    profile_image_public_id = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True,
-        help_text="Cloudinary public ID for managing the image"
-    )
-
-    # ============================================================
-    # PAYSTACK RECIPIENT FIELDS (Added for withdrawals)
-    # ============================================================
-    
-    # Paystack recipient code for M-Pesa withdrawals
-    paystack_recipient_code = models.CharField(
-        max_length=100,
+    gender = models.CharField(
+        max_length=1,
+        choices=GENDER_CHOICES,
         blank=True,
         null=True,
-        help_text="Paystack recipient code for M-Pesa withdrawals (stored after first withdrawal)"
     )
-    
-    # Phone number used for Paystack recipient (formatted)
-    paystack_recipient_phone = models.CharField(
+
+    # --------------------------------------------------------
+    # ROLE
+    # --------------------------------------------------------
+
+    ROLE_CHOICES = (
+        ("superadmin", "Super Admin"),
+        ("serviceprovider", "Service Provider"),
+        ("serviceseeker", "Service Seeker"),
+    )
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default="serviceseeker",
+    )
+
+    # --------------------------------------------------------
+    # EMAIL
+    # --------------------------------------------------------
+
+    email = models.EmailField(
+        unique=True
+    )
+
+    # --------------------------------------------------------
+    # PHONE NUMBER
+    # --------------------------------------------------------
+
+    phone_number = models.CharField(
         max_length=15,
         blank=True,
         null=True,
-        help_text="Formatted phone number used for Paystack recipient"
-    )
-    
-    # When the recipient was created
-    paystack_recipient_created_at = models.DateTimeField(
-        blank=True,
-        null=True,
-        help_text="Date and time when Paystack recipient was created"
     )
 
-    USERNAME_FIELD = 'email'
+    # --------------------------------------------------------
+    # PROFILE IMAGE
+    # --------------------------------------------------------
+    #
+    # Optional.
+    #
+    # This can store:
+    # - Cloudinary URL
+    # - Google profile image URL
+    # - Any other valid image URL
+    #
+    # A user does NOT have to provide a profile image.
+    # --------------------------------------------------------
+
+    profile_image_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Optional profile image URL.",
+    )
+
+    # --------------------------------------------------------
+    # GOOGLE ACCOUNT
+    # --------------------------------------------------------
+    #
+    # Used to identify users who registered/logged in
+    # through Google.
+    #
+    # Google provides a unique "sub" (subject) identifier
+    # for every Google account.
+    # --------------------------------------------------------
+
+    google_id = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="Unique Google account ID.",
+    )
+
+    # --------------------------------------------------------
+    # AUTHENTICATION PROVIDER
+    # --------------------------------------------------------
+
+    AUTH_PROVIDER_CHOICES = (
+        ("local", "Local"),
+        ("google", "Google"),
+    )
+
+    auth_provider = models.CharField(
+        max_length=20,
+        choices=AUTH_PROVIDER_CHOICES,
+        default="local",
+    )
+
+    # --------------------------------------------------------
+    # ACCOUNT ACTIVE STATUS
+    # --------------------------------------------------------
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    # --------------------------------------------------------
+    # DJANGO AUTHENTICATION
+    # --------------------------------------------------------
+
+    USERNAME_FIELD = "email"
+
     REQUIRED_FIELDS = []
+
+    # --------------------------------------------------------
+    # MANAGER
+    # --------------------------------------------------------
 
     objects = AccountsManager()
 
+    # ========================================================
+    # METHODS / PROPERTIES
+    # ========================================================
+
     def __str__(self):
+        """
+        Display user's full name if available.
+        Otherwise display email.
+        """
+
         name = f"{self.first_name} {self.last_name}".strip()
-        return f"{name if name else self.email} ({self.email})"
-    
+
+        return (
+            f"{name} ({self.email})"
+            if name
+            else self.email
+        )
+
+    # --------------------------------------------------------
+    # FULL NAME
+    # --------------------------------------------------------
+
     @property
     def full_name(self):
-        """Returns the user's full name."""
-        return f"{self.first_name} {self.last_name}".strip() or self.email
-    
+        """
+        Return user's full name.
+        """
+
+        return (
+            f"{self.first_name} {self.last_name}".strip()
+            or self.email
+        )
+
+    # --------------------------------------------------------
+    # PROFILE IMAGE CHECK
+    # --------------------------------------------------------
+
     @property
     def has_profile_image(self):
-        """Returns True if the user has a profile image."""
+        """
+        Return True if the user has a profile image.
+        """
+
         return bool(self.profile_image_url)
-    
+
+    # --------------------------------------------------------
+    # GOOGLE USER CHECK
+    # --------------------------------------------------------
+
     @property
-    def has_paystack_recipient(self):
-        """Returns True if the user has a Paystack recipient code."""
-        return bool(self.paystack_recipient_code)
+    def is_google_user(self):
+        """
+        Return True if this account was created
+        or connected through Google.
+        """
+
+        return self.auth_provider == "google"

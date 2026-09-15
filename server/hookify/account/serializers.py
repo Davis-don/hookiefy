@@ -1,53 +1,93 @@
+# account/serializers.py
+
 from rest_framework import serializers
-from .models import Accounts
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .models import Accounts
+
+
+# ============================================================
+# CREATE USER SERIALIZER
+# ============================================================
+
 class CreateNewUserSerializer(serializers.ModelSerializer):
-    confirmpassword = serializers.CharField(write_only=True)
+
+    confirmpassword = serializers.CharField(
+        write_only=True
+    )
 
     class Meta:
+
         model = Accounts
+
         fields = [
             "first_name",
             "last_name",
             "email",
             "phone_number",
             "gender",
-            "role",
             "password",
             "confirmpassword",
-            "profile_image_url",
-            "profile_image_public_id",
         ]
+
         extra_kwargs = {
-            "password": {"write_only": True},
-            "profile_image_url": {"read_only": True},
-            "profile_image_public_id": {"read_only": True},
+            "password": {
+                "write_only": True
+            },
         }
 
+    # --------------------------------------------------------
+    # VALIDATE PASSWORD
+    # --------------------------------------------------------
+
     def validate(self, data):
-        if data["password"] != data["confirmpassword"]:
-            raise serializers.ValidationError("Passwords do not match!")
+
+        password = data.get("password")
+        confirmpassword = data.get("confirmpassword")
+
+        if password != confirmpassword:
+
+            raise serializers.ValidationError(
+                {
+                    "confirmpassword": "Passwords do not match."
+                }
+            )
+
         return data
 
+    # --------------------------------------------------------
+    # CREATE USER
+    # --------------------------------------------------------
+
     def create(self, validated_data):
-        validated_data.pop("confirmpassword")
 
-        password = validated_data.pop("password")
+        validated_data.pop(
+            "confirmpassword"
+        )
 
-        user = Accounts(**validated_data)
-        user.set_password(password)  # 🔥 important (hashing)
-        user.save()
+        password = validated_data.pop(
+            "password"
+        )
+
+        # Use the Accounts manager
+        user = Accounts.objects.create_user(
+            password=password,
+            **validated_data
+        )
 
         return user
 
 
+# ============================================================
+# USER SERIALIZER
+# ============================================================
+
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField()
-    has_profile_image = serializers.SerializerMethodField()
 
     class Meta:
+
         model = Accounts
+
         fields = [
             "id",
             "email",
@@ -58,25 +98,30 @@ class UserSerializer(serializers.ModelSerializer):
             "gender",
             "role",
             "profile_image_url",
-            "profile_image_public_id",
             "has_profile_image",
+            "auth_provider",
         ]
+
         read_only_fields = [
             "id",
+            "full_name",
             "role",
-            "profile_image_public_id",
+            "profile_image_url",
+            "has_profile_image",
+            "auth_provider",
         ]
 
-    def get_full_name(self, obj):
-        return obj.full_name
 
-    def get_has_profile_image(self, obj):
-        return obj.has_profile_image
-
+# ============================================================
+# UPDATE USER SERIALIZER
+# ============================================================
 
 class UpdateUserSerializer(serializers.ModelSerializer):
+
     class Meta:
+
         model = Accounts
+
         fields = [
             "first_name",
             "last_name",
@@ -84,50 +129,100 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             "gender",
             "profile_image_url",
         ]
-        extra_kwargs = {
-            "profile_image_url": {"read_only": True},
-        }
+
+        read_only_fields = [
+            "profile_image_url",
+        ]
 
 
-# Token serializer
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    # 👇 This replaces the default ugly error message
+# ============================================================
+# JWT TOKEN SERIALIZER
+# ============================================================
+
+class MyTokenObtainPairSerializer(
+    TokenObtainPairSerializer
+):
+
+    # --------------------------------------------------------
+    # CUSTOM LOGIN ERROR
+    # --------------------------------------------------------
+
     default_error_messages = {
-        "no_active_account": "Invalid email or password. Login unsuccessful."
+        "no_active_account":
+            "Invalid email or password. Login unsuccessful."
     }
+
+    # --------------------------------------------------------
+    # CUSTOM JWT CLAIMS
+    # --------------------------------------------------------
 
     @classmethod
     def get_token(cls, user):
+
         token = super().get_token(user)
 
-        # 👇 add custom claims into JWT (optional but powerful)
         token["email"] = user.email
         token["role"] = user.role
         token["first_name"] = user.first_name
         token["last_name"] = user.last_name
         token["full_name"] = user.full_name
-        token["profile_image_url"] = user.profile_image_url
+        token["profile_image_url"] = (
+            user.profile_image_url
+        )
+        token["auth_provider"] = (
+            user.auth_provider
+        )
 
         return token
 
 
-class ProfileImageUploadSerializer(serializers.Serializer):
-    profile_image = serializers.ImageField(required=True)
+# ============================================================
+# PROFILE IMAGE UPLOAD SERIALIZER
+# ============================================================
+
+class ProfileImageUploadSerializer(
+    serializers.Serializer
+):
+
+    profile_image = serializers.ImageField(
+        required=True
+    )
+
+    # --------------------------------------------------------
+    # VALIDATE PROFILE IMAGE
+    # --------------------------------------------------------
 
     def validate_profile_image(self, value):
-        """Validate the uploaded image"""
-        # Check file size (max 5MB)
-        max_size = 5 * 1024 * 1024  # 5MB
+
+        # ----------------------------------------------------
+        # MAX FILE SIZE: 5MB
+        # ----------------------------------------------------
+
+        max_size = 5 * 1024 * 1024
+
         if value.size > max_size:
+
             raise serializers.ValidationError(
-                f"Image size should not exceed {max_size // (1024 * 1024)}MB"
+                "Image size should not exceed 5MB."
             )
 
-        # Check file type
-        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        # ----------------------------------------------------
+        # ALLOWED IMAGE TYPES
+        # ----------------------------------------------------
+
+        allowed_types = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+        ]
+
         if value.content_type not in allowed_types:
+
             raise serializers.ValidationError(
-                f"File type not supported. Allowed types: {', '.join(allowed_types)}"
+                "File type not supported. "
+                "Allowed types: "
+                + ", ".join(allowed_types)
             )
 
         return value

@@ -1,50 +1,76 @@
 # account/urls.py
+
 from django.urls import path
-from . import views
+
+from .views import (
+    health_check,
+    login_view,
+    create_service_provider,
+    create_service_seeker,
+    google_service_provider,
+    google_service_seeker,
+)
+
 
 urlpatterns = [
-    # Health check
-    path('health/', views.health_check, name='health_check'),
-    
-    # Authentication
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    path('refresh/', views.refresh_token_view, name='refresh_token'),
-    path('auth-check/', views.auth_check, name='auth_check'),
-    
-    # Current user
-    path('current-user/', views.get_current_logged_in_user, name='current_user'),
-    
-    # Check if user has profile image
-    path('has-profile-image/', views.has_profile_image, name='has_profile_image'),
-    
-    # User management
-    path('new/', views.create_new_user, name='create_user'),
-    path('update-user/', views.update_user_details, name='update_user'),
-    path('update-password/', views.update_user_password, name='update_password'),
-    
-    # ✅ NEW: Public signup - Assign to System Admin (from environment variables)
-    path('create-user-assigned-to-system-admin/', views.create_user_assigned_to_system_admin, name='create_user_assigned_to_system_admin'),
-    
-    # ⚠️ DEPRECATED: Create user assigned to superadmin (kept for backward compatibility)
-    path('create-user-assigned-to-superadmin/', views.create_user_assigned_to_superadmin, name='create_user_assigned_to_superadmin'),
-    
-    # Delete current user account
-    path('delete-account/', views.delete_current_user, name='delete_current_user'),
-    
-    # User management by ID (GET, PUT, DELETE) - MUST come before role/all paths
-    path('user/<int:id>/', views.manage_user_by_id, name='manage_user_by_id'),
-    
-    # Get users by role OR all users with pagination (superadmin only)
-    path('role/<str:role>/', views.get_users_by_role_or_all, name='get_users_by_role_or_all'),
-    
-    # Get all users with pagination (superadmin only)
-    path('all/', views.get_all_users_paginated, name='get_all_users_paginated'),
 
-    # Profile image upload
-    path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
+    # --------------------------------------------------------
+    # HEALTH
+    # --------------------------------------------------------
 
-    # Account status management
-    path('account-status/', views.update_account_status, name='update_account_status'),
-    path('account-status/get/', views.get_account_status, name='get_account_status'),
+    path(
+        "health/",
+        health_check,
+        name="health-check"
+    ),
+
+    # --------------------------------------------------------
+    # NORMAL LOGIN
+    # --------------------------------------------------------
+
+    path(
+        "login/",
+        login_view,
+        name="login"
+    ),
+
+    # --------------------------------------------------------
+    # SERVICE PROVIDER SIGNUP
+    # --------------------------------------------------------
+
+    path(
+        "signup/service-provider/",
+        create_service_provider,
+        name="service-provider-signup"
+    ),
+
+    # --------------------------------------------------------
+    # SERVICE SEEKER SIGNUP
+    # --------------------------------------------------------
+
+    path(
+        "signup/service-seeker/",
+        create_service_seeker,
+        name="service-seeker-signup"
+    ),
+
+    # --------------------------------------------------------
+    # GOOGLE SERVICE PROVIDER
+    # --------------------------------------------------------
+
+    path(
+        "google/service-provider/",
+        google_service_provider,
+        name="google-service-provider"
+    ),
+
+    # --------------------------------------------------------
+    # GOOGLE SERVICE SEEKER
+    # --------------------------------------------------------
+
+    path(
+        "google/service-seeker/",
+        google_service_seeker,
+        name="google-service-seeker"
+    ),
 ]
