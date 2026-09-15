@@ -1,241 +1,480 @@
-.overall-add-img-profile-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  position: relative;
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — PROFILE IMAGE UPLOADER
+   Modern · Official · Responsive · Big
+   Prefix: yp-imgup-
+   ───────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --yp-blue:      #2563EB;
+  --yp-blue-2:    #1D4ED8;
+  --yp-emerald:   #10B981;
+  --yp-emerald-2: #059669;
+  --yp-amber:     #F59E0B;
+  --yp-coral:     #F97316;
+  --yp-ink:       #0F172A;
+  --yp-ink-soft:  #475569;
+  --yp-line:      rgba(15, 23, 42, 0.08);
+  --yp-white:     #FFFFFF;
+  --yp-bg:        #FBFCFE;
 }
 
-.image-circular-card {
-  width: 25rem;
-  height: 25rem;
-  border: none;
-  position: relative;
-  overflow: hidden;
-}
+/* ============================================================
+   WRAPPER
+   ============================================================ */
 
-.image-circular-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Instagram-style plus button */
-.addimg-button {
-  position: absolute;
-  bottom: 15%;
-  right: 15%;
-  background-color: #ffffff;
-  border-radius: 50%;
-  width: 3.5rem;
-  height: 3.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-  z-index: 2;
-}
-
-.addimg-button svg {
-  color: #000000;
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-.addimg-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.addimg-button:active {
-  transform: scale(0.95);
-}
-
-/* Upload options overlay - Instagram style */
-.addimg-upload-options {
-  position: absolute;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 0.5rem;
-  z-index: 3;
-  animation: slideUp 0.3s ease;
-}
-
-.addimg-upload-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.addimg-upload-btn,
-.addimg-cancel-btn {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.addimg-upload-btn {
-  background: #0095f6;
-  color: white;
-}
-
-.addimg-upload-btn:hover {
-  background: #0077d4;
-  transform: scale(1.02);
-}
-
-.addimg-cancel-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
-.addimg-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.02);
-}
-
-/* Uploading overlay */
-.addimg-uploading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
+.yp-imgup-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  color: white;
-  z-index: 4;
-  border-radius: 50%;
+  gap: 2rem;
+  padding: 3rem 1.5rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--yp-white);
+  border-radius: 28px;
 }
 
-.addimg-uploading-spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #0095f6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
+/* ============================================================
+   AVATAR SHELL + SIMPLE RING
+   ============================================================ */
 
-.addimg-uploading-overlay span {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-/* File input hidden */
-.addimg-file-input {
-  display: none;
-}
-
-/* Loading state */
-.image-loading-spinner {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: #f0f0f0;
+.yp-imgup-avatar-shell {
+  position: relative;
+  width: 26rem;
+  height: 26rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
-.image-loading-spinner::after {
-  content: '';
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #0095f6;
+/* Simple single-tone gradient ring (Instagram-like) */
+.yp-imgup-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%);
+  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.18);
 }
 
-/* Animations */
-@keyframes slideUp {
+.yp-imgup-ring::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--yp-white);
+}
+
+.yp-imgup-circle {
+  position: relative;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--yp-bg);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   IMAGE + INITIALS
+   ============================================================ */
+
+.yp-imgup-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.yp-imgup-img-loading {
+  opacity: 0.6;
+  filter: blur(1px);
+}
+
+.yp-imgup-img-loaded {
+  opacity: 1;
+  filter: none;
+}
+
+.yp-imgup-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-emerald) 100%);
+  color: var(--yp-white);
+  font-weight: 800;
+  font-size: 7rem;
+  letter-spacing: 4px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.yp-imgup-circle.yp-imgup-fallback::after {
+  content: 'SP';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-emerald) 100%);
+  color: var(--yp-white);
+  font-weight: 800;
+  font-size: 7rem;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   FAB — the + button
+   ============================================================ */
+
+.yp-imgup-fab {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 4px solid var(--yp-white);
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-emerald) 100%);
+  color: var(--yp-white);
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow:
+    0 8px 24px rgba(37, 99, 235, 0.45),
+    0 3px 8px rgba(15, 23, 42, 0.15);
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.yp-imgup-fab:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 12px 32px rgba(37, 99, 235, 0.55),
+    0 5px 12px rgba(15, 23, 42, 0.18);
+  filter: brightness(1.05);
+}
+
+.yp-imgup-fab:active {
+  transform: scale(0.95);
+}
+
+.yp-imgup-fab:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.25),
+    0 12px 32px rgba(37, 99, 235, 0.55);
+}
+
+/* ============================================================
+   HINT TEXT
+   ============================================================ */
+
+.yp-imgup-hint {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--yp-ink-soft);
+  text-align: center;
+  letter-spacing: 0.2px;
+  transition: color 0.2s ease;
+}
+
+/* ============================================================
+   UPLOADING OVERLAY
+   ============================================================ */
+
+.yp-imgup-uploading {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  animation: ypImgupFadeIn 0.2s ease-out;
+}
+
+.yp-imgup-spinner {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--yp-white);
+  animation: ypImgupSpin 0.8s linear infinite;
+}
+
+/* ============================================================
+   ACTION BAR (Save / Cancel)
+   ============================================================ */
+
+.yp-imgup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+  animation: ypImgupSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.yp-imgup-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2.5rem;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  border: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    filter 0.25s ease;
+  white-space: nowrap;
+  min-width: 13rem;
+}
+
+.yp-imgup-btn svg {
+  font-size: 1.3rem;
+}
+
+/* Confirm (Save photo) */
+.yp-imgup-btn-confirm {
+  background: linear-gradient(135deg, var(--yp-emerald) 0%, var(--yp-emerald-2) 100%);
+  color: var(--yp-white);
+  box-shadow:
+    0 8px 20px rgba(16, 185, 129, 0.35),
+    0 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+.yp-imgup-btn-confirm:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 12px 28px rgba(16, 185, 129, 0.45),
+    0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.yp-imgup-btn-confirm:active {
+  transform: translateY(0);
+  box-shadow:
+    0 4px 10px rgba(16, 185, 129, 0.3),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/* Cancel */
+.yp-imgup-btn-cancel {
+  background: var(--yp-white);
+  color: var(--yp-ink);
+  border: 1.5px solid var(--yp-line);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.yp-imgup-btn-cancel:hover {
+  transform: translateY(-2px);
+  background: #F8FAFC;
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
+}
+
+.yp-imgup-btn-cancel:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.yp-imgup-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.22),
+    0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+/* ============================================================
+   HIDDEN FILE INPUT
+   ============================================================ */
+
+.yp-imgup-file {
+  display: none;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes ypImgupSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ypImgupFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ypImgupSlideUp {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* ============================================================
+   RESPONSIVE — TABLET
+   ============================================================ */
 
-/* Responsive styles */
 @media (max-width: 768px) {
-  .image-circular-card {
+  .yp-imgup-wrapper {
+    gap: 1.75rem;
+    padding: 2.5rem 1rem;
+    border-radius: 24px;
+  }
+
+  .yp-imgup-avatar-shell {
     width: 20rem;
     height: 20rem;
   }
-  
-  .addimg-button {
-    width: 3.2rem;
-    height: 3.2rem;
-    bottom: 15%;
-    right: 15%;
-  }
-  
-  .addimg-button svg {
-    font-size: 1.6rem;
+
+  .yp-imgup-circle {
+    width: calc(100% - 14px);
+    height: calc(100% - 14px);
   }
 
-  .addimg-upload-btn,
-  .addimg-cancel-btn {
-    padding: 0.4rem 1.2rem;
-    font-size: 0.8rem;
+  .yp-imgup-initials,
+  .yp-imgup-circle.yp-imgup-fallback::after {
+    font-size: 5.5rem;
+    letter-spacing: 3px;
+  }
+
+  .yp-imgup-fab {
+    width: 4.25rem;
+    height: 4.25rem;
+    font-size: 1.75rem;
+    border-width: 3.5px;
+  }
+
+  .yp-imgup-hint {
+    font-size: 1.05rem;
+  }
+
+  .yp-imgup-btn {
+    padding: 1.1rem 2rem;
+    font-size: 1.05rem;
+    min-width: 11rem;
+  }
+
+  .yp-imgup-spinner {
+    width: 3.75rem;
+    height: 3.75rem;
+    border-width: 4px;
   }
 }
 
+/* ============================================================
+   RESPONSIVE — SMALL PHONES
+   ============================================================ */
+
 @media (max-width: 480px) {
-  .image-circular-card {
-    width: 18rem;
-    height: 18rem;
+  .yp-imgup-wrapper {
+    gap: 1.5rem;
+    padding: 2rem 1rem;
+    border-radius: 22px;
   }
-  
-  .addimg-button {
-    width: 3rem;
-    height: 3rem;
-    bottom: 12%;
-    right: 12%;
+
+  .yp-imgup-avatar-shell {
+    width: 17rem;
+    height: 17rem;
   }
-  
-  .addimg-button svg {
+
+  .yp-imgup-circle {
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+  }
+
+  .yp-imgup-initials,
+  .yp-imgup-circle.yp-imgup-fallback::after {
+    font-size: 4.5rem;
+    letter-spacing: 2px;
+  }
+
+  .yp-imgup-fab {
+    width: 3.75rem;
+    height: 3.75rem;
     font-size: 1.5rem;
+    border-width: 3px;
+    bottom: 0.75rem;
+    right: 0.75rem;
   }
 
-  .addimg-upload-options {
-    bottom: 8%;
-    padding: 0.4rem;
+  .yp-imgup-hint {
+    font-size: 1rem;
   }
 
-  .addimg-upload-btn,
-  .addimg-cancel-btn {
-    padding: 0.3rem 1rem;
-    font-size: 0.75rem;
+  .yp-imgup-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .yp-imgup-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 1.1rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .yp-imgup-spinner {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-width: 4px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — VERY SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 360px) {
+  .yp-imgup-avatar-shell {
+    width: 15rem;
+    height: 15rem;
+  }
+
+  .yp-imgup-initials,
+  .yp-imgup-circle.yp-imgup-fallback::after {
+    font-size: 3.75rem;
+  }
+
+  .yp-imgup-fab {
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.35rem;
+    border-width: 3px;
+  }
+
+  .yp-imgup-hint {
+    font-size: 0.95rem;
   }
 }

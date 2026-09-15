@@ -124,24 +124,46 @@ class Accounts(AbstractUser):
     )
 
     # --------------------------------------------------------
-    # PROFILE IMAGE
+    # PROFILE IMAGE URL
     # --------------------------------------------------------
     #
-    # Optional.
+    # Stores the Cloudinary HTTPS URL of the user's
+    # profile image.
     #
-    # This can store:
-    # - Cloudinary URL
-    # - Google profile image URL
-    # - Any other valid image URL
+    # Example:
+    # https://res.cloudinary.com/your-cloud/image/upload/...
     #
-    # A user does NOT have to provide a profile image.
+    # This field is optional.
     # --------------------------------------------------------
 
     profile_image_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        null=True,
+        help_text="Cloudinary profile image URL.",
+    )
+
+    # --------------------------------------------------------
+    # CLOUDINARY PUBLIC ID
+    # --------------------------------------------------------
+    #
+    # Stores the Cloudinary public ID of the profile image.
+    #
+    # This is important when you want to:
+    #
+    # - Replace the profile image
+    # - Delete the profile image
+    # - Manage the image directly through Cloudinary
+    #
+    # Example:
+    # profiles/user_123/profile
+    # --------------------------------------------------------
+
+    profile_image_public_id = models.CharField(
         max_length=500,
         blank=True,
         null=True,
-        help_text="Optional profile image URL.",
+        help_text="Cloudinary public ID for the profile image.",
     )
 
     # --------------------------------------------------------

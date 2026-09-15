@@ -10,8 +10,11 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -20,6 +23,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Accounts
 from .serializers import CreateNewUserSerializer
+
+# ── Cloudinary helper for profile image upload ───────────────
+from .controllers.cloudinary_utils import upload_or_replace_profile_image
+# ─────────────────────────────────────────────────────────────
 
 
 # ============================================================
@@ -66,6 +73,7 @@ def get_user_data(user):
         "gender": user.gender,
         "role": user.role,
         "profile_image_url": user.profile_image_url,
+        "profile_image_public_id": user.profile_image_public_id,
         "has_profile_image": user.has_profile_image,
         "auth_provider": user.auth_provider,
     }
@@ -105,10 +113,7 @@ def create_service_provider(request):
 
     data = request.data.copy()
 
-    # Never trust role from frontend
     data["role"] = "serviceprovider"
-
-    # This endpoint is for local authentication
     data["auth_provider"] = "local"
 
     serializer = CreateNewUserSerializer(data=data)
@@ -173,10 +178,7 @@ def create_service_seeker(request):
 
     data = request.data.copy()
 
-    # Never trust role from frontend
     data["role"] = "serviceseeker"
-
-    # This endpoint is for local authentication
     data["auth_provider"] = "local"
 
     serializer = CreateNewUserSerializer(data=data)
@@ -234,18 +236,7 @@ def create_service_seeker(request):
 def verify_google_token(token):
     """
     Verify a Google ID token.
-
-    Returns:
-        dict:
-            Verified Google account information.
-
-        None:
-            If the token is invalid.
     """
-
-    # --------------------------------------------------------
-    # GET GOOGLE CLIENT ID
-    # --------------------------------------------------------
 
     google_client_id = config(
         "GOOGLE_CLIENT_ID",
@@ -262,10 +253,6 @@ def verify_google_token(token):
             "GOOGLE_CLIENT_ID is not configured."
         )
 
-    # --------------------------------------------------------
-    # VERIFY TOKEN
-    # --------------------------------------------------------
-
     try:
 
         google_user = id_token.verify_oauth2_token(
@@ -273,16 +260,6 @@ def verify_google_token(token):
             google_requests.Request(),
             google_client_id,
         )
-
-        # ----------------------------------------------------
-        # DEBUG INFORMATION
-        # ----------------------------------------------------
-        #
-        # Do NOT log the complete token.
-        #
-        # We only log safe identifying information useful
-        # for debugging.
-        # ----------------------------------------------------
 
         logger.info(
             "Google token verified successfully for email=%s",
@@ -292,16 +269,6 @@ def verify_google_token(token):
         return google_user
 
     except ValueError as e:
-
-        # ----------------------------------------------------
-        # THIS IS IMPORTANT FOR DEBUGGING
-        # ----------------------------------------------------
-        #
-        # Previously the actual Google error was hidden.
-        #
-        # Now Django will tell us exactly why verification
-        # failed.
-        # ----------------------------------------------------
 
         logger.error(
             "GOOGLE TOKEN VERIFICATION FAILED: %s",
@@ -317,7 +284,7 @@ def verify_google_token(token):
 
 def get_google_account_data(google_user):
     """
-    Extract the useful account information from a verified
+    Extract useful account information from a verified
     Google ID token.
     """
 
@@ -353,16 +320,7 @@ def authenticate_google_user(
 ):
     """
     Authenticate a user using a verified Google ID token.
-
-    expected_role:
-        serviceprovider
-        or
-        serviceseeker
     """
-
-    # ========================================================
-    # GET TOKEN
-    # ========================================================
 
     google_token = request.data.get("token")
 
@@ -374,10 +332,6 @@ def authenticate_google_user(
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-    # ========================================================
-    # VERIFY TOKEN
-    # ========================================================
 
     google_user = verify_google_token(
         google_token
@@ -396,10 +350,6 @@ def authenticate_google_user(
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # ========================================================
-    # EXTRACT GOOGLE INFORMATION
-    # ========================================================
-
     google_data = get_google_account_data(
         google_user
     )
@@ -410,13 +360,10 @@ def authenticate_google_user(
 
     first_name = google_data["first_name"]
     last_name = google_data["last_name"]
+
     profile_image_url = google_data[
         "profile_image_url"
     ]
-
-    # ========================================================
-    # VALIDATE GOOGLE INFORMATION
-    # ========================================================
 
     if not google_id:
 
@@ -451,19 +398,9 @@ def authenticate_google_user(
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ========================================================
-    # FIND USER BY GOOGLE ID
-    # ========================================================
-
     user = Accounts.objects.filter(
         google_id=google_id
     ).first()
-
-    # ========================================================
-    # IF GOOGLE ID NOT FOUND
-    #
-    # TRY EMAIL
-    # ========================================================
 
     if not user:
 
@@ -471,15 +408,7 @@ def authenticate_google_user(
             email__iexact=email
         ).first()
 
-    # ========================================================
-    # EXISTING USER
-    # ========================================================
-
     if user:
-
-        # ----------------------------------------------------
-        # CHECK FOR DIFFERENT GOOGLE ACCOUNT
-        # ----------------------------------------------------
 
         if (
             user.google_id
@@ -496,10 +425,6 @@ def authenticate_google_user(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ----------------------------------------------------
-        # CHECK ROLE
-        # ----------------------------------------------------
-
         if user.role != expected_role:
 
             return Response(
@@ -511,10 +436,6 @@ def authenticate_google_user(
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # ----------------------------------------------------
-        # CONNECT LOCAL ACCOUNT TO GOOGLE
-        # ----------------------------------------------------
 
         fields_to_update = []
 
@@ -534,10 +455,6 @@ def authenticate_google_user(
                 "auth_provider"
             )
 
-        # ----------------------------------------------------
-        # ADD GOOGLE PROFILE IMAGE IF USER DOES NOT HAVE ONE
-        # ----------------------------------------------------
-
         if (
             profile_image_url
             and not user.profile_image_url
@@ -551,10 +468,6 @@ def authenticate_google_user(
                 "profile_image_url"
             )
 
-        # ----------------------------------------------------
-        # ADD GOOGLE FIRST NAME IF EMPTY
-        # ----------------------------------------------------
-
         if (
             first_name
             and not user.first_name
@@ -565,10 +478,6 @@ def authenticate_google_user(
             fields_to_update.append(
                 "first_name"
             )
-
-        # ----------------------------------------------------
-        # ADD GOOGLE LAST NAME IF EMPTY
-        # ----------------------------------------------------
 
         if (
             last_name
@@ -581,19 +490,11 @@ def authenticate_google_user(
                 "last_name"
             )
 
-        # ----------------------------------------------------
-        # SAVE ONLY IF NECESSARY
-        # ----------------------------------------------------
-
         if fields_to_update:
 
             user.save(
                 update_fields=fields_to_update
             )
-
-    # ========================================================
-    # NEW USER
-    # ========================================================
 
     else:
 
@@ -608,10 +509,6 @@ def authenticate_google_user(
             auth_provider="google",
         )
 
-    # ========================================================
-    # CHECK ACCOUNT STATUS
-    # ========================================================
-
     if not user.is_active:
 
         return Response(
@@ -621,15 +518,7 @@ def authenticate_google_user(
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ========================================================
-    # GENERATE JWT TOKENS
-    # ========================================================
-
     tokens = generate_tokens(user)
-
-    # ========================================================
-    # RETURN RESPONSE
-    # ========================================================
 
     return Response(
         {
@@ -655,12 +544,6 @@ def authenticate_google_user(
 def google_service_provider(request):
     """
     Create or login a service provider using Google.
-
-    Expected request:
-
-    {
-        "token": "GOOGLE_ID_TOKEN"
-    }
     """
 
     return authenticate_google_user(
@@ -679,12 +562,6 @@ def google_service_provider(request):
 def google_service_seeker(request):
     """
     Create or login a service seeker using Google.
-
-    Expected request:
-
-    {
-        "token": "GOOGLE_ID_TOKEN"
-    }
     """
 
     return authenticate_google_user(
@@ -707,10 +584,6 @@ def login_view(request):
     email = request.data.get("email")
     password = request.data.get("password")
 
-    # ========================================================
-    # VALIDATE REQUEST
-    # ========================================================
-
     if not email or not password:
 
         return Response(
@@ -721,10 +594,6 @@ def login_view(request):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-    # ========================================================
-    # FIND USER
-    # ========================================================
 
     try:
 
@@ -743,10 +612,6 @@ def login_view(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # ========================================================
-    # CHECK ACCOUNT STATUS
-    # ========================================================
-
     if not user.is_active:
 
         return Response(
@@ -757,10 +622,6 @@ def login_view(request):
             },
             status=status.HTTP_403_FORBIDDEN,
         )
-
-    # ========================================================
-    # CHECK PASSWORD
-    # ========================================================
 
     if not user.check_password(password):
 
@@ -773,15 +634,7 @@ def login_view(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # ========================================================
-    # GENERATE TOKENS
-    # ========================================================
-
     tokens = generate_tokens(user)
-
-    # ========================================================
-    # RESPONSE
-    # ========================================================
 
     return Response(
         {
@@ -795,7 +648,7 @@ def login_view(request):
 
 
 # ============================================================
-# AUTH CHECK (used by ProtectedRoute on every navigation)
+# AUTH CHECK
 # ============================================================
 
 @api_view(["GET"])
@@ -803,33 +656,9 @@ def login_view(request):
 def auth_check(request):
     """
     Verify the Bearer token and return the current user.
-
-    Used by the frontend's ProtectedRoute on every navigation.
-
-    Request:
-        GET /account/auth-check/
-        Authorization: Bearer <access_token>
-
-    Response:
-        200 {
-            "authenticated": true,
-            "user": { ...public user fields... }
-        }
-        401 {
-            "authenticated": false,
-            "message": "Invalid or expired token."
-        }
-        403 {
-            "authenticated": false,
-            "message": "This account is inactive."
-        }
     """
 
     auth = JWTAuthentication()
-
-    # ========================================================
-    # AUTHENTICATE
-    # ========================================================
 
     try:
 
@@ -845,31 +674,20 @@ def auth_check(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # ========================================================
-    # NO CREDENTIALS PROVIDED
-    # ========================================================
-
     if result is None:
 
         return Response(
             {
                 "authenticated": False,
                 "message": (
-                    "Authentication credentials were not provided."
+                    "Authentication credentials "
+                    "were not provided."
                 ),
             },
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # ========================================================
-    # UNPACK USER
-    # ========================================================
-
     user, _ = result
-
-    # ========================================================
-    # CHECK ACCOUNT STATUS
-    # ========================================================
 
     if not user.is_active:
 
@@ -881,14 +699,128 @@ def auth_check(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ========================================================
-    # SUCCESS
-    # ========================================================
-
     return Response(
         {
             "authenticated": True,
             "user": get_user_data(user),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# CURRENT USER PROFILE IMAGE
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def profile_image_url(request):
+    """
+    Return the profile image URL belonging ONLY to the
+    currently authenticated user.
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "profile_image_url": None,
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    image_url = user.profile_image_url
+
+    return Response(
+        {
+            "profile_image_url": image_url,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# UPLOAD / REPLACE PROFILE IMAGE
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def upload_profile_image(request):
+    """
+    Upload (or replace) the authenticated user's profile image.
+
+    Request:
+        POST /account/upload-profile-image/
+        Authorization: Bearer <access_token>
+        Content-Type: multipart/form-data
+        Body:
+            image: <file>
+
+    Behavior:
+        - If the user already has a Cloudinary image
+          (profile_image_public_id is set), the old image
+          is deleted from Cloudinary before the new one is
+          uploaded.
+        - If the user only had a Google image URL (no public_id),
+          the helper skips deletion and just uploads the new image.
+        - The user's profile_image_url and profile_image_public_id
+          are updated in the DB.
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    image_file = request.FILES.get("image")
+
+    if not image_file:
+
+        return Response(
+            {
+                "message": "No image file was provided.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+
+        result = upload_or_replace_profile_image(
+            image_file=image_file,
+            user=user,
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            "Failed to upload profile image for user_id=%s",
+            user.id,
+        )
+
+        return Response(
+            {
+                "message": "Failed to upload profile image.",
+                "error": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Profile image uploaded successfully.",
+            "profile_image_url": result.get("url"),
+            "profile_image_public_id": result.get("public_id"),
+            "replaced": result.get("replaced", False),
+            "old_public_id": result.get("old_public_id"),
         },
         status=status.HTTP_200_OK,
     )

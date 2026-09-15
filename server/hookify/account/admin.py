@@ -1,3 +1,4 @@
+
 # account/admin.py
 
 from django.contrib import admin
@@ -11,7 +12,7 @@ from .models import Accounts
 
 
 # ============================================================
-# CUSTOM FORMS (email instead of username)
+# CUSTOM FORMS (EMAIL INSTEAD OF USERNAME)
 # ============================================================
 
 class AccountsCreationForm(UserCreationForm):
@@ -45,8 +46,8 @@ class AccountsAdmin(UserAdmin):
     """
     Custom admin for the Accounts model.
 
-    Removes all `username` references that Django's default
-    UserAdmin expects, and replaces them with `email`.
+    Uses email instead of username and includes
+    Cloudinary profile image information.
     """
 
     # --------------------------------------------------------
@@ -66,6 +67,7 @@ class AccountsAdmin(UserAdmin):
         "last_name",
         "role",
         "auth_provider",
+        "has_profile_image",
         "is_active",
         "is_staff",
         "date_joined",
@@ -85,15 +87,21 @@ class AccountsAdmin(UserAdmin):
         "first_name",
         "last_name",
         "phone_number",
+        "google_id",
+        "profile_image_public_id",
     )
 
     ordering = ("-date_joined",)
 
     # --------------------------------------------------------
-    # DETAIL VIEW LAYOUT
+    # DETAIL VIEW
     # --------------------------------------------------------
 
     fieldsets = (
+        # ----------------------------------------------------
+        # ACCOUNT
+        # ----------------------------------------------------
+
         (
             None,
             {
@@ -103,6 +111,11 @@ class AccountsAdmin(UserAdmin):
                 )
             },
         ),
+
+        # ----------------------------------------------------
+        # PERSONAL INFORMATION
+        # ----------------------------------------------------
+
         (
             "Personal info",
             {
@@ -111,10 +124,34 @@ class AccountsAdmin(UserAdmin):
                     "last_name",
                     "gender",
                     "phone_number",
-                    "profile_image_url",
                 )
             },
         ),
+
+        # ----------------------------------------------------
+        # PROFILE IMAGE
+        # ----------------------------------------------------
+
+        (
+            "Profile Image",
+            {
+                "fields": (
+                    "profile_image_url",
+                    "profile_image_public_id",
+                ),
+                "description": (
+                    "Cloudinary profile image information. "
+                    "The URL is used to display the image. "
+                    "The public ID is used to manage or "
+                    "delete the image from Cloudinary."
+                ),
+            },
+        ),
+
+        # ----------------------------------------------------
+        # ROLE & AUTHENTICATION
+        # ----------------------------------------------------
+
         (
             "Role & Auth",
             {
@@ -125,6 +162,11 @@ class AccountsAdmin(UserAdmin):
                 )
             },
         ),
+
+        # ----------------------------------------------------
+        # PERMISSIONS
+        # ----------------------------------------------------
+
         (
             "Permissions",
             {
@@ -137,6 +179,11 @@ class AccountsAdmin(UserAdmin):
                 )
             },
         ),
+
+        # ----------------------------------------------------
+        # IMPORTANT DATES
+        # ----------------------------------------------------
+
         (
             "Important dates",
             {
@@ -149,7 +196,7 @@ class AccountsAdmin(UserAdmin):
     )
 
     # --------------------------------------------------------
-    # ADD FORM LAYOUT (creating a new user)
+    # ADD USER FORM
     # --------------------------------------------------------
 
     add_fieldsets = (
@@ -165,6 +212,9 @@ class AccountsAdmin(UserAdmin):
                     "phone_number",
                     "role",
                     "auth_provider",
+                    "google_id",
+                    "profile_image_url",
+                    "profile_image_public_id",
                     "password1",
                     "password2",
                     "is_active",
@@ -174,3 +224,4 @@ class AccountsAdmin(UserAdmin):
             },
         ),
     )
+

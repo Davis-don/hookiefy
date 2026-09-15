@@ -172,3 +172,61 @@
 .yp-dash-wordmark:active {
   transform: scale(0.98);
 }
+/* ── Avatar image (smooth fade, no flash) ───────────────── */
+.yp-dash-avatar-img {
+  object-fit: cover;
+  background: #FBFCFE;
+  padding: 0;
+  display: block;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.yp-avatar-loading {
+  opacity: 0.6;
+  filter: blur(1px);
+}
+
+.yp-avatar-loaded {
+  opacity: 1;
+  filter: none;
+}
+
+/* ── Fallback (image failed) ─────────────────────────────── */
+.yp-dash-avatar-btn.yp-avatar-fallback::after {
+  content: 'SP';
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+}
+
+/* ── Tiny silent-refresh dot (no layout shift) ──────────── */
+.yp-avatar-refresh-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563EB;
+  border: 2px solid #FFFFFF;
+  animation: ypPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ypPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+
+/* Make the button the positioning context for the dot */
+.yp-dash-avatar-btn {
+  position: relative;
+}
