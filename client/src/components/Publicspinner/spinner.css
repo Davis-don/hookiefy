@@ -1,7 +1,23 @@
 /* ============================================================
-   SPINNER.CSS
+   YOUPATA — SPINNER
+   Light background · Company colors
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --yp-blue:      #2563EB;
+  --yp-blue-2:    #1D4ED8;
+  --yp-emerald:   #10B981;
+  --yp-emerald-2: #059669;
+  --yp-amber:     #F59E0B;
+  --yp-coral:     #F97316;
+  --yp-ink:       #0F172A;
+  --yp-ink-soft:  #475569;
+  --yp-line:      rgba(15, 23, 42, 0.08);
+  --yp-white:     #FFFFFF;
+  --yp-bg:        #FBFCFE;
+}
 
 /* ============================================================
    LAYOUT
@@ -12,26 +28,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   gap: 1.25rem;
 
   min-height: 100vh;
   width: 100%;
 
-  background: radial-gradient(
-    circle at 50% 40%,
-    #141a33 0%,
-    #0b0e1c 55%,
-    #05060d 100%
-  );
+  background: var(--yp-bg);
 
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 
-  color: #ffffff;
+  color: var(--yp-ink);
 
   box-sizing: border-box;
 }
-
 
 /* ============================================================
    SPINNER
@@ -40,31 +49,25 @@
 .spinner {
   width: 56px;
   height: 56px;
-
   flex-shrink: 0;
 
   border-radius: 50%;
 
-  border: 3px solid rgba(255, 255, 255, 0.08);
+  border: 3px solid rgba(37, 99, 235, 0.12);
 
-  border-top-color: #4d8bff;
-  border-right-color: #7bc6ff;
+  border-top-color: var(--yp-blue);
+  border-right-color: var(--yp-emerald);
 
   animation: spin 0.9s linear infinite;
 
-  box-shadow:
-    0 0 24px rgba(77, 139, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
 
   box-sizing: border-box;
 }
 
-
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
-
 
 /* ============================================================
    MAIN TEXT
@@ -72,28 +75,16 @@
 
 .spinner-text {
   margin: 0;
-
   font-size: 0.95rem;
-  font-weight: 500;
-
+  font-weight: 600;
   letter-spacing: 0.06em;
-
-  color: #ffffff !important;
-
+  color: var(--yp-ink);
   display: inline-flex;
   align-items: baseline;
-
   gap: 2px;
-
   line-height: 1.5;
-
-  opacity: 1 !important;
-
-  visibility: visible !important;
-
   text-align: center;
 }
-
 
 /* ============================================================
    ANIMATED DOTS
@@ -102,52 +93,25 @@
 .spinner-dots {
   display: inline-flex;
   align-items: baseline;
-
-  color: #ffffff !important;
+  color: var(--yp-blue);
 }
-
 
 .spinner-dots span {
   display: inline-block;
-
-  color: #ffffff !important;
-
+  color: var(--yp-blue);
   animation: dot-pulse 1.4s infinite;
-
   opacity: 0;
 }
 
-
-.spinner-dots span:nth-child(1) {
-  animation-delay: 0s;
-}
-
-
-.spinner-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-
-.spinner-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
+.spinner-dots span:nth-child(1) { animation-delay: 0s; }
+.spinner-dots span:nth-child(2) { animation-delay: 0.2s; }
+.spinner-dots span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes dot-pulse {
-  0%,
-  20% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
+  0%, 20%   { opacity: 0; }
+  50%       { opacity: 1; }
+  100%      { opacity: 0; }
 }
-
 
 /* ============================================================
    SLOW WARNING MESSAGE
@@ -155,54 +119,34 @@
 
 .spinner-slow {
   margin: 0;
-
   font-size: 0.85rem;
-  font-weight: 400;
-
-  color: rgba(255, 255, 255, 0.65) !important;
-
+  font-weight: 500;
+  color: var(--yp-ink-soft);
   opacity: 0;
-
   transform: translateY(-4px);
-
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
-
+  transition: opacity 0.4s ease, transform 0.4s ease;
   pointer-events: none;
-
   text-align: center;
-
   visibility: hidden;
 }
 
-
-/* ============================================================
-   SHOW SLOW WARNING
-   ============================================================ */
-
 .spinner-slow--visible {
   opacity: 1 !important;
-
   transform: translateY(0);
-
   visibility: visible;
 }
 
-
 /* ============================================================
-   PREVENT GLOBAL P / DIV COLOR RULES FROM HIDING TEXT
+   SAFETY OVERRIDES
    ============================================================ */
 
 .spinner-wrap p.spinner-text {
-  color: #ffffff !important;
+  color: var(--yp-ink) !important;
 }
-
 
 .spinner-wrap p.spinner-slow {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--yp-ink-soft) !important;
 }
-
 
 /* ============================================================
    MOBILE
@@ -211,7 +155,6 @@
 @media (max-width: 600px) {
   .spinner-wrap {
     gap: 1rem;
-
     padding: 1.5rem;
   }
 

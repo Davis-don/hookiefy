@@ -3,11 +3,8 @@ import { useEffect, useState } from 'react';
 import './spinner.css';
 
 interface SpinnerProps {
-  /** Main loading text */
   message?: string;
-  /** Text shown after a delay */
   slowMessage?: string;
-  /** Delay in ms before showing the slow message */
   slowAfter?: number;
 }
 
