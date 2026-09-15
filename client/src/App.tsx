@@ -26,7 +26,7 @@ function App() {
         <Routes>
           {/* ✅ Public — Homepage handles its own auth-based redirect */}
           <Route path="/" element={<Mainlayout><Homepage /></Mainlayout>} />
-          <Route path="/serviceseeker" element={<Mainlayout><Serviceseeker /></Mainlayout>} />
+          <Route path="/serviceseeker" element={<><Header/> <Serviceseeker /></>} />
           <Route path="/serviceprovider" element={<><Header/><Serviceprovider /></>} />
           <Route path="/login" element={<><Header/><Login /></>} />
 

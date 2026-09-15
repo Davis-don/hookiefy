@@ -1,20 +1,10 @@
 /* serviceprovider.css */
 
-/* ---------- RESET ---------- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* ============================================================
+   SCOPED STYLES — all rules live under
+   .overall-service-provider-container so nothing leaks out
+   ============================================================ */
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #f4f5f7;
-  min-height: 100vh;
-  color: #1a1a2e;
-}
-
-/* ---------- OVERALL ---------- */
 .overall-service-provider-container {
   width: 100%;
   min-height: 100vh;
@@ -22,10 +12,13 @@ body {
   justify-content: center;
   align-items: center;
   padding: 24px;
+  background: #f4f5f7;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1a1a2e;
 }
 
 /* ---------- FORM CARD ---------- */
-.service-provider-form-container {
+.overall-service-provider-container .service-provider-form-container {
   width: 100%;
   max-width: 460px;
   background: #ffffff;
@@ -35,10 +28,10 @@ body {
     0 12px 32px -8px rgba(0, 0, 0, 0.08);
   padding: 40px 36px 32px;
   border: 1px solid #eef0f3;
-  animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: providerCardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes cardIn {
+@keyframes providerCardIn {
   from {
     opacity: 0;
     transform: translateY(16px);
@@ -50,12 +43,12 @@ body {
 }
 
 /* ---------- HEADER ---------- */
-.form-header {
+.overall-service-provider-container .form-header {
   margin-bottom: 24px;
   text-align: center;
 }
 
-.form-header h2 {
+.overall-service-provider-container .form-header h2 {
   font-size: 1.65rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -63,18 +56,18 @@ body {
   margin-bottom: 6px;
 }
 
-.form-header p {
+.overall-service-provider-container .form-header p {
   font-size: 0.95rem;
   color: #6b7684;
   font-weight: 400;
 }
 
 /* ---------- PROGRESS ---------- */
-.progress-container {
+.overall-service-provider-container .progress-container {
   margin-bottom: 20px;
 }
 
-.progress-track {
+.overall-service-provider-container .progress-track {
   width: 100%;
   height: 4px;
   background: #eef0f3;
@@ -82,14 +75,14 @@ body {
   overflow: hidden;
 }
 
-.progress-fill {
+.overall-service-provider-container .progress-fill {
   height: 100%;
   background: #0f766e;
   border-radius: 999px;
   transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.progress-label {
+.overall-service-provider-container .progress-label {
   font-size: 0.78rem;
   color: #9aa3af;
   margin-top: 8px;
@@ -99,15 +92,15 @@ body {
 }
 
 /* ---------- STEP TITLE ---------- */
-.step-title {
+.overall-service-provider-container .step-title {
   font-size: 1.05rem;
   font-weight: 600;
   color: #0f1720;
   margin-bottom: 20px;
-  animation: titleIn 0.3s ease;
+  animation: providerTitleIn 0.3s ease;
 }
 
-@keyframes titleIn {
+@keyframes providerTitleIn {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -119,28 +112,28 @@ body {
 }
 
 /* ---------- FORM ---------- */
-.signup-form {
+.overall-service-provider-container .signup-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.step-body {
+.overall-service-provider-container .step-body {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-height: 120px;
 }
 
-.step-body.step-forward {
-  animation: slideInForward 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+.overall-service-provider-container .step-body.step-forward {
+  animation: providerSlideForward 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.step-body.step-back {
-  animation: slideInBack 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+.overall-service-provider-container .step-body.step-back {
+  animation: providerSlideBack 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes slideInForward {
+@keyframes providerSlideForward {
   from {
     opacity: 0;
     transform: translateX(24px);
@@ -151,7 +144,7 @@ body {
   }
 }
 
-@keyframes slideInBack {
+@keyframes providerSlideBack {
   from {
     opacity: 0;
     transform: translateX(-24px);
@@ -163,22 +156,22 @@ body {
 }
 
 /* ---------- INPUT GROUP ---------- */
-.input-group {
+.overall-service-provider-container .input-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
 }
 
-.input-group label {
+.overall-service-provider-container .input-group label {
   font-size: 0.85rem;
   font-weight: 500;
   color: #374151;
   letter-spacing: 0.01em;
 }
 
-.input-group input,
-.input-group select {
+.overall-service-provider-container .input-group input,
+.overall-service-provider-container .input-group select {
   width: 100%;
   padding: 13px 16px;
   font-size: 0.98rem;
@@ -191,7 +184,7 @@ body {
   color: #0f1720;
 }
 
-.input-group select {
+.overall-service-provider-container .input-group select {
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -202,51 +195,51 @@ body {
   padding-right: 44px;
 }
 
-.input-group select::-ms-expand {
+.overall-service-provider-container .input-group select::-ms-expand {
   display: none;
 }
 
-.input-group input:focus,
-.input-group select:focus {
+.overall-service-provider-container .input-group input:focus,
+.overall-service-provider-container .input-group select:focus {
   border-color: #0f766e;
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
 }
 
-.input-group input::placeholder {
+.overall-service-provider-container .input-group input::placeholder {
   color: #a5adba;
   font-weight: 400;
 }
 
-.input-group input:disabled,
-.input-group select:disabled {
+.overall-service-provider-container .input-group input:disabled,
+.overall-service-provider-container .input-group select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Error state */
-.input-group.input-error input,
-.input-group.input-error select {
+/* ---------- ERROR STATE ---------- */
+.overall-service-provider-container .input-group.input-error input,
+.overall-service-provider-container .input-group.input-error select {
   border-color: #dc2626;
   background: #fef2f2;
 }
 
-.input-group.input-error input:focus,
-.input-group.input-error select:focus {
+.overall-service-provider-container .input-group.input-error input:focus,
+.overall-service-provider-container .input-group.input-error select:focus {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-.error-message {
+.overall-service-provider-container .error-message {
   display: block;
   color: #dc2626;
   font-size: 0.78rem;
   font-weight: 500;
   margin-top: 2px;
   margin-left: 2px;
-  animation: errorIn 0.2s ease;
+  animation: providerErrorIn 0.2s ease;
 }
 
-@keyframes errorIn {
+@keyframes providerErrorIn {
   from {
     opacity: 0;
     transform: translateY(-2px);
@@ -258,7 +251,7 @@ body {
 }
 
 /* ---------- PASSWORD HINT ---------- */
-.password-hint {
+.overall-service-provider-container .password-hint {
   font-size: 0.78rem;
   color: #6b7684;
   line-height: 1.4;
@@ -267,13 +260,13 @@ body {
 }
 
 /* ---------- NAV BUTTONS ---------- */
-.nav-buttons {
+.overall-service-provider-container .nav-buttons {
   display: flex;
   gap: 10px;
   margin-top: 4px;
 }
 
-.back-btn {
+.overall-service-provider-container .back-btn {
   flex: 0 0 auto;
   padding: 14px 22px;
   font-size: 0.95rem;
@@ -287,16 +280,16 @@ body {
   transition: background 0.18s, border-color 0.18s;
 }
 
-.back-btn:hover {
+.overall-service-provider-container .back-btn:hover {
   background: #eaecf0;
   border-color: #d5dae0;
 }
 
-.back-btn:active {
+.overall-service-provider-container .back-btn:active {
   transform: scale(0.98);
 }
 
-.submit-btn {
+.overall-service-provider-container .submit-btn {
   flex: 1;
   padding: 14px;
   font-size: 0.98rem;
@@ -311,37 +304,37 @@ body {
   box-shadow: 0 4px 12px -2px rgba(15, 118, 110, 0.3);
 }
 
-.submit-btn:hover:not(:disabled) {
+.overall-service-provider-container .submit-btn:hover:not(:disabled) {
   background: #0d5f59;
   box-shadow: 0 6px 16px -2px rgba(15, 118, 110, 0.4);
 }
 
-.submit-btn:active:not(:disabled) {
+.overall-service-provider-container .submit-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-.submit-btn:disabled,
-.back-btn:disabled,
-.google-btn:disabled {
+.overall-service-provider-container .submit-btn:disabled,
+.overall-service-provider-container .back-btn:disabled,
+.overall-service-provider-container .google-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* ---------- DIVIDER ---------- */
-.divider {
+.overall-service-provider-container .divider {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 4px 0;
 }
 
-.divider hr {
+.overall-service-provider-container .divider hr {
   flex: 1;
   border: none;
   border-top: 1px solid #eef0f3;
 }
 
-.divider span {
+.overall-service-provider-container .divider span {
   font-size: 0.8rem;
   color: #9aa3af;
   font-weight: 500;
@@ -350,7 +343,7 @@ body {
 }
 
 /* ---------- GOOGLE BUTTON ---------- */
-.google-btn {
+.overall-service-provider-container .google-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -368,40 +361,40 @@ body {
   transition: background 0.18s, border-color 0.18s, transform 0.1s;
 }
 
-.google-btn:hover:not(:disabled) {
+.overall-service-provider-container .google-btn:hover:not(:disabled) {
   background: #fafbfc;
   border-color: #d5dae0;
 }
 
-.google-btn:active:not(:disabled) {
+.overall-service-provider-container .google-btn:active:not(:disabled) {
   transform: scale(0.99);
 }
 
-.google-btn svg {
+.overall-service-provider-container .google-btn svg {
   width: 18px;
   height: 18px;
 }
 
 /* ---------- LOGIN LINK ---------- */
-.login-link {
+.overall-service-provider-container .login-link {
   text-align: center;
   font-size: 0.88rem;
   color: #6b7684;
   margin-top: 6px;
 }
 
-.login-link a {
+.overall-service-provider-container .login-link a {
   color: #0f766e;
   font-weight: 600;
   text-decoration: none;
 }
 
-.login-link a:hover {
+.overall-service-provider-container .login-link a:hover {
   text-decoration: underline;
 }
 
 /* ============================================================
-   MOBILE: BOTTOM SHEET STYLE
+   MOBILE: BOTTOM SHEET
    ============================================================ */
 @media (max-width: 640px) {
   .overall-service-provider-container {
@@ -411,16 +404,16 @@ body {
     backdrop-filter: blur(2px);
   }
 
-  .service-provider-form-container {
+  .overall-service-provider-container .service-provider-form-container {
     max-width: 100%;
     border-radius: 24px 24px 0 0;
     padding: 32px 24px calc(32px + env(safe-area-inset-bottom));
-    animation: sheetUp 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: providerSheetUp 0.42s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: 0 -12px 40px -8px rgba(0, 0, 0, 0.18);
     border-bottom: none;
   }
 
-  @keyframes sheetUp {
+  @keyframes providerSheetUp {
     from {
       opacity: 0.6;
       transform: translateY(100%);
@@ -431,8 +424,7 @@ body {
     }
   }
 
-  /* Grab handle */
-  .service-provider-form-container::before {
+  .overall-service-provider-container .service-provider-form-container::before {
     content: '';
     display: block;
     width: 40px;
@@ -442,56 +434,58 @@ body {
     margin: -16px auto 20px;
   }
 
-  .form-header {
+  .overall-service-provider-container .form-header {
     margin-bottom: 20px;
   }
 
-  .form-header h2 {
+  .overall-service-provider-container .form-header h2 {
     font-size: 1.4rem;
   }
 
-  .form-header p {
+  .overall-service-provider-container .form-header p {
     font-size: 0.88rem;
   }
 
-  .progress-container {
+  .overall-service-provider-container .progress-container {
     margin-bottom: 16px;
   }
 
-  .step-title {
+  .overall-service-provider-container .step-title {
     font-size: 1rem;
     margin-bottom: 16px;
   }
 
-  .input-group input,
-  .input-group select {
+  .overall-service-provider-container .input-group input,
+  .overall-service-provider-container .input-group select {
     padding: 14px 16px;
     font-size: 1rem;
   }
 
-  .nav-buttons {
+  .overall-service-provider-container .nav-buttons {
     gap: 8px;
   }
 
-  .submit-btn,
-  .back-btn {
+  .overall-service-provider-container .submit-btn,
+  .overall-service-provider-container .back-btn {
     padding: 15px;
     font-size: 0.98rem;
   }
 
-  .google-btn {
+  .overall-service-provider-container .google-btn {
     padding: 14px;
     font-size: 0.92rem;
   }
 
-  .login-link {
+  .overall-service-provider-container .login-link {
     font-size: 0.85rem;
   }
 }
 
-/* ---------- SMALL TABLET ---------- */
+/* ============================================================
+   SMALL TABLET
+   ============================================================ */
 @media (min-width: 641px) and (max-width: 900px) {
-  .service-provider-form-container {
+  .overall-service-provider-container .service-provider-form-container {
     max-width: 440px;
     padding: 36px 32px 28px;
   }

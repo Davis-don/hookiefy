@@ -1,0 +1,492 @@
+/* serviceseeker.css */
+
+/* ============================================================
+   SCOPED STYLES — all rules live under
+   .overall-service-seeker-container so nothing leaks out
+   ============================================================ */
+
+.overall-service-seeker-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #f4f5f7;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1a1a2e;
+}
+
+/* ---------- FORM CARD ---------- */
+.overall-service-seeker-container .service-seeker-form-container {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 32px -8px rgba(0, 0, 0, 0.08);
+  padding: 40px 36px 32px;
+  border: 1px solid #eef0f3;
+  animation: seekerCardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes seekerCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- HEADER ---------- */
+.overall-service-seeker-container .form-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.overall-service-seeker-container .form-header h2 {
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #0f1720;
+  margin-bottom: 6px;
+}
+
+.overall-service-seeker-container .form-header p {
+  font-size: 0.95rem;
+  color: #6b7684;
+  font-weight: 400;
+}
+
+/* ---------- PROGRESS ---------- */
+.overall-service-seeker-container .progress-container {
+  margin-bottom: 20px;
+}
+
+.overall-service-seeker-container .progress-track {
+  width: 100%;
+  height: 4px;
+  background: #eef0f3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.overall-service-seeker-container .progress-fill {
+  height: 100%;
+  background: #1d4ed8;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.overall-service-seeker-container .progress-label {
+  font-size: 0.78rem;
+  color: #9aa3af;
+  margin-top: 8px;
+  text-align: right;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- STEP TITLE ---------- */
+.overall-service-seeker-container .step-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f1720;
+  margin-bottom: 20px;
+  animation: seekerTitleIn 0.3s ease;
+}
+
+@keyframes seekerTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- FORM ---------- */
+.overall-service-seeker-container .signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.overall-service-seeker-container .step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 120px;
+}
+
+.overall-service-seeker-container .step-body.step-forward {
+  animation: seekerSlideForward 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.overall-service-seeker-container .step-body.step-back {
+  animation: seekerSlideBack 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes seekerSlideForward {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes seekerSlideBack {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---------- INPUT GROUP ---------- */
+.overall-service-seeker-container .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.overall-service-seeker-container .input-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.overall-service-seeker-container .input-group input,
+.overall-service-seeker-container .input-group select {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 0.98rem;
+  font-family: inherit;
+  background: #fafbfc;
+  border: 1.5px solid #e4e8ed;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  color: #0f1720;
+}
+
+.overall-service-seeker-container .input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  cursor: pointer;
+  padding-right: 44px;
+}
+
+.overall-service-seeker-container .input-group select::-ms-expand {
+  display: none;
+}
+
+.overall-service-seeker-container .input-group input:focus,
+.overall-service-seeker-container .input-group select:focus {
+  border-color: #1d4ed8;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+}
+
+.overall-service-seeker-container .input-group input::placeholder {
+  color: #a5adba;
+  font-weight: 400;
+}
+
+.overall-service-seeker-container .input-group input:disabled,
+.overall-service-seeker-container .input-group select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- ERROR STATE ---------- */
+.overall-service-seeker-container .input-group.input-error input,
+.overall-service-seeker-container .input-group.input-error select {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.overall-service-seeker-container .input-group.input-error input:focus,
+.overall-service-seeker-container .input-group.input-error select:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.overall-service-seeker-container .error-message {
+  display: block;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-top: 2px;
+  margin-left: 2px;
+  animation: seekerErrorIn 0.2s ease;
+}
+
+@keyframes seekerErrorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- PASSWORD HINT ---------- */
+.overall-service-seeker-container .password-hint {
+  font-size: 0.78rem;
+  color: #6b7684;
+  line-height: 1.4;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+/* ---------- NAV BUTTONS ---------- */
+.overall-service-seeker-container .nav-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.overall-service-seeker-container .back-btn {
+  flex: 0 0 auto;
+  padding: 14px 22px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #374151;
+  background: #f4f5f7;
+  border: 1.5px solid #e4e8ed;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.overall-service-seeker-container .back-btn:hover {
+  background: #eaecf0;
+  border-color: #d5dae0;
+}
+
+.overall-service-seeker-container .back-btn:active {
+  transform: scale(0.98);
+}
+
+.overall-service-seeker-container .submit-btn {
+  flex: 1;
+  padding: 14px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #ffffff;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+  box-shadow: 0 4px 12px -2px rgba(29, 78, 216, 0.3);
+}
+
+.overall-service-seeker-container .submit-btn:hover:not(:disabled) {
+  background: #1a44be;
+  box-shadow: 0 6px 16px -2px rgba(29, 78, 216, 0.4);
+}
+
+.overall-service-seeker-container .submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.overall-service-seeker-container .submit-btn:disabled,
+.overall-service-seeker-container .back-btn:disabled,
+.overall-service-seeker-container .google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- DIVIDER ---------- */
+.overall-service-seeker-container .divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.overall-service-seeker-container .divider hr {
+  flex: 1;
+  border: none;
+  border-top: 1px solid #eef0f3;
+}
+
+.overall-service-seeker-container .divider span {
+  font-size: 0.8rem;
+  color: #9aa3af;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- GOOGLE BUTTON ---------- */
+.overall-service-seeker-container .google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #374151;
+  background: #ffffff;
+  border: 1.5px solid #e4e8ed;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.1s;
+}
+
+.overall-service-seeker-container .google-btn:hover:not(:disabled) {
+  background: #fafbfc;
+  border-color: #d5dae0;
+}
+
+.overall-service-seeker-container .google-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.overall-service-seeker-container .google-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- LOGIN LINK ---------- */
+.overall-service-seeker-container .login-link {
+  text-align: center;
+  font-size: 0.88rem;
+  color: #6b7684;
+  margin-top: 6px;
+}
+
+.overall-service-seeker-container .login-link a {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.overall-service-seeker-container .login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   MOBILE: BOTTOM SHEET
+   ============================================================ */
+@media (max-width: 640px) {
+  .overall-service-seeker-container {
+    align-items: flex-end;
+    padding: 0;
+    background: rgba(15, 23, 32, 0.35);
+    backdrop-filter: blur(2px);
+  }
+
+  .overall-service-seeker-container .service-seeker-form-container {
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 32px 24px calc(32px + env(safe-area-inset-bottom));
+    animation: seekerSheetUp 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 -12px 40px -8px rgba(0, 0, 0, 0.18);
+    border-bottom: none;
+  }
+
+  @keyframes seekerSheetUp {
+    from {
+      opacity: 0.6;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .overall-service-seeker-container .service-seeker-form-container::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: #e4e8ed;
+    border-radius: 999px;
+    margin: -16px auto 20px;
+  }
+
+  .overall-service-seeker-container .form-header {
+    margin-bottom: 20px;
+  }
+
+  .overall-service-seeker-container .form-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .overall-service-seeker-container .form-header p {
+    font-size: 0.88rem;
+  }
+
+  .overall-service-seeker-container .progress-container {
+    margin-bottom: 16px;
+  }
+
+  .overall-service-seeker-container .step-title {
+    font-size: 1rem;
+    margin-bottom: 16px;
+  }
+
+  .overall-service-seeker-container .input-group input,
+  .overall-service-seeker-container .input-group select {
+    padding: 14px 16px;
+    font-size: 1rem;
+  }
+
+  .overall-service-seeker-container .nav-buttons {
+    gap: 8px;
+  }
+
+  .overall-service-seeker-container .submit-btn,
+  .overall-service-seeker-container .back-btn {
+    padding: 15px;
+    font-size: 0.98rem;
+  }
+
+  .overall-service-seeker-container .google-btn {
+    padding: 14px;
+    font-size: 0.92rem;
+  }
+
+  .overall-service-seeker-container .login-link {
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================================
+   SMALL TABLET
+   ============================================================ */
+@media (min-width: 641px) and (max-width: 900px) {
+  .overall-service-seeker-container .service-seeker-form-container {
+    max-width: 440px;
+    padding: 36px 32px 28px;
+  }
+}
