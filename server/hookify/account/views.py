@@ -1,4 +1,3 @@
-
 # account/views.py
 
 import logging
@@ -14,7 +13,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
 
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Accounts
@@ -792,3 +793,102 @@ def login_view(request):
         status=status.HTTP_200_OK,
     )
 
+
+# ============================================================
+# AUTH CHECK (used by ProtectedRoute on every navigation)
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def auth_check(request):
+    """
+    Verify the Bearer token and return the current user.
+
+    Used by the frontend's ProtectedRoute on every navigation.
+
+    Request:
+        GET /account/auth-check/
+        Authorization: Bearer <access_token>
+
+    Response:
+        200 {
+            "authenticated": true,
+            "user": { ...public user fields... }
+        }
+        401 {
+            "authenticated": false,
+            "message": "Invalid or expired token."
+        }
+        403 {
+            "authenticated": false,
+            "message": "This account is inactive."
+        }
+    """
+
+    auth = JWTAuthentication()
+
+    # ========================================================
+    # AUTHENTICATE
+    # ========================================================
+
+    try:
+
+        result = auth.authenticate(request)
+
+    except AuthenticationFailed as e:
+
+        return Response(
+            {
+                "authenticated": False,
+                "message": str(e),
+            },
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    # ========================================================
+    # NO CREDENTIALS PROVIDED
+    # ========================================================
+
+    if result is None:
+
+        return Response(
+            {
+                "authenticated": False,
+                "message": (
+                    "Authentication credentials were not provided."
+                ),
+            },
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    # ========================================================
+    # UNPACK USER
+    # ========================================================
+
+    user, _ = result
+
+    # ========================================================
+    # CHECK ACCOUNT STATUS
+    # ========================================================
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "authenticated": False,
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    return Response(
+        {
+            "authenticated": True,
+            "user": get_user_data(user),
+        },
+        status=status.HTTP_200_OK,
+    )

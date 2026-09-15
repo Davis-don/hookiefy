@@ -9,6 +9,7 @@ from .views import (
     create_service_seeker,
     google_service_provider,
     google_service_seeker,
+    auth_check,
 )
 
 
@@ -22,6 +23,16 @@ urlpatterns = [
         "health/",
         health_check,
         name="health-check"
+    ),
+
+    # --------------------------------------------------------
+    # AUTH CHECK (for ProtectedRoute)
+    # --------------------------------------------------------
+
+    path(
+        "auth-check/",
+        auth_check,
+        name="auth-check"
     ),
 
     # --------------------------------------------------------

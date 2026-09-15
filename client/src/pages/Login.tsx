@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast, } from 'sonner';
+import { useAuthStore } from '../store/authtokenstore';
 import './login.css';
 
 // ============================================================
@@ -54,7 +55,10 @@ declare global {
 // API HELPERS
 // ============================================================
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  'https://hookiefy-server-7d6d.onrender.com';
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function extractErrorMessage(data: any, fallback: string): string {
@@ -99,17 +103,41 @@ function extractErrorMessage(data: any, fallback: string): string {
   return fieldErrors || fallback;
 }
 
+/**
+ * Safely parse a fetch response — throws a clear error
+ * if the server did not return JSON.
+ */
+async function parseJsonResponse(response: Response): Promise<any> {
+  const contentType = response.headers.get('content-type');
+
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error('❌ Non-JSON response:', text.substring(0, 200));
+    throw new Error(
+      'Server returned unexpected response. Please try again.'
+    );
+  }
+
+  return response.json();
+}
+
 async function loginWithCredentials(payload: {
   email: string;
   password: string;
 }): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE}/account/login/`, {
+  const url = `${API_BASE}/account/login/`;
+  console.log('📤 Sending login request to:', url);
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json();
+  const data = await parseJsonResponse(response);
 
   if (!response.ok) {
     throw new Error(
@@ -127,13 +155,18 @@ async function googleLoginByRole(
   const slug =
     role === 'serviceprovider' ? 'service-provider' : 'service-seeker';
 
-  const response = await fetch(`${API_BASE}/account/google/${slug}/`, {
+  const url = `${API_BASE}/account/google/${slug}/`;
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
     body: JSON.stringify({ token: idToken }),
   });
 
-  const data = await response.json();
+  const data = await parseJsonResponse(response);
 
   if (!response.ok) {
     throw new Error(
@@ -192,7 +225,7 @@ function validateField(
 
     case 'password':
       if (!value) return 'Password is required';
-      if (value.length < 8) return 'Min 8 characters';
+      if (value.length < 6) return 'Min 6 characters';
       break;
   }
   return undefined;
@@ -211,7 +244,7 @@ function getDashboardRoute(role: string | undefined): string {
     case 'serviceseeker':
       return '/service_seeker/dashboard';
     default:
-      return '/dashboard';
+      return '/unauthorized';
   }
 }
 
@@ -230,6 +263,9 @@ function Login() {
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // ✅ Auth store (Zustand)
+  const { setTokens } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -253,15 +289,14 @@ function Login() {
   const handleLoginSuccess = (result: LoginResponse) => {
     const name = result.user?.first_name || 'there';
 
-    if (result.access) {
-      localStorage.setItem('access_token', result.access);
-    }
-    if (result.refresh) {
-      localStorage.setItem('refresh_token', result.refresh);
-    }
-    if (result.user) {
-      localStorage.setItem('user', JSON.stringify(result.user));
-    }
+    // ✅ Store tokens + user in Zustand auth store (persisted)
+    setTokens({
+      access: result.access,
+      refresh: result.refresh,
+      user: result.user,
+    });
+
+    console.log('✅ Login successful, tokens + user stored in auth store');
 
     toast.success('🎉 Login successful!', {
       description: `Welcome back, ${name}!`,
@@ -285,7 +320,8 @@ function Login() {
     mutationFn: loginWithCredentials,
     onSuccess: handleLoginSuccess,
     onError: (error: Error) => {
-      // Stay on the login page — just show the error
+      console.error('❌ Login error:', error.message);
+      // Stay on the login page — only show the error
       toast.error('Login Failed', {
         description: error.message,
         duration: 6000,
@@ -306,7 +342,8 @@ function Login() {
     mutationFn: googleLogin,
     onSuccess: handleLoginSuccess,
     onError: (error: Error) => {
-      // Stay on the login page — just show the error
+      console.error('❌ Google login error:', error.message);
+      // Stay on the login page — only show the error
       toast.error('Google Login Failed', {
         description: error.message,
         duration: 6000,

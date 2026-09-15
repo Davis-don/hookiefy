@@ -15,7 +15,7 @@ interface AuthCheckResponse {
   user: {
     id: number;
     email: string;
-    role: string; // "user" | "admin" | "superadmin"
+    role: string;
     first_name?: string;
     last_name?: string;
     full_name?: string;
@@ -27,12 +27,17 @@ interface AuthCheckResponse {
 function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://hookiefy-server-7d6d.onrender.com";
 
-  // ✅ Only tokens matter
-  const { access, refresh, clearTokens, setTokens } = useAuthStore();
+  // ✅ Store now holds tokens + user
+  const { access, refresh, user, clearTokens, setTokens } = useAuthStore();
 
-  const { data, isLoading, isError, error } = useQuery<AuthCheckResponse, Error>({
+  const { data, isLoading, isError, error } = useQuery<
+    AuthCheckResponse,
+    Error
+  >({
     queryKey: ["auth-check", access],
     queryFn: async () => {
       if (!access) throw new Error("No access token found");
@@ -48,11 +53,14 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
 
       // 🔄 Expired → refresh once → retry
       if (response.status === 401 && refresh) {
-        const refreshResponse = await fetch(`${API_URL}/account/refresh/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token: refresh }),
-        });
+        const refreshResponse = await fetch(
+          `${API_URL}/api/token/refresh/`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh }),
+          }
+        );
 
         if (!refreshResponse.ok) {
           clearTokens();
@@ -60,7 +68,13 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
         }
 
         const refreshData = await refreshResponse.json();
-        setTokens({ access: refreshData.access, refresh });
+
+        // ✅ Preserve the user in the store while updating access
+        setTokens({
+          access: refreshData.access,
+          refresh: refreshData.refresh ?? refresh,
+          user: user ?? undefined,
+        });
 
         response = await fetch(`${API_URL}/account/auth-check/`, {
           method: "GET",
@@ -87,36 +101,35 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   useEffect(() => {
     if (isLoading) return;
 
-    // 🔐 Centralized sign-out: clear store + redirect to /signin
-    const redirectToSignin = () => {
+    // 🔐 Centralized sign-out: clear store + redirect to /login
+    const redirectToLogin = () => {
       clearTokens();
-      navigate("/signin", {
+      navigate("/login", {
         replace: true,
         state: { from: location.pathname },
       });
     };
 
-    // No token → signin (remember where they wanted to go)
+    // No token → login (remember where they wanted to go)
     if (!access) {
-      redirectToSignin();
+      redirectToLogin();
       return;
     }
 
     // Auth failed / refresh failed → wipe store, force re-login
     if (isError) {
       console.error("❌ Auth check failed:", error?.message);
-      redirectToSignin();
+      redirectToLogin();
       return;
     }
 
     // Server said not authenticated → wipe store, force re-login
     if (data && !data.authenticated) {
-      redirectToSignin();
+      redirectToLogin();
       return;
     }
 
     // Wrong role — only when we actually have a live session
-    // (`access &&` guards against stale `data` after clearTokens sets access=null)
     if (
       access &&
       data?.user &&
@@ -124,7 +137,9 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
       !allowedRoles.includes(data.user.role)
     ) {
       console.warn(
-        `Role "${data.user.role}" not allowed. Required: ${allowedRoles.join(", ")}`
+        `Role "${data.user.role}" not allowed. Required: ${allowedRoles.join(
+          ", "
+        )}`
       );
       navigate("/unauthorized", { replace: true });
     }
@@ -161,7 +176,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   // 🚫 Failures → return null (redirect effect handles nav)
   if (isError || !data?.authenticated) return null;
 
-  // 🚫 Wrong role — also guard with access to avoid stale-data flash
+  // 🚫 Wrong role
   if (
     access &&
     allowedRoles &&

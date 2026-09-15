@@ -1,0 +1,150 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — DASHBOARD MOBILE HEADER
+   Big wordmark, company palette, no global reset
+   ───────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --yp-blue:      #2563EB;
+  --yp-blue-2:    #1D4ED8;
+  --yp-emerald:   #10B981;
+  --yp-emerald-2: #059669;
+  --yp-amber:     #F59E0B;
+  --yp-coral:     #F97316;
+  --yp-ink:       #0F172A;
+  --yp-ink-soft:  #475569;
+  --yp-line:      rgba(15, 23, 42, 0.08);
+  --yp-white:     #FFFFFF;
+  --yp-bg:        #FBFCFE;
+}
+
+.yp-dash-header,
+.yp-dash-header button {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.yp-dash-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 74px;
+  background: var(--yp-white);
+  border-bottom: 1px solid var(--yp-line);
+  z-index: 200;
+}
+
+.yp-dash-header::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--yp-blue)    0%,
+    var(--yp-blue)    22%,
+    var(--yp-emerald) 22%,
+    var(--yp-emerald) 48%,
+    var(--yp-amber)   48%,
+    var(--yp-amber)   72%,
+    var(--yp-coral)   72%,
+    var(--yp-coral)   100%
+  );
+}
+
+.yp-dash-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 18px;
+}
+
+.yp-dash-wordmark {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 2.6rem;
+  line-height: 1;
+  letter-spacing: 1px;
+  margin: 0;
+  padding: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.yp-logo-you { color: var(--yp-blue); }
+.yp-logo-p   { color: var(--yp-emerald); }
+.yp-logo-ata { color: var(--yp-amber); }
+
+.yp-dash-avatar-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.yp-dash-avatar-btn:hover  { transform: scale(1.05); }
+.yp-dash-avatar-btn:active { transform: scale(0.94); }
+
+.yp-dash-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-emerald) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--yp-white);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid var(--yp-white);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+}
+
+@media (max-width: 1024px) {
+  .yp-dash-wordmark { font-size: 2.4rem; }
+}
+
+@media (max-width: 768px) {
+  .yp-dash-header { height: 78px; }
+  .yp-dash-wordmark {
+    font-size: 2.9rem;
+    letter-spacing: 1px;
+  }
+  .yp-dash-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .yp-dash-header { height: 76px; }
+  .yp-dash-wordmark {
+    font-size: 2.75rem;
+    letter-spacing: 0.9px;
+  }
+  .yp-dash-avatar {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .yp-dash-header { height: 72px; }
+  .yp-dash-wordmark {
+    font-size: 2.4rem;
+    letter-spacing: 0.6px;
+  }
+}
+
+@media (max-width: 320px) {
+  .yp-dash-wordmark { font-size: 2.1rem; }
+}
+
+@media (min-width: 769px) {
+  .yp-dash-header { display: none; }
+}

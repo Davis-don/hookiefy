@@ -1,10 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from 'sonner'
+import { Toaster } from 'sonner';
 import Superadmin from "./Accounts/superadmin/pages/Superadmin";
-import Admin from "./Accounts/admin/pages/Admin";
-import User from "./Accounts/clients/pages/User";
 import Unauthorized from "./pages/Unauthorized";
-import CenteredSpinner from "./Accounts/clients/components/Spinnerpage";
 import Toastlayout from "./layouts/Toastlayout";
 import Homepage from "./pages/Homepage";
 import Protectedroute from "./components/protected/Protectedroute";
@@ -14,6 +11,8 @@ import PaymentError from "./pages/PaymentError";
 import Mainlayout from "./layouts/Mainlayout";
 import Serviceseeker from "./pages/Seviceseeker";
 import Serviceprovider from "./pages/Serviceprovider";
+import Serviceproviderdash from "./Accounts/service_provider/pages/Serviceproviderdash";
+import Serviceseekerdash from "./Accounts/service_seeker/pages/Serviceseekerdash";
 import Header from "./components/Header/Header";
 import Login from "./pages/Login";
 
@@ -26,19 +25,22 @@ function App() {
         <Routes>
           {/* ✅ Public — Homepage handles its own auth-based redirect */}
           <Route path="/" element={<Mainlayout><Homepage /></Mainlayout>} />
-          <Route path="/serviceseeker" element={<><Header/> <Serviceseeker /></>} />
-          <Route path="/serviceprovider" element={<><Header/><Serviceprovider /></>} />
-          <Route path="/login" element={<><Header/><Login /></>} />
+          <Route path="/serviceseeker" element={<><Header /> <Serviceseeker /></>} />
+          <Route path="/serviceprovider" element={<><Header /> <Serviceprovider /></>} />
+          <Route path="/login" element={<><Header /> <Login /></>} />
 
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/spinner" element={<CenteredSpinner />} />
 
           {/* Payment routes — public */}
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failure" element={<PaymentFailure />} />
-          <Route path="/payment-error"   element={<PaymentError />} />
+          <Route path="/payment-error" element={<PaymentError />} />
 
-          {/* ✅ Protected — now role-gated */}
+          {/* ============================================================
+              ✅ Protected — role-gated
+              ============================================================ */}
+
+          {/* Superadmin only */}
           <Route
             path="/superadmin/dashboard"
             element={
@@ -50,23 +52,25 @@ function App() {
             }
           />
 
+          {/* Service Seeker only */}
           <Route
-            path="//dashboard"
+            path="/service_seeker/dashboard"
             element={
-              <Protectedroute allowedRoles={["admin", "superadmin"]}>
+              <Protectedroute allowedRoles={["serviceseeker"]}>
                 <Toastlayout>
-                  <Admin />
+                  <Serviceseekerdash />
                 </Toastlayout>
               </Protectedroute>
             }
           />
 
+          {/* Service Provider only */}
           <Route
-            path="/user/dashboard"
+            path="/service_provider/dashboard"
             element={
-              <Protectedroute allowedRoles={["user"]}>
+              <Protectedroute allowedRoles={["serviceprovider"]}>
                 <Toastlayout>
-                  <User />
+                  <Serviceproviderdash />
                 </Toastlayout>
               </Protectedroute>
             }
