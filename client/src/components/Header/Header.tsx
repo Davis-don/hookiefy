@@ -10,7 +10,6 @@ function Header(): ReactElement {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
 
-  // Close dropdown on outside click + Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (
@@ -34,7 +33,6 @@ function Header(): ReactElement {
     };
   }, []);
 
-  // Lock body scroll while mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => {
@@ -42,7 +40,6 @@ function Header(): ReactElement {
     };
   }, [mobileOpen]);
 
-  // Close menus whenever route changes
   useEffect(() => {
     setMobileOpen(false);
     setDropdownOpen(false);
@@ -53,10 +50,6 @@ function Header(): ReactElement {
     setMobileOpen(false);
   };
 
-  /**
-   * Scroll smoothly to a section by id.
-   * If the id is empty, we scroll to the top (Home).
-   */
   const scrollToSection = (id: string): void => {
     if (!id) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -64,7 +57,7 @@ function Header(): ReactElement {
     }
     const el = document.getElementById(id);
     if (el) {
-      const headerOffset = 90; // account for sticky header height
+      const headerOffset = 90;
       const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
       window.scrollTo({ top, behavior: 'smooth' });
     }
@@ -75,13 +68,34 @@ function Header(): ReactElement {
     setTimeout(() => scrollToSection(id), 60);
   };
 
-  // Nav items point to homepage sections
   const navItems: { label: string; id: string; className: string }[] = [
-    { label: 'Home',      id: '',              className: 'nav-link-home' },
-    { label: 'About Us',  id: 'how-it-works',  className: 'nav-link-about' },
-    { label: 'Services',  id: 'services',      className: 'nav-link-services' },
-    { label: 'Contact Us',id: 'contact',       className: 'nav-link-contact' },
+    { label: 'Home',       id: '',              className: 'nav-link-home' },
+    { label: 'About Us',   id: 'how-it-works',  className: 'nav-link-about' },
+    { label: 'Services',   id: 'services',      className: 'nav-link-services' },
+    { label: 'Contact Us', id: 'contact',       className: 'nav-link-contact' },
   ];
+
+  /* ── Classic login icon (door / arrow-in) ───────────────── */
+  const LoginIcon = (): ReactElement => (
+    <svg
+      className="login-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {/* door */}
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      {/* arrow pointing in */}
+      <polyline points="10 17 15 12 10 7" />
+      <line x1="15" y1="12" x2="3" y2="12" />
+    </svg>
+  );
 
   return (
     <header className="overall-homepage-header-container">
@@ -128,52 +142,66 @@ function Header(): ReactElement {
           </ul>
         </nav>
 
-        {/* ── REGISTER DROPDOWN ───────────────────────────────── */}
-        <div className="call-to-action-header-button" ref={dropdownRef}>
-          <button
-            type="button"
-            className={`btn register-btn ${dropdownOpen ? 'is-open' : ''}`}
-            onClick={() => setDropdownOpen((prev) => !prev)}
-            aria-expanded={dropdownOpen}
-            aria-haspopup="true"
+        {/* ── HEADER ACTIONS (Login + Register) ───────────────── */}
+        <div className="header-actions-group">
+
+          {/* Modern Login Link with Icon */}
+          <Link
+            to="/login"
+            className="login-link"
+            onClick={closeAll}
           >
-            <span>Register</span>
-            <svg
-              className={`dropdown-arrow ${dropdownOpen ? 'open' : ''}`}
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <LoginIcon />
+            <span>Login</span>
+          </Link>
+
+          {/* Classic Register pill button */}
+          <div className="call-to-action-header-button" ref={dropdownRef}>
+            <button
+              type="button"
+              className={`btn register-btn ${dropdownOpen ? 'is-open' : ''}`}
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="true"
             >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-
-          {dropdownOpen && (
-            <div className="register-dropdown" role="menu">
-              <Link
-                to="/serviceseeker"
-                className="dropdown-item dropdown-item-seeker"
-                role="menuitem"
-                onClick={closeAll}
+              <span>Register</span>
+              <svg
+                className={`dropdown-arrow ${dropdownOpen ? 'open' : ''}`}
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                Service Seeker
-              </Link>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
 
-              <Link
-                to="/serviceprovider"
-                className="dropdown-item dropdown-item-provider"
-                role="menuitem"
-                onClick={closeAll}
-              >
-                Service Provider
-              </Link>
-            </div>
-          )}
+            {dropdownOpen && (
+              <div className="register-dropdown" role="menu">
+                <Link
+                  to="/serviceseeker"
+                  className="dropdown-item dropdown-item-seeker"
+                  role="menuitem"
+                  onClick={closeAll}
+                >
+                  Service Seeker
+                </Link>
+
+                <Link
+                  to="/serviceprovider"
+                  className="dropdown-item dropdown-item-provider"
+                  role="menuitem"
+                  onClick={closeAll}
+                >
+                  Service Provider
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── MOBILE HAMBURGER ────────────────────────────────── */}
@@ -213,6 +241,16 @@ function Header(): ReactElement {
         </ul>
 
         <div className="mobile-register-group">
+          {/* Modern login link (mobile) */}
+          <Link
+            to="/login"
+            className="mobile-cta mobile-cta-login"
+            onClick={closeAll}
+          >
+            <LoginIcon />
+            <span>Login</span>
+          </Link>
+
           <Link
             to="/serviceseeker"
             className="mobile-cta mobile-cta-seeker"
