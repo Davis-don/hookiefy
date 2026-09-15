@@ -337,12 +337,15 @@ function Serviceprovider() {
     mutationFn: googleServiceProvider,
     onSuccess: (result) => {
       const name = result.user?.first_name || 'there';
-      if (result.access) localStorage.setItem('access_token', result.access);
-      if (result.refresh) localStorage.setItem('refresh_token', result.refresh);
+
+      // Do NOT auto-login — clear any stored tokens so the
+      // user signs in properly via the login page.
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
 
       toast.success('🎉 Signed up with Google!', {
-        description: `Welcome ${name}! Redirecting you now...`,
-        duration: 6000,
+        description: `Welcome ${name}! Please log in to continue.`,
+        duration: 5000,
         style: {
           background: '#1a1a2e',
           border: '2px solid #22c55e',
@@ -350,11 +353,7 @@ function Serviceprovider() {
         },
       });
 
-      if (!result.user?.phone_number || !result.user?.gender) {
-        setTimeout(() => navigate('/complete-profile'), 1200);
-      } else {
-        setTimeout(() => navigate('/login'), 1200);
-      }
+      setTimeout(() => navigate('/login'), 1200);
     },
     onError: (error: Error) => {
       toast.error('Google Signup Failed', {
@@ -374,12 +373,15 @@ function Serviceprovider() {
     mutationFn: createServiceProvider,
     onSuccess: (result) => {
       const name = result.user?.first_name || 'there';
-      if (result.access) localStorage.setItem('access_token', result.access);
-      if (result.refresh) localStorage.setItem('refresh_token', result.refresh);
+
+      // Do NOT auto-login — clear any stored tokens so the
+      // user signs in properly via the login page.
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
 
       toast.success('🎉 Account Created Successfully!', {
-        description: `Welcome ${name}! Redirecting you now...`,
-        duration: 6000,
+        description: `Welcome ${name}! Please log in to continue.`,
+        duration: 5000,
         style: {
           background: '#1a1a2e',
           border: '2px solid #22c55e',
@@ -387,7 +389,7 @@ function Serviceprovider() {
         },
       });
 
-      setTimeout(() => navigate('/dashboard'), 1200);
+      setTimeout(() => navigate('/login'), 1200);
     },
     onError: (error: Error) => {
       toast.error('Signup Failed', {

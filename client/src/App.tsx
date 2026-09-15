@@ -51,7 +51,7 @@ function App() {
           />
 
           <Route
-            path="/admin/dashboard"
+            path="//dashboard"
             element={
               <Protectedroute allowedRoles={["admin", "superadmin"]}>
                 <Toastlayout>
