@@ -5,6 +5,7 @@ import logging
 from decouple import config
 
 from django.db import transaction
+from django.utils import timezone
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -829,28 +830,44 @@ def upload_profile_image(request):
 # PREMIUM / VERIFIED STATUS CHECK
 # ============================================================
 
+# ============================================================
+# PREMIUM / VERIFIED STATUS CHECK
+# ============================================================
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def check_premium_status(request):
     """
     Return whether the currently authenticated user has an
-    active Premium/Verified status.
+    active Premium/Verified status, plus how much time is
+    left before it expires.
 
     Response:
         {
             "is_premium": true|false,
             "role": "serviceprovider",
             "expires_at": "2026-01-01T00:00:00Z" | null,
-            "is_expired": true|false
+            "is_expired": true|false,
+            "time_remaining": {
+                "total_seconds": 123456,
+                "days": 1,
+                "hours": 10,
+                "minutes": 17,
+                "seconds": 36,
+                "human": "1 day, 10 hours, 17 minutes",
+                "short": "1d 10h 17m"
+            } | null
         }
 
     Notes:
         - Only service providers can ever be Premium/Verified.
         - Service seekers and superadmins always get
-          is_premium = False.
+          is_premium = False and time_remaining = null.
         - "is_premium" is True only when the account is a
           service provider AND is_premium is True AND
           premium_expires_at is in the future.
+        - time_remaining is null when there is no active
+          premium period (no expiry set, or already expired).
     """
 
     user = request.user
@@ -861,20 +878,111 @@ def check_premium_status(request):
             {
                 "is_premium": False,
                 "message": "This account is inactive.",
+                "time_remaining": None,
             },
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    is_premium = user.premium_is_active
+    expires_at = user.premium_expires_at
+
+    # --------------------------------------------------------
+    # BUILD TIME-REMAINING OBJECT
+    # --------------------------------------------------------
+    #
+    # Only compute the countdown when the account is
+    # actually premium and an expiry date exists.
+    # --------------------------------------------------------
+
+    time_remaining = None
+
+    if is_premium and expires_at:
+
+        now = timezone.now()
+        delta = expires_at - now
+        total_seconds = int(delta.total_seconds())
+
+        # Days = full 24-hour days
+        days = total_seconds // 86400
+
+        # Hours = remainder after full days
+        hours = (total_seconds % 86400) // 3600
+
+        # Minutes = remainder after full hours
+        minutes = (total_seconds % 3600) // 60
+
+        # Seconds = remainder after full minutes
+        seconds = total_seconds % 60
+
+        # ----------------------------------------------------
+        # HUMAN-READABLE STRING
+        # ----------------------------------------------------
+        #
+        # Examples:
+        #   1 day, 10 hours, 17 minutes
+        #   3 hours, 5 minutes
+        #   42 minutes
+        #   Less than a minute
+        # ----------------------------------------------------
+
+        parts = []
+
+        if days > 0:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+
+        if hours > 0:
+            parts.append(
+                f"{hours} hour{'s' if hours != 1 else ''}"
+            )
+
+        if minutes > 0:
+            parts.append(
+                f"{minutes} minute{'s' if minutes != 1 else ''}"
+            )
+
+        human = (
+            ", ".join(parts)
+            if parts
+            else "Less than a minute"
+        )
+
+        # ----------------------------------------------------
+        # SHORT STRING (for tight UI spaces)
+        # ----------------------------------------------------
+        #
+        # Examples: "1d 10h 17m", "3h 5m", "42m"
+        # ----------------------------------------------------
+
+        short_parts = []
+
+        if days > 0:
+            short_parts.append(f"{days}d")
+
+        if hours > 0:
+            short_parts.append(f"{hours}h")
+
+        if minutes > 0:
+            short_parts.append(f"{minutes}m")
+
+        short = " ".join(short_parts) or "<1m"
+
+        time_remaining = {
+            "total_seconds": total_seconds,
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": seconds,
+            "human": human,
+            "short": short,
+        }
+
     return Response(
         {
-            "is_premium": user.premium_is_active,
+            "is_premium": is_premium,
             "role": user.role,
-            "expires_at": (
-                user.premium_expires_at
-                if user.premium_expires_at
-                else None
-            ),
+            "expires_at": expires_at if expires_at else None,
             "is_expired": user.premium_is_expired,
+            "time_remaining": time_remaining,
         },
         status=status.HTTP_200_OK,
     )

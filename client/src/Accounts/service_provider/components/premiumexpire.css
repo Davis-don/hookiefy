@@ -1,0 +1,164 @@
+/* premiumexpire.css */
+
+/* ─────────────────────────────────────────────
+   Wrapper — centers the alert horizontally
+   ───────────────────────────────────────────── */
+.premium-expire-alert {
+  --pe-bg: #eaf3ff;
+  --pe-border: #bcd9ff;
+  --pe-accent: #2f6fdb;
+  --pe-text: #14418a;
+
+  display: flex;                 /* was inline-flex → full-width row */
+  align-items: center;
+  justify-content: center;       /* ← centers content inside */
+  gap: 10px;
+
+  /* Center the alert itself inside its parent */
+  margin-left: auto;
+  margin-right: auto;
+
+  padding: 12px 22px 12px 16px;
+  border-radius: 12px;
+
+  font: inherit;
+  font-size: 15px;               /* ← was 13px — larger */
+  font-weight: 600;              /* ← bolder base weight */
+  line-height: 1.4;
+  letter-spacing: 0.15px;
+
+  color: var(--pe-text);
+  background: var(--pe-bg);
+
+  border: 1px solid var(--pe-border);
+  border-left: 5px solid var(--pe-accent);   /* ← thicker accent */
+
+  box-shadow: 0 2px 6px rgba(20, 65, 138, 0.08);
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  /* Let it size to content but never overflow */
+  max-width: 100%;
+  width: fit-content;            /* keeps the pill shape */
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   Icon — slightly larger, matches new text size
+   ───────────────────────────────────────────── */
+.premium-expire-alert-icon {
+  flex: 0 0 auto;
+  width: 22px;                   /* ← was 18px */
+  height: 22px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 13px;               /* ← was 11px */
+  font-weight: 800;
+  font-style: italic;
+
+  color: #ffffff;
+  background: var(--pe-accent);
+
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  user-select: none;
+}
+
+/* ─────────────────────────────────────────────
+   Text
+   ───────────────────────────────────────────── */
+.premium-expire-alert-text {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+
+  font-weight: 600;
+}
+
+.premium-expire-alert-text strong {
+  font-weight: 800;              /* ← was 700 — bolder headline */
+  letter-spacing: 0.2px;
+}
+
+.premium-expire-sep {
+  opacity: 0.6;
+  margin: 0 3px;
+  font-weight: 700;
+}
+
+.premium-expire-countdown {
+  display: inline-block;
+
+  font-size: 1.05em;             /* ← countdown slightly bigger */
+  font-weight: 800;              /* ← bolder countdown */
+  color: var(--pe-accent);
+  letter-spacing: 0.3px;
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+
+  animation: premium-expire-pulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes premium-expire-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Error variant (soft red)
+   ───────────────────────────────────────────── */
+.premium-expire-alert-error {
+  --pe-bg: #fdeaea;
+  --pe-border: #f6c4c4;
+  --pe-accent: #d9534f;
+  --pe-text: #8a2020;
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .premium-expire-countdown {
+    animation: none;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Small screens — still centered, slightly tighter
+   ───────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .premium-expire-alert {
+    padding: 10px 16px 10px 12px;
+    font-size: 13.5px;
+    gap: 8px;
+    border-left-width: 4px;
+  }
+
+  .premium-expire-alert-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+
+  .premium-expire-countdown {
+    font-size: 1em;
+  }
+}
