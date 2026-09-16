@@ -1,0 +1,505 @@
+/* biodata.css */
+
+/* ─────────────────────────────────────────────
+   Wrapper — inherits background from parent
+   ───────────────────────────────────────────── */
+.bio-main-wrapper {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 4px;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────
+   Header
+   ───────────────────────────────────────────── */
+.bio-header-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.bio-header-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.bio-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bio-page-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: inherit;
+}
+
+.bio-page-subtitle {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  opacity: 0.65;
+  color: inherit;
+}
+
+.bio-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─────────────────────────────────────────────
+   Header buttons
+   ───────────────────────────────────────────── */
+.bio-refresh-btn,
+.bio-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: transparent;
+  color: #111111;
+}
+
+.bio-refresh-btn {
+  padding: 10px 12px;
+}
+
+.bio-edit-btn {
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+}
+
+.bio-edit-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+.bio-refresh-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.bio-refresh-btn:disabled,
+.bio-edit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bio-refresh-icon,
+.bio-btn-icon {
+  font-size: 14px;
+}
+
+.bio-spinning {
+  animation: bio-spin 0.9s linear infinite;
+}
+
+@keyframes bio-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bio-close-icon {
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.bio-close-icon:hover {
+  opacity: 1;
+}
+
+.bio-disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* ─────────────────────────────────────────────
+   Form container — white card
+   ───────────────────────────────────────────── */
+.bio-form-container {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 22px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.bio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bio-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 14px;
+}
+
+.bio-full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 560px) {
+  .bio-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Form groups + labels
+   ───────────────────────────────────────────── */
+.bio-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bio-form-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #111111;
+  letter-spacing: 0.1px;
+}
+
+.bio-label-icon {
+  font-size: 13px;
+  color: #555555;
+}
+
+/* ─────────────────────────────────────────────
+   Inputs — BLACK text on white
+   ───────────────────────────────────────────── */
+.bio-form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1.5px solid #d9d9d9;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  color: #000000;
+  background: #ffffff;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+
+  box-sizing: border-box;
+}
+
+.bio-form-textarea {
+  resize: vertical;
+  min-height: 92px;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.bio-form-input::placeholder {
+  color: #999999;
+  font-weight: 400;
+}
+
+.bio-form-input:hover:not(:disabled) {
+  border-color: #bfbfbf;
+}
+
+.bio-form-input:focus:not(:disabled) {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.bio-form-input:disabled {
+  color: #666666;
+  background: #f7f7f7;
+  border-color: #e5e5e5;
+  cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: #666666;
+}
+
+/* ─────────────────────────────────────────────
+   Select — wrapper + single custom arrow
+   No native arrow. No CSS background arrow.
+   Only the inline SVG inside .bio-select-arrow.
+   ───────────────────────────────────────────── */
+
+.bio-select-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* Hide the native arrow on every browser */
+.bio-form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Force no background image — nothing here should
+     render an arrow of its own. */
+  background-image: none;
+  background-color: #ffffff;
+
+  /* Room for the custom arrow */
+  padding-right: 38px;
+  cursor: pointer;
+}
+
+.bio-form-select:disabled {
+  background-color: #f7f7f7;
+  cursor: not-allowed;
+}
+
+/* Kill the legacy IE / old-Edge arrow */
+.bio-form-select::-ms-expand {
+  display: none;
+}
+
+/* The one and only visible chevron */
+.bio-select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #111111;
+  pointer-events: none;      /* never blocks the select */
+  opacity: 0.75;
+
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+/* Dim the chevron when the select is disabled */
+.bio-select-wrap:has(.bio-form-select:disabled) .bio-select-arrow {
+  opacity: 0.35;
+  color: #666666;
+}
+
+/* Brighten on focus */
+.bio-form-select:focus:not(:disabled) + .bio-select-arrow {
+  opacity: 1;
+  color: #111111;
+}
+
+/* ─────────────────────────────────────────────
+   Field hint + error
+   ───────────────────────────────────────────── */
+.bio-field-hint {
+  display: block;
+  font-size: 11.5px;
+  color: #6b6b6b;
+  font-weight: 500;
+  letter-spacing: 0.05px;
+  margin-top: 2px;
+}
+
+.bio-input-error {
+  border-color: #d9534f !important;
+  background: #fff7f7;
+}
+
+.bio-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.12);
+}
+
+.bio-field-error {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #d9534f;
+  letter-spacing: 0.1px;
+  margin-top: 2px;
+}
+
+/* ─────────────────────────────────────────────
+   Actions
+   ───────────────────────────────────────────── */
+.bio-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 4px;
+}
+
+.bio-save-btn,
+.bio-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    opacity 0.15s ease;
+}
+
+.bio-save-btn {
+  background: #111111;
+  color: #ffffff;
+}
+
+.bio-save-btn:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+.bio-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bio-cancel-btn {
+  background: transparent;
+  color: #111111;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.bio-cancel-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.bio-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   Loading / error states
+   ───────────────────────────────────────────── */
+.bio-loading-container,
+.bio-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  color: inherit;
+}
+
+.bio-loading-text,
+.bio-error-text {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bio-loading-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #111111;
+  animation: bio-spin 0.8s linear infinite;
+}
+
+.bio-spinner-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: bio-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.bio-error-icon {
+  font-size: 28px;
+}
+
+.bio-retry-btn {
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1px solid #111111;
+  background: #111111;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.bio-retry-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .bio-spinning,
+  .bio-loading-spinner,
+  .bio-spinner-small {
+    animation: none;
+  }
+}
+/* ─────────────────────────────────────────────
+   Date of Birth — three-column row
+   ───────────────────────────────────────────── */
+.bio-dob-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .bio-dob-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+}
