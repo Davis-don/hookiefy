@@ -230,3 +230,117 @@
 .yp-dash-avatar-btn {
   position: relative;
 }
+/* ─────────────────────────────────────────────
+   Header layout
+   ───────────────────────────────────────────── */
+.yp-dash-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ─────────────────────────────────────────────
+   Avatar wrapper (positions halo + seal)
+   ───────────────────────────────────────────── */
+.yp-dash-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Give the ring room to breathe outside the avatar */
+  padding: 3px;
+}
+
+/* ─────────────────────────────────────────────
+   Premium halo ring
+   ───────────────────────────────────────────── */
+
+/* Hidden by default (non-premium users) */
+.yp-avatar-halo {
+  display: none;
+}
+
+/* Only render the ring when the wrapper is flagged premium */
+.yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo {
+  display: block;
+  position: absolute;
+  inset: -2px;                     /* sits just outside the avatar */
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+
+  /* The gold ring itself: a conic gradient that rotates */
+  background: conic-gradient(
+    from 0deg,
+    #f5d16a 0deg,
+    #b8860b 60deg,
+    #fff3c4 120deg,
+    #f5d16a 180deg,
+    #b8860b 240deg,
+    #fff3c4 300deg,
+    #f5d16a 360deg
+  );
+
+  /* Gentle breathing pulse */
+  animation: yp-halo-spin 8s linear infinite;
+
+  /* Soft outer glow so it feels like real metal */
+  filter: drop-shadow(0 0 4px rgba(212, 160, 44, 0.55));
+}
+
+/* Inner mask — punches a hole so only the thin ring shows */
+.yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo::after {
+  content: '';
+  position: absolute;
+  inset: 2px;                     /* ring thickness = 2px */
+  border-radius: 50%;
+  background: var(--yp-header-bg, #ffffff);  /* matches header background */
+}
+
+/* The avatar sits above the ring */
+.yp-dash-avatar-wrap .yp-dash-avatar-btn {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   Rotation + subtle breathing
+   ───────────────────────────────────────────── */
+@keyframes yp-halo-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Corner crown seal (smaller now — ring does the heavy lifting)
+   ───────────────────────────────────────────── */
+.yp-dash-avatar-seal {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(140, 90, 10, 0.35));
+}
+
+.yp-dash-avatar-seal .yp-premium-badge {
+  padding: 3px;
+  gap: 0;
+  border-width: 1.5px;
+  box-shadow:
+    0 2px 6px rgba(140, 90, 10, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* ─────────────────────────────────────────────
+   Reduced-motion: freeze the ring, keep the look
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo {
+    animation: none;
+  }
+}

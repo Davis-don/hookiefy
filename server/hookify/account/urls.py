@@ -12,6 +12,7 @@ from .views import (
     auth_check,
     profile_image_url,
     upload_profile_image,
+    check_premium_status, 
 )
 
 
@@ -78,5 +79,11 @@ urlpatterns = [
         "upload-profile-image/",
         upload_profile_image,
         name="upload-profile-image"
+    ),
+        # PREMIUM / VERIFIED STATUS CHECK
+    path(
+        "premium-status/",
+        check_premium_status,
+        name="premium-status"
     ),
 ]

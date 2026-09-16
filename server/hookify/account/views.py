@@ -824,3 +824,57 @@ def upload_profile_image(request):
         },
         status=status.HTTP_200_OK,
     )
+
+# ============================================================
+# PREMIUM / VERIFIED STATUS CHECK
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_premium_status(request):
+    """
+    Return whether the currently authenticated user has an
+    active Premium/Verified status.
+
+    Response:
+        {
+            "is_premium": true|false,
+            "role": "serviceprovider",
+            "expires_at": "2026-01-01T00:00:00Z" | null,
+            "is_expired": true|false
+        }
+
+    Notes:
+        - Only service providers can ever be Premium/Verified.
+        - Service seekers and superadmins always get
+          is_premium = False.
+        - "is_premium" is True only when the account is a
+          service provider AND is_premium is True AND
+          premium_expires_at is in the future.
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "is_premium": False,
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    return Response(
+        {
+            "is_premium": user.premium_is_active,
+            "role": user.role,
+            "expires_at": (
+                user.premium_expires_at
+                if user.premium_expires_at
+                else None
+            ),
+            "is_expired": user.premium_is_expired,
+        },
+        status=status.HTTP_200_OK,
+    )

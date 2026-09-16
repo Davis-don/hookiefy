@@ -1,3 +1,4 @@
+// Header.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   useQuery,
@@ -5,6 +6,10 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authtokenstore';
+import PremiumBadge, {
+  fetchPremiumStatus,
+  usePremiumStatus,
+} from './PremiumBadge';
 import './header.css';
 
 interface HeaderProps {
@@ -22,7 +27,7 @@ const API_URL =
   'https://hookiefy-server-7d6d.onrender.com';
 
 /* ────────────────────────────────────────────────────────
-   Fetch profile image (reusable — also used for prefetch)
+   Fetch profile image
    ──────────────────────────────────────────────────────── */
 async function fetchProfileImage(
   access: string | null
@@ -53,36 +58,33 @@ const Header: React.FC<HeaderProps> = ({
   const queryClient = useQueryClient();
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  /* ── Main query ─────────────────────────────────────── */
-  const { data: profileData, refetch, isFetching } =
-    useQuery<ProfileImageResponse, Error>({
-      queryKey: ['profile-image', access],
-      queryFn: () => fetchProfileImage(access),
-      enabled: !!access,
+  /* ── Premium status (shared cache with badge) ──────── */
+  const { data: premiumData } = usePremiumStatus();
+  const isPremium = premiumData?.is_premium === true;
 
-      // Keep the last good image while refetching → NO flicker
-      placeholderData: keepPreviousData,
-
-      // Cache is fresh for 10 min — refetch only when we ask
-      staleTime: 10 * 60_000,
-
-      // Keep cached data 30 min after unmount
-      gcTime: 30 * 60_000,
-
-      // No automatic refetch on window focus (we do it manually, throttled)
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-
-      // Only 1 retry, with backoff → won't spam the API
-      retry: 1,
-      retryDelay: 2000,
-    });
+  /* ── Profile-image query ───────────────────────────── */
+  const {
+    data: profileData,
+    refetch: refetchProfile,
+    isFetching,
+  } = useQuery<ProfileImageResponse, Error>({
+    queryKey: ['profile-image', access],
+    queryFn: () => fetchProfileImage(access),
+    enabled: !!access,
+    placeholderData: keepPreviousData,
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1,
+    retryDelay: 2000,
+  });
 
   const imageUrl = profileData?.profile_image_url || null;
 
-  /* ── Prefetch on hover/tap (before click) ──────────── */
-  const prefetch = () => {
+  /* ── Prefetch helpers ──────────────────────────────── */
+  const prefetchProfile = () => {
     if (!access) return;
     queryClient.prefetchQuery({
       queryKey: ['profile-image', access],
@@ -91,22 +93,36 @@ const Header: React.FC<HeaderProps> = ({
     });
   };
 
-  /* ── Throttled silent refetch when tab regains focus ── */
+  const prefetchPremium = () => {
+    if (!access) return;
+    queryClient.prefetchQuery({
+      queryKey: ['premium-status', access],
+      queryFn: () => fetchPremiumStatus(access),
+      staleTime: 10 * 60_000,
+    });
+  };
+
+  /* ── Throttled silent refetch on tab focus ─────────── */
   const lastFocusRef = useRef<number>(0);
+
   useEffect(() => {
     const onFocus = () => {
       const now = Date.now();
-      // Throttle: at most once every 2 minutes
       if (now - lastFocusRef.current < 120_000) return;
       lastFocusRef.current = now;
 
-      // Silent refetch — no spinner, no lag
-      refetch({ cancelRefetch: false });
+      refetchProfile({ cancelRefetch: false });
+
+      if (access) {
+        queryClient.refetchQueries({
+          queryKey: ['premium-status', access],
+        });
+      }
     };
 
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [refetch]);
+  }, [refetchProfile, queryClient, access]);
 
   /* ── Reset image fade on URL change ─────────────────── */
   useEffect(() => {
@@ -116,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="yp-dash-header">
       <div className="yp-dash-header-content">
-        {/* Brand */}
+        {/* ── Brand ─────────────────────────────────────── */}
         <h1
           className="yp-dash-wordmark"
           onClick={onBrandClick}
@@ -135,40 +151,59 @@ const Header: React.FC<HeaderProps> = ({
           <span className="yp-logo-ata">ata</span>
         </h1>
 
-        {/* Avatar */}
-        <button
-          className="yp-dash-avatar-btn"
-          onClick={onProfileClick}
-          onMouseEnter={prefetch}
-          onTouchStart={prefetch}
-          aria-label="Open profile"
-          type="button"
+        {/* ── Avatar with premium halo + crown seal ─────── */}
+        <div
+          className="yp-dash-avatar-wrap"
+          data-premium={isPremium ? 'true' : 'false'}
         >
-          {/* Show image if we have one (even while refetching) */}
-          {imageUrl ? (
-            <img
-              key={imageUrl}
-              src={imageUrl}
-              alt="Profile"
-              className={`yp-dash-avatar yp-dash-avatar-img ${
-                imgLoaded ? 'yp-avatar-loaded' : 'yp-avatar-loading'
-              }`}
-              onLoad={() => setImgLoaded(true)}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.parentElement?.classList.add('yp-avatar-fallback');
-              }}
-            />
-          ) : (
-            <div className="yp-dash-avatar">{userName}</div>
-          )}
+          {/* Halo ring — only visible when premium */}
+          <span className="yp-avatar-halo" aria-hidden="true" />
 
-          {/* Silent refresh indicator (tiny dot, no layout shift) */}
-          {isFetching && !imgLoaded && (
-            <span className="yp-avatar-refresh-dot" aria-hidden="true" />
-          )}
-        </button>
+          <button
+            className="yp-dash-avatar-btn"
+            onClick={onProfileClick}
+            onMouseEnter={() => {
+              prefetchProfile();
+              prefetchPremium();
+            }}
+            onTouchStart={() => {
+              prefetchProfile();
+              prefetchPremium();
+            }}
+            aria-label="Open profile"
+            type="button"
+          >
+            {imageUrl ? (
+              <img
+                key={imageUrl}
+                src={imageUrl}
+                alt="Profile"
+                className={`yp-dash-avatar yp-dash-avatar-img ${
+                  imgLoaded ? 'yp-avatar-loaded' : 'yp-avatar-loading'
+                }`}
+                onLoad={() => setImgLoaded(true)}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement?.classList.add(
+                    'yp-avatar-fallback'
+                  );
+                }}
+              />
+            ) : (
+              <div className="yp-dash-avatar">{userName}</div>
+            )}
+
+            {isFetching && !imgLoaded && (
+              <span className="yp-avatar-refresh-dot" aria-hidden="true" />
+            )}
+          </button>
+
+          {/* Corner crown — only renders for premium users */}
+          <div className="yp-dash-avatar-seal">
+            <PremiumBadge size="xs" showLabel={false} />
+          </div>
+        </div>
       </div>
     </header>
   );

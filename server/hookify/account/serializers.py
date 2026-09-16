@@ -16,6 +16,14 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    # Only these roles may be created through the public
+    # signup endpoints. "superadmin" must never be reachable
+    # from a client request.
+    ALLOWED_SIGNUP_ROLES = {
+        "serviceprovider",
+        "serviceseeker",
+    }
+
     class Meta:
 
         model = Accounts
@@ -28,16 +36,63 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
             "gender",
             "password",
             "confirmpassword",
+            "role",            # REQUIRED so the view's role is not dropped
+            "auth_provider",   # REQUIRED so the view's provider is not dropped
         ]
 
         extra_kwargs = {
             "password": {
                 "write_only": True
             },
+            "role": {
+                "write_only": True
+            },
+            "auth_provider": {
+                "write_only": True
+            },
         }
 
     # --------------------------------------------------------
-    # VALIDATE PASSWORD
+    # VALIDATE ROLE
+    # --------------------------------------------------------
+
+    def validate_role(self, value):
+        """
+        Only allow the two public signup roles.
+        Prevents a client from creating a superadmin
+        or any other privileged account.
+        """
+
+        if value not in self.ALLOWED_SIGNUP_ROLES:
+
+            raise serializers.ValidationError(
+                "Invalid role for signup."
+            )
+
+        return value
+
+    # --------------------------------------------------------
+    # VALIDATE AUTH PROVIDER
+    # --------------------------------------------------------
+
+    def validate_auth_provider(self, value):
+        """
+        Local signup must always be 'local'.
+        Google signup does not go through this serializer
+        (it uses the Google flow in views.py), so any
+        non-local value here is invalid.
+        """
+
+        if value != "local":
+
+            raise serializers.ValidationError(
+                "auth_provider must be 'local' for local signup."
+            )
+
+        return value
+
+    # --------------------------------------------------------
+    # VALIDATE (object-level)
     # --------------------------------------------------------
 
     def validate(self, data):
@@ -69,7 +124,9 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
             "password"
         )
 
-        # Use the Accounts manager
+        # Use the Accounts manager.
+        # role and auth_provider now survive validation
+        # and are passed through to create_user().
         user = Accounts.objects.create_user(
             password=password,
             **validated_data

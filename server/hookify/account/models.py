@@ -1,7 +1,9 @@
+
 # account/models.py
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.utils import timezone
 
 
 # ============================================================
@@ -129,11 +131,6 @@ class Accounts(AbstractUser):
     #
     # Stores the Cloudinary HTTPS URL of the user's
     # profile image.
-    #
-    # Example:
-    # https://res.cloudinary.com/your-cloud/image/upload/...
-    #
-    # This field is optional.
     # --------------------------------------------------------
 
     profile_image_url = models.URLField(
@@ -148,15 +145,6 @@ class Accounts(AbstractUser):
     # --------------------------------------------------------
     #
     # Stores the Cloudinary public ID of the profile image.
-    #
-    # This is important when you want to:
-    #
-    # - Replace the profile image
-    # - Delete the profile image
-    # - Manage the image directly through Cloudinary
-    #
-    # Example:
-    # profiles/user_123/profile
     # --------------------------------------------------------
 
     profile_image_public_id = models.CharField(
@@ -172,9 +160,6 @@ class Accounts(AbstractUser):
     #
     # Used to identify users who registered/logged in
     # through Google.
-    #
-    # Google provides a unique "sub" (subject) identifier
-    # for every Google account.
     # --------------------------------------------------------
 
     google_id = models.CharField(
@@ -206,6 +191,47 @@ class Accounts(AbstractUser):
 
     is_active = models.BooleanField(
         default=True
+    )
+
+    # ========================================================
+    # PREMIUM / VERIFIED SERVICE PROVIDER
+    # ========================================================
+    #
+    # Premium and Verified are treated as ONE status.
+    #
+    # Only service providers are allowed to have this status.
+    #
+    # Default:
+    #     is_premium = False
+    #     premium_expires_at = None
+    #
+    # A service provider becomes Premium/Verified when:
+    #
+    #     is_premium = True
+    #
+    # and:
+    #
+    #     premium_expires_at > current time
+    #
+    # Service seekers and superadmins should never receive
+    # Premium/Verified status.
+    # ========================================================
+
+    is_premium = models.BooleanField(
+        default=False,
+        help_text=(
+            "Premium/Verified status. "
+            "Only applicable to service providers."
+        ),
+    )
+
+    premium_expires_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=(
+            "Date and time when Premium/Verified status expires. "
+            "Only applicable to service providers."
+        ),
     )
 
     # --------------------------------------------------------
@@ -279,3 +305,55 @@ class Accounts(AbstractUser):
         """
 
         return self.auth_provider == "google"
+
+    # ========================================================
+    # PREMIUM / VERIFIED STATUS CHECK
+    # ========================================================
+
+    @property
+    def premium_is_active(self):
+        """
+        Return True only when this account is a
+        service provider with an active Premium/Verified
+        subscription.
+
+        A service seeker or superadmin will always return False.
+        """
+
+        # Only service providers can be Premium/Verified.
+        if self.role != "serviceprovider":
+            return False
+
+        # Premium must be enabled.
+        if not self.is_premium:
+            return False
+
+        # An expiry date must exist.
+        if not self.premium_expires_at:
+            return False
+
+        # The expiry date must still be in the future.
+        return self.premium_expires_at > timezone.now()
+
+    # ========================================================
+    # PREMIUM / VERIFIED EXPIRED CHECK
+    # ========================================================
+
+    @property
+    def premium_is_expired(self):
+        """
+        Return True if this service provider's
+        Premium/Verified period has expired.
+        """
+
+        if self.role != "serviceprovider":
+            return False
+
+        if not self.is_premium:
+            return False
+
+        if not self.premium_expires_at:
+            return False
+
+        return self.premium_expires_at <= timezone.now()
+
