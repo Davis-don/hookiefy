@@ -13,7 +13,8 @@ from .views import (
     profile_image_url,
     upload_profile_image,
     check_premium_status,
-    update_user, 
+    update_user,
+    update_password, 
 )
 
 
@@ -92,5 +93,11 @@ urlpatterns = [
         "update-user/",
         update_user,
         name="update-user"
+    ),
+        # UPDATE PASSWORD
+    path(
+        "update-password/",
+        update_password,
+        name="update-password"
     ),
 ]

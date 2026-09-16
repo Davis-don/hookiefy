@@ -23,7 +23,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Accounts
-from .serializers import CreateNewUserSerializer,UpdateUserSerializer
+from .serializers import CreateNewUserSerializer,UpdateUserSerializer, UpdatePasswordSerializer
 
 # ── Cloudinary helper for profile image upload ───────────────
 from .controllers.cloudinary_utils import upload_or_replace_profile_image
@@ -1128,6 +1128,116 @@ def update_user(request):
         {
             "message": "Profile updated successfully.",
             "user": get_user_data(updated_user),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+# ============================================================
+# UPDATE PASSWORD
+# ============================================================
+
+@api_view(["PUT", "POST"])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def update_password(request):
+    """
+    Update the authenticated user's password.
+
+    Request body:
+        {
+            "current_password": "OldPass123",
+            "new_password": "NewPass456",
+            "confirm_password": "NewPass456"
+        }
+
+    Rules enforced:
+        - current_password must match the user's actual password
+        - new_password must be at least 8 characters
+        - new_password must contain uppercase, lowercase, and a digit
+        - new_password must differ from current_password
+        - confirm_password must equal new_password
+
+    Response:
+        {
+            "message": "Password updated successfully."
+        }
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # --------------------------------------------------------
+    # GOOGLE ACCOUNT GUARD
+    # --------------------------------------------------------
+    #
+    # Google-only accounts have no usable password. Block
+    # the request with a clear message so the user knows
+    # why they can't change it here.
+    # --------------------------------------------------------
+
+    if (
+        user.auth_provider == "google"
+        and not user.has_usable_password()
+    ):
+
+        return Response(
+            {
+                "message": (
+                    "This account uses Google sign-in and "
+                    "does not have a password to change."
+                ),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    serializer = UpdatePasswordSerializer(
+        data=request.data,
+        context={
+            "request": request,
+            "user": user,
+        },
+    )
+
+    if not serializer.is_valid():
+
+        return Response(
+            {
+                "message": "Validation failed.",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+
+        serializer.save()
+
+    except Exception as e:
+
+        logger.exception(
+            "Failed to update password for user_id=%s",
+            user.id,
+        )
+
+        return Response(
+            {
+                "message": "Failed to update password.",
+                "error": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Password updated successfully.",
         },
         status=status.HTTP_200_OK,
     )

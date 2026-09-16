@@ -447,3 +447,129 @@ class ProfileImageUploadSerializer(
             )
 
         return value
+
+# ============================================================
+# UPDATE PASSWORD SERIALIZER
+# ============================================================
+#
+# Handles the "change my own password" flow.
+#
+# Rules:
+#   - current_password must match the user's actual password
+#   - new_password must meet complexity requirements
+#   - new_password must differ from current_password
+#   - confirm_password must equal new_password
+# ============================================================
+
+class UpdatePasswordSerializer(serializers.Serializer):
+
+    current_password = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+
+    new_password = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+
+    confirm_password = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+
+    # --------------------------------------------------------
+    # FIELD-LEVEL VALIDATION
+    # --------------------------------------------------------
+
+    def validate_current_password(self, value):
+
+        user = self.context.get("user")
+
+        if not user:
+
+            raise serializers.ValidationError(
+                "User context is required."
+            )
+
+        if not user.check_password(value):
+
+            raise serializers.ValidationError(
+                "Current password is incorrect."
+            )
+
+        return value
+
+    def validate_new_password(self, value):
+
+        if len(value) < 8:
+
+            raise serializers.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+
+        if not any(c.isupper() for c in value):
+
+            raise serializers.ValidationError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        if not any(c.islower() for c in value):
+
+            raise serializers.ValidationError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not any(c.isdigit() for c in value):
+
+            raise serializers.ValidationError(
+                "Password must contain at least one number."
+            )
+
+        return value
+
+    # --------------------------------------------------------
+    # OBJECT-LEVEL VALIDATION
+    # --------------------------------------------------------
+
+    def validate(self, data):
+
+        current = data.get("current_password")
+        new = data.get("new_password")
+        confirm = data.get("confirm_password")
+
+        if new != confirm:
+
+            raise serializers.ValidationError(
+                {
+                    "confirm_password":
+                        "New password and confirm password do not match."
+                }
+            )
+
+        if current and new and current == new:
+
+            raise serializers.ValidationError(
+                {
+                    "new_password":
+                        "New password must be different from the current password."
+                }
+            )
+
+        return data
+
+    # --------------------------------------------------------
+    # SAVE
+    # --------------------------------------------------------
+
+    def save(self, **kwargs):
+
+        user = self.context.get("user")
+
+        new_password = self.validated_data["new_password"]
+
+        user.set_password(new_password)
+
+        user.save(update_fields=["password"])
+
+        return user
