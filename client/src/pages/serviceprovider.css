@@ -49,17 +49,18 @@
 }
 
 .overall-service-provider-container .form-header h2 {
-  font-size: 1.65rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #0f1720;
-  margin-bottom: 6px;
+  font-size: 18px;               /* ← matches .pep-page-title */
+  font-weight: 800;              /* ← matches .pep-page-title */
+  letter-spacing: 0.2px;
+  color: #111111;
+  margin-bottom: 4px;
 }
 
 .overall-service-provider-container .form-header p {
-  font-size: 0.95rem;
-  color: #6b7684;
-  font-weight: 400;
+  font-size: 12.5px;             /* ← matches .pep-page-subtitle */
+  color: #6b6b6b;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* ---------- PROGRESS ---------- */
@@ -77,26 +78,28 @@
 
 .overall-service-provider-container .progress-fill {
   height: 100%;
-  background: #0f766e;
+  background: #111111;           /* ← black, matches the rest */
   border-radius: 999px;
   transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .overall-service-provider-container .progress-label {
-  font-size: 0.78rem;
-  color: #9aa3af;
+  font-size: 11.5px;             /* ← matches .pep-field-hint */
+  color: #6b6b6b;
   margin-top: 8px;
   text-align: right;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* ---------- STEP TITLE ---------- */
 .overall-service-provider-container .step-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #0f1720;
-  margin-bottom: 20px;
+  font-size: 14px;               /* ← between label and title */
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: 0.1px;
+  margin-bottom: 18px;
   animation: providerTitleIn 0.3s ease;
 }
 
@@ -115,7 +118,7 @@
 .overall-service-provider-container .signup-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;                     /* ← matches .pep-form gap */
 }
 
 .overall-service-provider-container .step-body {
@@ -159,40 +162,50 @@
 .overall-service-provider-container .input-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 6px;                      /* ← matches .pep-form-group */
   width: 100%;
 }
 
 .overall-service-provider-container .input-group label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #374151;
-  letter-spacing: 0.01em;
+  font-size: 12.5px;             /* ← matches .pep-form-label */
+  font-weight: 600;
+  color: #111111;
+  letter-spacing: 0.1px;
 }
 
 .overall-service-provider-container .input-group input,
 .overall-service-provider-container .input-group select {
   width: 100%;
-  padding: 13px 16px;
-  font-size: 0.98rem;
+  padding: 10px 12px;            /* ← matches .pep-form-input */
+  font-size: 14px;               /* ← matches .pep-form-input */
+  font-weight: 500;
   font-family: inherit;
-  background: #fafbfc;
-  border: 1.5px solid #e4e8ed;
-  border-radius: 12px;
+  background: #ffffff;           /* ← white field */
+  border: 1.5px solid #d9d9d9;
+  border-radius: 9px;            /* ← matches .pep-form-input */
   outline: none;
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
-  color: #0f1720;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+  color: #000000;                /* ← black text */
+  box-sizing: border-box;
+}
+
+.overall-service-provider-container .input-group input:hover:not(:disabled),
+.overall-service-provider-container .input-group select:hover:not(:disabled) {
+  border-color: #bfbfbf;
 }
 
 .overall-service-provider-container .input-group select {
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 16px center;
+  background-position: right 12px center;
   background-size: 16px;
   cursor: pointer;
-  padding-right: 44px;
+  padding-right: 36px;
 }
 
 .overall-service-provider-container .input-group select::-ms-expand {
@@ -201,41 +214,45 @@
 
 .overall-service-provider-container .input-group input:focus,
 .overall-service-provider-container .input-group select:focus {
-  border-color: #0f766e;
+  border-color: #111111;         /* ← black focus ring */
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
 .overall-service-provider-container .input-group input::placeholder {
-  color: #a5adba;
+  color: #999999;
   font-weight: 400;
 }
 
 .overall-service-provider-container .input-group input:disabled,
 .overall-service-provider-container .input-group select:disabled {
-  opacity: 0.6;
+  color: #666666;
+  background: #f7f7f7;
+  border-color: #e5e5e5;
   cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: #666666;
 }
 
 /* ---------- ERROR STATE ---------- */
 .overall-service-provider-container .input-group.input-error input,
 .overall-service-provider-container .input-group.input-error select {
-  border-color: #dc2626;
-  background: #fef2f2;
+  border-color: #d9534f;
+  background: #fff7f7;
 }
 
 .overall-service-provider-container .input-group.input-error input:focus,
 .overall-service-provider-container .input-group.input-error select:focus {
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.12);
 }
 
 .overall-service-provider-container .error-message {
   display: block;
-  color: #dc2626;
-  font-size: 0.78rem;
-  font-weight: 500;
+  color: #d9534f;
+  font-size: 11.5px;             /* ← matches .pep-field-error */
+  font-weight: 600;
+  letter-spacing: 0.1px;
   margin-top: 2px;
-  margin-left: 2px;
   animation: providerErrorIn 0.2s ease;
 }
 
@@ -252,8 +269,9 @@
 
 /* ---------- PASSWORD HINT ---------- */
 .overall-service-provider-container .password-hint {
-  font-size: 0.78rem;
-  color: #6b7684;
+  font-size: 11.5px;             /* ← matches .pep-field-hint */
+  color: #6b6b6b;
+  font-weight: 500;
   line-height: 1.4;
   margin-top: -4px;
   margin-bottom: 2px;
@@ -268,49 +286,53 @@
 
 .overall-service-provider-container .back-btn {
   flex: 0 0 auto;
-  padding: 14px 22px;
-  font-size: 0.95rem;
-  font-weight: 500;
+  padding: 10px 18px;            /* ← matches .pep-save-btn */
+  font-size: 13.5px;             /* ← matches .pep-save-btn */
+  font-weight: 700;
   font-family: inherit;
-  color: #374151;
-  background: #f4f5f7;
-  border: 1.5px solid #e4e8ed;
-  border-radius: 12px;
+  color: #111111;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.18);   /* ← matches .pep-cancel-btn */
+  border-radius: 9px;
   cursor: pointer;
-  transition: background 0.18s, border-color 0.18s;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
 }
 
-.overall-service-provider-container .back-btn:hover {
-  background: #eaecf0;
-  border-color: #d5dae0;
+.overall-service-provider-container .back-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.overall-service-provider-container .back-btn:active {
-  transform: scale(0.98);
+.overall-service-provider-container .back-btn:active:not(:disabled) {
+  transform: scale(0.99);
 }
 
 .overall-service-provider-container .submit-btn {
   flex: 1;
-  padding: 14px;
-  font-size: 0.98rem;
-  font-weight: 600;
+  padding: 10px 18px;            /* ← matches .pep-save-btn */
+  font-size: 13.5px;             /* ← matches .pep-save-btn */
+  font-weight: 700;
   font-family: inherit;
   color: #ffffff;
-  background: #0f766e;
+  background: #111111;           /* ← black, matches pep-save-btn */
   border: none;
-  border-radius: 12px;
+  border-radius: 9px;
   cursor: pointer;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
-  box-shadow: 0 4px 12px -2px rgba(15, 118, 110, 0.3);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease,
+    opacity 0.15s ease;
 }
 
 .overall-service-provider-container .submit-btn:hover:not(:disabled) {
-  background: #0d5f59;
-  box-shadow: 0 6px 16px -2px rgba(15, 118, 110, 0.4);
+  background: #000000;
+  transform: translateY(-1px);
 }
 
 .overall-service-provider-container .submit-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.99);
 }
 
 .overall-service-provider-container .submit-btn:disabled,
@@ -318,6 +340,7 @@
 .overall-service-provider-container .google-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* ---------- DIVIDER ---------- */
@@ -335,9 +358,9 @@
 }
 
 .overall-service-provider-container .divider span {
-  font-size: 0.8rem;
+  font-size: 11.5px;             /* ← matches .pep-field-hint */
   color: #9aa3af;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -349,21 +372,25 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 13px;
-  font-size: 0.95rem;
-  font-weight: 500;
+  padding: 10px 18px;            /* ← matches .pep-save-btn */
+  font-size: 13.5px;             /* ← matches .pep-save-btn */
+  font-weight: 700;
   font-family: inherit;
-  color: #374151;
+  color: #111111;
   background: #ffffff;
-  border: 1.5px solid #e4e8ed;
-  border-radius: 12px;
+  border: 1.5px solid #d9d9d9;    /* ← matches input border */
+  border-radius: 9px;
   cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, transform 0.1s;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    opacity 0.15s ease;
 }
 
 .overall-service-provider-container .google-btn:hover:not(:disabled) {
   background: #fafbfc;
-  border-color: #d5dae0;
+  border-color: #bfbfbf;
 }
 
 .overall-service-provider-container .google-btn:active:not(:disabled) {
@@ -378,14 +405,15 @@
 /* ---------- LOGIN LINK ---------- */
 .overall-service-provider-container .login-link {
   text-align: center;
-  font-size: 0.88rem;
-  color: #6b7684;
+  font-size: 12.5px;             /* ← matches .pep-form-label */
+  color: #6b6b6b;
   margin-top: 6px;
+  font-weight: 500;
 }
 
 .overall-service-provider-container .login-link a {
-  color: #0f766e;
-  font-weight: 600;
+  color: #111111;                /* ← black link */
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -439,11 +467,11 @@
   }
 
   .overall-service-provider-container .form-header h2 {
-    font-size: 1.4rem;
+    font-size: 16.5px;           /* ← matches pep small-screen */
   }
 
   .overall-service-provider-container .form-header p {
-    font-size: 0.88rem;
+    font-size: 11.5px;           /* ← matches pep small-screen */
   }
 
   .overall-service-provider-container .progress-container {
@@ -451,14 +479,14 @@
   }
 
   .overall-service-provider-container .step-title {
-    font-size: 1rem;
+    font-size: 13.5px;
     margin-bottom: 16px;
   }
 
   .overall-service-provider-container .input-group input,
   .overall-service-provider-container .input-group select {
-    padding: 14px 16px;
-    font-size: 1rem;
+    padding: 12px 14px;
+    font-size: 14px;             /* stay at 14 — anything smaller feels tiny on phones */
   }
 
   .overall-service-provider-container .nav-buttons {
@@ -466,18 +494,14 @@
   }
 
   .overall-service-provider-container .submit-btn,
-  .overall-service-provider-container .back-btn {
-    padding: 15px;
-    font-size: 0.98rem;
-  }
-
+  .overall-service-provider-container .back-btn,
   .overall-service-provider-container .google-btn {
-    padding: 14px;
-    font-size: 0.92rem;
+    padding: 11px 18px;
+    font-size: 13.5px;
   }
 
   .overall-service-provider-container .login-link {
-    font-size: 0.85rem;
+    font-size: 12px;
   }
 }
 
