@@ -36,8 +36,8 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
             "gender",
             "password",
             "confirmpassword",
-            "role",            # REQUIRED so the view's role is not dropped
-            "auth_provider",   # REQUIRED so the view's provider is not dropped
+            "role",
+            "auth_provider",
         ]
 
         extra_kwargs = {
@@ -57,11 +57,6 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
     # --------------------------------------------------------
 
     def validate_role(self, value):
-        """
-        Only allow the two public signup roles.
-        Prevents a client from creating a superadmin
-        or any other privileged account.
-        """
 
         if value not in self.ALLOWED_SIGNUP_ROLES:
 
@@ -76,12 +71,6 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
     # --------------------------------------------------------
 
     def validate_auth_provider(self, value):
-        """
-        Local signup must always be 'local'.
-        Google signup does not go through this serializer
-        (it uses the Google flow in views.py), so any
-        non-local value here is invalid.
-        """
 
         if value != "local":
 
@@ -90,6 +79,45 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+    # --------------------------------------------------------
+    # VALIDATE EMAIL (uniqueness on signup)
+    # --------------------------------------------------------
+
+    def validate_email(self, value):
+
+        email = value.strip().lower()
+
+        if Accounts.objects.filter(
+            email__iexact=email
+        ).exists():
+
+            raise serializers.ValidationError(
+                "An account with this email already exists."
+            )
+
+        return email
+
+    # --------------------------------------------------------
+    # VALIDATE PHONE NUMBER (uniqueness on signup)
+    # --------------------------------------------------------
+
+    def validate_phone_number(self, value):
+
+        if not value:
+            return value
+
+        phone = value.strip()
+
+        if Accounts.objects.filter(
+            phone_number=phone
+        ).exists():
+
+            raise serializers.ValidationError(
+                "An account with this phone number already exists."
+            )
+
+        return phone
 
     # --------------------------------------------------------
     # VALIDATE (object-level)
@@ -116,17 +144,10 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        validated_data.pop(
-            "confirmpassword"
-        )
+        validated_data.pop("confirmpassword")
 
-        password = validated_data.pop(
-            "password"
-        )
+        password = validated_data.pop("password")
 
-        # Use the Accounts manager.
-        # role and auth_provider now survive validation
-        # and are passed through to create_user().
         user = Accounts.objects.create_user(
             password=password,
             **validated_data
@@ -172,6 +193,19 @@ class UserSerializer(serializers.ModelSerializer):
 # ============================================================
 # UPDATE USER SERIALIZER
 # ============================================================
+#
+# Updatable fields:
+#     first_name, last_name, email, phone_number, gender
+#
+# NOT updatable (rejected if sent):
+#     role, auth_provider, google_id, profile_image_url,
+#     profile_image_public_id, is_premium, premium_expires_at,
+#     is_active, is_staff, is_superuser, password
+#
+# Uniqueness enforced here:
+#     - email must be unique across all accounts
+#     - phone_number must be unique across all accounts
+# ============================================================
 
 class UpdateUserSerializer(serializers.ModelSerializer):
 
@@ -182,14 +216,164 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         fields = [
             "first_name",
             "last_name",
+            "email",
             "phone_number",
             "gender",
-            "profile_image_url",
         ]
 
-        read_only_fields = [
-            "profile_image_url",
-        ]
+    # --------------------------------------------------------
+    # FIRST NAME
+    # --------------------------------------------------------
+
+    def validate_first_name(self, value):
+
+        first_name = (value or "").strip()
+
+        if not first_name:
+
+            raise serializers.ValidationError(
+                "First name is required."
+            )
+
+        if len(first_name) < 2:
+
+            raise serializers.ValidationError(
+                "First name must be at least 2 characters."
+            )
+
+        return first_name
+
+    # --------------------------------------------------------
+    # LAST NAME
+    # --------------------------------------------------------
+
+    def validate_last_name(self, value):
+
+        last_name = (value or "").strip()
+
+        if not last_name:
+
+            raise serializers.ValidationError(
+                "Last name is required."
+            )
+
+        if len(last_name) < 2:
+
+            raise serializers.ValidationError(
+                "Last name must be at least 2 characters."
+            )
+
+        return last_name
+
+    # --------------------------------------------------------
+    # EMAIL — must be unique, excluding the current user
+    # --------------------------------------------------------
+
+    def validate_email(self, value):
+
+        email = (value or "").strip().lower()
+
+        if not email:
+
+            raise serializers.ValidationError(
+                "Email is required."
+            )
+
+        # Basic format check
+        import re
+
+        if not re.match(
+            r"^[^\s@]+@[^\s@]+\.[^\s@]+$",
+            email,
+        ):
+
+            raise serializers.ValidationError(
+                "Enter a valid email address."
+            )
+
+        # Uniqueness — exclude the current user
+        request = self.context.get("request")
+
+        if request and request.user:
+
+            if (
+                Accounts.objects
+                .filter(email__iexact=email)
+                .exclude(id=request.user.id)
+                .exists()
+            ):
+
+                raise serializers.ValidationError(
+                    "This email is already in use."
+                )
+
+        return email
+
+    # --------------------------------------------------------
+    # PHONE NUMBER — must be unique, excluding the current user
+    # --------------------------------------------------------
+
+    def validate_phone_number(self, value):
+
+        # Allow clearing the phone number
+        if value is None or value == "":
+            return None
+
+        phone = value.strip()
+
+        if not phone:
+            return None
+
+        # Uniqueness — exclude the current user
+        request = self.context.get("request")
+
+        if request and request.user:
+
+            if (
+                Accounts.objects
+                .filter(phone_number=phone)
+                .exclude(id=request.user.id)
+                .exists()
+            ):
+
+                raise serializers.ValidationError(
+                    "This phone number is already in use."
+                )
+
+        return phone
+
+    # --------------------------------------------------------
+    # GENDER
+    # --------------------------------------------------------
+
+    def validate_gender(self, value):
+
+        if value in (None, ""):
+            return None
+
+        if value not in ("M", "F", "O"):
+
+            raise serializers.ValidationError(
+                "Invalid gender value."
+            )
+
+        return value
+
+    # --------------------------------------------------------
+    # UPDATE
+    # --------------------------------------------------------
+
+    def update(self, instance, validated_data):
+
+        for field, value in validated_data.items():
+
+            setattr(instance, field, value)
+
+        instance.save(
+            update_fields=list(validated_data.keys())
+        )
+
+        return instance
 
 
 # ============================================================
@@ -200,18 +384,10 @@ class MyTokenObtainPairSerializer(
     TokenObtainPairSerializer
 ):
 
-    # --------------------------------------------------------
-    # CUSTOM LOGIN ERROR
-    # --------------------------------------------------------
-
     default_error_messages = {
         "no_active_account":
             "Invalid email or password. Login unsuccessful."
     }
-
-    # --------------------------------------------------------
-    # CUSTOM JWT CLAIMS
-    # --------------------------------------------------------
 
     @classmethod
     def get_token(cls, user):
@@ -245,15 +421,7 @@ class ProfileImageUploadSerializer(
         required=True
     )
 
-    # --------------------------------------------------------
-    # VALIDATE PROFILE IMAGE
-    # --------------------------------------------------------
-
     def validate_profile_image(self, value):
-
-        # ----------------------------------------------------
-        # MAX FILE SIZE: 5MB
-        # ----------------------------------------------------
 
         max_size = 5 * 1024 * 1024
 
@@ -262,10 +430,6 @@ class ProfileImageUploadSerializer(
             raise serializers.ValidationError(
                 "Image size should not exceed 5MB."
             )
-
-        # ----------------------------------------------------
-        # ALLOWED IMAGE TYPES
-        # ----------------------------------------------------
 
         allowed_types = [
             "image/jpeg",

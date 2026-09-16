@@ -12,7 +12,8 @@ from .views import (
     auth_check,
     profile_image_url,
     upload_profile_image,
-    check_premium_status, 
+    check_premium_status,
+    update_user, 
 )
 
 
@@ -85,5 +86,11 @@ urlpatterns = [
         "premium-status/",
         check_premium_status,
         name="premium-status"
+    ),
+        # UPDATE CURRENT USER
+    path(
+        "update-user/",
+        update_user,
+        name="update-user"
     ),
 ]

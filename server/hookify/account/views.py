@@ -23,7 +23,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Accounts
-from .serializers import CreateNewUserSerializer
+from .serializers import CreateNewUserSerializer,UpdateUserSerializer
 
 # ── Cloudinary helper for profile image upload ───────────────
 from .controllers.cloudinary_utils import upload_or_replace_profile_image
@@ -983,6 +983,151 @@ def check_premium_status(request):
             "expires_at": expires_at if expires_at else None,
             "is_expired": user.premium_is_expired,
             "time_remaining": time_remaining,
+        },
+        status=status.HTTP_200_OK,
+    )
+# ============================================================
+# UPDATE CURRENT USER
+# ============================================================
+
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def update_user(request):
+    """
+    Update the currently authenticated user's profile.
+
+    Updatable fields:
+        - first_name
+        - last_name
+        - email
+        - phone_number
+        - gender
+
+    NOT updatable (silently rejected if sent):
+        - role
+        - auth_provider
+        - google_id
+        - profile_image_url
+        - profile_image_public_id
+        - is_premium
+        - premium_expires_at
+        - is_active
+        - is_staff
+        - is_superuser
+        - password
+
+    Uniqueness rules (enforced in serializer):
+        - email must be unique across all accounts
+        - phone_number must be unique across all accounts
+
+    Request body (any subset of the above):
+        {
+            "first_name": "Brian",
+            "last_name": "Kamau",
+            "email": "brian@example.com",
+            "phone_number": "0712345678",
+            "gender": "M"
+        }
+
+    Response:
+        {
+            "message": "Profile updated successfully.",
+            "user": { ... same shape as get_user_data() ... }
+        }
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # --------------------------------------------------------
+    # ONLY ALLOW THESE FIELDS THROUGH
+    # --------------------------------------------------------
+    #
+    # This blocks a client from sneaking in `role`,
+    # `is_premium`, `google_id`, etc. Even if they send
+    # them, they'll be silently ignored.
+    # --------------------------------------------------------
+
+    allowed_fields = {
+        "first_name",
+        "last_name",
+        "email",
+        "phone_number",
+        "gender",
+    }
+
+    data = {
+        key: value
+        for key, value in request.data.items()
+        if key in allowed_fields
+    }
+
+    if not data:
+
+        return Response(
+            {
+                "message": "No updatable fields were provided.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # SERIALIZE + VALIDATE
+    # --------------------------------------------------------
+
+    serializer = UpdateUserSerializer(
+        instance=user,
+        data=data,
+        partial=True,
+        context={"request": request},
+    )
+
+    if not serializer.is_valid():
+
+        return Response(
+            {
+                "message": "Validation failed.",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # SAVE
+    # --------------------------------------------------------
+
+    try:
+
+        updated_user = serializer.save()
+
+    except Exception as e:
+
+        logger.exception(
+            "Failed to update user_id=%s",
+            user.id,
+        )
+
+        return Response(
+            {
+                "message": "Failed to update profile.",
+                "error": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Profile updated successfully.",
+            "user": get_user_data(updated_user),
         },
         status=status.HTTP_200_OK,
     )
