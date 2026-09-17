@@ -1,156 +1,231 @@
-// Superadmin.tsx - Super Admin Dashboard with Header and Sidebar
-// ============================================================
-
+// Superadmin.tsx
+import { useState, useEffect } from 'react'
 import './superadmin.css'
-import { IoHome } from "react-icons/io5";
-import { IoPeople } from "react-icons/io5";
-import { IoWalletOutline } from "react-icons/io5";
-import { IoImageOutline } from "react-icons/io5"; // Advert icon
-import { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'
+import SuperadminHeader from '../components/SuperadminHeader'
+import SuperadminAnalytics from '../components/SuperadminAnalytics'
+import SuperadminUsers from '../components/SuperadminUsers'
+import SuperadminFinances from '../components/SuperadminFinances'
+import SuperadminServices from '../components/SuperadminServices'
+import SuperadminMessages from '../components/SuperadminMessages'
+import SuperadminSettings from './SuperadminSettings'
+import SuperadminProfile from '../components/SuperadminProfile'
 
-// Import superadmin components
-import SuperadminHeader from '../components/SuperadminHeader';
-import SuperadminHome from '../components/SuperadminHome';
-import SuperadminUsers from '../components/SuperadminUsers';
-import SuperadminFinancials from '../components/SuperadminFinancials';
-import SuperadminProfile from '../components/SuperadminProfile';
-import SuperadminSettings from '../components/SuperadminSettings';
-import SuperadminNotifications from '../components/SuperadminNotifications';
-import SuperadminAdverts from '../components/SuperadminAdverts';
-import Loadingcomponent from '../../common/components/Loading/Loadingcomponent';
-import { useAuthStore } from '../../../store/authtokenstore';
+const Superadmin = () => {
+  const [activeTab, setActiveTab] = useState('analytics')
+  const [isMobile, setIsMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [showProfile, setShowProfile] = useState(false)
 
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
-
-function Superadmin() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [isLoading, setIsLoading] = useState(true);
-
-  const { access: accessToken } = useAuthStore();
-
-  // Simulate loading for superadmin data
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle navigation click
-  const handleNavClick = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  // Render the appropriate component based on active tab
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100%',
-          minHeight: '400px'
-        }}>
-          <Loadingcomponent />
-        </div>
-      );
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768)
     }
 
-    switch(activeTab) {
-      case 'home':
-        return <SuperadminHome />;
-      case 'users':
-        return <SuperadminUsers />;
-      case 'financials':
-        return <SuperadminFinancials />;
-      case 'profile':
-        return <SuperadminProfile />;
-      case 'settings':
-        return <SuperadminSettings />;
-      case 'notifications':
-        return <SuperadminNotifications />;
-      case 'adverts':
-        return <SuperadminAdverts />;
-      default:
-        return <SuperadminHome />;
-    }
-  };
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
 
-  // No token available
-  if (!accessToken) {
-    return (
-      <div className="overall-super-admin-account-page" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🔒</div>
-          <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '0.5rem' }}>
-            Please login to continue
-          </p>
-        </div>
-      </div>
-    );
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  /* ── Full menu (sidebar) ─────────────────────────── */
+  const menuItems = [
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: '📊',
+      component: SuperadminAnalytics,
+    },
+    {
+      id: 'users',
+      label: 'Users',
+      icon: '👥',
+      component: SuperadminUsers,
+    },
+    {
+      id: 'services',
+      label: 'Services',
+      icon: '🛠️',
+      component: SuperadminServices,
+    },
+    {
+      id: 'finances',
+      label: 'Finances',
+      icon: '💰',
+      component: SuperadminFinances,
+    },
+    {
+      id: 'messages',
+      label: 'Messages',
+      icon: '💬',
+      component: SuperadminMessages,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: '⚙️',
+      component: SuperadminSettings,
+    },
+  ]
+
+  const renderActiveComponent = () => {
+    if (showProfile) return <SuperadminProfile />
+
+    const activeItem = menuItems.find((item) => item.id === activeTab)
+    const ActiveComponent = activeItem?.component || SuperadminAnalytics
+
+    return <ActiveComponent />
   }
 
+  const handleHeaderProfileClick = () => {
+    setShowProfile(true)
+    setActiveTab('')
+  }
+
+  const handleNavClick = (id: string) => {
+    setShowProfile(false)
+    setActiveTab(id)
+  }
+
+  const handleBrandClick = () => {
+    setShowProfile(false)
+    setActiveTab('analytics')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  /* ── Mobile bottom nav: only 3 icons ─────────────── */
+  const mobileNavItems = [
+    { id: 'analytics', label: 'Analytics', icon: '📊' },
+    { id: 'users', label: 'Users', icon: '👥' },
+    { id: 'messages', label: 'Messages', icon: '💬' },
+  ]
+
   return (
-    <div className="overall-super-admin-account-page">
-      {/* Header Bar */}
-      <SuperadminHeader 
-        activeTab={activeTab} 
-        onNavClick={handleNavClick} 
-      />
+    <div className="sa-dash-container">
+      {/* ── Mobile top header ─────────────────────────────── */}
+      {isMobile && (
+        <SuperadminHeader
+          onProfileClick={handleHeaderProfileClick}
+          onBrandClick={handleBrandClick}
+          onNavigate={(id) => {
+            setShowProfile(false)
+            setActiveTab(id)
+          }}
+          userName="SA"
+        />
+      )}
 
-      <div className="superadmin-main-layout">
-        {/* Sidebar / Navigation */}
-        <div className="superadmin-account-header-container">
-          <ul>
-            <li 
-              className={activeTab === 'home' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('home')}
+      {/* ── Desktop sidebar ────────────────────────────────── */}
+      {!isMobile && (
+        <aside
+          className={`sa-dash-sidebar ${
+            sidebarOpen ? 'sa-dash-sidebar-open' : ''
+          }`}
+        >
+          <div className="sa-dash-sidebar-header">
+            <h2
+              className="sa-dash-sidebar-logo"
+              onClick={handleBrandClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleBrandClick()
+                }
+              }}
+              role="link"
+              tabIndex={0}
+              aria-label="Go to analytics"
             >
-              <div className="superadmin-icon-fig"><IoHome /></div>
-              <div className="superadmin-nav-name">Home</div>
-            </li>
-            <li 
-              className={activeTab === 'users' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('users')}
-            >
-              <div className="superadmin-icon-fig"><IoPeople /></div>
-              <div className="superadmin-nav-name">Users</div>
-            </li>
-            <li 
-              className={activeTab === 'financials' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('financials')}
-            >
-              <div className="superadmin-icon-fig"><IoWalletOutline /></div>
-              <div className="superadmin-nav-name">Financials</div>
-            </li>
-            <li 
-              className={activeTab === 'adverts' ? 'active-nav' : ''}
-              onClick={() => handleNavClick('adverts')}
-            >
-              <div className="superadmin-icon-fig"><IoImageOutline /></div>
-              <div className="superadmin-nav-name">Adverts</div>
-            </li>
-          </ul>
+              <span className="sa-logo-you">You</span>
+              <span className="sa-logo-p">p</span>
+              <span className="sa-logo-ata">ata</span>
+            </h2>
 
-          <div className="superadmin-sidebar-footer">
-            <span>© 2026 Super Admin</span>
-            <span className="superadmin-version-badge">v2.0</span>
+            <button
+              className="sa-dash-sidebar-toggle"
+              onClick={toggleSidebar}
+              aria-label="Toggle sidebar"
+              type="button"
+            >
+              {sidebarOpen ? '◀' : '▶'}
+            </button>
           </div>
-        </div>
 
-        {/* Main Body Content */}
-        <div className="overall-superadmin-body-container">
-          <div className="actual-superadmin-body-content-retainer">
-            {renderContent()}
+          <div className="sa-dash-sidebar-role">
+            <span className="sa-role-chip">Superadmin</span>
           </div>
+
+          <nav className="sa-dash-sidebar-nav">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                className={`sa-dash-sidebar-item ${
+                  activeTab === item.id && !showProfile
+                    ? 'sa-dash-sidebar-item-active'
+                    : ''
+                }`}
+                onClick={() => handleNavClick(item.id)}
+                type="button"
+              >
+                <span className="sa-dash-sidebar-icon">{item.icon}</span>
+                <span className="sa-dash-sidebar-label">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="sa-dash-sidebar-footer">
+            <button
+              className="sa-dash-user-info"
+              onClick={handleHeaderProfileClick}
+              aria-label="Open profile"
+              type="button"
+            >
+              <div className="sa-dash-user-avatar">SA</div>
+              <div className="sa-dash-user-details">
+                <span className="sa-dash-user-name">Superadmin</span>
+                <span className="sa-dash-user-status">Online</span>
+              </div>
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* ── Main content ───────────────────────────────────── */}
+      <main
+        className={`sa-dash-main ${
+          !isMobile && sidebarOpen ? 'sa-dash-main-shifted' : ''
+        }`}
+      >
+        <div className="sa-dash-content-wrapper">
+          {renderActiveComponent()}
         </div>
-      </div>
+      </main>
+
+      {/* ── Mobile bottom nav — 3 icons only ──────────────── */}
+      {isMobile && (
+        <nav className="sa-dash-bottom-nav">
+          {mobileNavItems.map((item) => (
+            <button
+              key={item.id}
+              className={`sa-dash-nav-item ${
+                activeTab === item.id && !showProfile
+                  ? 'sa-dash-nav-item-active'
+                  : ''
+              }`}
+              onClick={() => handleNavClick(item.id)}
+              aria-label={item.label}
+              type="button"
+            >
+              <span className="sa-dash-nav-icon">{item.icon}</span>
+            </button>
+          ))}
+        </nav>
+      )}
     </div>
-  );
+  )
 }
 
-export default Superadmin;
+export default Superadmin

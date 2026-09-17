@@ -1,618 +1,588 @@
-/* superadmin.css */
-/* ============================================================
-   superadmin.css — Super Admin Dashboard
-   Gold premium theme - distinct from admin blue theme
-   ============================================================ */
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — SUPERADMIN DASHBOARD
+   Same layout language as the service-provider dashboard,
+   distinct .sa-* class names, purple accent for the role.
+   ───────────────────────────────────────────────────────── */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --sa-blue:      #2563EB;
+  --sa-blue-2:    #1D4ED8;
+  --sa-purple:    #7C3AED;
+  --sa-purple-2:  #6D28D9;
+  --sa-emerald:   #10B981;
+  --sa-amber:     #F59E0B;
+  --sa-coral:     #F97316;
+  --sa-ink:       #0F172A;
+  --sa-ink-soft:  #475569;
+  --sa-line:      rgba(15, 23, 42, 0.08);
+  --sa-white:     #FFFFFF;
+  --sa-bg:        #FBFCFE;
+
+  --sa-sidebar-width: 260px;
+  --sa-sidebar-collapsed: 80px;
+  --sa-bottom-nav-h: 68px;
+  --sa-mobile-header-h: 78px;
+
+  --sa-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* =========================
+.sa-dash-container,
+.sa-dash-container button {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ============================================
    MAIN CONTAINER
-========================= */
-.overall-super-admin-account-page {
-  background: linear-gradient(145deg, #0b0b12 0%, #14141e 100%);
-  height: 100vh;
-  height: 100dvh;
+   ============================================ */
+
+.sa-dash-container {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  color: #e8e8f0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  background-color: var(--sa-bg);
+  color: var(--sa-ink);
   position: relative;
 }
 
-/* Background glow effect - gold */
-.overall-super-admin-account-page::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
+/* ============================================
+   DESKTOP SIDEBAR
+   ============================================ */
 
-/* =========================
-   MAIN LAYOUT (Sidebar + Content)
-========================= */
-.superadmin-main-layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-
-/* =========================
-   SIDEBAR / NAVIGATION (Left on desktop)
-========================= */
-.superadmin-account-header-container {
-  height: 100%;
-  width: 220px;
-  padding: 1rem 0.8rem;
-  border-right: 1px solid rgba(212, 175, 55, 0.12);
+.sa-dash-sidebar {
+  width: var(--sa-sidebar-width);
+  background: var(--sa-white);
+  border-right: 1px solid var(--sa-line);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(11, 11, 18, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%);
-  overflow-y: auto;
-  backdrop-filter: blur(10px);
-}
-
-.superadmin-account-header-container::-webkit-scrollbar {
-  width: 3px;
-}
-
-.superadmin-account-header-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.superadmin-account-header-container::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-}
-
-.superadmin-account-header-container ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  flex: 1;
-}
-
-.superadmin-account-header-container ul li {
-  font-size: 0.95rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  color: rgba(232, 232, 240, 0.4);
-  font-weight: 400;
-  position: relative;
-}
-
-/* Gold accent left border */
-.superadmin-account-header-container ul li::before {
-  content: '';
-  position: absolute;
+  position: fixed;
+  top: 0;
   left: 0;
-  top: 20%;
-  height: 60%;
-  width: 3px;
-  background: transparent;
-  border-radius: 0 3px 3px 0;
-  transition: all 0.3s ease;
+  height: 100vh;
+  z-index: 100;
+  transition: var(--sa-transition);
 }
 
-.superadmin-account-header-container ul li:hover {
-  background: rgba(212, 175, 55, 0.06);
-  color: #f0e6d0;
+.sa-dash-sidebar:not(.sa-dash-sidebar-open) {
+  width: var(--sa-sidebar-collapsed);
 }
 
-.superadmin-account-header-container ul li:hover::before {
-  background: rgba(212, 175, 55, 0.3);
+.sa-dash-sidebar-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--sa-line);
+  min-height: 78px;
 }
 
-.superadmin-account-header-container ul li.active-nav {
-  background: rgba(212, 175, 55, 0.10);
-  color: #d4af37;
-  font-weight: 500;
+.sa-dash-sidebar-logo {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: 0.8px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: var(--sa-transition);
 }
 
-.superadmin-account-header-container ul li.active-nav::before {
-  background: #d4af37;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+.sa-dash-sidebar-logo .sa-logo-you { color: var(--sa-blue); }
+.sa-dash-sidebar-logo .sa-logo-p   { color: var(--sa-emerald); }
+.sa-dash-sidebar-logo .sa-logo-ata { color: var(--sa-amber); }
+
+.sa-dash-sidebar:not(.sa-dash-sidebar-open) .sa-dash-sidebar-logo {
+  opacity: 0;
+  width: 0;
 }
 
-.superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
-  color: #d4af37;
-}
-
-.superadmin-icon-fig {
-  font-size: 1.5rem;
+.sa-dash-sidebar-toggle {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--sa-line);
+  background: var(--sa-bg);
+  border-radius: 8px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.8rem;
-  color: rgba(232, 232, 240, 0.3);
-  transition: color 0.2s ease;
+  font-size: 12px;
+  color: var(--sa-ink-soft);
+  transition: var(--sa-transition);
+  flex-shrink: 0;
 }
 
-.superadmin-account-header-container ul li:hover .superadmin-icon-fig {
-  color: #f0e6d0;
+.sa-dash-sidebar-toggle:hover {
+  background: var(--sa-purple);
+  border-color: var(--sa-purple);
+  color: var(--sa-white);
 }
 
-.superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
-  color: #d4af37;
+/* ── Role chip (Superadmin badge) ──────────────────────── */
+
+.sa-dash-sidebar-role {
+  padding: 12px 20px 6px;
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
-.superadmin-nav-name {
-  font-size: 0.9rem;
+.sa-role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  background: rgba(124, 58, 237, 0.10);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+
+  color: var(--sa-purple-2);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  transition: var(--sa-transition);
+}
+
+.sa-dash-sidebar:not(.sa-dash-sidebar-open) .sa-dash-sidebar-role {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+}
+
+.sa-dash-sidebar-nav {
+  flex: 1;
+  padding: 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.sa-dash-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--sa-transition);
+  color: var(--sa-ink-soft);
+  font-size: 0.925rem;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sa-dash-sidebar-item:hover {
+  background: rgba(124, 58, 237, 0.06);
+  color: var(--sa-purple);
+}
+
+.sa-dash-sidebar-item-active {
+  background: linear-gradient(
+    135deg,
+    var(--sa-purple) 0%,
+    var(--sa-purple-2) 100%
+  );
+  color: var(--sa-white);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.28);
+}
+
+.sa-dash-sidebar-item-active:hover {
+  background: linear-gradient(
+    135deg,
+    var(--sa-purple-2) 0%,
+    var(--sa-purple) 100%
+  );
+  color: var(--sa-white);
+}
+
+.sa-dash-sidebar-icon {
+  font-size: 1.25rem;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sa-dash-sidebar-label {
+  transition: var(--sa-transition);
+  overflow: hidden;
+}
+
+.sa-dash-sidebar:not(.sa-dash-sidebar-open) .sa-dash-sidebar-label {
+  opacity: 0;
+  width: 0;
+}
+
+.sa-dash-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--sa-line);
+}
+
+.sa-dash-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--sa-bg);
+  border: 1px solid var(--sa-line);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: var(--sa-transition);
+}
+
+.sa-dash-user-info:hover {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.sa-dash-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--sa-purple) 0%,
+    var(--sa-blue) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sa-white);
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.sa-dash-user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: var(--sa-transition);
+}
+
+.sa-dash-sidebar:not(.sa-dash-sidebar-open) .sa-dash-user-details {
+  opacity: 0;
+  width: 0;
+}
+
+.sa-dash-user-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sa-ink);
   white-space: nowrap;
 }
 
-/* Sidebar footer - gold themed */
-.superadmin-sidebar-footer {
-  padding: 0.8rem 0.5rem 0 0.5rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.04);
-  margin-top: 0.3rem;
+.sa-dash-user-status {
+  font-size: 0.75rem;
+  color: var(--sa-emerald);
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-weight: 600;
 }
 
-.superadmin-sidebar-footer span {
-  font-size: 0.65rem;
-  color: rgba(232, 232, 240, 0.12);
-}
-
-.superadmin-version-badge {
-  font-size: 0.55rem !important;
-  color: rgba(212, 175, 55, 0.3) !important;
-  background: rgba(212, 175, 55, 0.04);
-  padding: 0.1rem 0.5rem;
-  border-radius: 20px;
+.sa-dash-user-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--sa-emerald);
+  border-radius: 50%;
   display: inline-block;
-  width: fit-content;
-  border: 1px solid rgba(212, 175, 55, 0.06);
 }
 
-/* =========================
-   BODY CONTENT (Center)
-========================= */
-.overall-superadmin-body-container {
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.sa-dash-main {
   flex: 1;
-  height: 100%;
-  overflow-y: auto;
+  margin-left: var(--sa-sidebar-width);
+  transition: var(--sa-transition);
+  min-height: 100vh;
+  background: var(--sa-bg);
+}
+
+.sa-dash-main-shifted {
+  margin-left: var(--sa-sidebar-collapsed);
+}
+
+.sa-dash-content-wrapper {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: saFadeIn 0.3s ease-in-out;
+}
+
+@keyframes saFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   MOBILE BOTTOM NAV — ICON ONLY
+   ============================================ */
+
+.sa-dash-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--sa-bottom-nav-h);
+  background: var(--sa-white);
+  border-top: 1px solid var(--sa-line);
   display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 200;
+  padding: 0 12px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.05);
+}
+
+.sa-dash-nav-item {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 1.5rem 2rem;
-  background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.02) 0%, transparent 60%);
-}
-
-.overall-superadmin-body-container::-webkit-scrollbar {
-  width: 4px;
-}
-
-.overall-superadmin-body-container::-webkit-scrollbar-track {
+  padding: 0;
+  border: none;
   background: transparent;
-}
-
-.overall-superadmin-body-container::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.15);
-  border-radius: 10px;
-}
-
-.actual-superadmin-body-content-retainer {
-  width: 100%;
-  max-width: 900px;
+  cursor: pointer;
+  transition: var(--sa-transition);
+  flex: 1;
+  max-width: 84px;
   height: 100%;
-  padding-bottom: 2rem;
+  position: relative;
 }
 
-/* =========================
-   RESPONSIVE - Mobile
-========================= */
-@media screen and (max-width: 46.875em) {
-  .overall-super-admin-account-page {
-    flex-direction: column;
-    overflow: hidden;
+.sa-dash-nav-item:active { transform: scale(0.9); }
+
+.sa-dash-nav-icon {
+  font-size: 1.85rem;
+  line-height: 1;
+  transition: var(--sa-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: grayscale(1) opacity(0.6);
+}
+
+.sa-dash-nav-item-active .sa-dash-nav-icon {
+  transform: scale(1.1);
+  filter: grayscale(0) opacity(1);
+}
+
+.sa-dash-nav-item-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 3px;
+  background: var(--sa-purple);
+  border-radius: 0 0 3px 3px;
+}
+
+/* Even bigger icons on small phones */
+@media (max-width: 480px) {
+  .sa-dash-bottom-nav { height: 70px; }
+  .sa-dash-nav-icon   { font-size: 2rem; }
+}
+
+@media (max-width: 360px) {
+  .sa-dash-bottom-nav { height: 66px; }
+  .sa-dash-nav-icon   { font-size: 1.8rem; }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .sa-dash-main {
+    margin-left: 0;
+    padding-top: var(--sa-mobile-header-h);
+    padding-bottom: var(--sa-bottom-nav-h);
+    min-height: calc(
+      100vh - var(--sa-mobile-header-h) - var(--sa-bottom-nav-h)
+    );
   }
 
-  /* Sidebar becomes bottom nav */
-  .superadmin-account-header-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    width: 100%;
-    height: auto;
-    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
-    border-right: none;
-    border-top: 1px solid rgba(212, 175, 55, 0.06);
-    background: #0b0b12;
-    z-index: 100;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    overflow: visible;
-    backdrop-filter: blur(10px);
+  .sa-dash-content-wrapper {
+    padding: 16px;
   }
 
-  .superadmin-sidebar-footer {
+  .sa-dash-sidebar {
     display: none;
   }
+}
 
-  .superadmin-account-header-container ul {
-    flex-direction: row;
-    justify-content: space-around;
-    width: 100%;
-    gap: 0.1rem;
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sa-dash-sidebar {
+    width: var(--sa-sidebar-collapsed);
+  }
+
+  .sa-dash-sidebar .sa-dash-sidebar-label,
+  .sa-dash-sidebar .sa-dash-user-details,
+  .sa-dash-sidebar .sa-dash-sidebar-logo,
+  .sa-dash-sidebar .sa-dash-sidebar-role {
+    opacity: 0;
+    width: 0;
+    height: 0;
     padding: 0;
   }
 
-  .superadmin-account-header-container ul li {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.05rem;
-    padding: 0.3rem 0.3rem;
-    font-size: 0.55rem;
-    border-radius: 8px;
-    flex: 1;
-    justify-content: center;
-    min-width: 0;
-  }
-
-  .superadmin-account-header-container ul li::before {
-    display: none;
-  }
-
-  .superadmin-icon-fig {
-    font-size: 2.6rem !important;
-    min-width: auto;
-    line-height: 1;
-  }
-
-  .superadmin-nav-name {
-    display: none;
-  }
-
-  .superadmin-account-header-container ul li.active-nav {
-    background: rgba(212, 175, 55, 0.12);
-    border-radius: 8px;
-  }
-
-  .superadmin-account-header-container ul li.active-nav .superadmin-icon-fig {
-    color: #d4af37;
-  }
-
-  /* Main body */
-  .overall-superadmin-body-container {
-    padding: 0.8rem 0.8rem;
-    height: calc(100% - 56px);
-    margin-bottom: 56px;
-  }
-
-  .actual-superadmin-body-content-retainer {
-    max-width: 100%;
-    padding-bottom: 0.5rem;
-  }
-
-  .superadmin-main-layout {
-    flex-direction: column;
+  .sa-dash-main {
+    margin-left: var(--sa-sidebar-collapsed);
   }
 }
 
-/* =========================
-   EXTRA SMALL SCREENS
-========================= */
-@media screen and (max-width: 30em) {
-  .superadmin-account-header-container {
-    padding: 0.3rem 0.1rem 0.5rem 0.1rem;
-  }
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 
-  .superadmin-account-header-container ul li {
-    padding: 0.2rem 0.15rem;
-  }
-
-  .superadmin-icon-fig {
-    font-size: 2.2rem !important;
-  }
-
-  .overall-superadmin-body-container {
-    padding: 0.5rem 0.5rem;
-    margin-bottom: 50px;
-    height: calc(100% - 50px);
-  }
+.sa-dash-sidebar-nav::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* =========================
-   SAFE AREA FOR NOTCH PHONES
-========================= */
-@supports (padding: max(0px)) {
-  @media screen and (max-width: 46.875em) {
-    .superadmin-account-header-container {
-      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
-    }
-  }
+.sa-dash-sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--sa-line);
+  border-radius: 4px;
 }
 
-/* =========================
-   ADVERT NAV ITEM - ACTIVE STATE
-========================= */
-.superadmin-account-header-container ul li.advert-nav {
-  position: relative;
+/* ============================================
+   UTILITY CLASSES FOR CHILD COMPONENTS
+   ============================================ */
+
+.sa-page-container {
+  animation: saFadeIn 0.3s ease-in-out;
 }
 
-/* Optional: Add a subtle gold dot indicator for adverts */
-.superadmin-account-header-container ul li.advert-nav.active-nav::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  background: #d4af37;
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
-}
-
-/* =========================
-   ADVERT COMPONENT STYLES
-   (To be used in SuperadminAdverts component)
-========================= */
-.adverts-container {
-  width: 100%;
-  padding: 1rem 0;
-}
-
-.adverts-header {
+.sa-page-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 16px;
 }
 
-.adverts-title-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.adverts-title-section h1 {
+.sa-page-title {
   font-size: 1.75rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #d4af37, #f5d97e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+  font-weight: 800;
+  color: var(--sa-ink);
+  letter-spacing: -0.4px;
 }
 
-.adverts-title-section p {
-  color: rgba(232, 232, 240, 0.5);
-  font-size: 0.9rem;
-  margin: 0;
+.sa-page-subtitle {
+  font-size: 0.875rem;
+  color: var(--sa-ink-soft);
+  margin-top: 4px;
 }
 
-.adverts-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+.sa-card {
+  background: var(--sa-white);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--sa-line);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: var(--sa-transition);
 }
 
-.adverts-actions button {
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  border: none;
-  font-weight: 500;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary-advert {
-  background: linear-gradient(135deg, #d4af37, #c9a030);
-  color: #0b0b12;
-}
-
-.btn-primary-advert:hover {
+.sa-card:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
 }
 
-.btn-secondary-advert {
-  background: rgba(212, 175, 55, 0.08);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.btn-secondary-advert:hover {
-  background: rgba(212, 175, 55, 0.15);
-}
-
-.adverts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.advert-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(212, 175, 55, 0.06);
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.advert-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(212, 175, 55, 0.15);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.advert-card-media {
-  width: 100%;
-  height: 200px;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
+.sa-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
-.advert-card-media img,
-.advert-card-media video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.advert-card-media .media-placeholder {
-  color: rgba(232, 232, 240, 0.2);
-  font-size: 3rem;
-}
-
-.advert-card-body {
-  padding: 1.2rem;
-}
-
-.advert-card-body h3 {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #e8e8f0;
-  margin: 0 0 0.5rem 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.advert-card-body p {
-  font-size: 0.85rem;
-  color: rgba(232, 232, 240, 0.5);
-  margin: 0 0 1rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.advert-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.04);
-}
-
-.advert-type-badge {
-  font-size: 0.65rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  background: rgba(212, 175, 55, 0.08);
-  color: #d4af37;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.advert-type-badge.image {
-  background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
-}
-
-.advert-type-badge.video {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-}
-
-.advert-card-actions {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.advert-card-actions button {
-  background: transparent;
+  gap: 8px;
+  padding: 10px 20px;
   border: none;
-  color: rgba(232, 232, 240, 0.3);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  font-size: 1rem;
+  transition: var(--sa-transition);
 }
 
-.advert-card-actions button:hover {
-  color: #d4af37;
-  background: rgba(212, 175, 55, 0.06);
+.sa-btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--sa-purple) 0%,
+    var(--sa-purple-2) 100%
+  );
+  color: var(--sa-white);
 }
 
-.advert-card-actions button.delete:hover {
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
+.sa-btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
 }
 
-/* Empty state */
-.adverts-empty {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: rgba(232, 232, 240, 0.3);
+.sa-btn-secondary {
+  background: var(--sa-bg);
+  color: var(--sa-ink);
+  border: 1px solid var(--sa-line);
 }
 
-.adverts-empty .empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.3;
+.sa-btn-secondary:hover {
+  background: rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.2);
+  color: var(--sa-purple);
 }
 
-.adverts-empty h3 {
-  font-size: 1.2rem;
-  color: rgba(232, 232, 240, 0.5);
-  margin-bottom: 0.5rem;
+.sa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
-.adverts-empty p {
-  font-size: 0.9rem;
-  color: rgba(232, 232, 240, 0.2);
+@media (max-width: 768px) {
+  .sa-page-title { font-size: 1.5rem; }
+  .sa-card { padding: 16px; border-radius: 12px; }
+  .sa-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 
-/* Responsive for advert grid */
-@media screen and (max-width: 46.875em) {
-  .adverts-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .adverts-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .adverts-actions {
-    width: 100%;
-  }
-  
-  .adverts-actions button {
-    flex: 1;
-    justify-content: center;
-  }
+/* ── Clickable sidebar wordmark (added traits only) ─────── */
+.sa-dash-sidebar-logo {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+  padding: 2px 4px;
+  margin-left: -4px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.sa-dash-sidebar-logo:hover {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
+
+.sa-dash-sidebar-logo:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
+}
+
+.sa-dash-sidebar-logo:active {
+  transform: scale(0.98);
 }

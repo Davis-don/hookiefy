@@ -1,265 +1,282 @@
-// components/SuperadminHeader.tsx
-// ============================================================
-// SuperadminHeader.tsx - Top Header Bar (With Profile, Balance & Icons)
-// Gold premium theme - distinct from admin blue theme
-// ============================================================
-
+// SuperadminHeader.tsx
+import React, { useEffect, useRef, useState } from 'react'
+import {
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
+import {
+  FiUser,
+  FiTool,
+  FiDollarSign,
+  FiSettings,
+} from 'react-icons/fi'
+import { useAuthStore } from '../../../store/authtokenstore'
+import LogoutButton from '../../service_provider/components/LogoutButton'
 import './superadminheader.css'
-import { IoSettingsOutline } from "react-icons/io5";
-import { IoLogOutOutline } from "react-icons/io5";
-import { IoNotificationsOutline } from "react-icons/io5";
-import { IoShieldCheckmark } from "react-icons/io5";
-import { useAuthStore } from '../../../store/authtokenstore';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useState } from 'react';
-import SuperadminBalance from './SuperadminBalance';
-
-// ============================================================
-// TYPES
-// ============================================================
 
 interface SuperadminHeaderProps {
-  activeTab: string;
-  onNavClick: (tab: string) => void;
+  onProfileClick: () => void
+  onBrandClick?: () => void
+  /** Called when a dropdown item wants to navigate to a tab */
+  onNavigate?: (tabId: string) => void
+  userName?: string
 }
 
-interface CurrentUserData {
-  id: number;
-  email: string;
-  role: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  phone_number: string;
-  gender: string;
-  profile_image_url: string | null;
-  profile_image_public_id: string | null;
-  has_profile_image: boolean;
+interface ProfileImageResponse {
+  profile_image_url: string | null
 }
 
-// ============================================================
-// API HELPERS
-// ============================================================
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  'https://hookiefy-server-7d6d.onrender.com'
 
-const fetchCurrentUser = async (accessToken: string | null): Promise<CurrentUserData> => {
-  if (!accessToken) {
-    throw new Error('No access token found. Please login again.');
-  }
+async function fetchProfileImage(
+  access: string | null
+): Promise<ProfileImageResponse> {
+  if (!access) throw new Error('No access token found')
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/account/current-user/`, {
+  const response = await fetch(`${API_URL}/account/profile-image/`, {
+    method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${access}`,
     },
-  });
+  })
 
   if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Session expired. Please login again.');
-    }
-    throw new Error(`Failed to fetch user: ${response.status}`);
+    throw new Error(`Profile image fetch failed: ${response.status}`)
   }
 
-  return response.json();
-};
+  return response.json()
+}
 
-// Logout function
-const logoutUser = async (accessToken: string | null, refreshToken: string | null): Promise<any> => {
-  if (!accessToken) {
-    throw new Error('No access token found.');
-  }
+const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
+  onProfileClick,
+  onBrandClick,
+  onNavigate,
+  userName = 'SA',
+}) => {
+  const { access } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [imgLoaded, setImgLoaded] = useState(false)
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/account/logout/`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    }
-  );
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  if (!response.ok) {
-    throw new Error('Logout failed');
-  }
-
-  return response.json();
-};
-
-// ============================================================
-// COMPONENT
-// ============================================================
-
-function SuperadminHeader({ activeTab, onNavClick }: SuperadminHeaderProps) {
-  const { access: accessToken, refresh: refreshToken, clearTokens } = useAuthStore();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  // ---- Fetch current user data ----
-  const { 
-    data: userData, 
-    isLoading: isLoadingUser,
-  } = useQuery<CurrentUserData>({
-    queryKey: ['currentSuperadminUser', accessToken],
-    queryFn: () => fetchCurrentUser(accessToken),
-    enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+  const {
+    data: profileData,
+    refetch: refetchProfile,
+    isFetching,
+  } = useQuery<ProfileImageResponse, Error>({
+    queryKey: ['profile-image', access],
+    queryFn: () => fetchProfileImage(access),
+    enabled: !!access,
+    placeholderData: keepPreviousData,
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     retry: 1,
-  });
+    retryDelay: 2000,
+  })
 
-  // ---- Logout mutation ----
-  const logoutMutation = useMutation({
-    mutationFn: () => logoutUser(accessToken, refreshToken),
-    onSuccess: () => {
-      toast.success('Logged out successfully!', {
-        duration: 3000,
-        icon: '👋',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #d4af37',
-          color: '#ffffff',
-        },
-      });
-      
-      clearTokens();
-      
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 1500);
-    },
-    onError: (error: Error) => {
-      toast.error('Logout failed', {
-        description: error.message || 'Please try again.',
-        duration: 4000,
-        icon: '⚠️',
-        style: {
-          background: '#1a1a2e',
-          border: '1px solid #ef4444',
-          color: '#ffffff',
-        },
-      });
-      setIsLoggingOut(false);
-    },
-  });
+  const imageUrl = profileData?.profile_image_url || null
 
-  // ---- Render profile avatar ----
-  const renderProfileAvatar = () => {
-    if (isLoadingUser) {
-      return (
-        <div className="superadmin-header-avatar-wrapper superadmin-header-avatar-loading">
-          <div className="superadmin-header-avatar-spinner"></div>
-        </div>
-      );
+  const prefetchProfile = () => {
+    if (!access) return
+    queryClient.prefetchQuery({
+      queryKey: ['profile-image', access],
+      queryFn: () => fetchProfileImage(access),
+      staleTime: 10 * 60_000,
+    })
+  }
+
+  const lastFocusRef = useRef<number>(0)
+
+  useEffect(() => {
+    const onFocus = () => {
+      const now = Date.now()
+      if (now - lastFocusRef.current < 120_000) return
+      lastFocusRef.current = now
+
+      refetchProfile({ cancelRefetch: false })
     }
 
-    if (userData?.profile_image_url) {
-      return (
-        <div className="superadmin-header-avatar-wrapper">
-          <img 
-            src={userData.profile_image_url} 
-            alt={userData.full_name || 'Super Admin'}
-            className="superadmin-header-avatar-img"
-          />
-        </div>
-      );
-    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refetchProfile])
 
-    return (
-      <div className="superadmin-header-avatar-wrapper default-bg">
-        <IoShieldCheckmark className="superadmin-header-avatar-icon" />
-      </div>
-    );
-  };
+  useEffect(() => {
+    setImgLoaded(false)
+  }, [imageUrl])
 
-  // ---- Handle logout ----
-  const handleLogout = () => {
-    if (isLoggingOut) return;
-    
-    setIsLoggingOut(true);
-    const loadingToast = toast.loading('Logging out...', {
-      style: {
-        background: '#1a1a2e',
-        border: '1px solid #d4af37',
-        color: '#ffffff',
-      },
-    });
+  useEffect(() => {
+    if (!menuOpen) return
 
-    logoutMutation.mutate(undefined, {
-      onSettled: () => {
-        toast.dismiss(loadingToast);
-        setIsLoggingOut(false);
+    const onDocClick = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false)
       }
-    });
-  };
+    }
 
-  // ---- Handle settings click ----
-  const handleSettingsClick = () => {
-    onNavClick('settings');
-  };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
 
-  // ---- Handle notifications click ----
-  const handleNotificationsClick = () => {
-    onNavClick('notifications');
-  };
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
 
-  // ---- Handle profile click ----
-  const handleProfileClick = () => {
-    onNavClick('profile');
-  };
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
+
+  const toggleMenu = () => {
+    setMenuOpen((v) => !v)
+    prefetchProfile()
+  }
+
+  const handleProfileSelect = () => {
+    setMenuOpen(false)
+    onProfileClick()
+  }
+
+  const handleNavigate = (tabId: string) => {
+    setMenuOpen(false)
+    onNavigate?.(tabId)
+  }
 
   return (
-    <div className="overall-superadmin-header-container">
-      <div className="superadmin-header-left">
-        {/* Profile Avatar with Name */}
-        <div className="superadmin-header-profile" onClick={handleProfileClick}>
-          {renderProfileAvatar()}
-          <div className="superadmin-header-profile-info">
-            <span className="superadmin-header-profile-name">
-              {isLoadingUser ? 'Loading...' : userData?.full_name || 'Super Admin'}
-            </span>
-            <span className="superadmin-header-profile-role">
-              {userData?.role || 'Super Administrator'}
-            </span>
-          </div>
+    <header className="sa-mobile-header">
+      <div className="sa-mobile-header-content">
+        <h1
+          className="sa-mobile-wordmark"
+          onClick={onBrandClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              onBrandClick?.()
+            }
+          }}
+          role="link"
+          tabIndex={0}
+          aria-label="Go to analytics"
+        >
+          <span className="sa-logo-you">You</span>
+          <span className="sa-logo-p">p</span>
+          <span className="sa-logo-ata">ata</span>
+          <span className="sa-mobile-role-dot" aria-hidden="true" />
+        </h1>
+
+        <div ref={menuRef} className="sa-mobile-avatar-wrap">
+          <button
+            className="sa-mobile-avatar-btn"
+            onClick={toggleMenu}
+            onMouseEnter={prefetchProfile}
+            onTouchStart={prefetchProfile}
+            aria-label="Open account menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            type="button"
+          >
+            {imageUrl ? (
+              <img
+                key={imageUrl}
+                src={imageUrl}
+                alt="Profile"
+                className={`sa-mobile-avatar sa-mobile-avatar-img ${
+                  imgLoaded ? 'sa-avatar-loaded' : 'sa-avatar-loading'
+                }`}
+                onLoad={() => setImgLoaded(true)}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  target.parentElement?.classList.add(
+                    'sa-avatar-fallback'
+                  )
+                }}
+              />
+            ) : (
+              <div className="sa-mobile-avatar">{userName}</div>
+            )}
+
+            {isFetching && !imgLoaded && (
+              <span className="sa-avatar-refresh-dot" aria-hidden="true" />
+            )}
+          </button>
+
+          {menuOpen && (
+            <div
+              className="sa-avatar-menu"
+              role="menu"
+              aria-label="Account menu"
+            >
+              {/* ── Profile ───────────────────────────── */}
+              <button
+                type="button"
+                role="menuitem"
+                className="sa-avatar-menu-item"
+                onClick={handleProfileSelect}
+              >
+                <FiUser className="sa-avatar-menu-icon" />
+                <span>Profile</span>
+              </button>
+
+              {/* ── Services ──────────────────────────── */}
+              <button
+                type="button"
+                role="menuitem"
+                className="sa-avatar-menu-item"
+                onClick={() => handleNavigate('services')}
+              >
+                <FiTool className="sa-avatar-menu-icon" />
+                <span>Services</span>
+              </button>
+
+              {/* ── Finances ──────────────────────────── */}
+              <button
+                type="button"
+                role="menuitem"
+                className="sa-avatar-menu-item"
+                onClick={() => handleNavigate('finances')}
+              >
+                <FiDollarSign className="sa-avatar-menu-icon" />
+                <span>Finances</span>
+              </button>
+
+              {/* ── Settings ──────────────────────────── */}
+              <button
+                type="button"
+                role="menuitem"
+                className="sa-avatar-menu-item"
+                onClick={() => handleNavigate('settings')}
+              >
+                <FiSettings className="sa-avatar-menu-icon" />
+                <span>Settings</span>
+              </button>
+
+              {/* ── Divider before Logout ─────────────── */}
+              <div className="sa-avatar-menu-divider" aria-hidden="true" />
+
+              {/* ── Logout ────────────────────────────── */}
+              <div className="sa-avatar-menu-item sa-avatar-menu-item--logout">
+                <LogoutButton
+                  redirectTo="/login"
+                  onLoggedOut={() => setMenuOpen(false)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Balance Component - Separate SuperadminBalance */}
-      <SuperadminBalance />
-
-      <div className="superadmin-header-icons-wrapper">
-        <button 
-          className={`superadmin-header-icon-btn ${activeTab === 'notifications' ? 'active' : ''}`} 
-          title="Notifications"
-          onClick={handleNotificationsClick}
-        >
-          <IoNotificationsOutline />
-          <span className="superadmin-header-notification-badge">3</span>
-        </button>
-        
-        <button 
-          className={`superadmin-header-icon-btn ${activeTab === 'settings' ? 'active' : ''}`} 
-          title="Settings"
-          onClick={handleSettingsClick}
-        >
-          <IoSettingsOutline />
-        </button>
-
-        <button 
-          className="superadmin-header-logout-btn" 
-          onClick={handleLogout}
-          disabled={isLoggingOut || logoutMutation.isPending}
-          title="Logout"
-        >
-          <IoLogOutOutline />
-        </button>
-      </div>
-    </div>
-  );
+    </header>
+  )
 }
 
-export default SuperadminHeader;
+export default SuperadminHeader

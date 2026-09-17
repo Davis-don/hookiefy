@@ -1,418 +1,449 @@
-/* components/superadminheader.css */
-/* ============================================================
-   superadminheader.css — Top Header Bar (With Profile, Balance & Icons)
-   Gold premium theme - distinct from admin blue theme
-   ============================================================ */
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — SUPERADMIN MOBILE HEADER
+   Same structure as the provider header, purple role accent.
+   ───────────────────────────────────────────────────────── */
 
-/* =========================
-   MAIN HEADER CONTAINER
-========================= */
-.overall-superadmin-header-container {
-  height: 80px;
-  padding: 0 2rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+
+.sa-mobile-header,
+.sa-mobile-header button {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.sa-mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 74px;
+  background: #FFFFFF;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  z-index: 200;
+}
+
+.sa-mobile-header::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #7C3AED 0%,
+    #7C3AED 25%,
+    #2563EB 25%,
+    #2563EB 50%,
+    #10B981 50%,
+    #10B981 75%,
+    #F59E0B 75%,
+    #F59E0B 100%
+  );
+}
+
+.sa-mobile-header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
-  background: #0b0b12;
-  z-index: 10;
-  position: sticky;
-  top: 0;
-  backdrop-filter: blur(12px);
-  background: rgba(11, 11, 18, 0.92);
+  height: 100%;
+  padding: 0 18px;
 }
 
-/* =========================
-   LEFT SECTION - Profile
-========================= */
-.superadmin-header-left {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
+.sa-mobile-wordmark {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 2.6rem;
+  line-height: 1;
+  letter-spacing: 1px;
+  margin: 0;
+  padding: 4px 6px;
+  margin-left: -6px;
 
-.superadmin-header-profile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.3rem 1.2rem 0.3rem 0.3rem;
-  border-radius: 50px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
 }
 
-.superadmin-header-profile:hover {
-  background: rgba(212, 175, 55, 0.04);
-  border-color: rgba(212, 175, 55, 0.06);
+.sa-mobile-wordmark:hover {
+  transform: scale(1.03);
+  opacity: 0.92;
 }
 
-.superadmin-header-profile:active {
+.sa-mobile-wordmark:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
+}
+
+.sa-mobile-wordmark:active {
   transform: scale(0.98);
 }
 
-/* Avatar - LARGER SIZE */
-.superadmin-header-avatar-wrapper {
-  height: 4rem;
-  width: 4rem;
-  border-radius: 50% !important;
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(212, 175, 55, 0.15);
-  transition: all 0.3s ease;
-  position: relative;
-}
+.sa-mobile-wordmark .sa-logo-you { color: #2563EB; }
+.sa-mobile-wordmark .sa-logo-p   { color: #10B981; }
+.sa-mobile-wordmark .sa-logo-ata { color: #F59E0B; }
 
-.superadmin-header-avatar-wrapper.default-bg {
-  background: linear-gradient(135deg, #1a1a2e, #2d1b3d);
-}
-
-.superadmin-header-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50% !important;
-  display: block;
-}
-
-.superadmin-header-avatar-icon {
-  font-size: 2rem;
-  color: #d4af37;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-.superadmin-header-avatar-loading {
-  background: #1a1a2e;
-  border: 2px solid rgba(212, 175, 55, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.superadmin-header-avatar-spinner {
-  width: 2rem;
-  height: 2rem;
-  border: 2px solid rgba(212, 175, 55, 0.1);
-  border-top: 2px solid #d4af37;
+/* Small superadmin purple dot next to wordmark */
+.sa-mobile-role-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
   border-radius: 50%;
-  animation: superadminHeaderSpin 0.8s linear infinite;
+  background: #7C3AED;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18);
+  transform: translateY(-8px);
 }
 
-@keyframes superadminHeaderSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* ── Avatar ───────────────────────────────────────────── */
 
-/* Profile Info */
-.superadmin-header-profile-info {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-  min-width: 0;
-}
-
-.superadmin-header-profile-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f0e6d0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 160px;
-}
-
-.superadmin-header-profile-role {
-  font-size: 0.8rem;
-  color: rgba(232, 232, 240, 0.3);
-  text-transform: capitalize;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 160px;
-}
-
-/* =========================
-   ICONS SECTION
-========================= */
-.superadmin-header-icons-wrapper {
-  display: flex;
+.sa-mobile-avatar-wrap {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  justify-content: center;
+  padding: 3px;
 }
 
-/* Icon buttons - LARGER SIZE */
-.superadmin-header-icon-btn {
+.sa-mobile-avatar-btn {
+  position: relative;
   background: transparent;
   border: none;
-  color: rgba(232, 232, 240, 0.4);
-  font-size: 3.2rem !important;
+  padding: 0;
   cursor: pointer;
-  padding: 0.8rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  flex-shrink: 0;
+  transition: transform 0.25s ease;
 }
 
-.superadmin-header-icon-btn:hover {
-  color: #f0e6d0;
-  background: rgba(212, 175, 55, 0.04);
-}
+.sa-mobile-avatar-btn:hover  { transform: scale(1.05); }
+.sa-mobile-avatar-btn:active { transform: scale(0.94); }
 
-.superadmin-header-icon-btn.active {
-  color: #d4af37;
-  background: rgba(212, 175, 55, 0.08);
-}
-
-.superadmin-header-icon-btn:active {
-  transform: scale(0.92);
-}
-
-.superadmin-header-notification-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  background: #d4af37;
-  color: #0b0b12;
-  font-size: 0.75rem;
+.sa-mobile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED 0%, #2563EB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
   font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.28);
+}
+
+.sa-mobile-avatar-img {
+  object-fit: cover;
+  background: #FBFCFE;
+  padding: 0;
+  display: block;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.sa-avatar-loading {
+  opacity: 0.6;
+  filter: blur(1px);
+}
+
+.sa-avatar-loaded {
+  opacity: 1;
+  filter: none;
+}
+
+.sa-mobile-avatar-btn.sa-avatar-fallback::after {
+  content: 'SA';
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED 0%, #2563EB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #0b0b12;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.28);
 }
 
-/* Logout button - LARGER SIZE */
-.superadmin-header-logout-btn {
+.sa-avatar-refresh-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7C3AED;
+  border: 2px solid #FFFFFF;
+  animation: saPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes saPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUPERADMIN AVATAR DROPDOWN MENU
+   ═══════════════════════════════════════════════════════════ */
+
+.sa-avatar-menu {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: -6px;
+
+  min-width: 240px;
+
+  background: #FFFFFF;
+  border-radius: 16px;
+
+  padding: 8px;
+
+  box-shadow:
+    0 24px 48px -16px rgba(15, 23, 42, 0.22),
+    0 12px 24px -12px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(15, 23, 42, 0.05);
+
+  z-index: 1000;
+
+  animation: saMenuIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sa-avatar-menu::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 22px;
+
+  width: 14px;
+  height: 14px;
+
+  background: #FFFFFF;
+  border-top-left-radius: 3px;
+  transform: rotate(45deg);
+
+  box-shadow: -1px -1px 0 rgba(15, 23, 42, 0.05);
+}
+
+@keyframes saMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.sa-avatar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+
+  padding: 12px 14px;
+
   background: transparent;
   border: none;
-  color: rgba(232, 232, 240, 0.3);
-  font-size: 3.2rem !important;
+  border-radius: 10px;
+
+  color: #0F172A;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  text-align: left;
+  text-decoration: none;
+  line-height: 1.1;
+
   cursor: pointer;
-  padding: 0.8rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sa-avatar-menu-item:hover {
+  background: rgba(124, 58, 237, 0.07);
+  color: #6D28D9;
+}
+
+.sa-avatar-menu-item:active {
+  background: rgba(124, 58, 237, 0.11);
+}
+
+.sa-avatar-menu-item:focus-visible {
+  outline: none;
+  background: rgba(124, 58, 237, 0.09);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.28);
+}
+
+.sa-avatar-menu-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #64748B;
+  transition: color 0.15s ease;
+}
+
+.sa-avatar-menu-item:hover .sa-avatar-menu-icon {
+  color: #7C3AED;
+}
+
+/* ── Logout row ───────────────────────────────────────── */
+
+.sa-avatar-menu-item--logout {
+  padding: 0;
+  cursor: default;
+  color: #DC2626;
+}
+
+.sa-avatar-menu-item--logout:hover {
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.sa-avatar-menu-item--logout .logout-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
+  gap: 12px;
+
+  flex: 1;
+
+  width: 100%;
+  justify-content: flex-start;
+
+  padding: 12px 14px;
+
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+
+  color: #DC2626;
+
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.sa-avatar-menu-item--logout .logout-btn:hover:not(:disabled) {
+  background: transparent;
+  color: #B91C1C;
+}
+
+.sa-avatar-menu-item--logout .logout-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.sa-avatar-menu-item--logout .logout-btn-icon {
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  color: inherit;
 }
 
-.superadmin-header-logout-btn:hover:not(:disabled) {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+.sa-avatar-menu-item--logout .logout-btn-label {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: inherit;
+
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  opacity: 1;
+  visibility: visible;
 }
 
-.superadmin-header-logout-btn:disabled {
-  opacity: 0.5;
+.sa-avatar-menu-item--logout .logout-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  animation: superadminPulse 1.5s ease-in-out infinite;
 }
 
-.superadmin-header-logout-btn:active:not(:disabled) {
-  transform: scale(0.92);
-}
+/* ── Mobile tweaks ────────────────────────────────────── */
 
-@keyframes superadminPulse {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
+@media (max-width: 480px) {
+  .sa-mobile-header { height: 78px; }
+  .sa-mobile-wordmark { font-size: 2.75rem; }
+  .sa-mobile-avatar { width: 46px; height: 46px; }
 
-/* =========================
-   RESPONSIVE - Mobile
-========================= */
-@media screen and (max-width: 46.875em) {
-  .overall-superadmin-header-container {
-    height: 72px;
-    padding: 0 1rem;
-    backdrop-filter: none;
-    background: #0b0b12;
+  .sa-avatar-menu {
+    min-width: 224px;
+    right: -4px;
+    padding: 6px;
   }
 
-  .superadmin-header-profile-info {
-    display: none;
-  }
-
-  .superadmin-header-profile {
-    padding: 0.2rem;
-    border-radius: 50%;
-    border: none;
-  }
-
-  .superadmin-header-profile:hover {
-    background: transparent;
-    border: none;
-  }
-
-  .superadmin-header-avatar-wrapper {
-    height: 3.2rem;
-    width: 3.2rem;
-  }
-
-  .superadmin-header-avatar-icon {
-    font-size: 1.6rem;
-  }
-
-  .superadmin-header-avatar-spinner {
-    width: 1.6rem;
-    height: 1.6rem;
-  }
-
-  /* Icons - Mobile */
-  .superadmin-header-icons-wrapper {
-    gap: 0.3rem;
-  }
-
-  .superadmin-header-icon-btn {
-    font-size: 2.6rem !important;
-    padding: 0.5rem;
-    width: 60px;
-    height: 60px;
-  }
-
-  .superadmin-header-logout-btn {
-    font-size: 2.6rem !important;
-    padding: 0.5rem;
-    width: 60px;
-    height: 60px;
-  }
-
-  .superadmin-header-notification-badge {
-    width: 22px;
-    height: 22px;
-    font-size: 0.65rem;
-    top: 4px;
-    right: 4px;
+  .sa-avatar-menu::before {
+    right: 20px;
   }
 }
 
-@media screen and (max-width: 30em) {
-  .overall-superadmin-header-container {
-    height: 64px;
-    padding: 0 0.6rem;
+@media (max-width: 380px) {
+  .sa-mobile-header { height: 72px; }
+  .sa-mobile-wordmark {
+    font-size: 2.4rem;
+    letter-spacing: 0.6px;
   }
 
-  .superadmin-header-avatar-wrapper {
-    height: 2.8rem;
-    width: 2.8rem;
+  .sa-avatar-menu {
+    min-width: 200px;
+    right: 0;
+    padding: 6px;
   }
 
-  .superadmin-header-avatar-icon {
-    font-size: 1.4rem;
+  .sa-avatar-menu::before {
+    right: 18px;
   }
 
-  .superadmin-header-avatar-spinner {
-    width: 1.4rem;
-    height: 1.4rem;
+  .sa-avatar-menu-item {
+    padding: 10px 12px;
+    font-size: 0.9rem;
   }
 
-  /* Icons - Small Mobile */
-  .superadmin-header-icons-wrapper {
-    gap: 0.2rem;
-  }
-
-  .superadmin-header-icon-btn {
-    font-size: 2.2rem !important;
-    padding: 0.4rem;
-    width: 50px;
-    height: 50px;
-  }
-
-  .superadmin-header-logout-btn {
-    font-size: 2.2rem !important;
-    padding: 0.4rem;
-    width: 50px;
-    height: 50px;
-  }
-
-  .superadmin-header-notification-badge {
-    width: 20px;
-    height: 20px;
-    font-size: 0.6rem;
-    top: 3px;
-    right: 3px;
-  }
-}
-
-@media screen and (max-width: 22em) {
-  .overall-superadmin-header-container {
-    height: 58px;
-    padding: 0 0.4rem;
-  }
-
-  .superadmin-header-avatar-wrapper {
-    height: 2.4rem;
-    width: 2.4rem;
-  }
-
-  .superadmin-header-avatar-icon {
-    font-size: 1.2rem;
-  }
-
-  .superadmin-header-avatar-spinner {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-
-  /* Icons - Extra Small */
-  .superadmin-header-icons-wrapper {
-    gap: 0.1rem;
-  }
-
-  .superadmin-header-icon-btn {
-    font-size: 1.8rem !important;
-    padding: 0.3rem;
-    width: 42px;
-    height: 42px;
-  }
-
-  .superadmin-header-logout-btn {
-    font-size: 1.8rem !important;
-    padding: 0.3rem;
-    width: 42px;
-    height: 42px;
-  }
-
-  .superadmin-header-notification-badge {
+  .sa-avatar-menu-icon {
     width: 16px;
     height: 16px;
-    font-size: 0.5rem;
-    top: 2px;
-    right: 2px;
+  }
+
+  .sa-avatar-menu-item--logout .logout-btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .sa-avatar-menu-item--logout .logout-btn-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 
-/* =========================
-   SAFE AREA FOR NOTCH PHONES
-========================= */
-@supports (padding: max(0px)) {
-  @media screen and (max-width: 46.875em) {
-    .overall-superadmin-header-container {
-      padding-top: max(0.5rem, env(safe-area-inset-top));
-    }
-  }
+@media (max-width: 320px) {
+  .sa-mobile-wordmark { font-size: 2.1rem; }
+}
+
+/* Only show mobile header on mobile */
+@media (min-width: 769px) {
+  .sa-mobile-header { display: none; }
 }
