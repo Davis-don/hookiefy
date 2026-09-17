@@ -130,6 +130,30 @@ async function deleteCategory(
   return data
 }
 
+/* ── Scroll hook: returns true once user has scrolled
+      beyond a threshold (i.e. is NOT at the top)      ─── */
+
+function useScrolledPast(threshold = 80) {
+  const [passed, setPassed] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        0
+      setPassed(y > threshold)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [threshold])
+
+  return passed
+}
+
 /* ── Component ────────────────────────────────────── */
 
 const AvailableCategories = ({
@@ -143,6 +167,9 @@ const AvailableCategories = ({
   const [savingId, setSavingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set())
+
+  /* Floating action button visibility */
+  const scrolledPast = useScrolledPast(80)
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['service-categories'],
@@ -216,7 +243,6 @@ const AvailableCategories = ({
         queryKey: ['service-categories'],
       })
 
-      // Clear any stale broken-image flag for this category
       setBrokenImages((prev) => {
         const next = new Set(prev)
         next.delete(id)
@@ -292,7 +318,7 @@ const AvailableCategories = ({
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
-  /* ── Close on Escape ───────────────────────────────── */
+  /* ── Close edit on Escape ──────────────────────────── */
 
   useEffect(() => {
     if (!editingId) return
@@ -395,7 +421,6 @@ const AvailableCategories = ({
                   !cat.is_active ? 'avc-card-inactive' : ''
                 } ${isEditing ? 'avc-card-editing' : ''}`}
               >
-                {/* ── Top-right icons (view mode) ──── */}
                 {!isEditing && (
                   <div className="avc-card-icons">
                     <button
@@ -424,7 +449,6 @@ const AvailableCategories = ({
 
                 {!isEditing ? (
                   <>
-                    {/* ── View mode ──────────────── */}
                     <div className="avc-card-media">
                       {hasImage ? (
                         <img
@@ -462,7 +486,6 @@ const AvailableCategories = ({
 
                     <div className="avc-card-body">
                       <h3 className="avc-card-title">{cat.name}</h3>
-                      <p className="avc-card-slug">/{cat.slug}</p>
 
                       {cat.description && (
                         <p className="avc-card-description">
@@ -486,7 +509,6 @@ const AvailableCategories = ({
                     </div>
                   </>
                 ) : (
-                  /* ── Edit mode ────────────────── */
                   <div className="avc-edit-form">
                     <div className="avc-edit-field">
                       <label className="avc-edit-label">Name</label>
@@ -611,6 +633,23 @@ const AvailableCategories = ({
             )
           })}
         </div>
+      )}
+
+      {/* ── Floating action button (mobile) ─────────────
+          Slides up from the bottom when the user has
+          scrolled. Hides when they return to the top.    */}
+      {onAddClick && (
+        <button
+          type="button"
+          className={`avc-fab ${
+            scrolledPast ? 'avc-fab-visible' : ''
+          }`}
+          onClick={onAddClick}
+          aria-label="Add Category"
+        >
+          <FiPlus className="avc-fab-icon" />
+          <span className="avc-fab-label">Add Category</span>
+        </button>
       )}
     </div>
   )
