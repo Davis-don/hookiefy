@@ -1,0 +1,200 @@
+/* myservices.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.mys-page,
+.mys-page button,
+.mys-page input,
+.mys-page textarea,
+.mys-page select {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ─────────────────────────────────────────────
+   Page shell
+   ───────────────────────────────────────────── */
+.mys-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-bottom: 40px;
+  animation: mysFadeIn 0.3s ease-in-out;
+}
+
+@keyframes mysFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Sticky tab bar — labels always visible
+   ───────────────────────────────────────────── */
+.mys-tabbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.mys-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.mys-tab {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 12px 14px;
+
+  background: transparent;
+  border: none;
+
+  color: #888888;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mys-tab:hover {
+  color: #111111;
+}
+
+.mys-tab-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.mys-tab-active {
+  color: #111111;
+}
+
+.mys-tab-active .mys-tab-icon {
+  color: #111111;
+}
+
+.mys-tab-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+
+  height: 2px;
+
+  background: #111111;
+  border-radius: 2px 2px 0 0;
+
+  animation: mysTabIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mysTabIn {
+  from { transform: scaleX(0.3); opacity: 0; }
+  to   { transform: scaleX(1);   opacity: 1; }
+}
+
+.mys-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.22);
+  border-radius: 8px;
+}
+
+/* ─────────────────────────────────────────────
+   Tab content
+   ───────────────────────────────────────────── */
+.mys-tab-content {
+  padding-top: 4px;
+  animation: mysTabContentIn 0.25s ease-out;
+}
+
+@keyframes mysTabContentIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Responsive — labels stay visible at all sizes
+   ───────────────────────────────────────────── */
+
+/* Tablet */
+@media (max-width: 640px) {
+  .mys-tab {
+    padding: 11px 12px;
+    font-size: 13.5px;
+    gap: 6px;
+  }
+
+  .mys-tab-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Small phones — tighten but DO NOT hide the label */
+@media (max-width: 380px) {
+  .mys-tab {
+    padding: 10px 10px;
+    font-size: 13px;
+    gap: 5px;
+  }
+
+  .mys-tab-icon {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+/* Very narrow phones — shrink further, still show labels */
+@media (max-width: 320px) {
+  .mys-tab {
+    padding: 10px 8px;
+    font-size: 12.5px;
+    gap: 4px;
+  }
+
+  .mys-tab-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mys-page,
+  .mys-tab-content {
+    animation: none;
+  }
+
+  .mys-tab-active::after {
+    animation: none;
+  }
+}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './serviceproviderdash.css';
 import Header from '../components/Header';
 import Home from '../components/Home';
-import AddService from '../components/AddService';
+import MyServices from '../components/MyServices';
 import Profile from '../components/Profile';
 import Settings from '../components/Settings';
 import Messages from '../components/Messages';
@@ -27,7 +27,7 @@ const Serviceproviderdash = () => {
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
     { id: 'messages', label: 'Messages', icon: '💬', component: Messages },
-    { id: 'add-service', label: 'Add Service', icon: '➕', component: AddService },
+    { id: 'my-services', label: 'My Services', icon: '🛠️', component: MyServices },
     { id: 'settings', label: 'Settings', icon: '⚙️', component: Settings },
   ];
 
@@ -61,7 +61,7 @@ const Serviceproviderdash = () => {
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'add-service', label: 'Add', icon: '➕' },
+    { id: 'my-services', label: 'Services', icon: '🛠️' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
