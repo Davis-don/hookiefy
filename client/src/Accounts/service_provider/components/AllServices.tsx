@@ -1,5 +1,5 @@
 // AllServices.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   FiPlus,
   FiRefreshCw,
@@ -11,9 +11,11 @@ import {
   FiXCircle,
   FiPackage,
   FiTool,
+  FiHeart,
   FiEye,
   FiEyeOff,
   FiImage,
+  FiLock,
 } from 'react-icons/fi'
 import {
   useMutation,
@@ -31,6 +33,8 @@ import './allservices.css'
    Types
    ──────────────────────────────────────────────────────── */
 
+type ListingType = 'service' | 'product' | 'hookup'
+
 interface ServiceCategory {
   id: number
   name: string
@@ -47,7 +51,7 @@ interface ServiceImage {
 
 interface Service {
   id: number
-  listing_type: 'service' | 'product'
+  listing_type: ListingType
   title: string
   description: string
   category: ServiceCategory
@@ -63,10 +67,8 @@ interface Service {
 }
 
 interface EditFormState {
-  listing_type: 'service' | 'product'
   title: string
   description: string
-  category_id: number | ''
   price: string
   pricing_unit: string
   is_active: boolean
@@ -91,7 +93,7 @@ const PRICING_UNITS = [
 
 function formatPrice(price: string, unit: string) {
   const num = Number(price)
-  if (Number.isNaN(num)) return '—'
+  if (Number.isNaN(num) || num === 0) return '—'
   const unitLabel =
     PRICING_UNITS.find((u) => u.value === unit)?.label ?? ''
   const formatted = `KES ${num.toLocaleString()}`
@@ -116,7 +118,7 @@ function useScrolledPast(threshold = 80) {
 }
 
 /* ────────────────────────────────────────────────────────
-   API
+   API helpers
    ──────────────────────────────────────────────────────── */
 
 async function fetchServices(
@@ -140,31 +142,10 @@ async function fetchServices(
   return (data?.services ?? []) as Service[]
 }
 
-async function fetchCategories(
-  access: string | null
-): Promise<ServiceCategory[]> {
-  if (!access) throw new Error('No access token found.')
-
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/services/service-categories/`,
-    {
-      headers: {
-        Authorization: `Bearer ${access}`,
-        Accept: 'application/json',
-      },
-    }
-  )
-  const data = await res.json().catch(() => null)
-  if (!res.ok) {
-    throw new Error((data && data.message) || 'Failed to load categories')
-  }
-  return (data?.categories ?? []) as ServiceCategory[]
-}
-
 async function updateService(
   access: string | null,
   id: number,
-  payload: Partial<EditFormState> & { category_id?: number }
+  payload: Partial<EditFormState>
 ) {
   if (!access) throw new Error('No access token found.')
 
@@ -256,6 +237,77 @@ async function setPrimaryImage(
   return data
 }
 
+function uploadServiceImages(
+  access: string | null,
+  serviceId: number,
+  files: File[],
+  makeFirstPrimary: boolean,
+  onProgress?: (percent: number) => void
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (!access) {
+      reject(new Error('No access token found.'))
+      return
+    }
+
+    const fd = new FormData()
+    files.forEach((file) => {
+      fd.append('images', file)
+    })
+
+    if (makeFirstPrimary) {
+      fd.append('make_first_primary', 'true')
+    }
+
+    const xhr = new XMLHttpRequest()
+
+    xhr.open(
+      'POST',
+      `${import.meta.env.VITE_API_URL}/services/${serviceId}/images/upload/`
+    )
+
+    xhr.setRequestHeader('Authorization', `Bearer ${access}`)
+    xhr.setRequestHeader('Accept', 'application/json')
+
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round(
+            (event.loaded / event.total) * 100
+          )
+          onProgress(percent)
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      let data: any = null
+      try {
+        data = JSON.parse(xhr.responseText)
+      } catch {
+        data = null
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data)
+      } else {
+        reject(
+          new Error(
+            (data && data.message) ||
+              `Upload failed (${xhr.status})`
+          )
+        )
+      }
+    }
+
+    xhr.onerror = () =>
+      reject(new Error('Network error during upload.'))
+    xhr.onabort = () => reject(new Error('Upload cancelled.'))
+
+    xhr.send(fd)
+  })
+}
+
 /* ────────────────────────────────────────────────────────
    Card cover
    ──────────────────────────────────────────────────────── */
@@ -322,23 +374,32 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const { access } = useAuthStore()
   const queryClient = useQueryClient()
 
-  const [editingId, setEditingId] = useState<number | null>(null)
+  /* Which listing is currently being edited */
+  const [editingService, setEditingService] = useState<Service | null>(
+    null
+  )
   const [form, setForm] = useState<EditFormState | null>(null)
-  const [savingId, setSavingId] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+
   const [viewingService, setViewingService] = useState<Service | null>(
     null
   )
 
-  /* Which service (if any) is pending delete confirmation */
   const [pendingDelete, setPendingDelete] = useState<Service | null>(
     null
   )
 
-  /* Image delete confirmation — inside edit mode */
   const [pendingImageDelete, setPendingImageDelete] = useState<{
     service: Service
     image: ServiceImage
   } | null>(null)
+
+  const [uploadingForId, setUploadingForId] = useState<number | null>(
+    null
+  )
+  const [uploadPercent, setUploadPercent] = useState(0)
+
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   const scrolledPast = useScrolledPast(80)
 
@@ -354,13 +415,6 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     staleTime: 60_000,
   })
 
-  const { data: categories } = useQuery({
-    queryKey: ['service-categories-public', access],
-    queryFn: () => fetchCategories(access),
-    enabled: !!access,
-    staleTime: 5 * 60_000,
-  })
-
   const list = services ?? []
 
   /* ── Update mutation ────────────────────────────────── */
@@ -370,10 +424,10 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       payload,
     }: {
       id: number
-      payload: Partial<EditFormState> & { category_id?: number }
+      payload: Partial<EditFormState>
     }) => updateService(access, id, payload),
     onSuccess: () => {
-      toast.success('Service updated.', {
+      toast.success('Listing updated.', {
         duration: 2500,
         icon: '✅',
         style: {
@@ -383,12 +437,12 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         },
       })
       queryClient.invalidateQueries({ queryKey: ['my-services'] })
-      setEditingId(null)
+      setEditingService(null)
       setForm(null)
-      setSavingId(null)
+      setSaving(false)
     },
     onError: (err: Error) => {
-      toast.error('Failed to update service', {
+      toast.error('Failed to update listing', {
         description: err.message,
         duration: 4500,
         icon: '⚠️',
@@ -398,7 +452,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-      setSavingId(null)
+      setSaving(false)
     },
   })
 
@@ -406,7 +460,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteService(access, id),
     onSuccess: () => {
-      toast.success('Service deleted.', {
+      toast.success('Listing deleted.', {
         duration: 2500,
         icon: '🗑️',
         style: {
@@ -419,7 +473,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       setPendingDelete(null)
     },
     onError: (err: Error) => {
-      toast.error('Failed to delete service', {
+      toast.error('Failed to delete listing', {
         description: err.message,
         duration: 4500,
         icon: '⚠️',
@@ -504,14 +558,60 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     },
   })
 
+  /* ── Upload new photos mutation ─────────────────────── */
+  const uploadPhotosMutation = useMutation({
+    mutationFn: ({
+      serviceId,
+      files,
+      makeFirstPrimary,
+    }: {
+      serviceId: number
+      files: File[]
+      makeFirstPrimary: boolean
+    }) =>
+      uploadServiceImages(
+        access,
+        serviceId,
+        files,
+        makeFirstPrimary,
+        (pct) => setUploadPercent(pct)
+      ),
+    onSuccess: () => {
+      toast.success('Photo(s) uploaded.', {
+        duration: 2500,
+        icon: '🖼️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      })
+      queryClient.invalidateQueries({ queryKey: ['my-services'] })
+      setUploadingForId(null)
+      setUploadPercent(0)
+    },
+    onError: (err: Error) => {
+      toast.error('Failed to upload photo', {
+        description: err.message,
+        duration: 4500,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      })
+      setUploadingForId(null)
+      setUploadPercent(0)
+    },
+  })
+
   /* ── Edit open / close ──────────────────────────────── */
   const openEdit = (s: Service) => {
-    setEditingId(s.id)
+    setEditingService(s)
     setForm({
-      listing_type: s.listing_type,
       title: s.title,
       description: s.description,
-      category_id: s.category?.id ?? '',
       price: s.price,
       pricing_unit: s.pricing_unit,
       is_active: s.is_active,
@@ -519,47 +619,63 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   }
 
   const closeEdit = () => {
-    if (savingId) return
-    setEditingId(null)
+    if (saving) return
+    setEditingService(null)
     setForm(null)
   }
 
   /* ── Save listing ───────────────────────────────────── */
-  const handleSave = (id: number) => {
-    if (!form) return
+  const handleSave = () => {
+    if (!form || !editingService) return
 
-    if (!form.title.trim() || form.title.trim().length < 3) {
-      toast.error('Title must be at least 3 characters.')
-      return
-    }
-    if (
-      !form.description.trim() ||
-      form.description.trim().length < 20
-    ) {
-      toast.error('Description must be at least 20 characters.')
-      return
-    }
-    if (!form.category_id) {
-      toast.error('Please pick a category.')
-      return
-    }
-    if (!form.price || Number(form.price) < 0) {
-      toast.error('Please enter a valid price.')
-      return
+    const isHookup = editingService.listing_type === 'hookup'
+
+    if (isHookup) {
+      if (
+        !form.description.trim() ||
+        form.description.trim().length < 20
+      ) {
+        toast.error(
+          'Please write at least a couple of sentences about yourself.'
+        )
+        return
+      }
+    } else {
+      if (!form.title.trim() || form.title.trim().length < 3) {
+        toast.error('Title must be at least 3 characters.')
+        return
+      }
+      if (
+        !form.description.trim() ||
+        form.description.trim().length < 20
+      ) {
+        toast.error('Description must be at least 20 characters.')
+        return
+      }
+      if (!form.price || Number(form.price) < 0) {
+        toast.error('Please enter a valid price.')
+        return
+      }
     }
 
-    setSavingId(id)
+    setSaving(true)
+
+    /* Only send the fields the user can actually edit.
+       Listing type and category stay untouched. */
+    const payload: Record<string, unknown> = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      is_active: form.is_active,
+    }
+
+    if (!isHookup) {
+      payload.price = form.price
+      payload.pricing_unit = form.pricing_unit
+    }
+
     updateMutation.mutate({
-      id,
-      payload: {
-        listing_type: form.listing_type,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category_id: Number(form.category_id),
-        price: form.price,
-        pricing_unit: form.pricing_unit,
-        is_active: form.is_active,
-      },
+      id: editingService.id,
+      payload: payload as Partial<EditFormState>,
     })
   }
 
@@ -611,6 +727,79 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     })
   }
 
+  /* ── Add new photos from the edit panel ─────────────── */
+  const handleAddPhotos = (
+    service: Service,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const serviceIsHookup = service.listing_type === 'hookup'
+
+    /* Hookup enforcement — only one image allowed.
+       The user must delete the existing photo first. */
+    if (serviceIsHookup && service.images.length >= 1) {
+      toast.error(
+        'Hookup listings only allow one photo. Remove the current one first.'
+      )
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = ''
+      }
+      return
+    }
+
+    const incoming = Array.from(files)
+    const limited = serviceIsHookup
+      ? incoming.slice(0, 1)
+      : incoming
+
+    if (serviceIsHookup && incoming.length > 1) {
+      toast.info('Hookup listings allow only one photo.', {
+        duration: 2500,
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #3b82f6',
+          color: '#ffffff',
+        },
+      })
+    }
+
+    const valid: File[] = []
+    for (const file of limited) {
+      if (!file.type.startsWith('image/')) continue
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error(`${file.name} is over 8MB.`)
+        continue
+      }
+      valid.push(file)
+    }
+
+    if (valid.length === 0) {
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = ''
+      }
+      return
+    }
+
+    const makeFirstPrimary = !service.images.some(
+      (i) => i.is_primary
+    )
+
+    setUploadingForId(service.id)
+    setUploadPercent(0)
+
+    uploadPhotosMutation.mutate({
+      serviceId: service.id,
+      files: valid,
+      makeFirstPrimary,
+    })
+
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = ''
+    }
+  }
+
   /* ── Field setter ───────────────────────────────────── */
   const setField = <K extends keyof EditFormState>(
     key: K,
@@ -621,14 +810,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
 
   /* ── Escape closes edit ─────────────────────────────── */
   useEffect(() => {
-    if (!editingId) return
+    if (!editingService) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeEdit()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingId, savingId])
+  }, [editingService, saving])
 
   /* ══════════════════════════════════════════════════════
      FULL-PAGE LOADER
@@ -690,8 +879,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           <FiInbox className="als-state-icon" />
           <h3 className="als-state-title">No listings yet</h3>
           <p className="als-state-text">
-            Create your first service or product so clients can find
-            and book you.
+            Create your first listing so clients can find you.
           </p>
           {onAddClick && (
             <button
@@ -711,18 +899,21 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       {list.length > 0 && (
         <div className="als-grid">
           {list.map((s) => {
-            const isEditing = editingId === s.id
-            const isSaving = savingId === s.id
+            const isEditing = editingService?.id === s.id
+            const isSaving = saving && isEditing
             const isDeleting =
               deleteMutation.isPending &&
               pendingDelete?.id === s.id
+            const isHookup = s.listing_type === 'hookup'
 
             return (
               <article
                 key={s.id}
                 className={`als-card ${
                   !s.is_active ? 'als-card-inactive' : ''
-                } ${isEditing ? 'als-card-editing' : ''}`}
+                } ${isEditing ? 'als-card-editing' : ''} ${
+                  isHookup ? 'als-card-hookup' : ''
+                }`}
               >
                 {!isEditing && (
                   <div
@@ -791,20 +982,29 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                         <span
                           className={`als-type-tag als-type-${s.listing_type}`}
                         >
-                          {s.listing_type === 'service' ? (
+                          {s.listing_type === 'service' && (
                             <>
                               <FiTool className="als-tag-icon" />
                               Service
                             </>
-                          ) : (
+                          )}
+
+                          {s.listing_type === 'product' && (
                             <>
                               <FiPackage className="als-tag-icon" />
                               Product
                             </>
                           )}
+
+                          {s.listing_type === 'hookup' && (
+                            <>
+                              <FiHeart className="als-tag-icon" />
+                              Hookup
+                            </>
+                          )}
                         </span>
 
-                        {s.category?.name && (
+                        {!isHookup && s.category?.name && (
                           <span className="als-card-category">
                             {s.category.name}
                           </span>
@@ -816,9 +1016,15 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       </p>
 
                       <div className="als-card-foot">
-                        <span className="als-card-price">
-                          {formatPrice(s.price, s.pricing_unit)}
-                        </span>
+                        {!isHookup ? (
+                          <span className="als-card-price">
+                            {formatPrice(s.price, s.pricing_unit)}
+                          </span>
+                        ) : (
+                          <span className="als-card-hookup-note">
+                            Just here for good company
+                          </span>
+                        )}
 
                         <span
                           className={`als-status ${
@@ -845,57 +1051,55 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                 ) : (
                   /* ── Edit mode ────────────────── */
                   <div className="als-edit-form">
-                    {/* Listing type */}
-                    <div className="als-edit-field">
-                      <label className="als-edit-label">
-                        Listing Type
-                      </label>
-                      <div className="als-type-toggle">
-                        <label
-                          className={`als-type-option ${
-                            form?.listing_type === 'service'
-                              ? 'als-type-active'
-                              : ''
-                          }`}
+                    {/* Locked meta — type + category (read-only) */}
+                    <div className="als-edit-locked">
+                      <div className="als-edit-locked-row">
+                        <span className="als-edit-locked-label">
+                          <FiLock className="als-edit-locked-icon" />
+                          Listing Type
+                        </span>
+                        <span
+                          className={`als-edit-locked-pill als-edit-locked-pill-${s.listing_type}`}
                         >
-                          <input
-                            type="radio"
-                            name="listing_type"
-                            value="service"
-                            checked={form?.listing_type === 'service'}
-                            onChange={() =>
-                              setField('listing_type', 'service')
-                            }
-                            disabled={isSaving}
-                          />
-                          <span>Service</span>
-                        </label>
-
-                        <label
-                          className={`als-type-option ${
-                            form?.listing_type === 'product'
-                              ? 'als-type-active'
-                              : ''
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="listing_type"
-                            value="product"
-                            checked={form?.listing_type === 'product'}
-                            onChange={() =>
-                              setField('listing_type', 'product')
-                            }
-                            disabled={isSaving}
-                          />
-                          <span>Product</span>
-                        </label>
+                          {s.listing_type === 'service' && (
+                            <>
+                              <FiTool /> Service
+                            </>
+                          )}
+                          {s.listing_type === 'product' && (
+                            <>
+                              <FiPackage /> Product
+                            </>
+                          )}
+                          {s.listing_type === 'hookup' && (
+                            <>
+                              <FiHeart /> Hookup
+                            </>
+                          )}
+                        </span>
                       </div>
+
+                      <div className="als-edit-locked-row">
+                        <span className="als-edit-locked-label">
+                          <FiLock className="als-edit-locked-icon" />
+                          Category
+                        </span>
+                        <span className="als-edit-locked-value">
+                          {s.category?.name || 'Uncategorised'}
+                        </span>
+                      </div>
+
+                      <p className="als-edit-locked-hint">
+                        Listing type and category can't be changed
+                        after publishing.
+                      </p>
                     </div>
 
                     {/* Title */}
                     <div className="als-edit-field">
-                      <label className="als-edit-label">Title</label>
+                      <label className="als-edit-label">
+                        {isHookup ? 'Intro Line (optional)' : 'Title'}
+                      </label>
                       <input
                         type="text"
                         className="als-edit-input"
@@ -908,35 +1112,10 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       />
                     </div>
 
-                    {/* Category */}
-                    <div className="als-edit-field">
-                      <label className="als-edit-label">Category</label>
-                      <select
-                        className="als-edit-input"
-                        value={form?.category_id ?? ''}
-                        onChange={(e) =>
-                          setField(
-                            'category_id',
-                            e.target.value
-                              ? Number(e.target.value)
-                              : ''
-                          )
-                        }
-                        disabled={isSaving}
-                      >
-                        <option value="">Select category…</option>
-                        {categories?.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
                     {/* Description */}
                     <div className="als-edit-field">
                       <label className="als-edit-label">
-                        Description
+                        {isHookup ? 'About You' : 'Description'}
                       </label>
                       <textarea
                         className="als-edit-input als-edit-textarea"
@@ -945,50 +1124,57 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                           setField('description', e.target.value)
                         }
                         disabled={isSaving}
-                        rows={3}
+                        rows={isHookup ? 5 : 3}
                         maxLength={2000}
+                        placeholder={
+                          isHookup
+                            ? "Tell people about yourself and what you're looking for…"
+                            : undefined
+                        }
                       />
                     </div>
 
-                    {/* Price + Unit */}
-                    <div className="als-edit-row">
-                      <div className="als-edit-field">
-                        <label className="als-edit-label">
-                          Price (KES)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          className="als-edit-input"
-                          value={form?.price || ''}
-                          onChange={(e) =>
-                            setField('price', e.target.value)
-                          }
-                          disabled={isSaving}
-                        />
-                      </div>
+                    {/* Price + Unit — hidden for hookup */}
+                    {!isHookup && (
+                      <div className="als-edit-row">
+                        <div className="als-edit-field">
+                          <label className="als-edit-label">
+                            Price (KES)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="als-edit-input"
+                            value={form?.price || ''}
+                            onChange={(e) =>
+                              setField('price', e.target.value)
+                            }
+                            disabled={isSaving}
+                          />
+                        </div>
 
-                      <div className="als-edit-field">
-                        <label className="als-edit-label">
-                          Pricing Unit
-                        </label>
-                        <select
-                          className="als-edit-input"
-                          value={form?.pricing_unit || 'per_job'}
-                          onChange={(e) =>
-                            setField('pricing_unit', e.target.value)
-                          }
-                          disabled={isSaving}
-                        >
-                          {PRICING_UNITS.map((u) => (
-                            <option key={u.value} value={u.value}>
-                              {u.label}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="als-edit-field">
+                          <label className="als-edit-label">
+                            Pricing Unit
+                          </label>
+                          <select
+                            className="als-edit-input"
+                            value={form?.pricing_unit || 'per_job'}
+                            onChange={(e) =>
+                              setField('pricing_unit', e.target.value)
+                            }
+                            disabled={isSaving}
+                          >
+                            {PRICING_UNITS.map((u) => (
+                              <option key={u.value} value={u.value}>
+                                {u.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Active toggle */}
                     <div className="als-edit-field">
@@ -1028,17 +1214,70 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                     <div className="als-edit-photos">
                       <div className="als-edit-photos-header">
                         <span className="als-edit-label">
-                          Photos ({s.images.length})
+                          {isHookup
+                            ? 'Your Photo'
+                            : `Photos (${s.images.length})`}
                         </span>
-                        <span className="als-edit-photos-hint">
-                          Tap ★ to make a photo the cover
-                        </span>
+
+                        <div className="als-edit-photos-actions">
+                          {!isHookup && (
+                            <span className="als-edit-photos-hint">
+                              Tap ★ to make a photo the cover
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            className="als-edit-photos-add"
+                            onClick={() =>
+                              editFileInputRef.current?.click()
+                            }
+                            disabled={
+                              isSaving ||
+                              uploadingForId === s.id ||
+                              (isHookup && s.images.length >= 1)
+                            }
+                            title={
+                              isHookup && s.images.length >= 1
+                                ? 'Remove the current photo first'
+                                : 'Add photos'
+                            }
+                          >
+                            {uploadingForId === s.id ? (
+                              <>
+                                <span className="als-spinner-small als-spinner-dark" />
+                                {uploadPercent}%
+                              </>
+                            ) : (
+                              <>
+                                <FiPlus />
+                                {isHookup ? 'Add Photo' : 'Add Photos'}
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Hidden multi-file input */}
+                      <input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple={!isHookup}
+                        className="als-edit-photos-file"
+                        onChange={(e) => handleAddPhotos(s, e)}
+                        disabled={
+                          isSaving || uploadingForId === s.id
+                        }
+                      />
 
                       {s.images.length === 0 ? (
                         <div className="als-edit-photos-empty">
                           <FiImage />
-                          <span>No photos on this listing</span>
+                          <span>
+                            No photos yet — use the button above to
+                            add one.
+                          </span>
                         </div>
                       ) : (
                         <div className="als-edit-photos-grid">
@@ -1051,6 +1290,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                               deleteImageMutation.isPending &&
                               pendingImageDelete?.image.id ===
                                 img.id
+                            const hideStar = isHookup
 
                             return (
                               <div
@@ -1074,7 +1314,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                                 )}
 
                                 <div className="als-edit-photo-actions">
-                                  {!img.is_primary && (
+                                  {!img.is_primary && !hideStar && (
                                     <button
                                       type="button"
                                       className="als-edit-photo-btn als-edit-photo-btn-star"
@@ -1117,6 +1357,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                           })}
                         </div>
                       )}
+
+                      {/* Hookup single-photo helper text */}
+                      {isHookup && s.images.length >= 1 && (
+                        <span className="als-edit-photos-hint als-edit-photos-hint-full">
+                          Remove the current photo to upload a new
+                          one.
+                        </span>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -1124,7 +1372,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       <button
                         type="button"
                         className="als-edit-save"
-                        onClick={() => handleSave(s.id)}
+                        onClick={handleSave}
                         disabled={isSaving}
                       >
                         {isSaving ? (

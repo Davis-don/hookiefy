@@ -5,6 +5,7 @@ import {
   FiStar,
   FiTool,
   FiPackage,
+  FiHeart,
   FiEye,
   FiEyeOff,
   FiChevronLeft,
@@ -20,6 +21,8 @@ import './servicedetailmodal.css'
 /* ────────────────────────────────────────────────────────
    Types
    ──────────────────────────────────────────────────────── */
+
+type ListingType = 'service' | 'product' | 'hookup'
 
 interface ServiceCategory {
   id: number
@@ -37,7 +40,7 @@ interface ServiceImage {
 
 interface Service {
   id: number
-  listing_type: 'service' | 'product'
+  listing_type: ListingType
   title: string
   description: string
   category: ServiceCategory
@@ -153,8 +156,31 @@ const ServiceDetailModal = ({
   if (!service) return null
 
   const images = service.images ?? []
-  const active = images.length > 0 ? images[activeIndex] : null
+
+  const safeActiveIndex =
+    images.length === 0
+      ? 0
+      : Math.min(activeIndex, images.length - 1)
+
+  const active = images.length > 0 ? images[safeActiveIndex] : null
   const hasMultiple = images.length > 1
+
+  const isHookup = service.listing_type === 'hookup'
+
+  /* Avatar letter — fall back to the category if the title
+     is empty (hookup rows may only carry a fallback title). */
+  const avatarLetter =
+    (service.title || service.category?.name || 'H')
+      .charAt(0)
+      .toUpperCase()
+
+  /* Type label */
+  const typeLabel =
+    service.listing_type === 'service'
+      ? 'Service'
+      : service.listing_type === 'product'
+        ? 'Product'
+        : 'Hookup'
 
   const goPrev = () => {
     if (!hasMultiple) return
@@ -177,11 +203,13 @@ const ServiceDetailModal = ({
         className="sdm-post"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ══════════════════════════════════════════════
-            Top bar — floating over everything
-           ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════
+            Top bar
+           ══════════════════════════════════════════ */}
         <div className="sdm-topbar">
-          <span className="sdm-topbar-title">Listing Details</span>
+          <span className="sdm-topbar-title">
+            {isHookup ? 'Hookup Profile' : 'Listing Details'}
+          </span>
           <button
             type="button"
             className="sdm-topbar-close"
@@ -192,39 +220,38 @@ const ServiceDetailModal = ({
           </button>
         </div>
 
-        {/* ══════════════════════════════════════════════
-            Hero image — full width, cover, tall
-           ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════
+            Hero image
+           ══════════════════════════════════════════ */}
         <div className="sdm-hero">
           {active ? (
             <>
               <img
                 src={active.image_url}
-                alt={service.title}
+                alt={service.title || 'Profile photo'}
                 className="sdm-hero-image"
                 key={active.id}
               />
 
-              {/* Soft gradient at the bottom for readability */}
-              <div className="sdm-hero-gradient" aria-hidden="true" />
+              <div
+                className="sdm-hero-gradient"
+                aria-hidden="true"
+              />
 
-              {/* Primary badge — top left */}
-              {active.is_primary && (
+              {active.is_primary && !isHookup && (
                 <span className="sdm-hero-badge">
                   <FiStar />
                   Cover Photo
                 </span>
               )}
 
-              {/* Multi-image counter — top right */}
               {hasMultiple && (
                 <span className="sdm-hero-counter">
                   <FiImage />
-                  {activeIndex + 1} / {images.length}
+                  {safeActiveIndex + 1} / {images.length}
                 </span>
               )}
 
-              {/* Prev / Next arrows */}
               {hasMultiple && (
                 <>
                   <button
@@ -254,9 +281,9 @@ const ServiceDetailModal = ({
           )}
         </div>
 
-        {/* ══════════════════════════════════════════════
-            Dots indicator — Instagram style
-           ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════
+            Dots
+           ══════════════════════════════════════════ */}
         {hasMultiple && (
           <div className="sdm-dots">
             {images.map((img, idx) => (
@@ -264,7 +291,7 @@ const ServiceDetailModal = ({
                 key={img.id}
                 type="button"
                 className={`sdm-dot ${
-                  idx === activeIndex ? 'sdm-dot-active' : ''
+                  idx === safeActiveIndex ? 'sdm-dot-active' : ''
                 }`}
                 onClick={() => setActiveIndex(idx)}
                 aria-label={`Go to image ${idx + 1}`}
@@ -273,24 +300,24 @@ const ServiceDetailModal = ({
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════
-            Body — the actual detail content
-           ══════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════
+            Body
+           ══════════════════════════════════════════ */}
         <div className="sdm-content">
-          {/* Author-ish strip: category + type + status */}
+          {/* Author-style strip */}
           <div className="sdm-strip">
             <div className="sdm-strip-avatar">
-              {service.title.charAt(0).toUpperCase()}
+              {avatarLetter}
             </div>
 
             <div className="sdm-strip-meta">
               <span className="sdm-strip-name">
-                {service.category?.name || 'Uncategorised'}
+                {service.title ||
+                  service.category?.name ||
+                  'Hookup'}
               </span>
               <span className="sdm-strip-sub">
-                {service.listing_type === 'service'
-                  ? 'Service'
-                  : 'Product'}
+                {typeLabel}
                 {' · '}
                 {service.is_active ? 'Active' : 'Hidden'}
               </span>
@@ -298,17 +325,23 @@ const ServiceDetailModal = ({
 
             <div className="sdm-strip-tags">
               <span
-                className={`sdm-pill sdm-pill-${
-                  service.listing_type
-                }`}
+                className={`sdm-pill sdm-pill-${service.listing_type}`}
               >
-                {service.listing_type === 'service' ? (
+                {service.listing_type === 'service' && (
                   <>
                     <FiTool /> Service
                   </>
-                ) : (
+                )}
+
+                {service.listing_type === 'product' && (
                   <>
                     <FiPackage /> Product
+                  </>
+                )}
+
+                {service.listing_type === 'hookup' && (
+                  <>
+                    <FiHeart /> Hookup
                   </>
                 )}
               </span>
@@ -340,57 +373,73 @@ const ServiceDetailModal = ({
           </div>
 
           {/* Title */}
-          <h1 className="sdm-title">{service.title}</h1>
+          <h1 className="sdm-title">
+            {service.title || service.category?.name || 'Hookup'}
+          </h1>
 
-          {/* Price strip — bold and prominent */}
-          <div className="sdm-price-strip">
-            <div className="sdm-price-left">
-              <span className="sdm-price-amount">
-                KES {Number(service.price).toLocaleString()}
-              </span>
-              <span className="sdm-price-unit">
-                {formatUnit(service.pricing_unit)}
+          {/* Price strip — hidden for hookups */}
+          {!isHookup && (
+            <div className="sdm-price-strip">
+              <div className="sdm-price-left">
+                <span className="sdm-price-amount">
+                  KES {Number(service.price).toLocaleString()}
+                </span>
+                <span className="sdm-price-unit">
+                  {formatUnit(service.pricing_unit)}
+                </span>
+              </div>
+
+              <span className="sdm-price-category">
+                <FiTag />
+                {service.category?.name || 'Uncategorised'}
               </span>
             </div>
+          )}
 
-            <span className="sdm-price-category">
-              <FiTag />
-              {service.category?.name || 'Uncategorised'}
-            </span>
-          </div>
-
-          {/* Description */}
+          {/* Description / About */}
           <section className="sdm-block">
-            <h2 className="sdm-block-title">About this listing</h2>
-            <p className="sdm-block-text">{service.description}</p>
+            <h2 className="sdm-block-title">
+              {isHookup ? 'About' : 'About this listing'}
+            </h2>
+            <p className="sdm-block-text">
+              {service.description}
+            </p>
           </section>
 
-          {/* Details grid */}
+          {/* Details */}
           <section className="sdm-block">
             <h2 className="sdm-block-title">Details</h2>
 
             <div className="sdm-details">
               <div className="sdm-detail-row">
                 <span className="sdm-detail-label">
-                  <FiPackage className="sdm-detail-icon" />
+                  {service.listing_type === 'hookup' ? (
+                    <FiHeart className="sdm-detail-icon" />
+                  ) : (
+                    <FiPackage className="sdm-detail-icon" />
+                  )}
                   Listing Type
                 </span>
                 <span className="sdm-detail-value">
-                  {service.listing_type === 'service'
-                    ? 'Service'
-                    : 'Product'}
+                  {typeLabel}
                 </span>
               </div>
 
-              <div className="sdm-detail-row">
-                <span className="sdm-detail-label">
-                  <FiDollarSign className="sdm-detail-icon" />
-                  Pricing
-                </span>
-                <span className="sdm-detail-value">
-                  {formatPrice(service.price, service.pricing_unit)}
-                </span>
-              </div>
+              {/* Pricing row — hidden for hookups */}
+              {!isHookup && (
+                <div className="sdm-detail-row">
+                  <span className="sdm-detail-label">
+                    <FiDollarSign className="sdm-detail-icon" />
+                    Pricing
+                  </span>
+                  <span className="sdm-detail-value">
+                    {formatPrice(
+                      service.price,
+                      service.pricing_unit
+                    )}
+                  </span>
+                </div>
+              )}
 
               <div className="sdm-detail-row">
                 <span className="sdm-detail-label">
@@ -408,8 +457,8 @@ const ServiceDetailModal = ({
                   Photos
                 </span>
                 <span className="sdm-detail-value">
-                  {service.image_count}{' '}
-                  {service.image_count === 1 ? 'photo' : 'photos'}
+                  {images.length}{' '}
+                  {images.length === 1 ? 'photo' : 'photos'}
                 </span>
               </div>
 
@@ -435,10 +484,12 @@ const ServiceDetailModal = ({
             </div>
           </section>
 
-          {/* Thumbnails strip — below the fold for extra images */}
+          {/* Thumbnails — below the fold */}
           {hasMultiple && (
             <section className="sdm-block">
-              <h2 className="sdm-block-title">All photos</h2>
+              <h2 className="sdm-block-title">
+                All photos ({images.length})
+              </h2>
 
               <div className="sdm-thumb-strip">
                 {images.map((img, idx) => (
@@ -446,20 +497,29 @@ const ServiceDetailModal = ({
                     key={img.id}
                     type="button"
                     className={`sdm-thumb ${
-                      idx === activeIndex ? 'sdm-thumb-active' : ''
+                      idx === safeActiveIndex
+                        ? 'sdm-thumb-active'
+                        : ''
                     }`}
                     onClick={() => {
                       setActiveIndex(idx)
-                      // Scroll back to the top of the modal
-                      const post = document.querySelector('.sdm-post')
+                      const post =
+                        document.querySelector('.sdm-post')
                       if (post) {
-                        post.scrollTo({ top: 0, behavior: 'smooth' })
+                        post.scrollTo({
+                          top: 0,
+                          behavior: 'smooth',
+                        })
                       }
                     }}
                     aria-label={`View image ${idx + 1}`}
                   >
-                    <img src={img.image_url} alt="" loading="lazy" />
-                    {img.is_primary && (
+                    <img
+                      src={img.image_url}
+                      alt=""
+                      loading="lazy"
+                    />
+                    {img.is_primary && !isHookup && (
                       <span className="sdm-thumb-star">
                         <FiStar />
                       </span>
@@ -470,7 +530,6 @@ const ServiceDetailModal = ({
             </section>
           )}
 
-          {/* Bottom spacer for iOS safe area */}
           <div className="sdm-bottom-spacer" />
         </div>
       </div>

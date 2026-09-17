@@ -768,3 +768,14 @@
     transform: none;
   }
 }
+/* ═══════════════════════════════════════════════════════
+   HOOKUP LISTING PILL — soft red
+   ═══════════════════════════════════════════════════════ */
+.sdm-pill-hookup {
+  background: rgba(217, 83, 79, 0.12);
+  color: #b03a35;
+}
+
+.sdm-pill-hookup svg {
+  color: inherit;
+}

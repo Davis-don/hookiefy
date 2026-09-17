@@ -12,6 +12,8 @@ import {
   FiStar,
   FiEye,
   FiCheck,
+  FiHeart,
+  FiInfo,
 } from 'react-icons/fi'
 import {
   useMutation,
@@ -37,8 +39,10 @@ interface AddServiceProps {
   onCancel?: () => void
 }
 
+type ListingType = 'service' | 'product' | 'hookup'
+
 interface FormState {
-  listing_type: 'service' | 'product'
+  listing_type: ListingType
   title: string
   description: string
   category_id: number | ''
@@ -61,9 +65,7 @@ interface PendingImage {
   file: File
   previewUrl: string
   isPrimary: boolean
-  /** 0..100 — only meaningful during upload */
   progress: number
-  /** 'pending' | 'uploading' | 'done' | 'failed' */
   status: 'pending' | 'uploading' | 'done' | 'failed'
 }
 
@@ -106,7 +108,9 @@ async function fetchCategories(
   )
   const data = await res.json().catch(() => null)
   if (!res.ok) {
-    throw new Error((data && data.message) || 'Failed to load categories')
+    throw new Error(
+      (data && data.message) || 'Failed to load categories'
+    )
   }
   return (data?.categories ?? []) as ServiceCategory[]
 }
@@ -117,14 +121,24 @@ async function createListing(
 ) {
   if (!access) throw new Error('No access token found.')
 
-  const body = {
+  const isHookup = form.listing_type === 'hookup'
+
+  // Build the payload dynamically — price and pricing_unit
+  // are only sent for service / product listings.
+  const body: Record<string, unknown> = {
     listing_type: form.listing_type,
-    title: form.title.trim(),
     description: form.description.trim(),
     category_id: Number(form.category_id),
-    price: form.price,
-    pricing_unit: form.pricing_unit,
     is_active: form.is_active,
+  }
+
+  if (form.title.trim()) {
+    body.title = form.title.trim()
+  }
+
+  if (!isHookup) {
+    body.price = form.price
+    body.pricing_unit = form.pricing_unit
   }
 
   const res = await fetch(
@@ -143,7 +157,7 @@ async function createListing(
 
   if (!res.ok) {
     const err = new Error(
-      (data && data.message) || 'Failed to create service'
+      (data && data.message) || 'Failed to create listing'
     ) as Error & { fieldErrors?: FieldErrors }
 
     if (data?.errors && typeof data.errors === 'object') {
@@ -162,10 +176,6 @@ async function createListing(
   return data
 }
 
-/**
- * Upload all images in a single multipart request while
- * reporting real progress via XMLHttpRequest.
- */
 function uploadListingImages(
   access: string | null,
   serviceId: number,
@@ -183,8 +193,7 @@ function uploadListingImages(
       fd.append('images', img.file)
     })
 
-    const primary = images.find((i) => i.isPrimary)
-    if (primary) {
+    if (images.length > 0) {
       fd.append('make_first_primary', 'true')
     }
 
@@ -224,7 +233,8 @@ function uploadListingImages(
       }
     }
 
-    xhr.onerror = () => reject(new Error('Network error during upload.'))
+    xhr.onerror = () =>
+      reject(new Error('Network error during upload.'))
     xhr.onabort = () => reject(new Error('Upload cancelled.'))
 
     xhr.send(fd)
@@ -248,6 +258,9 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     'idle' | 'creating' | 'uploading'
   >('idle')
 
+  const isHookup = form.listing_type === 'hookup'
+  const allowMultipleImages = !isHookup
+
   /* ── Fetch categories ─────────────────────────────── */
   const { data: categories } = useQuery({
     queryKey: ['service-categories-public', access],
@@ -256,7 +269,12 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     staleTime: 5 * 60_000,
   })
 
-  /* ── Create listing mutation ──────────────────────── */
+  /* Look up the "Hookup" category if one exists */
+  const hookupCategory = categories?.find(
+    (c) => c.name.trim().toLowerCase() === 'hookup'
+  )
+
+  /* ── Create mutation ──────────────────────────────── */
   const createMutation = useMutation({
     mutationFn: async () => {
       setUploadPhase('creating')
@@ -267,45 +285,55 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       if (listingId && images.length > 0) {
         setUploadPhase('uploading')
 
-        // Mark all as pending
         setImages((prev) =>
-          prev.map((i) => ({ ...i, status: 'uploading', progress: 0 }))
+          prev.map((i) => ({
+            ...i,
+            status: 'uploading',
+            progress: 0,
+          }))
         )
 
-        await uploadListingImages(access, listingId, images, (pct) => {
-          setUploadPercent(pct)
+        await uploadListingImages(
+          access,
+          listingId,
+          images,
+          (pct) => {
+            setUploadPercent(pct)
 
-          // Distribute progress across tiles so users see
-          // each image moving.
-          setImages((prev) =>
-            prev.map((img, idx) => {
-              // Simple equal distribution — each image moves
-              // in a slice of the overall percent.
-              const sliceSize = 100 / prev.length
-              const sliceStart = sliceSize * idx
-              const local = Math.min(
-                100,
-                Math.max(0, (pct - sliceStart) / sliceSize * 100)
-              )
-              return {
-                ...img,
-                progress: Math.round(local),
-                status: local >= 100 ? 'done' : 'uploading',
-              }
-            })
-          )
-        })
+            setImages((prev) =>
+              prev.map((img, idx) => {
+                const sliceSize = 100 / prev.length
+                const sliceStart = sliceSize * idx
+                const local = Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    ((pct - sliceStart) / sliceSize) * 100
+                  )
+                )
+                return {
+                  ...img,
+                  progress: Math.round(local),
+                  status: local >= 100 ? 'done' : 'uploading',
+                }
+              })
+            )
+          }
+        )
 
-        // Ensure all are marked done
         setImages((prev) =>
-          prev.map((i) => ({ ...i, progress: 100, status: 'done' }))
+          prev.map((i) => ({
+            ...i,
+            progress: 100,
+            status: 'done',
+          }))
         )
       }
 
       return created
     },
     onSuccess: (data) => {
-      toast.success('Service created successfully.', {
+      toast.success('Listing created successfully.', {
         duration: 3000,
         icon: '✅',
         style: {
@@ -333,7 +361,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       const e = err as Error & { fieldErrors?: FieldErrors }
       if (e.fieldErrors) setFieldErrors(e.fieldErrors)
 
-      toast.error('Failed to create service', {
+      toast.error('Failed to create listing', {
         description: err.message,
         duration: 4500,
         icon: '⚠️',
@@ -368,13 +396,89 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     }
   }
 
+  /* ── Switch listing type ──────────────────────────── */
+  const handleTypeChange = (type: ListingType) => {
+    if (createMutation.isPending) return
+
+    // Trim to a single image when switching TO hookup
+    if (type === 'hookup' && images.length > 1) {
+      const keep = images[0]
+      const toRevoke = images.slice(1)
+      toRevoke.forEach((img) => URL.revokeObjectURL(img.previewUrl))
+
+      setImages(
+        keep
+          ? [
+              {
+                ...keep,
+                isPrimary: true,
+                progress: 0,
+                status: 'pending',
+              },
+            ]
+          : []
+      )
+
+      toast.info('Hookup listings use only one photo.', {
+        duration: 2500,
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #3b82f6',
+          color: '#ffffff',
+        },
+      })
+    }
+
+    if (type === 'hookup') {
+      setImages((prev) =>
+        prev.length > 0
+          ? [{ ...prev[0], isPrimary: true }]
+          : prev
+      )
+    }
+
+    // Auto-select the Hookup category when switching.
+    // Also clear price / pricing_unit when moving to hookup
+    // so nothing stale gets sent.
+    setForm((prev) => ({
+      ...prev,
+      listing_type: type,
+      ...(type === 'hookup'
+        ? {
+            category_id: hookupCategory
+              ? hookupCategory.id
+              : prev.category_id,
+            price: '',
+            pricing_unit: 'per_job',
+          }
+        : {}),
+    }))
+  }
+
   /* ── Image picker ─────────────────────────────────── */
-  const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImagePick = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
+    const incoming = Array.from(files)
+
+    const limited = isHookup ? incoming.slice(0, 1) : incoming
+
+    if (isHookup && incoming.length > 1) {
+      toast.info('Hookup listings allow only one photo.', {
+        duration: 2500,
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #3b82f6',
+          color: '#ffffff',
+        },
+      })
+    }
+
     const next: PendingImage[] = []
-    for (const file of Array.from(files)) {
+    for (const file of limited) {
       if (!file.type.startsWith('image/')) continue
       if (file.size > 8 * 1024 * 1024) {
         toast.error(`${file.name} is over 8MB.`)
@@ -392,10 +496,21 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     }
 
     setImages((prev) => {
-      const combined = [...prev, ...next]
-      if (combined.length > 0 && !combined.some((i) => i.isPrimary)) {
-        combined[0].isPrimary = true
+      const base = isHookup ? [] : prev
+
+      if (isHookup) {
+        prev.forEach((img) => URL.revokeObjectURL(img.previewUrl))
       }
+
+      const combined = [...base, ...next]
+
+      if (
+        combined.length > 0 &&
+        !combined.some((i) => i.isPrimary)
+      ) {
+        combined[0] = { ...combined[0], isPrimary: true }
+      }
+
       return combined
     })
 
@@ -410,15 +525,20 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
 
       const filtered = prev.filter((i) => i.id !== id)
 
-      if (filtered.length > 0 && !filtered.some((i) => i.isPrimary)) {
-        filtered[0].isPrimary = true
+      if (
+        filtered.length > 0 &&
+        !filtered.some((i) => i.isPrimary)
+      ) {
+        filtered[0] = { ...filtered[0], isPrimary: true }
       }
+
       return filtered
     })
   }
 
   const setPrimary = (id: string) => {
     if (createMutation.isPending) return
+    if (!allowMultipleImages) return
     setImages((prev) =>
       prev.map((i) => ({ ...i, isPrimary: i.id === id }))
     )
@@ -430,17 +550,35 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
 
     const errors: FieldErrors = {}
 
-    if (!form.title.trim() || form.title.trim().length < 3) {
-      errors.title = 'Title must be at least 3 characters.'
+    if (!isHookup) {
+      if (!form.title.trim() || form.title.trim().length < 3) {
+        errors.title = 'Title must be at least 3 characters.'
+      }
+      if (
+        !form.description.trim() ||
+        form.description.trim().length < 20
+      ) {
+        errors.description =
+          'Description must be at least 20 characters.'
+      }
+      if (!form.price || Number(form.price) < 0) {
+        errors.price = 'Please enter a valid price.'
+      }
+    } else {
+      // Hookup → only the intro is required
+      if (
+        !form.description.trim() ||
+        form.description.trim().length < 20
+      ) {
+        errors.description =
+          'Please write at least a couple of sentences about yourself.'
+      }
     }
-    if (!form.description.trim() || form.description.trim().length < 20) {
-      errors.description = 'Description must be at least 20 characters.'
-    }
+
     if (!form.category_id) {
-      errors.category_id = 'Please select a category.'
-    }
-    if (!form.price || Number(form.price) < 0) {
-      errors.price = 'Please enter a valid price.'
+      errors.category_id = isHookup
+        ? 'Please choose the Hookup category.'
+        : 'Please select a category.'
     }
 
     if (Object.keys(errors).length > 0) {
@@ -474,21 +612,22 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     onCancel?.()
   }
 
-  /* ── Uploaded count ───────────────────────────────── */
-  const uploadedCount = images.filter((i) => i.status === 'done').length
+  /* ── Upload overlay ───────────────────────────────── */
+  const uploadedCount = images.filter(
+    (i) => i.status === 'done'
+  ).length
   const totalCount = images.length
 
-  /* ── Overlay spinner ──────────────────────────────── */
   const isWorking = createMutation.isPending
   const overlayMessage =
     uploadPhase === 'uploading'
-      ? `Uploading images (${uploadedCount}/${totalCount})`
-      : 'Creating your service'
+      ? `Uploading ${isHookup ? 'photo' : 'images'} (${uploadedCount}/${totalCount})`
+      : 'Creating your listing'
 
   /* ── Render ───────────────────────────────────────── */
   return (
     <>
-      {/* ── Full-screen overlay while creating/uploading ── */}
+      {/* ── Full-screen overlay ─────────────────────── */}
       {isWorking && (
         <div className="ads-overlay">
           <div className="ads-overlay-card">
@@ -498,7 +637,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               slowAfter={4000}
             />
 
-            {/* Progress bar — only shows during upload phase */}
             {uploadPhase === 'uploading' && (
               <div className="ads-overlay-progress">
                 <div className="ads-progress-track">
@@ -518,17 +656,23 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
 
       <div className="ads-wrapper">
         <div className="ads-form-container">
-          <form className="ads-form" onSubmit={handleSubmit} noValidate>
-            {/* Listing type */}
+          <form
+            className="ads-form"
+            onSubmit={handleSubmit}
+            noValidate
+          >
+            {/* ── Listing type ──────────────────────── */}
             <div className="ads-form-group">
               <label className="ads-form-label">
-                <FiPackage className="ads-label-icon" /> Listing Type{' '}
-                <span className="ads-required">*</span>
+                <FiPackage className="ads-label-icon" /> Listing
+                Type <span className="ads-required">*</span>
               </label>
               <div className="ads-type-toggle">
                 <label
                   className={`ads-type-option ${
-                    form.listing_type === 'service' ? 'ads-type-active' : ''
+                    form.listing_type === 'service'
+                      ? 'ads-type-active'
+                      : ''
                   }`}
                 >
                   <input
@@ -536,7 +680,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                     name="listing_type"
                     value="service"
                     checked={form.listing_type === 'service'}
-                    onChange={handleChange}
+                    onChange={() => handleTypeChange('service')}
                     disabled={isWorking}
                   />
                   <span>Service</span>
@@ -544,7 +688,9 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
 
                 <label
                   className={`ads-type-option ${
-                    form.listing_type === 'product' ? 'ads-type-active' : ''
+                    form.listing_type === 'product'
+                      ? 'ads-type-active'
+                      : ''
                   }`}
                 >
                   <input
@@ -552,19 +698,67 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                     name="listing_type"
                     value="product"
                     checked={form.listing_type === 'product'}
-                    onChange={handleChange}
+                    onChange={() => handleTypeChange('product')}
                     disabled={isWorking}
                   />
                   <span>Product</span>
                 </label>
+
+                <label
+                  className={`ads-type-option ads-type-option-hookup ${
+                    form.listing_type === 'hookup'
+                      ? 'ads-type-active'
+                      : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="listing_type"
+                    value="hookup"
+                    checked={form.listing_type === 'hookup'}
+                    onChange={() => handleTypeChange('hookup')}
+                    disabled={isWorking}
+                  />
+                  <span>
+                    <FiHeart className="ads-type-icon" />
+                    Hookup
+                  </span>
+                </label>
               </div>
             </div>
 
-            {/* Title */}
+            {/* ── Hookup info banner ────────────────── */}
+            {isHookup && (
+              <div className="ads-hookup-banner">
+                <FiHeart className="ads-hookup-icon" />
+                <p className="ads-hookup-text">
+                  Write a short intro about yourself — who you
+                  are, what you enjoy, and the kind of company
+                  you're looking for. One photo is enough.
+                  Remember to choose the{' '}
+                  <strong>Hookup</strong> category below.
+                </p>
+              </div>
+            )}
+
+            {/* ── Title / Intro Line ───────────────── */}
             <div className="ads-form-group">
               <label className="ads-form-label" htmlFor="title">
-                <FiTool className="ads-label-icon" /> Title{' '}
-                <span className="ads-required">*</span>
+                {isHookup ? (
+                  <>
+                    <FiHeart className="ads-label-icon" /> Your
+                    Intro Line
+                  </>
+                ) : (
+                  <>
+                    <FiTool className="ads-label-icon" /> Title
+                  </>
+                )}
+                {isHookup ? (
+                  <span className="ads-optional">Optional</span>
+                ) : (
+                  <span className="ads-required">*</span>
+                )}
               </label>
               <input
                 id="title"
@@ -573,27 +767,43 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                 className={`ads-form-input ${
                   fieldErrors.title ? 'ads-input-error' : ''
                 }`}
-                placeholder="e.g. Private Math Tutoring"
+                placeholder={
+                  isHookup
+                    ? 'e.g. John Doe — Looking for someone to hang out with'
+                    : 'e.g. Private Math Tutoring'
+                }
                 value={form.title}
                 onChange={handleChange}
                 disabled={isWorking}
                 maxLength={255}
               />
+              {isHookup && (
+                <span className="ads-hint">
+                  Leave blank and we'll use your name.
+                </span>
+              )}
               {fieldErrors.title && (
-                <span className="ads-field-error">{fieldErrors.title}</span>
+                <span className="ads-field-error">
+                  {fieldErrors.title}
+                </span>
               )}
             </div>
 
-            {/* Category */}
+            {/* ── Category ─────────────────────────── */}
             <div className="ads-form-group">
-              <label className="ads-form-label" htmlFor="category_id">
+              <label
+                className="ads-form-label"
+                htmlFor="category_id"
+              >
                 Category <span className="ads-required">*</span>
               </label>
               <select
                 id="category_id"
                 name="category_id"
                 className={`ads-form-input ${
-                  fieldErrors.category_id ? 'ads-input-error' : ''
+                  fieldErrors.category_id
+                    ? 'ads-input-error'
+                    : ''
                 }`}
                 value={form.category_id}
                 onChange={handleChange}
@@ -606,6 +816,16 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   </option>
                 ))}
               </select>
+
+              {isHookup && (
+                <span className="ads-hookup-category-hint">
+                  <FiInfo className="ads-hint-icon" />
+                  Please choose the <strong>Hookup</strong>{' '}
+                  category so your listing appears in the right
+                  place.
+                </span>
+              )}
+
               {fieldErrors.category_id && (
                 <span className="ads-field-error">
                   {fieldErrors.category_id}
@@ -613,24 +833,39 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               )}
             </div>
 
-            {/* Description */}
+            {/* ── Description / About You ──────────── */}
             <div className="ads-form-group">
-              <label className="ads-form-label" htmlFor="description">
-                Description <span className="ads-required">*</span>
+              <label
+                className="ads-form-label"
+                htmlFor="description"
+              >
+                {isHookup ? 'About You' : 'Description'}{' '}
+                <span className="ads-required">*</span>
               </label>
               <textarea
                 id="description"
                 name="description"
                 className={`ads-form-input ads-form-textarea ${
-                  fieldErrors.description ? 'ads-input-error' : ''
+                  fieldErrors.description
+                    ? 'ads-input-error'
+                    : ''
                 }`}
-                placeholder="Describe what your service includes…"
+                placeholder={
+                  isHookup
+                    ? "e.g. I'm John Doe, 28, and I'm looking for a girl I can hang out with — grab coffee, watch a movie, or just talk. I'm easygoing, respectful and value good company."
+                    : 'Describe what your service includes, what clients should expect, and anything they need to prepare…'
+                }
                 value={form.description}
                 onChange={handleChange}
                 disabled={isWorking}
-                rows={4}
+                rows={isHookup ? 6 : 4}
                 maxLength={2000}
               />
+              <span className="ads-hint">
+                {isHookup
+                  ? 'Take a moment to describe yourself honestly — this helps you meet the right people.'
+                  : 'Give clients a clear picture of what you offer.'}
+              </span>
               {fieldErrors.description && (
                 <span className="ads-field-error">
                   {fieldErrors.description}
@@ -638,57 +873,69 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               )}
             </div>
 
-            {/* Price + Unit */}
-            <div className="ads-form-row">
-              <div className="ads-form-group">
-                <label className="ads-form-label" htmlFor="price">
-                  <FiDollarSign className="ads-label-icon" /> Price (KES){' '}
-                  <span className="ads-required">*</span>
-                </label>
-                <input
-                  id="price"
-                  name="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={`ads-form-input ${
-                    fieldErrors.price ? 'ads-input-error' : ''
-                  }`}
-                  placeholder="0.00"
-                  value={form.price}
-                  onChange={handleChange}
-                  disabled={isWorking}
-                />
-                {fieldErrors.price && (
-                  <span className="ads-field-error">{fieldErrors.price}</span>
-                )}
-              </div>
+            {/* ── Price + Unit ─────────────────────── */}
+            {!isHookup && (
+              <div className="ads-form-row">
+                <div className="ads-form-group">
+                  <label
+                    className="ads-form-label"
+                    htmlFor="price"
+                  >
+                    <FiDollarSign className="ads-label-icon" />{' '}
+                    Price (KES){' '}
+                    <span className="ads-required">*</span>
+                  </label>
+                  <input
+                    id="price"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className={`ads-form-input ${
+                      fieldErrors.price ? 'ads-input-error' : ''
+                    }`}
+                    placeholder="0.00"
+                    value={form.price}
+                    onChange={handleChange}
+                    disabled={isWorking}
+                  />
+                  {fieldErrors.price && (
+                    <span className="ads-field-error">
+                      {fieldErrors.price}
+                    </span>
+                  )}
+                </div>
 
-              <div className="ads-form-group">
-                <label className="ads-form-label" htmlFor="pricing_unit">
-                  Pricing Unit
-                </label>
-                <select
-                  id="pricing_unit"
-                  name="pricing_unit"
-                  className="ads-form-input"
-                  value={form.pricing_unit}
-                  onChange={handleChange}
-                  disabled={isWorking}
-                >
-                  {PRICING_UNITS.map((u) => (
-                    <option key={u.value} value={u.value}>
-                      {u.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="ads-form-group">
+                  <label
+                    className="ads-form-label"
+                    htmlFor="pricing_unit"
+                  >
+                    Pricing Unit
+                  </label>
+                  <select
+                    id="pricing_unit"
+                    name="pricing_unit"
+                    className="ads-form-input"
+                    value={form.pricing_unit}
+                    onChange={handleChange}
+                    disabled={isWorking}
+                  >
+                    {PRICING_UNITS.map((u) => (
+                      <option key={u.value} value={u.value}>
+                        {u.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Images */}
+            {/* ── Images ───────────────────────────── */}
             <div className="ads-form-group">
               <label className="ads-form-label">
-                <FiImage className="ads-label-icon" /> Images
+                <FiImage className="ads-label-icon" />{' '}
+                {isHookup ? 'Your Photo' : 'Images'}
               </label>
 
               <div className="ads-image-uploader">
@@ -696,7 +943,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  multiple
+                  multiple={allowMultipleImages}
                   className="ads-file-hidden"
                   onChange={handleImagePick}
                   disabled={isWorking}
@@ -706,16 +953,30 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   type="button"
                   className="ads-pick-btn"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isWorking}
+                  disabled={
+                    isWorking ||
+                    (isHookup && images.length >= 1)
+                  }
                 >
                   <FiPlus className="ads-btn-icon" />
-                  Add Images
+                  {isHookup
+                    ? images.length > 0
+                      ? 'Replace Photo'
+                      : 'Add Photo'
+                    : 'Add Images'}
                 </button>
 
                 {images.length > 0 && (
-                  <div className="ads-image-grid">
+                  <div
+                    className={`ads-image-grid ${
+                      isHookup ? 'ads-image-grid-single' : ''
+                    }`}
+                  >
                     {images.map((img) => (
-                      <div key={img.id} className="ads-image-tile">
+                      <div
+                        key={img.id}
+                        className="ads-image-tile"
+                      >
                         <img
                           src={img.previewUrl}
                           alt="preview"
@@ -723,17 +984,22 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                         />
 
                         <div className="ads-image-actions">
-                          <button
-                            type="button"
-                            className={`ads-image-btn ${
-                              img.isPrimary ? 'ads-image-btn-active' : ''
-                            }`}
-                            onClick={() => setPrimary(img.id)}
-                            title="Make primary"
-                            disabled={isWorking}
-                          >
-                            <FiStar />
-                          </button>
+                          {allowMultipleImages && (
+                            <button
+                              type="button"
+                              className={`ads-image-btn ${
+                                img.isPrimary
+                                  ? 'ads-image-btn-active'
+                                  : ''
+                              }`}
+                              onClick={() => setPrimary(img.id)}
+                              title="Make primary"
+                              disabled={isWorking}
+                            >
+                              <FiStar />
+                            </button>
+                          )}
+
                           <button
                             type="button"
                             className="ads-image-btn ads-image-btn-danger"
@@ -745,11 +1011,20 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                           </button>
                         </div>
 
-                        {img.isPrimary && img.status !== 'done' && (
-                          <span className="ads-image-badge">Primary</span>
+                        {allowMultipleImages &&
+                          img.isPrimary &&
+                          img.status !== 'done' && (
+                            <span className="ads-image-badge">
+                              Primary
+                            </span>
+                          )}
+
+                        {isHookup && img.status !== 'done' && (
+                          <span className="ads-image-badge ads-image-badge-hookup">
+                            <FiHeart /> Profile
+                          </span>
                         )}
 
-                        {/* Per-tile upload progress */}
                         {img.status === 'uploading' && (
                           <>
                             <div className="ads-tile-overlay" />
@@ -757,7 +1032,9 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                               <div className="ads-tile-progress-track">
                                 <div
                                   className="ads-tile-progress-fill"
-                                  style={{ width: `${img.progress}%` }}
+                                  style={{
+                                    width: `${img.progress}%`,
+                                  }}
                                 />
                               </div>
                               <span className="ads-tile-progress-label">
@@ -778,12 +1055,14 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                 )}
 
                 <span className="ads-hint">
-                  Optional. The first uploaded image is used as the cover.
+                  {isHookup
+                    ? 'Add one clear photo of yourself. It becomes your profile shot.'
+                    : 'Optional. Add up to several photos. The first one becomes the cover.'}
                 </span>
               </div>
             </div>
 
-            {/* Active toggle */}
+            {/* ── Status toggle ────────────────────── */}
             <div className="ads-form-group">
               <span className="ads-form-label">Status</span>
               <label className="ads-toggle">
@@ -794,7 +1073,10 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   onChange={handleChange}
                   disabled={isWorking}
                 />
-                <span className="ads-toggle-box" aria-hidden="true" />
+                <span
+                  className="ads-toggle-box"
+                  aria-hidden="true"
+                />
                 <span className="ads-toggle-text">
                   <FiEye className="ads-toggle-icon" />
                   Active (visible to the public)
@@ -802,7 +1084,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </label>
             </div>
 
-            {/* Actions */}
+            {/* ── Actions ──────────────────────────── */}
             <div className="ads-form-actions">
               <button
                 type="submit"
@@ -818,7 +1100,10 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   </>
                 ) : (
                   <>
-                    <FiSave className="ads-btn-icon" /> Create Service
+                    <FiSave className="ads-btn-icon" />{' '}
+                    {isHookup
+                      ? 'Publish Hookup'
+                      : 'Create Listing'}
                   </>
                 )}
               </button>

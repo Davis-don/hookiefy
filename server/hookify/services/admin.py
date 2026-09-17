@@ -190,7 +190,8 @@ class ServiceImageInline(admin.TabularInline):
 @admin.register(ClientService)
 class ClientServiceAdmin(admin.ModelAdmin):
     """
-    Admin panel for managing services and product listings.
+    Admin panel for managing service, product, and
+    hookup listings.
 
     A listing belongs to one provider and one category.
     Providers can have multiple listings, each with
@@ -205,7 +206,7 @@ class ClientServiceAdmin(admin.ModelAdmin):
         "title",
         "provider",
         "category",
-        "listing_type",
+        "listing_type_badge",
         "price",
         "pricing_unit",
         "primary_thumb",
@@ -318,6 +319,49 @@ class ClientServiceAdmin(admin.ModelAdmin):
     )
 
     # --------------------------------------------------------
+    # LIST VIEW — LISTING TYPE BADGE
+    # --------------------------------------------------------
+
+    @admin.display(
+        description="Type",
+        ordering="listing_type",
+    )
+    def listing_type_badge(self, obj):
+        """
+        Colour-coded pill for the listing type so
+        service / product / hookup are easy to spot
+        at a glance in the changelist.
+        """
+
+        palettes = {
+            "service": ("#1d4ed8", "rgba(37, 99, 235, 0.12)"),
+            "product": ("#059669", "rgba(16, 185, 129, 0.14)"),
+            "hookup": ("#b03a35", "rgba(217, 83, 79, 0.14)"),
+        }
+
+        color, background = palettes.get(
+            obj.listing_type,
+            ("#555555", "rgba(0, 0, 0, 0.06)"),
+        )
+
+        label = obj.get_listing_type_display()
+
+        return format_html(
+            '<span style="display:inline-block;'
+            'padding:3px 10px;'
+            'border-radius:999px;'
+            'font-size:11px;'
+            'font-weight:700;'
+            'letter-spacing:0.04em;'
+            'text-transform:uppercase;'
+            'color:{};'
+            'background:{};">{}</span>',
+            color,
+            background,
+            label,
+        )
+
+    # --------------------------------------------------------
     # LIST VIEW — PRIMARY IMAGE THUMBNAIL
     # --------------------------------------------------------
 
@@ -341,6 +385,9 @@ class ClientServiceAdmin(admin.ModelAdmin):
     actions = (
         "activate_services",
         "deactivate_services",
+        "mark_as_service",
+        "mark_as_product",
+        "mark_as_hookup",
     )
 
     @admin.action(description="Activate selected listings")
@@ -359,17 +406,36 @@ class ClientServiceAdmin(admin.ModelAdmin):
             f"{updated} listing(s) deactivated.",
         )
 
+    @admin.action(description="Change type → Service")
+    def mark_as_service(self, request, queryset):
+        updated = queryset.update(listing_type="service")
+        self.message_user(
+            request,
+            f"{updated} listing(s) marked as Service.",
+        )
+
+    @admin.action(description="Change type → Product")
+    def mark_as_product(self, request, queryset):
+        updated = queryset.update(listing_type="product")
+        self.message_user(
+            request,
+            f"{updated} listing(s) marked as Product.",
+        )
+
+    @admin.action(description="Change type → Hookup")
+    def mark_as_hookup(self, request, queryset):
+        updated = queryset.update(listing_type="hookup")
+        self.message_user(
+            request,
+            f"{updated} listing(s) marked as Hookup.",
+        )
+
     # --------------------------------------------------------
     # QUERYSET OPTIMISATION
-    # --------------------------------------------------------
-    #
-    # Prefetch images so the list view's `primary_thumb`
-    # column doesn't hit the DB once per row.
     # --------------------------------------------------------
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-
         return qs.prefetch_related("images")
 
 
@@ -505,11 +571,6 @@ class ServiceImageAdmin(admin.ModelAdmin):
 
     @admin.action(description="Mark selected as primary")
     def make_primary(self, request, queryset):
-        """
-        Mark each selected image as primary for its service,
-        automatically flipping siblings to non-primary.
-        """
-
         count = 0
 
         for img in queryset:

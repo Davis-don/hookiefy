@@ -183,32 +183,19 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
     """
     Create / update a listing together with its images.
 
-    Payload shape:
+    Per-type rules:
 
-        {
-            "listing_type": "service",
-            "title": "Private Math Tutoring",
-            "description": "...",
-            "category_id": 3,
-            "price": "1500.00",
-            "pricing_unit": "per_hour",
-            "is_active": true,
-            "images": [
-                {
-                    "image_url": "https://res.cloudinary.com/.../a.jpg",
-                    "image_public_id": "hookiefy/services/a",
-                    "is_primary": true,
-                    "display_order": 0
-                },
-                {
-                    "image_url": "https://res.cloudinary.com/.../b.jpg",
-                    "image_public_id": "hookiefy/services/b",
-                    "display_order": 1
-                }
-            ]
-        }
+        service / product
+            - title:       required, ≥ 3 characters
+            - description: required, ≥ 20 characters
+            - price:       required, ≥ 0
 
-    Semantics:
+        hookup
+            - title:       optional (falls back to provider name)
+            - description: required, ≥ 20 characters (the intro)
+            - price:       optional (defaults to 0)
+
+    Image handling:
         - On create: every image in the array is created.
         - On update: images are reconciled —
             * items with an `id` are updated in place
@@ -248,30 +235,56 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
         )
 
     # ── Field-level validation ────────────────────────────
+    #
+    # Note: these run per-field, before `validate()`. We
+    # only reject clearly invalid values here. Whether a
+    # field is *required* depends on the listing type, so
+    # that decision lives in `validate()`.
 
     def validate_title(self, value):
-        value = value.strip()
+        if value is None:
+            return value
+
+        value = str(value).strip()
+
+        # Allow blank here — required-ness is per type
+        if value == "":
+            return ""
+
         if len(value) < 3:
             raise serializers.ValidationError(
                 "Title must be at least 3 characters long."
             )
+
         return value
 
     def validate_description(self, value):
-        value = (value or "").strip()
+        if value is None:
+            return value
+
+        value = str(value).strip()
+
+        # Allow blank here — required-ness is per type
+        if value == "":
+            return ""
+
         if len(value) < 20:
             raise serializers.ValidationError(
                 "Description must be at least 20 characters long."
             )
+
         return value
 
     def validate_price(self, value):
+        # Allow None here — required-ness is per type
         if value is None:
-            raise serializers.ValidationError("Price is required.")
+            return None
+
         if value < 0:
             raise serializers.ValidationError(
                 "Price cannot be negative."
             )
+
         return value
 
     # ── Cross-field validation ────────────────────────────
@@ -280,18 +293,94 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = getattr(request, "user", None)
 
+        # ── Determine the effective listing type ──────────
+        listing_type = attrs.get("listing_type")
+
+        if not listing_type and self.instance:
+            listing_type = self.instance.listing_type
+
+        listing_type = listing_type or "service"
+
+        # ── Resolve effective values (fall back on instance) ──
         title = attrs.get("title")
+        description = attrs.get("description")
+        price = attrs.get("price")
         category = attrs.get("category")
 
         if self.instance:
-            title = title or self.instance.title
-            category = category or self.instance.category
+            if title is None:
+                title = self.instance.title
+            if description is None:
+                description = self.instance.description
+            if price is None:
+                price = self.instance.price
+            if category is None:
+                category = self.instance.category
 
-        # Prevent duplicate titles per provider + category
-        if user and user.is_authenticated and title and category:
+        # Trim once for readability
+        title_str = (title or "").strip()
+        description_str = (description or "").strip()
+
+        # ── Per-type required rules ───────────────────────
+
+        if listing_type in ("service", "product"):
+            if not title_str:
+                raise serializers.ValidationError(
+                    {"title": "Title is required."}
+                )
+
+            if not description_str:
+                raise serializers.ValidationError(
+                    {"description": "Description is required."}
+                )
+
+            if price is None:
+                raise serializers.ValidationError(
+                    {"price": "Price is required."}
+                )
+
+        elif listing_type == "hookup":
+            # Description (intro) is the one thing that
+            # hookups must carry.
+            if not description_str:
+                raise serializers.ValidationError(
+                    {
+                        "description": (
+                            "Please write a short intro about "
+                            "yourself."
+                        )
+                    }
+                )
+
+            # Title is optional — fall back to the provider's
+            # name so the row still has a human-readable label.
+            if not title_str:
+                fallback = ""
+                if user and user.is_authenticated:
+                    fallback = getattr(user, "full_name", "") or ""
+                attrs["title"] = fallback or "Hookup"
+
+            # Price is optional — default to 0 so nothing
+            # downstream has to deal with null.
+            if price is None:
+                attrs["price"] = 0
+
+        # ── Duplicate title check (all types) ─────────────
+        final_title = attrs.get("title")
+        if self.instance and not final_title:
+            final_title = self.instance.title
+
+        final_title_str = (final_title or "").strip()
+
+        if (
+            user
+            and user.is_authenticated
+            and final_title_str
+            and category
+        ):
             qs = ClientService.objects.filter(
                 provider=user,
-                title__iexact=title,
+                title__iexact=final_title_str,
                 category=category,
             )
             if self.instance:
@@ -307,10 +396,12 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        # Ensure at most one primary across the submitted images
+        # ── At most one primary image per payload ─────────
         images = attrs.get("images")
         if images is not None:
-            primaries = [img for img in images if img.get("is_primary")]
+            primaries = [
+                img for img in images if img.get("is_primary")
+            ]
             if len(primaries) > 1:
                 raise serializers.ValidationError(
                     {
@@ -332,6 +423,12 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "You must be logged in to create a listing."
             )
+
+        # Guarantee non-null values for the DB columns
+        validated_data.setdefault("title", "")
+        validated_data.setdefault("description", "")
+        if validated_data.get("price") is None:
+            validated_data["price"] = 0
 
         images_data = validated_data.pop("images", [])
 
@@ -359,6 +456,20 @@ class ClientServiceWriteSerializer(serializers.ModelSerializer):
         # Update the listing's scalar fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
+        # Never persist a null price
+        if instance.price is None:
+            instance.price = 0
+
+        # Keep title non-null for older rows created before
+        # the field became blank-able.
+        if instance.title is None:
+            instance.title = ""
+
+        # Same for description
+        if instance.description is None:
+            instance.description = ""
+
         instance.save()
 
         # Reconcile the gallery only if the client sent it

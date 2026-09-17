@@ -89,7 +89,7 @@ class ServiceCategory(models.Model):
 
 class ClientService(models.Model):
     """
-    A service or product listing created by a service provider.
+    A service, product, or hookup listing created by a provider.
 
     One service provider can have many ClientService records.
 
@@ -99,6 +99,12 @@ class ClientService(models.Model):
 
     Images are stored as related ServiceImage rows, so a
     listing can carry any number of photos.
+
+    Note:
+        `title`, `description`, and `price` are optional at
+        the model level so hookup listings can be published
+        with just a photo and an intro. Validation of these
+        fields per listing type is enforced in the serializer.
     """
 
     # ========================================================
@@ -108,6 +114,7 @@ class ClientService(models.Model):
     LISTING_TYPE_CHOICES = (
         ("service", "Service"),
         ("product", "Product"),
+        ("hookup", "Hookup"),
     )
 
     listing_type = models.CharField(
@@ -116,8 +123,8 @@ class ClientService(models.Model):
         default="service",
         db_index=True,
         help_text=(
-            "Whether this listing represents a service "
-            "or a product/good for sale."
+            "Whether this listing is a service, a product "
+            "for sale, or a hookup / companionship offer."
         ),
     )
 
@@ -156,10 +163,13 @@ class ClientService(models.Model):
 
     title = models.CharField(
         max_length=255,
+        blank=True,
+        default="",
         db_index=True,
         help_text=(
             "Name of the service or product, "
-            "e.g. 'Mathematics Tutoring' or 'Toyota Premio 2018'."
+            "e.g. 'Mathematics Tutoring' or 'Toyota Premio 2018'. "
+            "Optional for hookup listings."
         ),
     )
 
@@ -168,8 +178,11 @@ class ClientService(models.Model):
     # ========================================================
 
     description = models.TextField(
+        blank=True,
+        default="",
         help_text=(
-            "Detailed description of the service or product."
+            "Detailed description of the service or product. "
+            "Optional for hookup listings."
         ),
     )
 
@@ -180,8 +193,13 @@ class ClientService(models.Model):
     price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
+        blank=True,
+        null=True,
         validators=[MinValueValidator(0)],
-        help_text="Price in Kenyan Shillings (KES).",
+        help_text=(
+            "Price in Kenyan Shillings (KES). "
+            "Optional for hookup listings."
+        ),
     )
 
     # ========================================================
@@ -201,6 +219,7 @@ class ClientService(models.Model):
         max_length=20,
         choices=PRICING_UNIT_CHOICES,
         default="per_job",
+        blank=True,
         help_text="How the listed price is charged.",
     )
 
@@ -249,7 +268,9 @@ class ClientService(models.Model):
     # ========================================================
 
     def __str__(self):
-        return f"{self.title} - {self.provider}"
+        if self.title:
+            return f"{self.title} - {self.provider}"
+        return f"Hookup #{self.pk} - {self.provider}"
 
     # ========================================================
     # CONVENIENCE

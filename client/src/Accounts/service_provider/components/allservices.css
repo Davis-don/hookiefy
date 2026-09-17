@@ -1139,3 +1139,176 @@
     transition: none;
   }
 }
+/* ═══════════════════════════════════════════════════════
+   PHOTO MANAGEMENT — header actions + upload button
+   ═══════════════════════════════════════════════════════ */
+
+.als-edit-photos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.als-edit-photos-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.als-edit-photos-hint {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #999999;
+  letter-spacing: 0.02em;
+}
+
+.als-edit-photos-file {
+  display: none;
+}
+
+.als-edit-photos-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1.5px dashed #c9c9c9;
+
+  background: #fafafa;
+  color: #333333;
+
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.als-edit-photos-add:hover:not(:disabled) {
+  background: #111111;
+  border-color: #111111;
+  border-style: solid;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.als-edit-photos-add:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.als-edit-photos-add:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.als-edit-photos-add svg {
+  width: 14px;
+  height: 14px;
+}
+/* ═══════════════════════════════════════════════════════
+   EDIT FORM — locked meta (type + category)
+   ═══════════════════════════════════════════════════════ */
+
+.als-edit-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 12px 14px;
+  border-radius: 10px;
+
+  background: #f7f7f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.als-edit-locked-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  flex-wrap: wrap;
+}
+
+.als-edit-locked-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #666666;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.als-edit-locked-icon {
+  width: 11px;
+  height: 11px;
+  color: #999999;
+}
+
+.als-edit-locked-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111111;
+  text-align: right;
+  word-break: break-word;
+}
+
+.als-edit-locked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.als-edit-locked-pill svg {
+  width: 11px;
+  height: 11px;
+}
+
+.als-edit-locked-pill-service {
+  background: rgba(37, 99, 235, 0.09);
+  color: #1d4ed8;
+}
+
+.als-edit-locked-pill-product {
+  background: rgba(16, 185, 129, 0.11);
+  color: #059669;
+}
+
+.als-edit-locked-pill-hookup {
+  background: rgba(217, 83, 79, 0.12);
+  color: #b03a35;
+}
+
+.als-edit-locked-hint {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #999999;
+  line-height: 1.5;
+}
+
+/* Full-width hint used under the photo grid for hookups */
+.als-edit-photos-hint-full {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  color: #b03a35;
+  font-weight: 600;
+}
