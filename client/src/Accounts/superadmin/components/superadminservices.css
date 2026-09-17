@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — SUPERADMIN SERVICES (Category Manager shell)
-   Tab bar + shared button/form primitives
+   Sticky tab bar + shared button/form primitives
    ───────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -20,6 +20,10 @@
   flex-direction: column;
   gap: 22px;
   padding-bottom: 40px;
+
+  /* Anchor for the sticky tab bar */
+  position: relative;
+
   animation: sasFadeIn 0.3s ease-in-out;
 }
 
@@ -62,20 +66,41 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TAB BAR — Medium-style underline switcher
+   STICKY TAB BAR — Medium-style underline switcher
+   Stays pinned at the top of the scroll container while
+   the content below scrolls.
    ═══════════════════════════════════════════════════════════ */
 
 .sas-tabbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
   display: flex;
   align-items: center;
   gap: 4px;
 
+  /* Solid background so content passing underneath
+     doesn't bleed through */
+  background: var(--sas-tabbar-bg, #ffffff);
+
+  /* The subtle divider line that Medium uses */
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+
+  /* Compensate for the parent's vertical padding so the
+     tab bar spans the full width of the scroll area */
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
 
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+
+  /* Slight lift so it reads as a fixed surface */
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
 }
 
 .sas-tabbar::-webkit-scrollbar {
@@ -155,6 +180,10 @@
 /* ── Tab content wrapper ────────────────────────────────── */
 
 .sas-tab-content {
+  /* Slight top padding so the first card doesn't touch
+     the sticky bar */
+  padding-top: 4px;
+
   animation: sasTabContentIn 0.25s ease-out;
 }
 

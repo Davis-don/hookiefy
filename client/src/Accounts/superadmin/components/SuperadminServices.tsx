@@ -25,7 +25,7 @@ const SuperadminServices = () => {
 
   return (
     <div className="sas-page">
-      {/* ── Tab bar (Medium-style underline) ────────────── */}
+      {/* ── Sticky tab bar ──────────────────────────────── */}
       <div className="sas-tabbar" role="tablist">
         {tabs.map((tab) => (
           <button
