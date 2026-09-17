@@ -1,8 +1,8 @@
-/* ─────────────────────────────────────────────────────────
-   YOUPATA — AVAILABLE CATEGORIES LIST
-   Scoped to .avc-* classes
-   ───────────────────────────────────────────────────────── */
+/* availablecategories.css */
 
+/* ─────────────────────────────────────────────
+   List wrapper
+   ───────────────────────────────────────────── */
 .avc-list {
   display: flex;
   flex-direction: column;
@@ -16,8 +16,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Toolbar ────────────────────────────────────────────── */
-
+/* ─────────────────────────────────────────────
+   Toolbar
+   ───────────────────────────────────────────── */
 .avc-toolbar {
   display: flex;
   align-items: center;
@@ -33,10 +34,10 @@
 }
 
 .avc-toolbar-title {
-  font-size: 1.05rem;
+  font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.01em;
+  color: #111111;
+  letter-spacing: 0.2px;
   margin: 0;
 }
 
@@ -46,6 +47,9 @@
   gap: 10px;
 }
 
+/* ─────────────────────────────────────────────
+   Icon button (refresh)
+   ───────────────────────────────────────────── */
 .avc-icon-btn {
   width: 38px;
   height: 38px;
@@ -54,19 +58,20 @@
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
-  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  border-radius: 8px;
 
-  color: #475569;
+  color: #111111;
   cursor: pointer;
-  transition: all 0.2s ease;
+
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .avc-icon-btn:hover:not(:disabled) {
-  background: rgba(124, 58, 237, 0.07);
-  border-color: rgba(124, 58, 237, 0.25);
-  color: #7c3aed;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.25);
 }
 
 .avc-icon-btn:disabled {
@@ -87,8 +92,49 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Empty / loading states ─────────────────────────────── */
+/* ─────────────────────────────────────────────
+   Add button (used in toolbar + empty state)
+   ───────────────────────────────────────────── */
+.avc-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1px solid #111111;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease,
+    opacity 0.15s ease;
+}
+
+.avc-add-btn:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+.avc-add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.avc-add-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* ─────────────────────────────────────────────
+   Loading / empty states
+   ───────────────────────────────────────────── */
 .avc-state {
   display: flex;
   flex-direction: column;
@@ -100,8 +146,8 @@
   text-align: center;
 
   background: #ffffff;
-  border: 1px dashed rgba(15, 23, 42, 0.12);
-  border-radius: 16px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
 }
 
 .avc-state-icon {
@@ -111,81 +157,74 @@
 }
 
 .avc-state-title {
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 700;
-  color: #334155;
+  color: #111111;
   margin: 0;
 }
 
 .avc-state-text {
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 13px;
+  color: #666666;
   max-width: 380px;
   margin: 0;
   line-height: 1.55;
 }
 
 .avc-spinner {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 3px solid rgba(124, 58, 237, 0.25);
-  border-top-color: #7c3aed;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #111111;
   animation: avcSpin 0.8s linear infinite;
 }
 
-/* ── Grid ───────────────────────────────────────────────── */
-
+/* ─────────────────────────────────────────────
+   Grid
+   ───────────────────────────────────────────── */
 .avc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px;
 }
 
-/* ── Card ───────────────────────────────────────────────── */
-
+/* ─────────────────────────────────────────────
+   Card
+   ───────────────────────────────────────────── */
 .avc-card {
   display: flex;
   flex-direction: column;
 
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
 
   overflow: hidden;
 
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    border-color 0.18s ease;
 
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .avc-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
 .avc-card-inactive {
-  opacity: 0.72;
+  opacity: 0.65;
 }
 
-/* ── Card media ─────────────────────────────────────────── */
-
+/* ── Media / initial ─────────────────────────────────── */
 .avc-card-media {
   position: relative;
   aspect-ratio: 16 / 9;
 
-  background: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.14) 0%,
-    rgba(37, 99, 235, 0.12) 100%
-  );
-}
-
-.avc-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  background: #f5f5f5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .avc-card-initial {
@@ -198,17 +237,16 @@
 
   font-size: 2.2rem;
   font-weight: 800;
-  color: #7c3aed;
+  color: #111111;
 
   background: linear-gradient(
     135deg,
-    rgba(124, 58, 237, 0.14) 0%,
-    rgba(37, 99, 235, 0.12) 100%
+    #f5f5f5 0%,
+    #e8e8e8 100%
   );
 }
 
-/* ── Card badges ────────────────────────────────────────── */
-
+/* ── Badges ──────────────────────────────────────────── */
 .avc-badge {
   position: absolute;
   top: 10px;
@@ -235,19 +273,18 @@
 }
 
 .avc-badge-featured {
-  background: rgba(251, 191, 36, 0.92);
-  color: #7c3aed;
+  background: #111111;
+  color: #ffffff;
 }
 
 .avc-badge-inactive {
-  background: rgba(100, 116, 139, 0.9);
+  background: rgba(120, 120, 120, 0.9);
   color: #ffffff;
   left: auto;
   right: 10px;
 }
 
-/* ── Card body ──────────────────────────────────────────── */
-
+/* ── Body ────────────────────────────────────────────── */
 .avc-card-body {
   padding: 14px 16px;
   display: flex;
@@ -257,25 +294,25 @@
 }
 
 .avc-card-title {
-  font-size: 0.98rem;
+  font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.015em;
+  color: #111111;
+  letter-spacing: 0.1px;
   margin: 0;
   line-height: 1.25;
 }
 
 .avc-card-slug {
-  font-size: 0.72rem;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #999999;
   margin: 0 0 4px;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 .avc-card-description {
-  font-size: 0.82rem;
-  color: #475569;
+  font-size: 13px;
+  color: #555555;
   line-height: 1.5;
   margin: 0 0 8px;
 
@@ -291,9 +328,9 @@
   gap: 6px;
 
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 8px;
 
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .avc-card-meta-item {
@@ -301,9 +338,9 @@
   align-items: center;
   gap: 4px;
 
-  font-size: 0.72rem;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #64748b;
+  color: #666666;
 }
 
 .avc-card-meta-dot {
@@ -318,16 +355,15 @@
   height: 12px;
 }
 
-/* ── Card actions ───────────────────────────────────────── */
-
+/* ── Card actions ────────────────────────────────────── */
 .avc-card-actions {
   display: flex;
   gap: 6px;
 
   padding: 10px 12px;
 
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
-  background: #fafbfc;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafafa;
 }
 
 .avc-card-action {
@@ -341,24 +377,24 @@
   border-radius: 8px;
 
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 
-  color: #475569;
+  color: #333333;
 
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .avc-card-action:hover:not(:disabled) {
-  background: rgba(124, 58, 237, 0.07);
-  border-color: rgba(124, 58, 237, 0.28);
-  color: #7c3aed;
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
 }
 
 .avc-card-action-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.07);
-  border-color: rgba(239, 68, 68, 0.28);
-  color: #dc2626;
+  background: #d9534f;
+  border-color: #d9534f;
+  color: #ffffff;
 }
 
 .avc-card-action:disabled {
@@ -366,11 +402,22 @@
   cursor: not-allowed;
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
-
+/* ─────────────────────────────────────────────
+   Responsive
+   ───────────────────────────────────────────── */
 @media (max-width: 640px) {
   .avc-grid {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .avc-icon-spinning,
+  .avc-spinner {
+    animation: none;
   }
 }

@@ -18,8 +18,6 @@ interface Category {
   name: string
   slug: string
   description: string
-  image_url: string | null
-  display_order: number
   is_active: boolean
   is_featured: boolean
   created_at: string
@@ -100,10 +98,10 @@ const AvailableCategories = ({
           {onAddClick && (
             <button
               type="button"
-              className="sas-btn sas-btn-primary"
+              className="avc-add-btn"
               onClick={onAddClick}
             >
-              <FiPlus className="sas-btn-icon" />
+              <FiPlus className="avc-add-icon" />
               Add Category
             </button>
           )}
@@ -131,11 +129,11 @@ const AvailableCategories = ({
           {onAddClick && (
             <button
               type="button"
-              className="sas-btn sas-btn-primary"
+              className="avc-add-btn"
               onClick={onAddClick}
               style={{ marginTop: 8 }}
             >
-              <FiPlus className="sas-btn-icon" />
+              <FiPlus className="avc-add-icon" />
               Add Category
             </button>
           )}
@@ -154,18 +152,9 @@ const AvailableCategories = ({
             >
               {/* Media */}
               <div className="avc-card-media">
-                {cat.image_url ? (
-                  <img
-                    src={cat.image_url}
-                    alt={cat.name}
-                    className="avc-card-img"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="avc-card-initial">
-                    {cat.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <div className="avc-card-initial">
+                  {cat.name.charAt(0).toUpperCase()}
+                </div>
 
                 {cat.is_featured && (
                   <span className="avc-badge avc-badge-featured">
@@ -193,10 +182,6 @@ const AvailableCategories = ({
                 )}
 
                 <div className="avc-card-meta">
-                  <span className="avc-card-meta-item">
-                    Order: {cat.display_order}
-                  </span>
-                  <span className="avc-card-meta-dot" />
                   <span className="avc-card-meta-item">
                     {cat.is_active ? (
                       <>
