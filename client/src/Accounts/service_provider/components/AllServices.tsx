@@ -23,6 +23,8 @@ import {
 import { toast } from 'sonner'
 import { useAuthStore } from '../../../store/authtokenstore'
 import ServiceDetailModal from './ServiceDetailModal'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
+import Spinner from '../../../components/Publicspinner/Spinner'
 import './allservices.css'
 
 /* ────────────────────────────────────────────────────────
@@ -203,6 +205,59 @@ async function deleteService(access: string | null, id: number) {
 }
 
 /* ────────────────────────────────────────────────────────
+   Card cover — handles its own loading state
+   ──────────────────────────────────────────────────────── */
+
+interface CardCoverProps {
+  src: string
+  alt: string
+  count: number
+}
+
+function CardCover({ src, alt, count }: CardCoverProps) {
+  const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
+
+  return (
+    <div className="als-card-media">
+      {!errored ? (
+        <>
+          {!loaded && (
+            <div className="als-card-media-skeleton" aria-hidden="true" />
+          )}
+
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className={`als-card-image ${
+              loaded ? 'als-card-image-loaded' : 'als-card-image-loading'
+            }`}
+            onLoad={() => setLoaded(true)}
+            onError={() => {
+              setErrored(true)
+              setLoaded(true)
+            }}
+          />
+        </>
+      ) : (
+        <div className="als-card-media-empty">
+          <FiImage className="als-card-media-icon" />
+        </div>
+      )}
+
+      {count > 1 && loaded && !errored && (
+        <span className="als-card-image-count">
+          <FiImage />
+          {count}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────────────
    Component
    ──────────────────────────────────────────────────────── */
 
@@ -213,8 +268,12 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState<EditFormState | null>(null)
   const [savingId, setSavingId] = useState<number | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
   const [viewingService, setViewingService] = useState<Service | null>(
+    null
+  )
+
+  /* Which service (if any) is pending delete confirmation */
+  const [pendingDelete, setPendingDelete] = useState<Service | null>(
     null
   )
 
@@ -294,7 +353,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         },
       })
       queryClient.invalidateQueries({ queryKey: ['my-services'] })
-      setDeletingId(null)
+      setPendingDelete(null)
     },
     onError: (err: Error) => {
       toast.error('Failed to delete service', {
@@ -307,7 +366,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-      setDeletingId(null)
+      /* Keep the modal open so the user can retry or cancel */
     },
   })
 
@@ -367,11 +426,19 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     })
   }
 
-  /* ── Delete ─────────────────────────────────────────── */
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Delete this service permanently?')) return
-    setDeletingId(id)
-    deleteMutation.mutate(id)
+  /* ── Delete — opens the confirm modal ───────────────── */
+  const requestDelete = (s: Service) => {
+    setPendingDelete(s)
+  }
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return
+    deleteMutation.mutate(pendingDelete.id)
+  }
+
+  const cancelDelete = () => {
+    if (deleteMutation.isPending) return
+    setPendingDelete(null)
   }
 
   /* ── Field setter ───────────────────────────────────── */
@@ -392,6 +459,21 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     return () => document.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingId, savingId])
+
+  /* ══════════════════════════════════════════════════════
+     FULL-PAGE LOADER
+     ══════════════════════════════════════════════════════ */
+  if (isLoading) {
+    return (
+      <div className="als-loader-screen">
+        <Spinner
+          message="Loading your listings"
+          slowMessage="This is taking a bit longer than usual…"
+          slowAfter={4000}
+        />
+      </div>
+    )
+  }
 
   /* ── Render ─────────────────────────────────────────── */
   return (
@@ -432,16 +514,8 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         </div>
       </div>
 
-      {/* ── Loading ─────────────────────────────────── */}
-      {isLoading && (
-        <div className="als-state">
-          <div className="als-spinner" />
-          <p className="als-state-text">Loading listings…</p>
-        </div>
-      )}
-
       {/* ── Empty ───────────────────────────────────── */}
-      {!isLoading && list.length === 0 && (
+      {list.length === 0 && (
         <div className="als-state">
           <FiInbox className="als-state-icon" />
           <h3 className="als-state-title">No listings yet</h3>
@@ -464,12 +538,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       )}
 
       {/* ── Grid ────────────────────────────────────── */}
-      {!isLoading && list.length > 0 && (
+      {list.length > 0 && (
         <div className="als-grid">
           {list.map((s) => {
             const isEditing = editingId === s.id
             const isSaving = savingId === s.id
-            const isDeleting = deletingId === s.id
+            const isDeleting =
+              deleteMutation.isPending &&
+              pendingDelete?.id === s.id
 
             return (
               <article
@@ -496,14 +572,10 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       type="button"
                       className="als-card-icon-btn als-card-icon-btn-danger"
                       title="Delete"
-                      onClick={() => handleDelete(s.id)}
+                      onClick={() => requestDelete(s)}
                       disabled={isDeleting}
                     >
-                      {isDeleting ? (
-                        <span className="als-spinner-small" />
-                      ) : (
-                        <FiTrash2 />
-                      )}
+                      <FiTrash2 />
                     </button>
                   </div>
                 )}
@@ -525,20 +597,11 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                   >
                     {/* Cover image */}
                     {s.primary_image_url ? (
-                      <div className="als-card-media">
-                        <img
-                          src={s.primary_image_url}
-                          alt={s.title}
-                          className="als-card-image"
-                          loading="lazy"
-                        />
-                        {s.image_count > 1 && (
-                          <span className="als-card-image-count">
-                            <FiImage />
-                            {s.image_count}
-                          </span>
-                        )}
-                      </div>
+                      <CardCover
+                        src={s.primary_image_url}
+                        alt={s.title}
+                        count={s.image_count}
+                      />
                     ) : (
                       <div className="als-card-media als-card-media-empty">
                         <FiImage className="als-card-media-icon" />
@@ -849,6 +912,19 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       <ServiceDetailModal
         service={viewingService}
         onClose={() => setViewingService(null)}
+      />
+
+      {/* ── Confirm delete modal ────────────────────── */}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        subject={pendingDelete?.title}
+        title="Delete this listing?"
+        message="This will permanently remove the listing and all its images from Cloudinary. This action cannot be undone."
+        confirmLabel="Yes, delete"
+        cancelLabel="Keep it"
+        isPending={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
       />
     </div>
   )
