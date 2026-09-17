@@ -21,6 +21,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import Accounts
 from .serializers import CreateNewUserSerializer,UpdateUserSerializer, UpdatePasswordSerializer
@@ -649,6 +650,113 @@ def login_view(request):
 
 
 # ============================================================
+# LOGOUT
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    """
+    Logout the currently authenticated user.
+
+    Blacklists the provided refresh token so it can no
+    longer be used to generate new access tokens.
+
+    Request body:
+        {
+            "refresh": "<refresh_token>"
+        }
+
+    Behavior:
+        - The refresh token is required. Access tokens
+          cannot be blacklisted because they are
+          stateless and short-lived; they will simply
+          expire on their own.
+        - If the refresh token is already blacklisted or
+          malformed, we return 400 with a clear message.
+        - If the token is valid, it is added to the
+          blacklist and the client should discard both
+          the access and refresh tokens on its side.
+
+    Response (success):
+        {
+            "message": "Logged out successfully."
+        }
+    """
+
+    user = request.user
+
+    if not user.is_active:
+
+        return Response(
+            {
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    refresh_token = request.data.get("refresh")
+
+    if not refresh_token:
+
+        return Response(
+            {
+                "message": "Refresh token is required.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+
+        token = RefreshToken(refresh_token)
+
+        token.blacklist()
+
+    except TokenError as e:
+
+        # TokenError covers: malformed, expired,
+        # already blacklisted, wrong token type, etc.
+
+        logger.warning(
+            "Logout failed for user_id=%s: %s",
+            user.id,
+            str(e),
+        )
+
+        return Response(
+            {
+                "message": (
+                    "Invalid or expired refresh token."
+                ),
+                "error": str(e),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            "Unexpected error during logout for user_id=%s",
+            user.id,
+        )
+
+        return Response(
+            {
+                "message": "Failed to log out.",
+                "error": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Logged out successfully.",
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
 # AUTH CHECK
 # ============================================================
 
@@ -826,9 +934,6 @@ def upload_profile_image(request):
         status=status.HTTP_200_OK,
     )
 
-# ============================================================
-# PREMIUM / VERIFIED STATUS CHECK
-# ============================================================
 
 # ============================================================
 # PREMIUM / VERIFIED STATUS CHECK
@@ -986,6 +1091,8 @@ def check_premium_status(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
 # ============================================================
 # UPDATE CURRENT USER
 # ============================================================
@@ -1131,6 +1238,7 @@ def update_user(request):
         },
         status=status.HTTP_200_OK,
     )
+
 
 # ============================================================
 # UPDATE PASSWORD

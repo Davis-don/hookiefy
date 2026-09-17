@@ -148,6 +148,7 @@
 @media (min-width: 769px) {
   .yp-dash-header { display: none; }
 }
+
 /* ── Clickable wordmark (added traits only) ─────────────── */
 .yp-dash-wordmark {
   cursor: pointer;
@@ -172,6 +173,7 @@
 .yp-dash-wordmark:active {
   transform: scale(0.98);
 }
+
 /* ── Avatar image (smooth fade, no flash) ───────────────── */
 .yp-dash-avatar-img {
   object-fit: cover;
@@ -230,6 +232,7 @@
 .yp-dash-avatar-btn {
   position: relative;
 }
+
 /* ─────────────────────────────────────────────
    Header layout
    ───────────────────────────────────────────── */
@@ -240,7 +243,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Avatar wrapper (positions halo + seal)
+   Avatar wrapper (positions halo + seal + menu)
    ───────────────────────────────────────────── */
 .yp-dash-avatar-wrap {
   position: relative;
@@ -342,5 +345,297 @@
 @media (prefers-reduced-motion: reduce) {
   .yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo {
     animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AVATAR DROPDOWN MENU  —  redesigned
+   Clean, airy card with clear hierarchy
+   ═══════════════════════════════════════════════════════════ */
+
+.yp-avatar-menu {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: -6px;
+
+  min-width: 240px;
+
+  /* Solid surface, soft depth — no harsh borders */
+  background: #FFFFFF;
+  border-radius: 16px;
+
+  padding: 8px;
+
+  box-shadow:
+    0 24px 48px -16px rgba(15, 23, 42, 0.22),
+    0 12px 24px -12px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(15, 23, 42, 0.05);
+
+  z-index: 1000;
+
+  animation: yp-menu-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+
+  /* Prevent accidental text selection on long-press (mobile) */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Small upward-pointing caret */
+.yp-avatar-menu::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 22px;
+
+  width: 14px;
+  height: 14px;
+
+  background: #FFFFFF;
+  border-top-left-radius: 3px;
+  transform: rotate(45deg);
+
+  box-shadow: -1px -1px 0 rgba(15, 23, 42, 0.05);
+}
+
+@keyframes yp-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Optional user header block ──────────────────────────── */
+
+.yp-avatar-menu-header {
+  padding: 12px 14px 10px;
+}
+
+.yp-avatar-menu-name {
+  display: block;
+  color: #0F172A;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.yp-avatar-menu-sub {
+  display: block;
+  margin-top: 3px;
+  color: #64748B;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+
+  /* Truncate long emails gracefully */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yp-avatar-menu-divider {
+  height: 1px;
+  margin: 6px 10px;
+  background: rgba(15, 23, 42, 0.07);
+}
+
+/* ── Menu row ────────────────────────────────────────────── */
+
+.yp-avatar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+
+  padding: 12px 14px;
+
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+
+  color: #0F172A;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  text-align: left;
+  text-decoration: none;
+  line-height: 1.1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.yp-avatar-menu-item:hover {
+  background: rgba(37, 99, 235, 0.07);
+  color: #1D4ED8;
+}
+
+.yp-avatar-menu-item:active {
+  background: rgba(37, 99, 235, 0.11);
+}
+
+.yp-avatar-menu-item:focus-visible {
+  outline: none;
+  background: rgba(37, 99, 235, 0.09);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.28);
+}
+
+.yp-avatar-menu-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+
+  color: #64748B;
+
+  transition: color 0.15s ease;
+}
+
+.yp-avatar-menu-item:hover .yp-avatar-menu-icon {
+  color: #2563EB;
+}
+
+/* ── Logout row (blends LogoutButton into the menu) ──────── */
+
+.yp-avatar-menu-item--logout {
+  padding: 0;
+  cursor: default;
+  color: #DC2626;
+}
+
+.yp-avatar-menu-item--logout:hover {
+  background: rgba(239, 68, 68, 0.07);
+}
+
+/* Strip LogoutButton's standalone pill styling and
+   make it align exactly like the Profile row. */
+.yp-avatar-menu-item--logout .logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex: 1;
+
+  width: 100%;
+  justify-content: flex-start;
+
+  padding: 12px 14px;
+
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+
+  color: #DC2626;
+
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.yp-avatar-menu-item--logout .logout-btn:hover:not(:disabled) {
+  background: transparent;
+  color: #B91C1C;
+}
+
+.yp-avatar-menu-item--logout .logout-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.yp-avatar-menu-item--logout .logout-btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.yp-avatar-menu-item--logout .logout-btn-label {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: inherit;
+
+  /* NEVER hide the label — keep "Logout" visible on all screens */
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  opacity: 1;
+  visibility: visible;
+}
+
+.yp-avatar-menu-item--logout .logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Mobile tweaks ───────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .yp-avatar-menu {
+    min-width: 224px;
+    right: -4px;
+    padding: 6px;
+  }
+
+  .yp-avatar-menu::before {
+    right: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .yp-avatar-menu {
+    min-width: 200px;
+    right: 0;
+    padding: 6px;
+  }
+
+  .yp-avatar-menu::before {
+    right: 18px;
+  }
+
+  .yp-avatar-menu-item {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .yp-avatar-menu-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .yp-avatar-menu-item--logout .logout-btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .yp-avatar-menu-item--logout .logout-btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Label stays visible — no display: none here */
+  .yp-avatar-menu-item--logout .logout-btn-label {
+    display: inline-block;
+    font-size: inherit;
   }
 }

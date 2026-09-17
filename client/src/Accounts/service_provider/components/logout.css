@@ -1,0 +1,67 @@
+/* logoutbutton.css */
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 14px;
+
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, transform 0.1s ease;
+
+  white-space: nowrap;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #f87171;
+}
+
+.logout-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.logout-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.logout-btn-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.logout-btn-icon-spinning {
+  animation: logout-spin 0.9s linear infinite;
+}
+
+.logout-btn-label {
+  /* Never hide this label — keep it visible on all screens */
+  display: inline-block;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@keyframes logout-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ────────────────────────────────────────────────────────
+   NOTE: The mobile rule that hid .logout-btn-label is
+   intentionally removed. The label always shows.
+   ──────────────────────────────────────────────────────── */

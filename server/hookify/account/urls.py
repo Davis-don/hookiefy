@@ -15,6 +15,7 @@ from .views import (
     check_premium_status,
     update_user,
     update_password, 
+    logout_view,
 )
 
 
@@ -100,4 +101,5 @@ urlpatterns = [
         update_password,
         name="update-password"
     ),
+    path("logout/", logout_view, name="logout"),
 ]

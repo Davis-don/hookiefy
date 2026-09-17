@@ -5,11 +5,13 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
+import { FiUser } from 'react-icons/fi';
 import { useAuthStore } from '../../../store/authtokenstore';
 import PremiumBadge, {
   fetchPremiumStatus,
   usePremiumStatus,
 } from './PremiumBadge';
+import LogoutButton from './LogoutButton';
 import './header.css';
 
 interface HeaderProps {
@@ -57,6 +59,10 @@ const Header: React.FC<HeaderProps> = ({
   const { access } = useAuthStore();
   const queryClient = useQueryClient();
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  /* ── Dropdown state ────────────────────────────────── */
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   /* ── Premium status (shared cache with badge) ──────── */
   const { data: premiumData } = usePremiumStatus();
@@ -129,6 +135,44 @@ const Header: React.FC<HeaderProps> = ({
     setImgLoaded(false);
   }, [imageUrl]);
 
+  /* ── Close dropdown on outside click / Escape ───────── */
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onDocClick = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  /* ── Handlers ──────────────────────────────────────── */
+  const toggleMenu = () => {
+    setMenuOpen((v) => !v);
+    prefetchProfile();
+    prefetchPremium();
+  };
+
+  const handleProfileSelect = () => {
+    setMenuOpen(false);
+    onProfileClick();
+  };
+
   return (
     <header className="yp-dash-header">
       <div className="yp-dash-header-content">
@@ -153,6 +197,7 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* ── Avatar with premium halo + crown seal ─────── */}
         <div
+          ref={menuRef}
           className="yp-dash-avatar-wrap"
           data-premium={isPremium ? 'true' : 'false'}
         >
@@ -161,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({
 
           <button
             className="yp-dash-avatar-btn"
-            onClick={onProfileClick}
+            onClick={toggleMenu}
             onMouseEnter={() => {
               prefetchProfile();
               prefetchPremium();
@@ -170,7 +215,9 @@ const Header: React.FC<HeaderProps> = ({
               prefetchProfile();
               prefetchPremium();
             }}
-            aria-label="Open profile"
+            aria-label="Open account menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             type="button"
           >
             {imageUrl ? (
@@ -203,6 +250,33 @@ const Header: React.FC<HeaderProps> = ({
           <div className="yp-dash-avatar-seal">
             <PremiumBadge size="xs" showLabel={false} />
           </div>
+
+          {/* ── Dropdown menu ─────────────────────────── */}
+          {menuOpen && (
+            <div
+              className="yp-avatar-menu"
+              role="menu"
+              aria-label="Account menu"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                className="yp-avatar-menu-item"
+                onClick={handleProfileSelect}
+              >
+                <FiUser className="yp-avatar-menu-icon" />
+                <span>Profile</span>
+              </button>
+
+              {/* LogoutButton renders its own icon + label */}
+              <div className="yp-avatar-menu-item yp-avatar-menu-item--logout">
+                <LogoutButton
+                  redirectTo="/login"
+                  onLoggedOut={() => setMenuOpen(false)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
