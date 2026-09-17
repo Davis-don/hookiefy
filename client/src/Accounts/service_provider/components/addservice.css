@@ -56,6 +56,19 @@
   color: #555555;
 }
 
+.ads-required {
+  color: #d9534f;
+  font-weight: 700;
+}
+
+.ads-hint {
+  font-size: 11.5px;
+  color: #888888;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Inputs ───────────────────────────────────────── */
 .ads-form-input {
   width: 100%;
   padding: 10px 12px;
@@ -76,6 +89,10 @@
   font-weight: 400;
 }
 
+.ads-form-input:hover:not(:disabled) {
+  border-color: #bfbfbf;
+}
+
 .ads-form-input:focus:not(:disabled) {
   border-color: #111111;
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
@@ -93,6 +110,263 @@
   line-height: 1.5;
 }
 
+.ads-input-error {
+  border-color: #d9534f !important;
+  background: #fff7f7;
+}
+
+.ads-field-error {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #d9534f;
+  letter-spacing: 0.1px;
+}
+
+/* ── Listing type toggle ──────────────────────────── */
+.ads-type-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.ads-type-option {
+  position: relative;
+  flex: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 14px;
+
+  border-radius: 9px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+
+  color: #666666;
+  font-size: 13.5px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.ads-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ads-type-option:hover {
+  border-color: #bfbfbf;
+}
+
+.ads-type-option.ads-type-active {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+/* ── Image uploader ───────────────────────────────── */
+.ads-image-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ads-file-hidden {
+  display: none;
+}
+
+.ads-pick-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 9px 14px;
+
+  border-radius: 9px;
+  border: 1.5px dashed #c9c9c9;
+  background: #fafafa;
+
+  color: #333333;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ads-pick-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #111111;
+  color: #111111;
+}
+
+.ads-pick-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ads-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.ads-image-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f5f5f5;
+}
+
+.ads-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ads-image-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.ads-image-btn {
+  width: 26px;
+  height: 26px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+
+  color: #333333;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ads-image-btn:hover:not(:disabled) {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.ads-image-btn-active {
+  background: #f5b301;
+  border-color: #f5b301;
+  color: #ffffff;
+}
+
+.ads-image-btn-danger:hover:not(:disabled) {
+  background: #d9534f;
+  border-color: #d9534f;
+  color: #ffffff;
+}
+
+.ads-image-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ads-image-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  background: #111111;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Active toggle ────────────────────────────────── */
+.ads-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ads-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ads-toggle-box {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ads-toggle-box::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.ads-toggle input:checked + .ads-toggle-box {
+  background: #111111;
+}
+
+.ads-toggle input:checked + .ads-toggle-box::after {
+  transform: translateX(16px);
+}
+
+.ads-toggle input:focus-visible + .ads-toggle-box {
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.15);
+}
+
+.ads-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.ads-toggle-icon {
+  width: 14px;
+  height: 14px;
+  color: #555555;
+}
+
+.ads-toggle input:checked ~ .ads-toggle-text .ads-toggle-icon {
+  color: #111111;
+}
+
+/* ── Actions ──────────────────────────────────────── */
 .ads-form-actions {
   display: flex;
   align-items: center;
@@ -153,6 +427,7 @@
   font-size: 14px;
 }
 
+/* ── Spinner ──────────────────────────────────────── */
 .ads-spinner-small {
   width: 14px;
   height: 14px;
@@ -167,6 +442,7 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Responsive ───────────────────────────────────── */
 @media (max-width: 560px) {
   .ads-form-container {
     padding: 18px 16px;
@@ -180,5 +456,211 @@
   .ads-save-btn,
   .ads-cancel-btn {
     justify-content: center;
+  }
+
+  .ads-image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ads-spinner-small {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UPLOAD OVERLAY + PROGRESS
+   ═══════════════════════════════════════════════════════════ */
+
+.ads-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+
+  z-index: 9000;
+
+  animation: adsOverlayIn 0.2s ease-out;
+}
+
+@keyframes adsOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ads-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+
+  padding: 28px 32px;
+
+  min-width: 320px;
+  max-width: 90vw;
+
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+
+  box-shadow:
+    0 24px 48px -16px rgba(15, 23, 42, 0.18),
+    0 12px 24px -12px rgba(15, 23, 42, 0.12);
+}
+
+/* The Spinner component sets min-height:100vh — undo that
+   here so it fits inside the card. */
+.ads-overlay-card .spinner-wrap {
+  min-height: 0;
+  background: transparent;
+  gap: 0.9rem;
+  padding: 0;
+}
+
+.ads-overlay-card .spinner {
+  width: 42px;
+  height: 42px;
+  border-width: 3px;
+}
+
+.ads-overlay-card .spinner-text {
+  font-size: 0.9rem;
+}
+
+/* ── Overall progress bar (in overlay) ─────────────── */
+
+.ads-overlay-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  max-width: 320px;
+}
+
+.ads-progress-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.ads-progress-fill {
+  height: 100%;
+  background: #111111;
+  border-radius: 999px;
+  transition: width 0.15s ease-out;
+}
+
+.ads-progress-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111111;
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PER-IMAGE TILE PROGRESS
+   ═══════════════════════════════════════════════════════════ */
+
+.ads-tile-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.ads-tile-progress {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ads-tile-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.ads-tile-progress-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 999px;
+  transition: width 0.15s ease-out;
+}
+
+.ads-tile-progress-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ads-tile-done {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  font-size: 28px;
+
+  pointer-events: none;
+  animation: adsTileDoneIn 0.3s ease-out;
+}
+
+@keyframes adsTileDoneIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Responsive tweaks for the overlay ─────────────── */
+
+@media (max-width: 480px) {
+  .ads-overlay-card {
+    padding: 22px 20px;
+    min-width: 0;
+    width: 90vw;
+  }
+
+  .ads-overlay-card .spinner {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ads-overlay-card .spinner-text {
+    font-size: 0.85rem;
+  }
+
+  .ads-overlay-progress {
+    max-width: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ads-overlay,
+  .ads-tile-done {
+    animation: none;
   }
 }

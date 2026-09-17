@@ -9,14 +9,25 @@ import {
   FiInbox,
   FiSave,
   FiXCircle,
-  FiMapPin,
+  FiPackage,
+  FiTool,
+  FiEye,
+  FiEyeOff,
+  FiImage,
 } from 'react-icons/fi'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuthStore } from '../../../store/authtokenstore'
+import ServiceDetailModal from './ServiceDetailModal'
 import './allservices.css'
 
-/* ── Types ─────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────
+   Types
+   ──────────────────────────────────────────────────────── */
 
 interface ServiceCategory {
   id: number
@@ -24,28 +35,38 @@ interface ServiceCategory {
   slug: string
 }
 
+interface ServiceImage {
+  id: number
+  image_url: string
+  image_public_id: string
+  is_primary: boolean
+  display_order: number
+}
+
 interface Service {
   id: number
+  listing_type: 'service' | 'product'
   title: string
-  slug: string
   description: string
   category: ServiceCategory
   price: string
-  currency: string
   pricing_unit: string
-  location: string
+  images: ServiceImage[]
+  primary_image_url: string | null
+  image_count: number
   is_active: boolean
   is_featured: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface EditFormState {
+  listing_type: 'service' | 'product'
   title: string
   description: string
   category_id: number | ''
   price: string
-  currency: string
   pricing_unit: string
-  location: string
   is_active: boolean
 }
 
@@ -53,19 +74,52 @@ interface AllServicesProps {
   onAddClick?: () => void
 }
 
-const CURRENCIES = ['KES', 'USD', 'EUR', 'GBP']
-
 const PRICING_UNITS = [
   { value: 'per_hour', label: 'Per Hour' },
   { value: 'per_day', label: 'Per Day' },
   { value: 'per_week', label: 'Per Week' },
   { value: 'per_month', label: 'Per Month' },
   { value: 'per_job', label: 'Per Job' },
+  { value: 'per_item', label: 'Per Item' },
 ]
 
-/* ── Fetchers ─────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────
+   Helpers
+   ──────────────────────────────────────────────────────── */
 
-async function fetchServices(access: string | null): Promise<Service[]> {
+function formatPrice(price: string, unit: string) {
+  const num = Number(price)
+  if (Number.isNaN(num)) return '—'
+  const unitLabel =
+    PRICING_UNITS.find((u) => u.value === unit)?.label ?? ''
+  const formatted = `KES ${num.toLocaleString()}`
+  return unitLabel ? `${formatted} · ${unitLabel}` : formatted
+}
+
+function useScrolledPast(threshold = 80) {
+  const [passed, setPassed] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y =
+        window.scrollY || document.documentElement.scrollTop || 0
+      setPassed(y > threshold)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [threshold])
+
+  return passed
+}
+
+/* ────────────────────────────────────────────────────────
+   API
+   ──────────────────────────────────────────────────────── */
+
+async function fetchServices(
+  access: string | null
+): Promise<Service[]> {
   if (!access) throw new Error('No access token found.')
 
   const res = await fetch(
@@ -84,7 +138,9 @@ async function fetchServices(access: string | null): Promise<Service[]> {
   return (data?.services ?? []) as Service[]
 }
 
-async function fetchCategories(access: string | null): Promise<ServiceCategory[]> {
+async function fetchCategories(
+  access: string | null
+): Promise<ServiceCategory[]> {
   if (!access) throw new Error('No access token found.')
 
   const res = await fetch(
@@ -146,36 +202,9 @@ async function deleteService(access: string | null, id: number) {
   return data
 }
 
-/* ── Formatting ───────────────────────────────────── */
-
-function formatPrice(price: string, currency: string, unit: string) {
-  const num = Number(price)
-  if (Number.isNaN(num)) return '—'
-  const unitLabel =
-    PRICING_UNITS.find((u) => u.value === unit)?.label || unit
-  return `${currency} ${num.toLocaleString()} · ${unitLabel}`
-}
-
-/* ── Scroll hook ──────────────────────────────────── */
-
-function useScrolledPast(threshold = 80) {
-  const [passed, setPassed] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y =
-        window.scrollY || document.documentElement.scrollTop || 0
-      setPassed(y > threshold)
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [threshold])
-
-  return passed
-}
-
-/* ── Component ────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────
+   Component
+   ──────────────────────────────────────────────────────── */
 
 const AllServices = ({ onAddClick }: AllServicesProps) => {
   const { access } = useAuthStore()
@@ -185,6 +214,9 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const [form, setForm] = useState<EditFormState | null>(null)
   const [savingId, setSavingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [viewingService, setViewingService] = useState<Service | null>(
+    null
+  )
 
   const scrolledPast = useScrolledPast(80)
 
@@ -209,57 +241,16 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
 
   const list = services ?? []
 
-  /* ── Edit open / close ─────────────────────────────── */
-
-  const openEdit = (s: Service) => {
-    setEditingId(s.id)
-    setForm({
-      title: s.title,
-      description: s.description,
-      category_id: s.category?.id ?? '',
-      price: s.price,
-      currency: s.currency,
-      pricing_unit: s.pricing_unit,
-      location: s.location || '',
-      is_active: s.is_active,
-    })
-  }
-
-  const closeEdit = () => {
-    if (savingId) return
-    setEditingId(null)
-    setForm(null)
-  }
-
-  /* ── Save ──────────────────────────────────────────── */
-
-  const handleSave = async (id: number) => {
-    if (!form) return
-
-    if (!form.title.trim()) {
-      toast.error('Title is required.')
-      return
-    }
-    if (!form.category_id) {
-      toast.error('Please pick a category.')
-      return
-    }
-
-    setSavingId(id)
-    const loadingToast = toast.loading('Saving changes…')
-
-    try {
-      await updateService(access, id, {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category_id: Number(form.category_id),
-        price: form.price,
-        currency: form.currency,
-        pricing_unit: form.pricing_unit,
-        location: form.location.trim(),
-        is_active: form.is_active,
-      })
-
+  /* ── Update mutation ────────────────────────────────── */
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number
+      payload: Partial<EditFormState> & { category_id?: number }
+    }) => updateService(access, id, payload),
+    onSuccess: () => {
       toast.success('Service updated.', {
         duration: 2500,
         icon: '✅',
@@ -269,13 +260,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-
       queryClient.invalidateQueries({ queryKey: ['my-services'] })
       setEditingId(null)
       setForm(null)
-    } catch (err) {
+      setSavingId(null)
+    },
+    onError: (err: Error) => {
       toast.error('Failed to update service', {
-        description: err instanceof Error ? err.message : undefined,
+        description: err.message,
         duration: 4500,
         icon: '⚠️',
         style: {
@@ -284,22 +276,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-    } finally {
-      toast.dismiss(loadingToast)
       setSavingId(null)
-    }
-  }
+    },
+  })
 
-  /* ── Delete ────────────────────────────────────────── */
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Delete this service permanently?')) return
-
-    setDeletingId(id)
-    const loadingToast = toast.loading('Deleting…')
-
-    try {
-      await deleteService(access, id)
+  /* ── Delete mutation ────────────────────────────────── */
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteService(access, id),
+    onSuccess: () => {
       toast.success('Service deleted.', {
         duration: 2500,
         icon: '🗑️',
@@ -310,9 +294,11 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         },
       })
       queryClient.invalidateQueries({ queryKey: ['my-services'] })
-    } catch (err) {
+      setDeletingId(null)
+    },
+    onError: (err: Error) => {
       toast.error('Failed to delete service', {
-        description: err instanceof Error ? err.message : undefined,
+        description: err.message,
         duration: 4500,
         icon: '⚠️',
         style: {
@@ -321,14 +307,74 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-    } finally {
-      toast.dismiss(loadingToast)
       setDeletingId(null)
-    }
+    },
+  })
+
+  /* ── Edit open / close ──────────────────────────────── */
+  const openEdit = (s: Service) => {
+    setEditingId(s.id)
+    setForm({
+      listing_type: s.listing_type,
+      title: s.title,
+      description: s.description,
+      category_id: s.category?.id ?? '',
+      price: s.price,
+      pricing_unit: s.pricing_unit,
+      is_active: s.is_active,
+    })
   }
 
-  /* ── Field setter ──────────────────────────────────── */
+  const closeEdit = () => {
+    if (savingId) return
+    setEditingId(null)
+    setForm(null)
+  }
 
+  /* ── Save ───────────────────────────────────────────── */
+  const handleSave = (id: number) => {
+    if (!form) return
+
+    if (!form.title.trim() || form.title.trim().length < 3) {
+      toast.error('Title must be at least 3 characters.')
+      return
+    }
+    if (!form.description.trim() || form.description.trim().length < 20) {
+      toast.error('Description must be at least 20 characters.')
+      return
+    }
+    if (!form.category_id) {
+      toast.error('Please pick a category.')
+      return
+    }
+    if (!form.price || Number(form.price) < 0) {
+      toast.error('Please enter a valid price.')
+      return
+    }
+
+    setSavingId(id)
+    updateMutation.mutate({
+      id,
+      payload: {
+        listing_type: form.listing_type,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category_id: Number(form.category_id),
+        price: form.price,
+        pricing_unit: form.pricing_unit,
+        is_active: form.is_active,
+      },
+    })
+  }
+
+  /* ── Delete ─────────────────────────────────────────── */
+  const handleDelete = (id: number) => {
+    if (!window.confirm('Delete this service permanently?')) return
+    setDeletingId(id)
+    deleteMutation.mutate(id)
+  }
+
+  /* ── Field setter ───────────────────────────────────── */
   const setField = <K extends keyof EditFormState>(
     key: K,
     value: EditFormState[K]
@@ -336,8 +382,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
-  /* ── Escape closes edit ────────────────────────────── */
-
+  /* ── Escape closes edit ─────────────────────────────── */
   useEffect(() => {
     if (!editingId) return
     const onKey = (e: KeyboardEvent) => {
@@ -348,15 +393,14 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingId, savingId])
 
-  /* ── Render ────────────────────────────────────────── */
-
+  /* ── Render ─────────────────────────────────────────── */
   return (
     <div className="als-list">
-      {/* Toolbar */}
+      {/* ── Toolbar ─────────────────────────────────── */}
       <div className="als-toolbar">
         <div className="als-toolbar-left">
           <h2 className="als-toolbar-title">
-            {list.length} {list.length === 1 ? 'service' : 'services'}
+            {list.length} {list.length === 1 ? 'listing' : 'listings'}
           </h2>
         </div>
 
@@ -382,28 +426,28 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
               onClick={onAddClick}
             >
               <FiPlus className="als-add-icon" />
-              Add Service
+              Add Listing
             </button>
           )}
         </div>
       </div>
 
-      {/* Loading */}
+      {/* ── Loading ─────────────────────────────────── */}
       {isLoading && (
         <div className="als-state">
           <div className="als-spinner" />
-          <p className="als-state-text">Loading services…</p>
+          <p className="als-state-text">Loading listings…</p>
         </div>
       )}
 
-      {/* Empty */}
+      {/* ── Empty ───────────────────────────────────── */}
       {!isLoading && list.length === 0 && (
         <div className="als-state">
           <FiInbox className="als-state-icon" />
-          <h3 className="als-state-title">No services yet</h3>
+          <h3 className="als-state-title">No listings yet</h3>
           <p className="als-state-text">
-            Create your first service so clients can find and book
-            you.
+            Create your first service or product so clients can find
+            and book you.
           </p>
           {onAddClick && (
             <button
@@ -413,13 +457,13 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
               style={{ marginTop: 8 }}
             >
               <FiPlus className="als-add-icon" />
-              Add Service
+              Add Listing
             </button>
           )}
         </div>
       )}
 
-      {/* Grid */}
+      {/* ── Grid ────────────────────────────────────── */}
       {!isLoading && list.length > 0 && (
         <div className="als-grid">
           {list.map((s) => {
@@ -434,8 +478,12 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                   !s.is_active ? 'als-card-inactive' : ''
                 } ${isEditing ? 'als-card-editing' : ''}`}
               >
+                {/* ── Top-right icons (view mode) ─── */}
                 {!isEditing && (
-                  <div className="als-card-icons">
+                  <div
+                    className="als-card-icons"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       type="button"
                       className="als-card-icon-btn"
@@ -461,7 +509,43 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                 )}
 
                 {!isEditing ? (
-                  <>
+                  /* ── Clickable card body ──────── */
+                  <div
+                    className="als-card-clickable"
+                    onClick={() => setViewingService(s)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setViewingService(s)
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View details for ${s.title}`}
+                  >
+                    {/* Cover image */}
+                    {s.primary_image_url ? (
+                      <div className="als-card-media">
+                        <img
+                          src={s.primary_image_url}
+                          alt={s.title}
+                          className="als-card-image"
+                          loading="lazy"
+                        />
+                        {s.image_count > 1 && (
+                          <span className="als-card-image-count">
+                            <FiImage />
+                            {s.image_count}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="als-card-media als-card-media-empty">
+                        <FiImage className="als-card-media-icon" />
+                      </div>
+                    )}
+
+                    {/* Body */}
                     <div className="als-card-body">
                       <div className="als-card-heading">
                         <h3 className="als-card-title">{s.title}</h3>
@@ -473,11 +557,29 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                         )}
                       </div>
 
-                      {s.category?.name && (
-                        <span className="als-card-category">
-                          {s.category.name}
+                      <div className="als-card-tags">
+                        <span
+                          className={`als-type-tag als-type-${s.listing_type}`}
+                        >
+                          {s.listing_type === 'service' ? (
+                            <>
+                              <FiTool className="als-tag-icon" />
+                              Service
+                            </>
+                          ) : (
+                            <>
+                              <FiPackage className="als-tag-icon" />
+                              Product
+                            </>
+                          )}
                         </span>
-                      )}
+
+                        {s.category?.name && (
+                          <span className="als-card-category">
+                            {s.category.name}
+                          </span>
+                        )}
+                      </div>
 
                       <p className="als-card-description">
                         {s.description}
@@ -485,24 +587,83 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
 
                       <div className="als-card-foot">
                         <span className="als-card-price">
-                          {formatPrice(
-                            s.price,
-                            s.currency,
-                            s.pricing_unit
-                          )}
+                          {formatPrice(s.price, s.pricing_unit)}
                         </span>
 
-                        {s.location && (
-                          <span className="als-card-location">
-                            <FiMapPin className="als-location-icon" />
-                            {s.location}
-                          </span>
-                        )}
+                        <span
+                          className={`als-status ${
+                            s.is_active
+                              ? 'als-status-active'
+                              : 'als-status-inactive'
+                          }`}
+                        >
+                          {s.is_active ? (
+                            <>
+                              <FiEye className="als-status-icon" />
+                              Active
+                            </>
+                          ) : (
+                            <>
+                              <FiEyeOff className="als-status-icon" />
+                              Hidden
+                            </>
+                          )}
+                        </span>
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : (
+                  /* ── Edit mode ────────────────── */
                   <div className="als-edit-form">
+                    {/* Listing type */}
+                    <div className="als-edit-field">
+                      <label className="als-edit-label">
+                        Listing Type
+                      </label>
+                      <div className="als-type-toggle">
+                        <label
+                          className={`als-type-option ${
+                            form?.listing_type === 'service'
+                              ? 'als-type-active'
+                              : ''
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="listing_type"
+                            value="service"
+                            checked={form?.listing_type === 'service'}
+                            onChange={() =>
+                              setField('listing_type', 'service')
+                            }
+                            disabled={isSaving}
+                          />
+                          <span>Service</span>
+                        </label>
+
+                        <label
+                          className={`als-type-option ${
+                            form?.listing_type === 'product'
+                              ? 'als-type-active'
+                              : ''
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="listing_type"
+                            value="product"
+                            checked={form?.listing_type === 'product'}
+                            onChange={() =>
+                              setField('listing_type', 'product')
+                            }
+                            disabled={isSaving}
+                          />
+                          <span>Product</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Title */}
                     <div className="als-edit-field">
                       <label className="als-edit-label">Title</label>
                       <input
@@ -513,9 +674,11 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                           setField('title', e.target.value)
                         }
                         disabled={isSaving}
+                        maxLength={255}
                       />
                     </div>
 
+                    {/* Category */}
                     <div className="als-edit-field">
                       <label className="als-edit-label">Category</label>
                       <select
@@ -540,6 +703,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       </select>
                     </div>
 
+                    {/* Description */}
                     <div className="als-edit-field">
                       <label className="als-edit-label">
                         Description
@@ -552,15 +716,20 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                         }
                         disabled={isSaving}
                         rows={3}
+                        maxLength={2000}
                       />
                     </div>
 
+                    {/* Price + Unit */}
                     <div className="als-edit-row">
                       <div className="als-edit-field">
-                        <label className="als-edit-label">Price</label>
+                        <label className="als-edit-label">
+                          Price (KES)
+                        </label>
                         <input
                           type="number"
                           min="0"
+                          step="0.01"
                           className="als-edit-input"
                           value={form?.price || ''}
                           onChange={(e) =>
@@ -570,28 +739,6 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                         />
                       </div>
 
-                      <div className="als-edit-field">
-                        <label className="als-edit-label">
-                          Currency
-                        </label>
-                        <select
-                          className="als-edit-input"
-                          value={form?.currency || 'KES'}
-                          onChange={(e) =>
-                            setField('currency', e.target.value)
-                          }
-                          disabled={isSaving}
-                        >
-                          {CURRENCIES.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="als-edit-row">
                       <div className="als-edit-field">
                         <label className="als-edit-label">
                           Pricing Unit
@@ -611,23 +758,41 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      <div className="als-edit-field">
-                        <label className="als-edit-label">
-                          Location
-                        </label>
+                    {/* Active toggle */}
+                    <div className="als-edit-field">
+                      <span className="als-edit-label">Status</span>
+                      <label className="als-toggle">
                         <input
-                          type="text"
-                          className="als-edit-input"
-                          value={form?.location || ''}
+                          type="checkbox"
+                          checked={form?.is_active || false}
                           onChange={(e) =>
-                            setField('location', e.target.value)
+                            setField('is_active', e.target.checked)
                           }
                           disabled={isSaving}
                         />
-                      </div>
+                        <span
+                          className="als-toggle-box"
+                          aria-hidden="true"
+                        />
+                        <span className="als-toggle-text">
+                          {form?.is_active ? (
+                            <>
+                              <FiEye className="als-toggle-icon" />
+                              Active
+                            </>
+                          ) : (
+                            <>
+                              <FiEyeOff className="als-toggle-icon" />
+                              Hidden
+                            </>
+                          )}
+                        </span>
+                      </label>
                     </div>
 
+                    {/* Actions */}
                     <div className="als-edit-actions">
                       <button
                         type="button"
@@ -665,7 +830,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         </div>
       )}
 
-      {/* Mobile FAB */}
+      {/* ── Mobile FAB ──────────────────────────────── */}
       {onAddClick && (
         <button
           type="button"
@@ -673,12 +838,18 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
             scrolledPast ? 'als-fab-visible' : ''
           }`}
           onClick={onAddClick}
-          aria-label="Add Service"
+          aria-label="Add Listing"
         >
           <FiPlus className="als-fab-icon" />
-          <span className="als-fab-label">Add Service</span>
+          <span className="als-fab-label">Add Listing</span>
         </button>
       )}
+
+      {/* ── Service detail modal ────────────────────── */}
+      <ServiceDetailModal
+        service={viewingService}
+        onClose={() => setViewingService(null)}
+      />
     </div>
   )
 }

@@ -26,12 +26,6 @@
   gap: 12px;
 }
 
-.als-toolbar-left {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
 .als-toolbar-title {
   font-size: 15px;
   font-weight: 800;
@@ -170,12 +164,18 @@
 }
 
 /* ─────────────────────────────────────────────
-   Grid
+   Grid — responsive
    ───────────────────────────────────────────── */
 .als-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .als-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -195,7 +195,7 @@
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
-  padding: 18px 16px 16px;
+  overflow: hidden;
   transition: transform 0.18s ease, box-shadow 0.18s ease,
     border-color 0.18s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -212,11 +212,32 @@
 }
 
 .als-card-editing {
+  padding: 16px;
+  overflow: visible;
   border-color: #111111;
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Top-right icons */
+/* ── Clickable wrapper ─────────────────────────── */
+.als-card-clickable {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s ease;
+}
+
+.als-card-clickable:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(17, 17, 17, 0.4);
+  border-radius: 14px;
+}
+
+.als-card-clickable:active {
+  opacity: 0.96;
+}
+
+/* ── Top-right icon buttons ──────────────────── */
 .als-card-icons {
   position: absolute;
   top: 10px;
@@ -224,6 +245,7 @@
   display: flex;
   gap: 4px;
   z-index: 2;
+  pointer-events: auto;
 }
 
 .als-card-icon-btn {
@@ -234,8 +256,9 @@
   justify-content: center;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #ffffff;
-  color: #444444;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  color: #333333;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -258,12 +281,74 @@
   cursor: not-allowed;
 }
 
-/* Body */
+/* ── Cover media ──────────────────────────────── */
+.als-card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #f5f5f5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.als-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.als-card:hover .als-card-image {
+  transform: scale(1.03);
+}
+
+.als-card-media-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+.als-card-media-icon {
+  width: 32px;
+  height: 32px;
+  color: #b8b8b8;
+}
+
+/* ── Image count badge ────────────────────────── */
+.als-card-image-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.als-card-image-count svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ── Body ────────────────────────────────────── */
 .als-card-body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 66px;
+  padding: 14px 16px 16px;
+  flex: 1;
 }
 
 .als-card-heading {
@@ -271,15 +356,16 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  padding-right: 62px;
 }
 
 .als-card-title {
-  font-size: 15.5px;
+  font-size: 15px;
   font-weight: 800;
   color: #111111;
   letter-spacing: 0.1px;
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.3;
   word-break: break-word;
 }
 
@@ -306,24 +392,60 @@
   color: #ffffff;
 }
 
-.als-card-category {
+/* ── Tags row (type + category) ──────────────── */
+.als-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.als-type-tag {
   display: inline-flex;
-  align-self: flex-start;
-  font-size: 11px;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #555555;
-  background: rgba(0, 0, 0, 0.05);
-  padding: 3px 8px;
-  border-radius: 999px;
   white-space: nowrap;
 }
 
+.als-tag-icon {
+  width: 10px;
+  height: 10px;
+}
+
+.als-type-service {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+}
+
+.als-type-product {
+  background: rgba(16, 185, 129, 0.10);
+  color: #059669;
+}
+
+.als-card-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.05);
+  color: #555555;
+  white-space: nowrap;
+}
+
+/* ── Description ────────────────────────────── */
 .als-card-description {
   font-size: 13px;
   color: #555555;
-  line-height: 1.55;
+  line-height: 1.5;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -331,42 +453,46 @@
   overflow: hidden;
 }
 
+/* ── Foot ───────────────────────────────────── */
 .als-card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 6px;
+  margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .als-card-price {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: #111111;
-  letter-spacing: 0.1px;
+  letter-spacing: 0.05px;
   white-space: nowrap;
 }
 
-.als-card-location {
+.als-status {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666666;
-  max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 11.5px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
-.als-location-icon {
+.als-status-icon {
   width: 12px;
   height: 12px;
-  flex-shrink: 0;
+}
+
+.als-status-active {
+  color: #059669;
+}
+
+.als-status-inactive {
+  color: #888888;
 }
 
 /* ─────────────────────────────────────────────
@@ -444,7 +570,117 @@
   line-height: 1.5;
 }
 
-/* Edit actions */
+/* ── Listing type toggle inside edit ─────────── */
+.als-type-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.als-type-option {
+  position: relative;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  color: #666666;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.als-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.als-type-option:hover {
+  border-color: #bfbfbf;
+}
+
+.als-type-option.als-type-active {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+/* ── Active toggle ──────────────────────────── */
+.als-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.als-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.als-toggle-box {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.als-toggle-box::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.als-toggle input:checked + .als-toggle-box {
+  background: #111111;
+}
+
+.als-toggle input:checked + .als-toggle-box::after {
+  transform: translateX(16px);
+}
+
+.als-toggle input:focus-visible + .als-toggle-box {
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.15);
+}
+
+.als-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.als-toggle-icon {
+  width: 13px;
+  height: 13px;
+  color: #555555;
+}
+
+.als-toggle input:checked ~ .als-toggle-text .als-toggle-icon {
+  color: #111111;
+}
+
+/* ── Edit actions ───────────────────────────── */
 .als-edit-actions {
   display: flex;
   gap: 8px;
@@ -504,7 +740,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Floating action button (mobile)
+   Mobile FAB
    ───────────────────────────────────────────── */
 .als-fab {
   position: fixed;
@@ -594,12 +830,19 @@
   }
 }
 
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .als-icon-spinning,
+  .als-spinner,
+  .als-spinner-small,
   .als-fab {
-    transform: none;
-    transition: opacity 0.15s ease;
+    animation: none;
+    transition: none;
   }
-  .als-fab-visible {
+  .als-card:hover,
+  .als-card:hover .als-card-image {
     transform: none;
   }
 }
