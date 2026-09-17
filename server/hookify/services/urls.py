@@ -2,17 +2,17 @@
 from django.urls import path
 
 from .views import (
-    # ── Categories ─────────────────────────────────────
+    # Categories
     service_categories_list_create,
     service_category_detail,
     toggle_service_category_active,
     toggle_service_category_featured,
 
-    # ── Listings ───────────────────────────────────────
+    # Listings
     services_list_create,
     service_detail,
 
-    # ── Listing images ─────────────────────────────────
+    # Listing images
     upload_service_images,
     delete_service_image,
     bulk_delete_service_images_view,

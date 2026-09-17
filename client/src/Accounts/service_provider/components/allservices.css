@@ -956,3 +956,186 @@
     transform: none;
   }
 }
+/* ═══════════════════════════════════════════════════════
+   PHOTO MANAGEMENT (edit mode)
+   ═══════════════════════════════════════════════════════ */
+.als-edit-photos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.als-edit-photos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.als-edit-photos-hint {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #999999;
+  letter-spacing: 0.02em;
+}
+
+.als-edit-photos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 24px 16px;
+
+  border-radius: 10px;
+  border: 1px dashed rgba(0, 0, 0, 0.14);
+
+  color: #999999;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.als-edit-photos-empty svg {
+  width: 22px;
+  height: 22px;
+  color: #cbd5e1;
+}
+
+.als-edit-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+/* ── Single photo tile ───────────────────────────── */
+.als-edit-photo {
+  position: relative;
+
+  aspect-ratio: 1 / 1;
+
+  border-radius: 10px;
+  border: 2px solid transparent;
+
+  overflow: hidden;
+
+  background: #f5f5f5;
+
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.als-edit-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.als-edit-photo-primary {
+  border-color: #111111;
+}
+
+.als-edit-photo-badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  padding: 3px 7px;
+  border-radius: 999px;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+
+  z-index: 2;
+}
+
+.als-edit-photo-badge svg {
+  width: 9px;
+  height: 9px;
+}
+
+/* ── Actions ─────────────────────────────────────── */
+.als-edit-photo-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  display: flex;
+  gap: 4px;
+
+  z-index: 2;
+}
+
+.als-edit-photo-btn {
+  width: 26px;
+  height: 26px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+
+  color: #111111;
+  font-size: 12px;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+  transition: background 0.15s ease, color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.als-edit-photo-btn:hover:not(:disabled) {
+  transform: scale(1.12);
+}
+
+.als-edit-photo-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.als-edit-photo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.als-edit-photo-btn-star:hover:not(:disabled) {
+  background: #f5b301;
+  color: #ffffff;
+}
+
+.als-edit-photo-btn-delete {
+  color: #d9534f;
+}
+
+.als-edit-photo-btn-delete:hover:not(:disabled) {
+  background: #d9534f;
+  color: #ffffff;
+}
+
+/* ── Reduced motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .als-edit-photo-btn {
+    transition: none;
+  }
+}

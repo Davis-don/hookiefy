@@ -204,8 +204,60 @@ async function deleteService(access: string | null, id: number) {
   return data
 }
 
+async function deleteServiceImage(
+  access: string | null,
+  serviceId: number,
+  imageId: number
+) {
+  if (!access) throw new Error('No access token found.')
+
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/services/${serviceId}/images/${imageId}/`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${access}`,
+        Accept: 'application/json',
+      },
+    }
+  )
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new Error(
+      (data && data.message) || 'Failed to delete image'
+    )
+  }
+  return data
+}
+
+async function setPrimaryImage(
+  access: string | null,
+  serviceId: number,
+  imageId: number
+) {
+  if (!access) throw new Error('No access token found.')
+
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/services/${serviceId}/images/${imageId}/set-primary/`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${access}`,
+        Accept: 'application/json',
+      },
+    }
+  )
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new Error(
+      (data && data.message) || 'Failed to set primary image'
+    )
+  }
+  return data
+}
+
 /* ────────────────────────────────────────────────────────
-   Card cover — handles its own loading state
+   Card cover
    ──────────────────────────────────────────────────────── */
 
 interface CardCoverProps {
@@ -223,7 +275,10 @@ function CardCover({ src, alt, count }: CardCoverProps) {
       {!errored ? (
         <>
           {!loaded && (
-            <div className="als-card-media-skeleton" aria-hidden="true" />
+            <div
+              className="als-card-media-skeleton"
+              aria-hidden="true"
+            />
           )}
 
           <img
@@ -232,7 +287,9 @@ function CardCover({ src, alt, count }: CardCoverProps) {
             loading="lazy"
             decoding="async"
             className={`als-card-image ${
-              loaded ? 'als-card-image-loaded' : 'als-card-image-loading'
+              loaded
+                ? 'als-card-image-loaded'
+                : 'als-card-image-loading'
             }`}
             onLoad={() => setLoaded(true)}
             onError={() => {
@@ -276,6 +333,12 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const [pendingDelete, setPendingDelete] = useState<Service | null>(
     null
   )
+
+  /* Image delete confirmation — inside edit mode */
+  const [pendingImageDelete, setPendingImageDelete] = useState<{
+    service: Service
+    image: ServiceImage
+  } | null>(null)
 
   const scrolledPast = useScrolledPast(80)
 
@@ -339,7 +402,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     },
   })
 
-  /* ── Delete mutation ────────────────────────────────── */
+  /* ── Delete listing mutation ────────────────────────── */
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteService(access, id),
     onSuccess: () => {
@@ -366,7 +429,78 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
           color: '#ffffff',
         },
       })
-      /* Keep the modal open so the user can retry or cancel */
+    },
+  })
+
+  /* ── Delete image mutation ──────────────────────────── */
+  const deleteImageMutation = useMutation({
+    mutationFn: ({
+      serviceId,
+      imageId,
+    }: {
+      serviceId: number
+      imageId: number
+    }) => deleteServiceImage(access, serviceId, imageId),
+    onSuccess: () => {
+      toast.success('Photo removed.', {
+        duration: 2500,
+        icon: '🗑️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      })
+      queryClient.invalidateQueries({ queryKey: ['my-services'] })
+      setPendingImageDelete(null)
+    },
+    onError: (err: Error) => {
+      toast.error('Failed to remove photo', {
+        description: err.message,
+        duration: 4500,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      })
+      setPendingImageDelete(null)
+    },
+  })
+
+  /* ── Set primary mutation ───────────────────────────── */
+  const setPrimaryMutation = useMutation({
+    mutationFn: ({
+      serviceId,
+      imageId,
+    }: {
+      serviceId: number
+      imageId: number
+    }) => setPrimaryImage(access, serviceId, imageId),
+    onSuccess: () => {
+      toast.success('Cover photo updated.', {
+        duration: 2000,
+        icon: '⭐',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #22c55e',
+          color: '#ffffff',
+        },
+      })
+      queryClient.invalidateQueries({ queryKey: ['my-services'] })
+    },
+    onError: (err: Error) => {
+      toast.error('Failed to set cover photo', {
+        description: err.message,
+        duration: 4500,
+        icon: '⚠️',
+        style: {
+          background: '#1a1a2e',
+          border: '1px solid #ef4444',
+          color: '#ffffff',
+        },
+      })
     },
   })
 
@@ -390,7 +524,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     setForm(null)
   }
 
-  /* ── Save ───────────────────────────────────────────── */
+  /* ── Save listing ───────────────────────────────────── */
   const handleSave = (id: number) => {
     if (!form) return
 
@@ -398,7 +532,10 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
       toast.error('Title must be at least 3 characters.')
       return
     }
-    if (!form.description.trim() || form.description.trim().length < 20) {
+    if (
+      !form.description.trim() ||
+      form.description.trim().length < 20
+    ) {
       toast.error('Description must be at least 20 characters.')
       return
     }
@@ -426,7 +563,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
     })
   }
 
-  /* ── Delete — opens the confirm modal ───────────────── */
+  /* ── Delete listing ─────────────────────────────────── */
   const requestDelete = (s: Service) => {
     setPendingDelete(s)
   }
@@ -439,6 +576,39 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
   const cancelDelete = () => {
     if (deleteMutation.isPending) return
     setPendingDelete(null)
+  }
+
+  /* ── Delete image ───────────────────────────────────── */
+  const requestImageDelete = (
+    service: Service,
+    image: ServiceImage
+  ) => {
+    setPendingImageDelete({ service, image })
+  }
+
+  const confirmImageDelete = () => {
+    if (!pendingImageDelete) return
+    deleteImageMutation.mutate({
+      serviceId: pendingImageDelete.service.id,
+      imageId: pendingImageDelete.image.id,
+    })
+  }
+
+  const cancelImageDelete = () => {
+    if (deleteImageMutation.isPending) return
+    setPendingImageDelete(null)
+  }
+
+  /* ── Set primary image ──────────────────────────────── */
+  const handleSetPrimary = (
+    service: Service,
+    image: ServiceImage
+  ) => {
+    if (image.is_primary) return
+    setPrimaryMutation.mutate({
+      serviceId: service.id,
+      imageId: image.id,
+    })
   }
 
   /* ── Field setter ───────────────────────────────────── */
@@ -554,7 +724,6 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                   !s.is_active ? 'als-card-inactive' : ''
                 } ${isEditing ? 'als-card-editing' : ''}`}
               >
-                {/* ── Top-right icons (view mode) ─── */}
                 {!isEditing && (
                   <div
                     className="als-card-icons"
@@ -595,7 +764,6 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                     tabIndex={0}
                     aria-label={`View details for ${s.title}`}
                   >
-                    {/* Cover image */}
                     {s.primary_image_url ? (
                       <CardCover
                         src={s.primary_image_url}
@@ -608,7 +776,6 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       </div>
                     )}
 
-                    {/* Body */}
                     <div className="als-card-body">
                       <div className="als-card-heading">
                         <h3 className="als-card-title">{s.title}</h3>
@@ -855,6 +1022,103 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
                       </label>
                     </div>
 
+                    {/* ══════════════════════════════════
+                        PHOTO MANAGEMENT
+                       ══════════════════════════════════ */}
+                    <div className="als-edit-photos">
+                      <div className="als-edit-photos-header">
+                        <span className="als-edit-label">
+                          Photos ({s.images.length})
+                        </span>
+                        <span className="als-edit-photos-hint">
+                          Tap ★ to make a photo the cover
+                        </span>
+                      </div>
+
+                      {s.images.length === 0 ? (
+                        <div className="als-edit-photos-empty">
+                          <FiImage />
+                          <span>No photos on this listing</span>
+                        </div>
+                      ) : (
+                        <div className="als-edit-photos-grid">
+                          {s.images.map((img) => {
+                            const isPrimaryBusy =
+                              setPrimaryMutation.isPending &&
+                              setPrimaryMutation.variables
+                                ?.imageId === img.id
+                            const isDeleteBusy =
+                              deleteImageMutation.isPending &&
+                              pendingImageDelete?.image.id ===
+                                img.id
+
+                            return (
+                              <div
+                                key={img.id}
+                                className={`als-edit-photo ${
+                                  img.is_primary
+                                    ? 'als-edit-photo-primary'
+                                    : ''
+                                }`}
+                              >
+                                <img
+                                  src={img.image_url}
+                                  alt=""
+                                  loading="lazy"
+                                />
+
+                                {img.is_primary && (
+                                  <span className="als-edit-photo-badge">
+                                    <FiStar /> Cover
+                                  </span>
+                                )}
+
+                                <div className="als-edit-photo-actions">
+                                  {!img.is_primary && (
+                                    <button
+                                      type="button"
+                                      className="als-edit-photo-btn als-edit-photo-btn-star"
+                                      title="Make cover"
+                                      onClick={() =>
+                                        handleSetPrimary(s, img)
+                                      }
+                                      disabled={
+                                        isPrimaryBusy || isSaving
+                                      }
+                                    >
+                                      {isPrimaryBusy ? (
+                                        <span className="als-spinner-small als-spinner-dark" />
+                                      ) : (
+                                        <FiStar />
+                                      )}
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    className="als-edit-photo-btn als-edit-photo-btn-delete"
+                                    title="Remove photo"
+                                    onClick={() =>
+                                      requestImageDelete(s, img)
+                                    }
+                                    disabled={
+                                      isDeleteBusy || isSaving
+                                    }
+                                  >
+                                    {isDeleteBusy ? (
+                                      <span className="als-spinner-small" />
+                                    ) : (
+                                      <FiTrash2 />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Actions */}
                     <div className="als-edit-actions">
                       <button
@@ -914,7 +1178,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         onClose={() => setViewingService(null)}
       />
 
-      {/* ── Confirm delete modal ────────────────────── */}
+      {/* ── Confirm delete listing ──────────────────── */}
       <ConfirmDeleteModal
         open={!!pendingDelete}
         subject={pendingDelete?.title}
@@ -925,6 +1189,18 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         isPending={deleteMutation.isPending}
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
+      />
+
+      {/* ── Confirm delete image ────────────────────── */}
+      <ConfirmDeleteModal
+        open={!!pendingImageDelete}
+        title="Remove this photo?"
+        message="This photo will be permanently removed from your listing. This action cannot be undone."
+        confirmLabel="Yes, remove"
+        cancelLabel="Keep it"
+        isPending={deleteImageMutation.isPending}
+        onConfirm={confirmImageDelete}
+        onCancel={cancelImageDelete}
       />
     </div>
   )
