@@ -19,7 +19,7 @@ interface ConfirmDeleteModalProps {
 const ConfirmDeleteModal = ({
   open,
   title = 'Delete this item?',
-  message = 'This action cannot be undone. All images and data associated with it will be permanently removed.',
+  message = 'This action cannot be undone. The item and all its photos will be permanently removed.',
   confirmLabel = 'Yes, delete',
   cancelLabel = 'Cancel',
   subject,

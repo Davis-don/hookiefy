@@ -919,7 +919,7 @@ const AllServices = ({ onAddClick }: AllServicesProps) => {
         open={!!pendingDelete}
         subject={pendingDelete?.title}
         title="Delete this listing?"
-        message="This will permanently remove the listing and all its images from Cloudinary. This action cannot be undone."
+        message="This will permanently remove the listing and all its photos. This action cannot be undone."
         confirmLabel="Yes, delete"
         cancelLabel="Keep it"
         isPending={deleteMutation.isPending}
