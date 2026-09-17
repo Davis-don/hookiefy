@@ -5,6 +5,7 @@ import {
   FiXCircle,
   FiStar,
   FiEye,
+  FiImage,
 } from 'react-icons/fi'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -14,6 +15,7 @@ import './addservicecategory.css'
 interface FormState {
   name: string
   description: string
+  image_url: string
   is_active: boolean
   is_featured: boolean
 }
@@ -21,6 +23,7 @@ interface FormState {
 interface FieldErrors {
   name?: string
   description?: string
+  image_url?: string
 }
 
 interface AddServiceCategoryProps {
@@ -31,6 +34,7 @@ interface AddServiceCategoryProps {
 const EMPTY_FORM: FormState = {
   name: '',
   description: '',
+  image_url: '',
   is_active: true,
   is_featured: false,
 }
@@ -44,6 +48,7 @@ async function createCategory(
   const body = {
     name: payload.name.trim(),
     description: payload.description.trim(),
+    image_url: payload.image_url.trim() || null,
     is_active: payload.is_active,
     is_featured: payload.is_featured,
   }
@@ -177,17 +182,6 @@ const AddServiceCategory = ({
 
   return (
     <div className="asc-wrapper">
-      {/* ── Header ──────────────────────────────────── */}
-      <div className="asc-header">
-        <div className="asc-title-wrapper">
-          <h2 className="asc-title">Add Category</h2>
-          <p className="asc-subtitle">
-            Create a new category for service providers to pick from.
-          </p>
-        </div>
-      </div>
-
-      {/* ── Form card ───────────────────────────────── */}
       <div className="asc-form-container">
         <form className="asc-form" onSubmit={handleSubmit} noValidate>
           {/* Name */}
@@ -234,6 +228,34 @@ const AddServiceCategory = ({
             {fieldErrors.description && (
               <span className="asc-field-error">
                 {fieldErrors.description}
+              </span>
+            )}
+          </div>
+
+          {/* Image URL */}
+          <div className="asc-form-group">
+            <label className="asc-form-label" htmlFor="image_url">
+              <FiImage className="asc-label-icon" /> Image URL
+            </label>
+            <input
+              id="image_url"
+              name="image_url"
+              type="url"
+              className={`asc-form-input ${
+                fieldErrors.image_url ? 'asc-input-error' : ''
+              }`}
+              placeholder="https://res.cloudinary.com/…/category.jpg"
+              value={form.image_url}
+              onChange={handleChange}
+              disabled={mutation.isPending}
+              maxLength={500}
+            />
+            <span className="asc-hint">
+              Optional. Must start with http:// or https://
+            </span>
+            {fieldErrors.image_url && (
+              <span className="asc-field-error">
+                {fieldErrors.image_url}
               </span>
             )}
           </div>

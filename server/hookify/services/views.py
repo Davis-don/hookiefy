@@ -27,21 +27,13 @@ logger = logging.getLogger(__name__)
 # ============================================================
 
 def _is_superadmin(user):
-    """
-    Return True only when the given user is a superadmin.
-    """
-
+    """Return True only when the given user is a superadmin."""
     if not user or not user.is_authenticated:
         return False
-
     return getattr(user, "role", None) == "superadmin"
 
 
 def _forbidden(message):
-    """
-    Consistent 403 response.
-    """
-
     return Response(
         {"message": message},
         status=status.HTTP_403_FORBIDDEN,
@@ -49,10 +41,6 @@ def _forbidden(message):
 
 
 def _unauthorized(message="Authentication required."):
-    """
-    Consistent 401 response.
-    """
-
     return Response(
         {"message": message},
         status=status.HTTP_401_UNAUTHORIZED,
@@ -68,16 +56,12 @@ def _unauthorized(message="Authentication required."):
 def service_categories_list_create(request):
     """
     GET  /services/service-categories/
-        Public list of service categories.
-
-        Query params:
-            ?featured=true   → only featured categories
-            ?search=teach    → case-insensitive name filter
-            ?all=true        → (superadmin only) include inactive
+        Public list of active categories.
+        ?featured=true | ?search=teach | ?all=true (superadmin)
 
     POST /services/service-categories/
-        Create a new service category.
-        Superadmin only.
+        Create a category. Superadmin only.
+        Accepts `image_url` in the body.
     """
 
     # ── LIST ─────────────────────────────────────────────
@@ -100,7 +84,7 @@ def service_categories_list_create(request):
         if search:
             qs = qs.filter(name__icontains=search)
 
-        qs = qs.order_by("display_order", "name")
+        qs = qs.order_by("name")
 
         serializer = ServiceCategorySerializer(qs, many=True)
 
@@ -167,9 +151,12 @@ def service_categories_list_create(request):
 def service_category_detail(request, pk):
     """
     GET    /services/service-categories/<pk>/   → public read
-    PUT    /services/service-categories/<pk>/   → full update (superadmin)
-    PATCH  /services/service-categories/<pk>/   → partial update (superadmin)
-    DELETE /services/service-categories/<pk>/   → delete (superadmin)
+    PUT    /services/service-categories/<pk>/   → full update
+    PATCH  /services/service-categories/<pk>/   → partial update
+    DELETE /services/service-categories/<pk>/   → delete
+
+    Update accepts `image_url` (string URL, empty string,
+    or null) in the request body.
     """
 
     category = get_object_or_404(ServiceCategory, pk=pk)
@@ -177,7 +164,6 @@ def service_category_detail(request, pk):
     # ── READ ─────────────────────────────────────────────
     if request.method == "GET":
 
-        # Inactive categories are only visible to superadmins.
         if not category.is_active and not _is_superadmin(request.user):
             return Response(
                 {"message": "Category not found."},
@@ -267,18 +253,13 @@ def service_category_detail(request, pk):
 
 
 # ============================================================
-# TOGGLE ACTIVE (CONVENIENCE)
+# TOGGLE ACTIVE
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_service_category_active(request, pk):
-    """
-    POST /services/service-categories/<pk>/toggle-active/
-
-    Quickly flip a category on/off without sending the
-    whole payload. Superadmin only.
-    """
+    """POST /services/service-categories/<pk>/toggle-active/"""
 
     if not _is_superadmin(request.user):
         return _forbidden("Only superadmins can modify categories.")
@@ -302,17 +283,13 @@ def toggle_service_category_active(request, pk):
 
 
 # ============================================================
-# TOGGLE FEATURED (CONVENIENCE)
+# TOGGLE FEATURED
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_service_category_featured(request, pk):
-    """
-    POST /services/service-categories/<pk>/toggle-featured/
-
-    Flip the featured flag on a category. Superadmin only.
-    """
+    """POST /services/service-categories/<pk>/toggle-featured/"""
 
     if not _is_superadmin(request.user):
         return _forbidden("Only superadmins can modify categories.")

@@ -47,6 +47,15 @@ class ServiceCategory(models.Model):
         help_text="Short description shown to providers when picking a category.",
     )
 
+    # ── Visuals ───────────────────────────────────────────
+
+    image_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Optional image/illustration for the category.",
+    )
+
     # ── Status ────────────────────────────────────────────
 
     is_active = models.BooleanField(

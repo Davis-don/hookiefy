@@ -17,6 +17,7 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "description",
+            "image_url",
             "is_active",
             "is_featured",
             "created_at",
@@ -52,3 +53,16 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
             )
 
         return value
+
+    def validate_image_url(self, value):
+        # Allow null/blank
+        if value in (None, ""):
+            return None
+
+        # Enforce http/https scheme
+        if not value.startswith(("http://", "https://")):
+            raise serializers.ValidationError(
+                "Image URL must start with http:// or https://"
+            )
+
+        return value.strip()

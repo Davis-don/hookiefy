@@ -47,9 +47,7 @@
   gap: 10px;
 }
 
-/* ─────────────────────────────────────────────
-   Icon button (refresh)
-   ───────────────────────────────────────────── */
+/* ── Icon button ────────────────────────────── */
 .avc-icon-btn {
   width: 38px;
   height: 38px;
@@ -65,8 +63,7 @@
   color: #111111;
   cursor: pointer;
 
-  transition: background 0.15s ease, border-color 0.15s ease,
-    color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .avc-icon-btn:hover:not(:disabled) {
@@ -92,9 +89,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* ─────────────────────────────────────────────
-   Add button (used in toolbar + empty state)
-   ───────────────────────────────────────────── */
+/* ── Add button ─────────────────────────────── */
 .avc-add-btn {
   display: inline-flex;
   align-items: center;
@@ -112,8 +107,7 @@
   letter-spacing: 0.1px;
 
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease,
-    opacity 0.15s ease;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .avc-add-btn:hover:not(:disabled) {
@@ -133,7 +127,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Loading / empty states
+   States (loading / empty)
    ───────────────────────────────────────────── */
 .avc-state {
   display: flex;
@@ -180,6 +174,21 @@
   animation: avcSpin 0.8s linear infinite;
 }
 
+.avc-spinner-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: avcSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.avc-spinner-dark {
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #ffffff;
+}
+
 /* ─────────────────────────────────────────────
    Grid
    ───────────────────────────────────────────── */
@@ -193,6 +202,8 @@
    Card
    ───────────────────────────────────────────── */
 .avc-card {
+  position: relative;
+
   display: flex;
   flex-direction: column;
 
@@ -218,7 +229,62 @@
   opacity: 0.65;
 }
 
-/* ── Media / initial ─────────────────────────────────── */
+.avc-card-editing {
+  padding: 16px;
+  overflow: visible;
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Top-right icon buttons ──────────────────── */
+.avc-card-icons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  display: flex;
+  gap: 4px;
+
+  z-index: 2;
+}
+
+.avc-card-icon-btn {
+  width: 30px;
+  height: 30px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+
+  color: #444444;
+  font-size: 14px;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avc-card-icon-btn:hover:not(:disabled) {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.avc-card-icon-btn-danger:hover:not(:disabled) {
+  background: #d9534f;
+  border-color: #d9534f;
+  color: #ffffff;
+}
+
+.avc-card-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Media / initial ──────────────────────────── */
 .avc-card-media {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -239,14 +305,10 @@
   font-weight: 800;
   color: #111111;
 
-  background: linear-gradient(
-    135deg,
-    #f5f5f5 0%,
-    #e8e8e8 100%
-  );
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
 }
 
-/* ── Badges ──────────────────────────────────────────── */
+/* ── Badges ──────────────────────────────────── */
 .avc-badge {
   position: absolute;
   top: 10px;
@@ -284,7 +346,7 @@
   right: 10px;
 }
 
-/* ── Body ────────────────────────────────────────────── */
+/* ── Body ─────────────────────────────────────── */
 .avc-card-body {
   padding: 14px 16px;
   display: flex;
@@ -300,6 +362,8 @@
   letter-spacing: 0.1px;
   margin: 0;
   line-height: 1.25;
+  word-break: break-word;
+  padding-right: 66px; /* keep clear of icons */
 }
 
 .avc-card-slug {
@@ -343,63 +407,217 @@
   color: #666666;
 }
 
-.avc-card-meta-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #cbd5e1;
-}
-
 .avc-meta-icon {
   width: 12px;
   height: 12px;
 }
 
-/* ── Card actions ────────────────────────────────────── */
-.avc-card-actions {
+/* ─────────────────────────────────────────────
+   Edit mode
+   ───────────────────────────────────────────── */
+.avc-edit-form {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 12px;
 
-  padding: 10px 12px;
-
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fafafa;
+  animation: avcFadeIn 0.2s ease-out;
 }
 
-.avc-card-action {
-  flex: 1;
+.avc-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
 
+.avc-edit-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.avc-edit-input {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
+
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+
+  color: #000000;
+  background: #ffffff;
+
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.avc-edit-input::placeholder {
+  color: #999999;
+  font-weight: 400;
+}
+
+.avc-edit-input:focus:not(:disabled) {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.avc-edit-input:disabled {
+  background: #f7f7f7;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.avc-edit-textarea {
+  min-height: 78px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ── Toggles inside edit ─────────────────────── */
+.avc-edit-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 2px;
+}
+
+.avc-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
 
-  padding: 8px;
-  border-radius: 8px;
+.avc-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
 
+.avc-toggle-box {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.avc-toggle-box::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease;
+}
 
-  color: #333333;
+.avc-toggle input:checked + .avc-toggle-box {
+  background: #111111;
+}
+
+.avc-toggle input:checked + .avc-toggle-box::after {
+  transform: translateX(16px);
+}
+
+.avc-toggle input:focus-visible + .avc-toggle-box {
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.15);
+}
+
+.avc-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.avc-toggle-icon {
+  width: 13px;
+  height: 13px;
+  color: #555555;
+}
+
+.avc-toggle input:checked ~ .avc-toggle-text .avc-toggle-icon {
+  color: #111111;
+}
+
+/* ── Edit actions ────────────────────────────── */
+.avc-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.avc-edit-save,
+.avc-edit-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+
+  font-size: 13px;
+  font-weight: 700;
 
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease;
 }
 
-.avc-card-action:hover:not(:disabled) {
+.avc-edit-save {
   background: #111111;
-  border-color: #111111;
   color: #ffffff;
 }
 
-.avc-card-action-danger:hover:not(:disabled) {
-  background: #d9534f;
-  border-color: #d9534f;
-  color: #ffffff;
+.avc-edit-save:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
 }
 
-.avc-card-action:disabled {
-  opacity: 0.4;
+.avc-edit-save:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+.avc-edit-cancel {
+  background: transparent;
+  color: #111111;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.avc-edit-cancel:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.avc-edit-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avc-edit-icon {
+  font-size: 13px;
 }
 
 /* ─────────────────────────────────────────────
@@ -417,7 +635,39 @@
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .avc-icon-spinning,
-  .avc-spinner {
+  .avc-spinner,
+  .avc-spinner-small {
     animation: none;
   }
+}
+/* ─────────────────────────────────────────────
+   Card image (rendered when image_url is set)
+   ───────────────────────────────────────────── */
+.avc-card-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  display: block;
+
+  background: #f5f5f5;
+
+  transition: transform 0.35s ease;
+}
+
+.avc-card:hover .avc-card-image {
+  transform: scale(1.03);
+}
+
+/* ─────────────────────────────────────────────
+   Small icon inside edit-mode labels
+   ───────────────────────────────────────────── */
+.avc-edit-label-icon {
+  width: 12px;
+  height: 12px;
+  color: #555555;
+  vertical-align: middle;
+  margin-right: 4px;
 }
