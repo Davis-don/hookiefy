@@ -58,4 +58,5 @@ urlpatterns = [
     path('withdrawals/', include('withdrawals.urls')),
     # Adverts
     path('adverts/', include('adverts.urls')),
+    path("services/", include("services.urls")),
 ]

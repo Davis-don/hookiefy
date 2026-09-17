@@ -92,8 +92,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "account",
-    "assignments",
     "userprofile",
+    "services",
+    "assignments",
     "userpreference",
     "feed",
     "connections",

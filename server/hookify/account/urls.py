@@ -102,4 +102,5 @@ urlpatterns = [
         name="update-password"
     ),
     path("logout/", logout_view, name="logout"),
+    
 ]
