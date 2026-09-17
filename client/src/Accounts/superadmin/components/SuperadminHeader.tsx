@@ -10,6 +10,7 @@ import {
   FiTool,
   FiDollarSign,
   FiSettings,
+  FiAward,
 } from 'react-icons/fi'
 import { useAuthStore } from '../../../store/authtokenstore'
 import LogoutButton from '../../service_provider/components/LogoutButton'
@@ -18,7 +19,6 @@ import './superadminheader.css'
 interface SuperadminHeaderProps {
   onProfileClick: () => void
   onBrandClick?: () => void
-  /** Called when a dropdown item wants to navigate to a tab */
   onNavigate?: (tabId: string) => void
   userName?: string
 }
@@ -155,8 +155,9 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
   return (
     <header className="sa-mobile-header">
       <div className="sa-mobile-header-content">
-        <h1
-          className="sa-mobile-wordmark"
+        {/* ── Brand + Crown badge ───────────────────────── */}
+        <div
+          className="sa-mobile-brand"
           onClick={onBrandClick}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -168,11 +169,16 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
           tabIndex={0}
           aria-label="Go to analytics"
         >
-          <span className="sa-logo-you">You</span>
-          <span className="sa-logo-p">p</span>
-          <span className="sa-logo-ata">ata</span>
-          <span className="sa-mobile-role-dot" aria-hidden="true" />
-        </h1>
+          <h1 className="sa-mobile-wordmark">
+            <span className="sa-logo-you">You</span>
+            <span className="sa-logo-p">p</span>
+            <span className="sa-logo-ata">ata</span>
+          </h1>
+
+          <span className="sa-admin-crown" title="Superadmin">
+            <FiAward className="sa-admin-crown-icon" />
+          </span>
+        </div>
 
         <div ref={menuRef} className="sa-mobile-avatar-wrap">
           <button
@@ -217,7 +223,6 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
               role="menu"
               aria-label="Account menu"
             >
-              {/* ── Profile ───────────────────────────── */}
               <button
                 type="button"
                 role="menuitem"
@@ -228,7 +233,6 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
                 <span>Profile</span>
               </button>
 
-              {/* ── Services ──────────────────────────── */}
               <button
                 type="button"
                 role="menuitem"
@@ -239,7 +243,6 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
                 <span>Services</span>
               </button>
 
-              {/* ── Finances ──────────────────────────── */}
               <button
                 type="button"
                 role="menuitem"
@@ -250,7 +253,6 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
                 <span>Finances</span>
               </button>
 
-              {/* ── Settings ──────────────────────────── */}
               <button
                 type="button"
                 role="menuitem"
@@ -261,10 +263,8 @@ const SuperadminHeader: React.FC<SuperadminHeaderProps> = ({
                 <span>Settings</span>
               </button>
 
-              {/* ── Divider before Logout ─────────────── */}
               <div className="sa-avatar-menu-divider" aria-hidden="true" />
 
-              {/* ── Logout ────────────────────────────── */}
               <div className="sa-avatar-menu-item sa-avatar-menu-item--logout">
                 <LogoutButton
                   redirectTo="/login"

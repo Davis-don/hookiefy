@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — SUPERADMIN MOBILE HEADER
-   Same structure as the provider header, purple role accent.
+   Purple admin accent, brand + gold crown authority badge
    ───────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
@@ -46,60 +46,142 @@
   padding: 0 18px;
 }
 
-.sa-mobile-wordmark {
-  font-family: 'Pacifico', cursive;
-  font-weight: 400;
-  font-size: 2.6rem;
-  line-height: 1;
-  letter-spacing: 1px;
-  margin: 0;
-  padding: 4px 6px;
-  margin-left: -6px;
+/* ── Brand row (wordmark + crown badge) ─────────────────── */
+
+.sa-mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 4px 6px;
+  margin-left: -6px;
 
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: transform 0.2s ease, opacity 0.2s ease;
-
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
 }
 
-.sa-mobile-wordmark:hover {
-  transform: scale(1.03);
-  opacity: 0.92;
+.sa-mobile-brand:hover {
+  transform: scale(1.02);
+  opacity: 0.94;
 }
 
-.sa-mobile-wordmark:focus-visible {
+.sa-mobile-brand:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
 }
 
-.sa-mobile-wordmark:active {
+.sa-mobile-brand:active {
   transform: scale(0.98);
+}
+
+/* ── Wordmark ───────────────────────────────────────────── */
+
+.sa-mobile-wordmark {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: 1px;
+  margin: 0;
+  padding: 0;
+
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  display: inline-flex;
+  align-items: baseline;
 }
 
 .sa-mobile-wordmark .sa-logo-you { color: #2563EB; }
 .sa-mobile-wordmark .sa-logo-p   { color: #10B981; }
 .sa-mobile-wordmark .sa-logo-ata { color: #F59E0B; }
 
-/* Small superadmin purple dot next to wordmark */
-.sa-mobile-role-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-left: 6px;
+/* ── Crown badge (admin authority) ──────────────────────── */
+
+.sa-admin-crown {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
   border-radius: 50%;
-  background: #7C3AED;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18);
-  transform: translateY(-8px);
+
+  /* Rich gold gradient — the "royal" feel */
+  background: linear-gradient(
+    135deg,
+    #fbbf24 0%,
+    #f59e0b 45%,
+    #d97706 100%
+  );
+
+  color: #ffffff;
+
+  border: 2px solid #ffffff;
+
+  box-shadow:
+    0 3px 10px rgba(217, 119, 6, 0.42),
+    0 1px 3px rgba(180, 83, 9, 0.3),
+    inset 0 -1px 2px rgba(146, 64, 14, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+  /* Subtle float so it reads as a "medallion" not a status dot */
+  transform: translateY(-2px);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* ── Avatar ───────────────────────────────────────────── */
+.sa-admin-crown:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 6px 16px rgba(217, 119, 6, 0.5),
+    0 2px 4px rgba(180, 83, 9, 0.35),
+    inset 0 -1px 2px rgba(146, 64, 14, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.sa-admin-crown-icon {
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+
+  /* Slight inner glow to sit crisply on the gold */
+  filter: drop-shadow(0 1px 1px rgba(146, 64, 14, 0.45));
+}
+
+/* Soft golden halo pulse — signals "authority" without noise */
+.sa-admin-crown::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(251, 191, 36, 0.35) 0%,
+    rgba(251, 191, 36, 0) 70%
+  );
+  pointer-events: none;
+  animation: saCrownPulse 3.2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes saCrownPulse {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.12);
+  }
+}
+
+/* ── Avatar ─────────────────────────────────────────────── */
 
 .sa-mobile-avatar-wrap {
   position: relative;
@@ -304,7 +386,15 @@
   color: #7C3AED;
 }
 
-/* ── Logout row ───────────────────────────────────────── */
+/* ── Divider ───────────────────────────────────────────── */
+
+.sa-avatar-menu-divider {
+  height: 1px;
+  margin: 6px 10px;
+  background: rgba(15, 23, 42, 0.07);
+}
+
+/* ── Logout row ─────────────────────────────────────────── */
 
 .sa-avatar-menu-item--logout {
   padding: 0;
@@ -383,12 +473,22 @@
   cursor: not-allowed;
 }
 
-/* ── Mobile tweaks ────────────────────────────────────── */
+/* ── Mobile tweaks ──────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .sa-mobile-header { height: 78px; }
-  .sa-mobile-wordmark { font-size: 2.75rem; }
+  .sa-mobile-wordmark { font-size: 2.5rem; }
   .sa-mobile-avatar { width: 46px; height: 46px; }
+
+  .sa-admin-crown {
+    width: 32px;
+    height: 32px;
+  }
+
+  .sa-admin-crown-icon {
+    width: 17px;
+    height: 17px;
+  }
 
   .sa-avatar-menu {
     min-width: 224px;
@@ -404,8 +504,23 @@
 @media (max-width: 380px) {
   .sa-mobile-header { height: 72px; }
   .sa-mobile-wordmark {
-    font-size: 2.4rem;
+    font-size: 2.15rem;
     letter-spacing: 0.6px;
+  }
+
+  .sa-mobile-brand {
+    gap: 7px;
+  }
+
+  .sa-admin-crown {
+    width: 30px;
+    height: 30px;
+    border-width: 1.5px;
+  }
+
+  .sa-admin-crown-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .sa-avatar-menu {
@@ -440,7 +555,17 @@
 }
 
 @media (max-width: 320px) {
-  .sa-mobile-wordmark { font-size: 2.1rem; }
+  .sa-mobile-wordmark { font-size: 1.9rem; }
+
+  .sa-admin-crown {
+    width: 26px;
+    height: 26px;
+  }
+
+  .sa-admin-crown-icon {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 /* Only show mobile header on mobile */

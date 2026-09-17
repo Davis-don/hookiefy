@@ -1,8 +1,11 @@
-
+import Addimageprofile from '../../common/components/Addimageprofile'
+import './superadminprofile.css'
 
 function SuperadminProfile() {
   return (
-    <div>SuperadminProfile</div>
+    <div className="overall-superadmin-profile">
+      <Addimageprofile/>
+    </div>
   )
 }
 
