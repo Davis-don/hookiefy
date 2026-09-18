@@ -235,6 +235,15 @@ class ClientService(models.Model):
         ),
     )
 
+    is_featured = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=(
+            "Featured listings are highlighted in the feed "
+            "and search results."
+        ),
+    )
+
     # ========================================================
     # TIMESTAMPS
     # ========================================================
@@ -260,6 +269,7 @@ class ClientService(models.Model):
             models.Index(fields=["provider", "is_active"]),
             models.Index(fields=["category", "is_active"]),
             models.Index(fields=["listing_type", "is_active"]),
+            models.Index(fields=["is_featured", "is_active"]),
             models.Index(fields=["title"]),
         ]
 

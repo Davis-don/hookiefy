@@ -1,0 +1,258 @@
+/* userservicesfeed.css */
+
+/* ─────────────────────────────────────────────
+   Page wrapper — edge-to-edge, no padding
+   ───────────────────────────────────────────── */
+.userfeed-page {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: #ffffff;
+  min-height: 100%;
+}
+
+/* ─────────────────────────────────────────────
+   Floating refresh — top-right, subtle
+   ───────────────────────────────────────────── */
+.userfeed-float-refresh {
+  position: fixed;
+  top: calc(var(--yp-mobile-header-h, 78px) + 12px);
+  right: 16px;
+
+  width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  color: #111111;
+  font-size: 17px;
+
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease;
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  z-index: 50;
+}
+
+@media (min-width: 769px) {
+  .userfeed-float-refresh {
+    top: 20px;
+    right: 24px;
+  }
+}
+
+.userfeed-float-refresh:hover:not(:disabled) {
+  background: #ffffff;
+  transform: scale(1.06);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.userfeed-float-refresh:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.userfeed-float-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.userfeed-spin {
+  animation: uf-spin 0.9s linear infinite;
+}
+
+@keyframes uf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────
+   Cards list — posts stack with no gap
+   ───────────────────────────────────────────── */
+.userfeed-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────────
+   Infinite scroll sentinel — invisible
+   ───────────────────────────────────────────── */
+.userfeed-sentinel {
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────
+   Load-more indicator (bottom of feed)
+   ───────────────────────────────────────────── */
+.userfeed-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 24px 16px 32px;
+}
+
+.userfeed-load-more-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+
+  border: 2.5px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #111111;
+
+  animation: uf-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.userfeed-load-more-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888888;
+}
+
+/* ─────────────────────────────────────────────
+   End of feed — nice dot with text
+   ───────────────────────────────────────────── */
+.userfeed-end {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  padding: 32px 24px 48px;
+}
+
+.userfeed-end-line {
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.userfeed-end-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #999999;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────
+   Loader screen
+   ───────────────────────────────────────────── */
+.userfeed-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 24px 16px;
+}
+
+.userfeed-loader .spinner-wrap {
+  min-height: 0;
+  background: transparent;
+  padding: 40px 20px;
+}
+
+/* ─────────────────────────────────────────────
+   Empty / error state
+   ───────────────────────────────────────────── */
+.userfeed-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  margin: 24px 16px;
+  padding: 48px 24px;
+  text-align: center;
+
+  background: #ffffff;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+}
+
+.userfeed-state-icon {
+  width: 40px;
+  height: 40px;
+  color: #cbd5e1;
+}
+
+.userfeed-state-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+.userfeed-state-text {
+  font-size: 13px;
+  color: #666666;
+  max-width: 380px;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.userfeed-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 6px;
+  padding: 9px 16px;
+
+  border: 1px solid #111111;
+  border-radius: 9px;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.userfeed-retry-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .userfeed-spin,
+  .userfeed-load-more-spinner {
+    animation: none;
+  }
+
+  .userfeed-float-refresh:hover:not(:disabled) {
+    transform: none;
+  }
+}

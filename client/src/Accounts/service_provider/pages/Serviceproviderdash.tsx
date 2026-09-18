@@ -7,6 +7,9 @@ import Profile from '../components/Profile';
 import Settings from '../components/Settings';
 import Messages from '../components/Messages';
 
+/* Tabs that render edge-to-edge (no content-wrapper padding) */
+const FULL_BLEED_TABS = new Set(['home']);
+
 const Serviceproviderdash = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [isMobile, setIsMobile] = useState(false);
@@ -65,9 +68,13 @@ const Serviceproviderdash = () => {
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
+  /* Should the current view render edge-to-edge? */
+  const useFullBleed =
+    !showProfile && FULL_BLEED_TABS.has(activeTab);
+
   return (
     <div className="yp-dash-container">
-      {/* Mobile Top Header — brand = Home, avatar = Profile */}
+      {/* Mobile Top Header */}
       {isMobile && (
         <Header
           onProfileClick={handleHeaderProfileClick}
@@ -138,12 +145,20 @@ const Serviceproviderdash = () => {
         </aside>
       )}
 
-      {/* Main Content */}
+      {/* Main Content — conditionally padded */}
       <main className={`yp-dash-main ${!isMobile && sidebarOpen ? 'yp-dash-main-shifted' : ''}`}>
-        <div className="yp-dash-content-wrapper">{renderActiveComponent()}</div>
+        {useFullBleed ? (
+          <div className="yp-dash-full-bleed">
+            {renderActiveComponent()}
+          </div>
+        ) : (
+          <div className="yp-dash-content-wrapper">
+            {renderActiveComponent()}
+          </div>
+        )}
       </main>
 
-      {/* Mobile Bottom Nav — ICON ONLY */}
+      {/* Mobile Bottom Nav */}
       {isMobile && (
         <nav className="yp-dash-bottom-nav">
           {mobileNavItems.map((item) => (

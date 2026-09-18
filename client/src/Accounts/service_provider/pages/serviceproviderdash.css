@@ -282,6 +282,23 @@
   animation: ypFadeIn 0.3s ease-in-out;
 }
 
+/* ============================================
+   FULL-BLEED CONTENT AREA
+   Used by tabs that need edge-to-edge rendering
+   (e.g. the Home / feed). No padding, no
+   max-width cap — the content runs wall-to-wall
+   inside the main column.
+   ============================================ */
+
+.yp-dash-full-bleed {
+  width: 100%;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  background: var(--yp-white);
+  animation: ypFadeIn 0.3s ease-in-out;
+}
+
 @keyframes ypFadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -378,6 +395,11 @@
 
   .yp-dash-content-wrapper {
     padding: 16px;
+  }
+
+  /* Full-bleed area stays edge-to-edge on mobile too */
+  .yp-dash-full-bleed {
+    padding: 0;
   }
 
   .yp-dash-sidebar {
@@ -506,6 +528,7 @@
   .yp-card { padding: 16px; border-radius: 12px; }
   .yp-grid { grid-template-columns: 1fr; gap: 16px; }
 }
+
 /* ── Clickable sidebar wordmark (added traits only) ─────── */
 .yp-dash-sidebar-logo {
   cursor: pointer;
