@@ -1,4 +1,3 @@
-
 """
 Django settings for hookify project.
 """
@@ -40,7 +39,7 @@ FRONTEND_URL = os.environ.get(
 # Django API / backend
 API_BASE_URL = os.environ.get(
     "API_BASE_URL",
-    "https://hookiefy-server-7d6d.onrender.com",  
+    "https://hookiefy-server-7d6d.onrender.com",
 ).rstrip("/")
 
 
@@ -209,17 +208,101 @@ REST_FRAMEWORK = {
 
 
 # ============================================================
+# FILE UPLOAD LIMITS
+# ============================================================
+#
+# These settings control how Django handles multipart
+# requests and file uploads. The defaults are quite low —
+# big images (10MB+ from modern phone cameras) will be
+# rejected before they ever reach a view.
+#
+# Raise them so image uploads to Cloudinary work smoothly.
+# ============================================================
+
+# Max size of any non-file request body (JSON, form data).
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB
+
+# Max size of a file uploaded into memory before Django
+# spills it to disk. Larger files go straight to a temp file.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024    # 5 MB
+
+# Max number of files allowed per request.
+DATA_UPLOAD_MAX_NUMBER_FILES = 100
+
+# Max number of form fields per request.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
+
+# ============================================================
 # JWT CONFIGURATION
+# ============================================================
+#
+# Tokens are intentionally long-lived so users stay
+# signed in until they explicitly log out.
+#
+# The logout endpoint (/account/logout/) blacklists the
+# refresh token, which stops it from ever minting new
+# access tokens. Any access token already issued remains
+# valid until its own (very long) expiry — this is the
+# trade-off we accept for a frictionless "stay signed in"
+# experience.
+#
+# If you later decide to shorten the access lifetime,
+# pair it with the auto-refresh client wrapper so the
+# user is never actually logged out mid-session.
 # ============================================================
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    # Access token: 365 days.
+    # Effectively "never expires" for a user session.
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=365),
 
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    # Refresh token: 5 years.
+    # Only used to mint new access tokens if ever needed.
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1825),
 
+    # Rotate refresh tokens each time one is used, and
+    # blacklist the previous one so it can't be reused.
     "ROTATE_REFRESH_TOKENS": True,
 
+    # When a refresh token is rotated, move the old one
+    # into the blacklist table.
     "BLACKLIST_AFTER_ROTATION": True,
+
+    # Standard header prefix
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+
+    # Where to find the user identifier on the model
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+
+    # Skip the last_login update to avoid a DB write on
+    # every authenticated request.
+    "UPDATE_LAST_LOGIN": False,
+
+    # Signing algorithm and key
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+
+    # Where the "type" claim lives in the payload
+    "TOKEN_TYPE_CLAIM": "token_type",
+
+    # JWT ID claim — required for blacklisting
+    "JTI_CLAIM": "jti",
+
+    # Only access tokens are checked by the default
+    # authentication class.
+    "AUTH_TOKEN_CLASSES": (
+        "rest_framework_simplejwt.tokens.AccessToken",
+    ),
+
+    # Sliding-token variants (unused here, but kept for
+    # completeness in case we switch to sliding sessions).
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=365),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1825),
 }
 
 
@@ -686,6 +769,57 @@ if DEBUG:
     )
 
 
+    print("\n📦 FILE UPLOAD LIMITS:")
+
+    print(
+        f"  DATA_UPLOAD_MAX_MEMORY_SIZE: "
+        f"{DATA_UPLOAD_MAX_MEMORY_SIZE / (1024 * 1024):.1f} MB"
+    )
+
+    print(
+        f"  FILE_UPLOAD_MAX_MEMORY_SIZE: "
+        f"{FILE_UPLOAD_MAX_MEMORY_SIZE / (1024 * 1024):.1f} MB"
+    )
+
+    print(
+        f"  DATA_UPLOAD_MAX_NUMBER_FILES: "
+        f"{DATA_UPLOAD_MAX_NUMBER_FILES}"
+    )
+
+    print(
+        f"  DATA_UPLOAD_MAX_NUMBER_FIELDS: "
+        f"{DATA_UPLOAD_MAX_NUMBER_FIELDS}"
+    )
+
+
+    print("\n🔑 JWT CONFIGURATION:")
+
+    print(
+        f"  ACCESS_TOKEN_LIFETIME: "
+        f"{SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].days} days"
+    )
+
+    print(
+        f"  REFRESH_TOKEN_LIFETIME: "
+        f"{SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].days} days"
+    )
+
+    print(
+        f"  ROTATE_REFRESH_TOKENS: "
+        f"{SIMPLE_JWT['ROTATE_REFRESH_TOKENS']}"
+    )
+
+    print(
+        f"  BLACKLIST_AFTER_ROTATION: "
+        f"{SIMPLE_JWT['BLACKLIST_AFTER_ROTATION']}"
+    )
+
+    print(
+        f"  UPDATE_LAST_LOGIN: "
+        f"{SIMPLE_JWT['UPDATE_LAST_LOGIN']}"
+    )
+
+
     print("\n🌐 CORS SETTINGS:")
 
     print(
@@ -788,4 +922,3 @@ if DEBUG:
     )
 
     print("=" * 70 + "\n")
-

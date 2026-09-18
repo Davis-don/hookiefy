@@ -21,6 +21,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import imageCompression from 'browser-image-compression'
 import { useAuthStore } from '../../../store/authtokenstore'
 import Spinner from '../../../components/Publicspinner/Spinner'
 import './addservice.css'
@@ -89,6 +90,22 @@ const EMPTY_FORM: FormState = {
 }
 
 /* ────────────────────────────────────────────────────────
+   Image limits and compression config
+   ──────────────────────────────────────────────────────── */
+
+/** Soft cap — anything above this gets compressed before upload. */
+const COMPRESS_THRESHOLD_BYTES = 4 * 1024 * 1024 // 4MB
+
+/** Hard cap — files larger than this are rejected outright. */
+const MAX_IMAGE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB
+
+/** Target size after compression. */
+const COMPRESS_TARGET_MB = 4
+
+/** Maximum dimension after compression (width or height). */
+const COMPRESS_MAX_DIMENSION = 2400
+
+/* ────────────────────────────────────────────────────────
    API helpers
    ──────────────────────────────────────────────────────── */
 
@@ -123,8 +140,6 @@ async function createListing(
 
   const isHookup = form.listing_type === 'hookup'
 
-  // Build the payload dynamically — price and pricing_unit
-  // are only sent for service / product listings.
   const body: Record<string, unknown> = {
     listing_type: form.listing_type,
     description: form.description.trim(),
@@ -176,24 +191,21 @@ async function createListing(
   return data
 }
 
-function uploadListingImages(
-  access: string | null,
+/**
+ * Upload a single file with real progress via XHR.
+ */
+function uploadSingleImage(
+  access: string,
   serviceId: number,
-  images: PendingImage[],
+  file: File,
+  makeFirstPrimary: boolean,
   onProgress: (percent: number) => void
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    if (!access) {
-      reject(new Error('No access token found.'))
-      return
-    }
-
     const fd = new FormData()
-    images.forEach((img) => {
-      fd.append('images', img.file)
-    })
+    fd.append('images', file)
 
-    if (images.length > 0) {
+    if (makeFirstPrimary) {
       fd.append('make_first_primary', 'true')
     }
 
@@ -209,7 +221,9 @@ function uploadListingImages(
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100)
+        const percent = Math.round(
+          (event.loaded / event.total) * 100
+        )
         onProgress(percent)
       }
     }
@@ -227,7 +241,8 @@ function uploadListingImages(
       } else {
         reject(
           new Error(
-            (data && data.message) || `Upload failed (${xhr.status})`
+            (data && data.message) ||
+              `Upload failed (${xhr.status})`
           )
         )
       }
@@ -239,6 +254,44 @@ function uploadListingImages(
 
     xhr.send(fd)
   })
+}
+
+/**
+ * Upload images sequentially, one request per file.
+ * Reports a single overall progress value to the caller.
+ */
+async function uploadListingImages(
+  access: string | null,
+  serviceId: number,
+  images: PendingImage[],
+  onProgress: (percent: number) => void
+): Promise<any[]> {
+  if (!access) throw new Error('No access token found.')
+
+  const total = images.length
+  const results: any[] = []
+
+  for (let idx = 0; idx < total; idx++) {
+    const img = images[idx]
+
+    const data = await uploadSingleImage(
+      access,
+      serviceId,
+      img.file,
+      idx === 0, // make_first_primary on the first upload
+      (localPercent) => {
+        const overall = Math.round(
+          ((idx + localPercent / 100) / total) * 100
+        )
+        onProgress(overall)
+      }
+    )
+
+    results.push(data)
+  }
+
+  onProgress(100)
+  return results
 }
 
 /* ────────────────────────────────────────────────────────
@@ -257,6 +310,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
   const [uploadPhase, setUploadPhase] = useState<
     'idle' | 'creating' | 'uploading'
   >('idle')
+  const [isProcessingImages, setIsProcessingImages] = useState(false)
 
   const isHookup = form.listing_type === 'hookup'
   const allowMultipleImages = !isHookup
@@ -269,7 +323,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     staleTime: 5 * 60_000,
   })
 
-  /* Look up the "Hookup" category if one exists */
+  /* Look up the "Hookup" category if it exists */
   const hookupCategory = categories?.find(
     (c) => c.name.trim().toLowerCase() === 'hookup'
   )
@@ -297,28 +351,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
           access,
           listingId,
           images,
-          (pct) => {
-            setUploadPercent(pct)
-
-            setImages((prev) =>
-              prev.map((img, idx) => {
-                const sliceSize = 100 / prev.length
-                const sliceStart = sliceSize * idx
-                const local = Math.min(
-                  100,
-                  Math.max(
-                    0,
-                    ((pct - sliceStart) / sliceSize) * 100
-                  )
-                )
-                return {
-                  ...img,
-                  progress: Math.round(local),
-                  status: local >= 100 ? 'done' : 'uploading',
-                }
-              })
-            )
-          }
+          (pct) => setUploadPercent(pct)
         )
 
         setImages((prev) =>
@@ -400,7 +433,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
   const handleTypeChange = (type: ListingType) => {
     if (createMutation.isPending) return
 
-    // Trim to a single image when switching TO hookup
     if (type === 'hookup' && images.length > 1) {
       const keep = images[0]
       const toRevoke = images.slice(1)
@@ -437,9 +469,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       )
     }
 
-    // Auto-select the Hookup category when switching.
-    // Also clear price / pricing_unit when moving to hookup
-    // so nothing stale gets sent.
     setForm((prev) => ({
       ...prev,
       listing_type: type,
@@ -455,8 +484,31 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     }))
   }
 
+  /* ── Compress a single file if it's too large ─────── */
+  const maybeCompress = async (file: File): Promise<File> => {
+    if (file.size <= COMPRESS_THRESHOLD_BYTES) return file
+
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: COMPRESS_TARGET_MB,
+        maxWidthOrHeight: COMPRESS_MAX_DIMENSION,
+        useWebWorker: true,
+        initialQuality: 0.85,
+      })
+
+      // imageCompression returns a Blob — wrap as a File
+      return new File([compressed], file.name, {
+        type: compressed.type || file.type,
+        lastModified: Date.now(),
+      })
+    } catch {
+      // Compression failed — fall back to the original
+      return file
+    }
+  }
+
   /* ── Image picker ─────────────────────────────────── */
-  const handleImagePick = (
+  const handleImagePick = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = e.target.files
@@ -477,23 +529,50 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       })
     }
 
-    const next: PendingImage[] = []
+    // Filter out obvious non-images and anything above the
+    // hard cap. Compression happens next.
+    const valid: File[] = []
     for (const file of limited) {
-      if (!file.type.startsWith('image/')) continue
-      if (file.size > 8 * 1024 * 1024) {
-        toast.error(`${file.name} is over 8MB.`)
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image.`)
         continue
       }
 
-      next.push({
-        id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        isPrimary: false,
-        progress: 0,
-        status: 'pending',
-      })
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        toast.error(
+          `${file.name} is over ${
+            MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+          }MB.`
+        )
+        continue
+      }
+
+      valid.push(file)
     }
+
+    if (valid.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    setIsProcessingImages(true)
+
+    const processed: File[] = []
+    for (const file of valid) {
+      const next = await maybeCompress(file)
+      processed.push(next)
+    }
+
+    setIsProcessingImages(false)
+
+    const next: PendingImage[] = processed.map((file) => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      isPrimary: false,
+      progress: 0,
+      status: 'pending',
+    }))
 
     setImages((prev) => {
       const base = isHookup ? [] : prev
@@ -565,7 +644,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
         errors.price = 'Please enter a valid price.'
       }
     } else {
-      // Hookup → only the intro is required
       if (
         !form.description.trim() ||
         form.description.trim().length < 20
@@ -946,7 +1024,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   multiple={allowMultipleImages}
                   className="ads-file-hidden"
                   onChange={handleImagePick}
-                  disabled={isWorking}
+                  disabled={isWorking || isProcessingImages}
                 />
 
                 <button
@@ -955,11 +1033,14 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={
                     isWorking ||
+                    isProcessingImages ||
                     (isHookup && images.length >= 1)
                   }
                 >
                   <FiPlus className="ads-btn-icon" />
-                  {isHookup
+                  {isProcessingImages
+                    ? 'Optimising…'
+                    : isHookup
                     ? images.length > 0
                       ? 'Replace Photo'
                       : 'Add Photo'
@@ -1057,7 +1138,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                 <span className="ads-hint">
                   {isHookup
                     ? 'Add one clear photo of yourself. It becomes your profile shot.'
-                    : 'Optional. Add up to several photos. The first one becomes the cover.'}
+                    : 'Optional. Add up to several photos. Large images are optimised automatically. The first one becomes the cover.'}
                 </span>
               </div>
             </div>
@@ -1089,7 +1170,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               <button
                 type="submit"
                 className="ads-save-btn"
-                disabled={isWorking}
+                disabled={isWorking || isProcessingImages}
               >
                 {isWorking ? (
                   <>
@@ -1112,7 +1193,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                 type="button"
                 className="ads-cancel-btn"
                 onClick={handleCancel}
-                disabled={isWorking}
+                disabled={isWorking || isProcessingImages}
               >
                 <FiXCircle className="ads-btn-icon" /> Cancel
               </button>
