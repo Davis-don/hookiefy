@@ -1,0 +1,69 @@
+/* seekersettings.css */
+
+.ss-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: ssSetFadeIn 0.3s ease-in-out;
+}
+
+@keyframes ssSetFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ss-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ss-settings-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.ss-settings-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.ss-settings-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+}
+
+.ss-settings-empty-icon {
+  width: 44px;
+  height: 44px;
+  color: #cbd5e1;
+}
+
+.ss-settings-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+.ss-settings-empty-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  max-width: 380px;
+  margin: 0;
+  line-height: 1.55;
+}

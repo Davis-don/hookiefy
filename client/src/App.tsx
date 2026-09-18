@@ -15,6 +15,7 @@ import Serviceproviderdash from "./Accounts/service_provider/pages/Serviceprovid
 import Serviceseekerdash from "./Accounts/service_seeker/pages/Serviceseekerdash";
 import Header from "./components/Header/Header";
 import Login from "./pages/Login";
+import Accountslayout from "./layouts/Accountslayout";
 
 import "./App.css";
 
@@ -57,10 +58,13 @@ function App() {
             path="/service_seeker/dashboard"
             element={
               <Protectedroute allowedRoles={["serviceseeker"]}>
+                <Accountslayout>
                 <Toastlayout>
                   <Serviceseekerdash />
                 </Toastlayout>
+                </Accountslayout>
               </Protectedroute>
+              
             }
           />
 
@@ -69,9 +73,11 @@ function App() {
             path="/service_provider/dashboard"
             element={
               <Protectedroute allowedRoles={["serviceprovider"]}>
+                <Accountslayout>
                 <Toastlayout>
                   <Serviceproviderdash />
                 </Toastlayout>
+                </Accountslayout>
               </Protectedroute>
             }
           />

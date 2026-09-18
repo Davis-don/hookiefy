@@ -1,0 +1,11 @@
+/* seekerprofile.css */
+
+.ss-profile-page {
+  width: 100%;
+  animation: ssProfFadeIn 0.3s ease-in-out;
+}
+
+@keyframes ssProfFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

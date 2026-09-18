@@ -21,6 +21,7 @@ import type {
   FeedService,
   FeedAdvert,
 } from './Userservicesesfeed'
+import { usePostActionStore } from '../../common/store/usepaymentstore'
 
 /* ────────────────────────────────────────────────────────
    Helpers
@@ -270,9 +271,10 @@ function Carousel({ images, alt }: CarouselProps) {
 
 function ServicePost({ service }: { service: FeedService }) {
   const isHookup = service.listing_type === 'hookup'
+  const open = usePostActionStore((s) => s.open)
 
   const handleGetContact = () => {
-    console.log('Get contact for service', service.id)
+    open(service.id)
   }
 
   /* Prefer the images array. Fall back to the primary URL. */
