@@ -1,5 +1,5 @@
 // Userfeedcard.tsx
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   FiStar,
   FiHeart,
@@ -11,6 +11,8 @@ import {
   FiPhone,
   FiUserPlus,
   FiSend,
+  FiChevronLeft,
+  FiChevronRight,
 } from 'react-icons/fi'
 import './userfeedcard.css'
 import type {
@@ -48,16 +50,16 @@ function initials(first?: string, last?: string) {
 }
 
 /* ────────────────────────────────────────────────────────
-   Media
+   Single-image media
    ──────────────────────────────────────────────────────── */
 
-interface MediaProps {
+interface SingleImageProps {
   src: string
   alt: string
   count?: number
 }
 
-function Media({ src, alt, count }: MediaProps) {
+function SingleImage({ src, alt, count }: SingleImageProps) {
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
 
@@ -100,6 +102,169 @@ function Media({ src, alt, count }: MediaProps) {
 }
 
 /* ────────────────────────────────────────────────────────
+   Carousel — multi-image, swipeable, auto-advancing
+   ──────────────────────────────────────────────────────── */
+
+interface CarouselImage {
+  id: number
+  image_url: string
+}
+
+interface CarouselProps {
+  images: CarouselImage[]
+  alt: string
+}
+
+function Carousel({ images, alt }: CarouselProps) {
+  const [index, setIndex] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragX, setDragX] = useState(0)
+  const [paused, setPaused] = useState(false)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const startXRef = useRef(0)
+  const startTimeRef = useRef(0)
+
+  const count = images.length
+
+  const goTo = (i: number) => {
+    const next = ((i % count) + count) % count
+    setIndex(next)
+  }
+
+  const goNext = () => goTo(index + 1)
+  const goPrev = () => goTo(index - 1)
+
+  /* Auto-advance every 4.5s unless paused */
+  useEffect(() => {
+    if (paused || count <= 1) return
+
+    const t = setInterval(() => {
+      setIndex((i) => (i + 1) % count)
+    }, 4500)
+
+    return () => clearInterval(t)
+  }, [paused, count])
+
+  /* ── Drag / swipe handlers ─────────────────────── */
+  const onPointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true)
+    startXRef.current = e.clientX
+    startTimeRef.current = Date.now()
+    setPaused(true)
+    ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return
+    const dx = e.clientX - startXRef.current
+    setDragX(dx)
+  }
+
+  const onPointerUp = () => {
+    if (!isDragging) return
+
+    const width = containerRef.current?.offsetWidth ?? 1
+    const duration = Date.now() - startTimeRef.current
+    const velocity = Math.abs(dragX) / Math.max(duration, 1)
+
+    const passedThreshold = Math.abs(dragX) > width * 0.25
+    const isFlick = velocity > 0.5 && Math.abs(dragX) > 30
+
+    if ((passedThreshold || isFlick) && dragX < 0) {
+      goNext()
+    } else if ((passedThreshold || isFlick) && dragX > 0) {
+      goPrev()
+    }
+
+    setIsDragging(false)
+    setDragX(0)
+
+    setTimeout(() => setPaused(false), 2500)
+  }
+
+  const onPointerCancel = () => {
+    setIsDragging(false)
+    setDragX(0)
+    setTimeout(() => setPaused(false), 2500)
+  }
+
+  const width = containerRef.current?.offsetWidth ?? 1
+  const dragPercent = isDragging ? (dragX / width) * 100 : 0
+  const translatePercent = -(index * 100) + dragPercent
+
+  return (
+    <div
+      className="ufc-carousel"
+      ref={containerRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div
+        className={`ufc-carousel-track ${
+          isDragging ? 'ufc-carousel-track-dragging' : ''
+        }`}
+        style={{ transform: `translateX(${translatePercent}%)` }}
+      >
+        {images.map((img) => (
+          <div className="ufc-carousel-slide" key={img.id}>
+            <img
+              src={img.image_url}
+              alt={alt}
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              className="ufc-carousel-img"
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className="ufc-carousel-nav ufc-carousel-nav-prev"
+        onClick={goPrev}
+        aria-label="Previous image"
+      >
+        <FiChevronLeft />
+      </button>
+      <button
+        type="button"
+        className="ufc-carousel-nav ufc-carousel-nav-next"
+        onClick={goNext}
+        aria-label="Next image"
+      >
+        <FiChevronRight />
+      </button>
+
+      <div className="ufc-carousel-dots" role="tablist">
+        {images.map((img, i) => (
+          <button
+            key={img.id}
+            type="button"
+            role="tab"
+            aria-selected={i === index}
+            aria-label={`Go to image ${i + 1}`}
+            className={`ufc-carousel-dot ${
+              i === index ? 'ufc-carousel-dot-active' : ''
+            }`}
+            onClick={() => goTo(i)}
+          />
+        ))}
+      </div>
+
+      <span className="ufc-carousel-count">
+        {index + 1} / {count}
+      </span>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────────────
    SERVICE POST
    ──────────────────────────────────────────────────────── */
 
@@ -110,13 +275,27 @@ function ServicePost({ service }: { service: FeedService }) {
     console.log('Get contact for service', service.id)
   }
 
+  /* Prefer the images array. Fall back to the primary URL. */
+  const feedImages: CarouselImage[] =
+    Array.isArray((service as any).images) &&
+    (service as any).images.length > 0
+      ? (service as any).images.map(
+          (i: { id: number; image_url: string }) => ({
+            id: i.id,
+            image_url: i.image_url,
+          })
+        )
+      : service.primary_image_url
+      ? [{ id: 0, image_url: service.primary_image_url }]
+      : []
+
   return (
     <article
       className={`ufc-post ufc-post-service ${
         isHookup ? 'ufc-post-hookup' : ''
       }`}
     >
-      {/* Header — no more "⋯" button */}
+      {/* Header */}
       <header className="ufc-header">
         {service.provider ? (
           <>
@@ -159,14 +338,18 @@ function ServicePost({ service }: { service: FeedService }) {
         )}
       </header>
 
-      {service.primary_image_url && (
-        <Media
-          src={service.primary_image_url}
+      {/* Media — carousel if 2+, single image otherwise */}
+      {feedImages.length > 1 ? (
+        <Carousel images={feedImages} alt={service.title} />
+      ) : feedImages.length === 1 ? (
+        <SingleImage
+          src={feedImages[0].image_url}
           alt={service.title}
           count={service.image_count}
         />
-      )}
+      ) : null}
 
+      {/* Body */}
       <div className="ufc-post-body">
         <div className="ufc-post-tags">
           <span
@@ -222,6 +405,7 @@ function ServicePost({ service }: { service: FeedService }) {
         )}
       </div>
 
+      {/* Footer CTA */}
       <footer className="ufc-footer">
         <button
           type="button"
@@ -279,7 +463,7 @@ function UserPost({ user }: { user: FeedUser }) {
       </header>
 
       {user.profile_image_url && (
-        <Media
+        <SingleImage
           src={user.profile_image_url}
           alt={`${user.first_name} ${user.last_name}`}
         />
