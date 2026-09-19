@@ -1,22 +1,36 @@
 /* addData.css — creative surface with 4 responsive tabs
-   Unique `adx-` class prefix to avoid collisions.
-   Tabs: text + emoji on wide screens, icon-only on small.
-   No close button — the bottom nav handles navigation.
-   Edge-to-edge layout — no side padding.
-   Page scrolls naturally — the fixed bottom nav stays put. */
+   Font Awesome icons, larger mobile-friendly tabs.
+   Sticky header + tab bar inside a self-scrolling panel.
+   Edge-to-edge layout. Works on mobile and desktop. */
 
 /* ─────────────────────────────────────────────
-   Root wrapper — no side padding, content touches edges
+   Root wrapper — becomes its OWN scroll container
+   so sticky positioning inside works reliably.
    ───────────────────────────────────────────── */
 .adx-root {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
 
-  /* only vertical padding — content runs edge to edge */
-  padding: 24px 0 40px;
+  /* Fill the available height inside the dashboard main area
+     minus the mobile header + bottom nav. The value comes from
+     CSS variables on the dashboard so it stays in sync. */
+  height: calc(
+    100vh
+    - var(--yp-mobile-header-h, 78px)
+    - var(--yp-bottom-nav-h, 68px)
+  );
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  padding: 0 0 24px;
 
   animation: adxFadeIn 0.3s ease-out;
+
+  /* Position context for the sticky top bar */
+  position: relative;
 }
 
 @keyframes adxFadeIn {
@@ -25,39 +39,48 @@
 }
 
 /* ─────────────────────────────────────────────
-   Header (title only) — keeps its own inset so the
-   title doesn't hug the screen edge
+   Top bar (title + tab bar)
+   Sticky to the top of `.adx-root`'s scroll area.
+   ───────────────────────────────────────────── */
+.adx-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+
+  /* stay above the panel content while scrolling */
+  isolation: isolate;
+}
+
+/* ─────────────────────────────────────────────
+   Header — compact, tight vertical spacing
    ───────────────────────────────────────────── */
 .adx-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 4px;
-  padding: 0 16px;
+
+  padding: 10px 16px 2px;
 }
 
 .adx-title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
 }
 
 /* ─────────────────────────────────────────────
-   Top tab bar — underline style, never overflows
+   Tab bar — underline style, Font Awesome icons
    ───────────────────────────────────────────── */
 .adx-tabbar-wrap {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
-  margin-bottom: 20px;
-
   width: 100%;
-  overflow: hidden;
+  background: #ffffff;
 }
 
 .adx-tabbar {
@@ -93,14 +116,14 @@
   min-width: 0;
   max-width: 100%;
 
-  padding: 14px 8px 12px;
+  padding: 8px 10px 12px;
   margin: 0;
 
   border: none;
   background: transparent;
 
   color: #64748b;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;
   white-space: nowrap;
@@ -118,7 +141,7 @@
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: -1px;
+  bottom: 0;
 
   height: 2px;
   border-radius: 2px;
@@ -156,16 +179,15 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
 }
 
-.adx-tab-emoji {
+/* Font Awesome icon */
+.adx-tab-icon {
   font-size: 15px;
   line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  transition: transform 0.18s ease;
   flex-shrink: 0;
+  transition: transform 0.18s ease;
 }
 
-.adx-tab:hover .adx-tab-emoji { transform: scale(1.12); }
+.adx-tab:hover .adx-tab-icon { transform: scale(1.12); }
 
 .adx-tab-label {
   font-weight: inherit;
@@ -173,17 +195,13 @@
   text-overflow: ellipsis;
 }
 
-/* Short label hidden by default — shown on small screens */
 .adx-tab-short {
   display: none;
   font-weight: inherit;
 }
 
 /* ─────────────────────────────────────────────
-   Panel — the child components (MyPosts, AddPost,
-   AllServices, AddService) provide their own
-   internal padding so their content sits nicely.
-   The panel itself stays edge-to-edge.
+   Panel — content flows inside .adx-root's scroll
    ───────────────────────────────────────────── */
 .adx-panel {
   animation: adxFadeIn 0.25s ease-out;
@@ -195,44 +213,52 @@
 
 /* ── Medium: swap to short labels ── */
 @media (max-width: 520px) {
-  .adx-root {
-    padding: 20px 0 36px;
-  }
-
   .adx-header {
-    padding: 0 14px;
+    padding: 8px 14px 2px;
   }
 
   .adx-title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
   }
 
   .adx-tab {
-    padding: 13px 6px 11px;
-    font-size: 13px;
+    padding: 8px 8px 11px;
+    font-size: 12.5px;
     gap: 5px;
   }
 
   .adx-tab-label { display: none; }
   .adx-tab-short { display: inline; }
+
+  .adx-tab-icon {
+    font-size: 16px;
+  }
 }
 
-/* ── Small: icon-only tabs ── */
+/* ── Small: icon + short label stacked ── */
 @media (max-width: 400px) {
   .adx-tab {
-    padding: 13px 4px 11px;
-    gap: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 6px 11px;
   }
 
   .adx-tab-short { display: none; }
 
-  .adx-tab-emoji {
-    font-size: 1.35rem;
+  .adx-tab-icon {
+    font-size: 18px;
   }
 
   .adx-tab::after {
     left: 6px;
     right: 6px;
+  }
+}
+
+/* ── Desktop: full viewport height minus nothing ── */
+@media (min-width: 769px) {
+  .adx-root {
+    height: 100vh;
   }
 }
 
@@ -242,7 +268,7 @@
   .adx-panel { animation: none; }
 
   .adx-tab::after,
-  .adx-tab-emoji { transition: none; }
+  .adx-tab-icon { transition: none; }
 
-  .adx-tab:hover .adx-tab-emoji { transform: none; }
+  .adx-tab:hover .adx-tab-icon { transform: none; }
 }
