@@ -1,5 +1,7 @@
-// AddPost.tsx — create a new story via /stories/create/
+// AddPost.tsx — create a new story with rich text content
 import { useRef, useState } from 'react'
+import ReactQuill from 'react-quill-new'
+import 'react-quill-new/dist/quill.snow.css'
 import {
   FiImage,
   FiSend,
@@ -7,7 +9,6 @@ import {
   FiX,
   FiTag,
   FiType,
-  FiAlignLeft,
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 import { useAuthStore } from '../../../store/authtokenstore'
@@ -37,6 +38,40 @@ const CATEGORY_OPTIONS: {
 ]
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024 // 8 MB
+
+/* ────────────────────────────────────────────────────────
+   Quill editor configuration
+   ──────────────────────────────────────────────────────── */
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ color: [] }, { background: [] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ align: [] }],
+    ['blockquote', 'code-block'],
+    ['link'],
+    ['clean'],
+  ],
+}
+
+const QUILL_FORMATS = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'color', 'background',
+  'list', 'bullet',
+  'align',
+  'blockquote', 'code-block',
+  'link',
+]
+
+/* Strip HTML to measure plain-text length for validation */
+function plainTextLength(html: string) {
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  return (tmp.textContent || tmp.innerText || '').trim().length
+}
 
 function AddPost({ onCreated, onCancel }: AddPostProps) {
   const { access: accessToken } = useAuthStore()
@@ -107,7 +142,8 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
       errors.title = 'Title must be at least 3 characters.'
     }
 
-    if (!content.trim() || content.trim().length < 10) {
+    const contentLength = plainTextLength(content)
+    if (contentLength < 10) {
       errors.content = 'Content must be at least 10 characters.'
     }
 
@@ -135,7 +171,7 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
     /* ---- build the multipart payload ---- */
     const fd = new FormData()
     fd.append('title', title.trim())
-    fd.append('content', content.trim())
+    fd.append('content', content)          // HTML string
     fd.append('category', category as string)
     fd.append('image', file as File)
 
@@ -160,7 +196,6 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
       const data = await res.json().catch(() => null)
 
       if (!res.ok) {
-        // Map DRF field errors back onto the form
         const err = data as Record<string, unknown> | null
         if (err && typeof err === 'object') {
           const flat: FieldErrors = {}
@@ -254,28 +289,33 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
           )}
         </div>
 
-        {/* Content */}
+        {/* Content — rich text editor */}
         <div className="addpost-group">
           <label className="addpost-label" htmlFor="addpost-content">
-            <FiAlignLeft className="addpost-label-icon" /> Content
+            Content
           </label>
-          <textarea
-            id="addpost-content"
-            className={`addpost-textarea ${
-              fieldErrors.content ? 'addpost-input-error' : ''
+
+          <div
+            className={`addpost-editor ${
+              fieldErrors.content ? 'addpost-editor-error' : ''
             }`}
-            placeholder="Write your story..."
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value)
-              if (fieldErrors.content) {
-                setFieldErrors((p) => ({ ...p, content: undefined }))
-              }
-            }}
-            maxLength={2000}
-            disabled={submitting}
-            rows={6}
-          />
+          >
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={(html) => {
+                setContent(html)
+                if (fieldErrors.content) {
+                  setFieldErrors((p) => ({ ...p, content: undefined }))
+                }
+              }}
+              modules={QUILL_MODULES}
+              formats={QUILL_FORMATS}
+              placeholder="Write your story…"
+              readOnly={submitting}
+            />
+          </div>
+
           {fieldErrors.content && (
             <span className="addpost-field-error">
               {fieldErrors.content}
@@ -385,7 +425,7 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
             disabled={
               submitting ||
               !title.trim() ||
-              !content.trim() ||
+              plainTextLength(content) < 1 ||
               !category ||
               !file
             }

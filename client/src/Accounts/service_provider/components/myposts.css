@@ -1,4 +1,4 @@
-/* myposts.css — unique mpx- prefix, bold readable text */
+/* myposts.css — unique mpx- prefix, image edge-to-edge */
 
 /* ─────────────────────────────────────────────
    Root
@@ -10,10 +10,11 @@
   background: transparent;
   color: inherit;
   padding: 0;
+  margin: 0;
 }
 
 /* ─────────────────────────────────────────────
-   Toolbar
+   Toolbar — the only place with wide side padding
    ───────────────────────────────────────────── */
 .mpx-toolbar {
   display: flex;
@@ -110,7 +111,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Feed — edge-to-edge
+   Feed
    ───────────────────────────────────────────── */
 .mpx-feed {
   display: flex;
@@ -140,15 +141,20 @@
   padding: 12px 0;
 }
 
-/* ── Post header ─────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   POST HEADER — small side inset for readable text
+   ═══════════════════════════════════════════════════════════ */
 .mpx-post-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 0;
 }
 
-.mpx-post-avatar-wrap { flex-shrink: 0; }
+.mpx-post-avatar-wrap {
+  flex-shrink: 0;
+}
 
 .mpx-post-avatar,
 .mpx-post-avatar-fallback {
@@ -181,11 +187,8 @@
   min-width: 0;
 }
 
-/* ═══════════════════════════════════════════
-   AUTHOR NAME — bigger, bolder, stands out
-   ═══════════════════════════════════════════ */
 .mpx-post-author {
-  font-size: 16px;        /* was 14px */
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.25;
@@ -196,7 +199,7 @@
 }
 
 .mpx-post-time {
-  font-size: 13px;        /* was 12px */
+  font-size: 13px;
   font-weight: 500;
   color: #64748b;
   white-space: nowrap;
@@ -241,64 +244,179 @@
   cursor: not-allowed;
 }
 
-/* ── Image — full bleed, no crop ─────────────── */
+/* ═══════════════════════════════════════════════════════════
+   IMAGE — full viewport width, flush to both edges,
+   no gap above or below. Breaks out of the parent
+   inset via the 100vw + translateX(-50%) trick.
+   ═══════════════════════════════════════════════════════════ */
 .mpx-post-media {
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+
   margin: 0;
   padding: 0;
+
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%);
+
   background: #f1f5f9;
   overflow: hidden;
+
+  /* Kill the inline baseline gap */
+  line-height: 0;
+  font-size: 0;
 }
 
 .mpx-post-media img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 80vh;
-  object-fit: contain;
+  max-height: 90vh;
+
+  object-fit: cover;
   object-position: center;
-  background: #0b0e12;
+
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
 }
 
-/* ── Body — below the image ──────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   BODY — small side inset for readable text
+   ═══════════════════════════════════════════════════════════ */
 .mpx-post-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px 16px 10px;
+  gap: 10px;
+  padding: 12px 14px 8px;
+  margin: 0;
 }
 
-/* ═══════════════════════════════════════════
-   POST TITLE — big, bold, headline-style
-   ═══════════════════════════════════════════ */
 .mpx-post-title {
   margin: 0;
-  font-size: 1.5rem;       /* 24px — noticeably big */
-  font-weight: 900;         /* heaviest weight */
+  font-size: 1.5rem;
+  font-weight: 900;
   color: #0f172a;
   letter-spacing: -0.035em;
   line-height: 1.2;
   word-break: break-word;
 }
 
-/* ═══════════════════════════════════════════
-   POST CONTENT — comfortable reading size
-   ═══════════════════════════════════════════ */
 .mpx-post-content {
-  margin: 0;
-  font-size: 15.5px;        /* was 14.5px */
+  font-size: 15.5px;
   font-weight: 400;
-  color: #1e293b;           /* slightly darker for readability */
+  color: #1e293b;
   line-height: 1.65;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* ── Category pill ───────────────────────────── */
+.mpx-post-content > *:first-child { margin-top: 0; }
+.mpx-post-content > *:last-child  { margin-bottom: 0; }
+
+.mpx-post-content p {
+  margin: 0 0 0.75em;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.mpx-post-content h1,
+.mpx-post-content h2,
+.mpx-post-content h3 {
+  margin: 0.6em 0 0.35em;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.mpx-post-content h1 { font-size: 1.4rem; }
+.mpx-post-content h2 { font-size: 1.2rem; }
+.mpx-post-content h3 { font-size: 1.05rem; }
+
+.mpx-post-content ul,
+.mpx-post-content ol {
+  margin: 0.4em 0 0.75em;
+  padding-left: 1.4em;
+}
+
+.mpx-post-content li {
+  margin: 0.15em 0;
+  line-height: inherit;
+}
+
+.mpx-post-content a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.mpx-post-content a:hover {
+  color: #1d4ed8;
+}
+
+.mpx-post-content blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 12px;
+  margin: 0.6em 0;
+  color: #475569;
+  font-style: italic;
+}
+
+.mpx-post-content strong,
+.mpx-post-content b {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mpx-post-content em,
+.mpx-post-content i {
+  font-style: italic;
+}
+
+.mpx-post-content u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mpx-post-content s {
+  text-decoration: line-through;
+}
+
+.mpx-post-content pre,
+.mpx-post-content code {
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13.5px;
+}
+
+.mpx-post-content code {
+  padding: 2px 6px;
+}
+
+.mpx-post-content pre {
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+
+.mpx-post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.4em 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOT — small side inset for the category pill
+   ═══════════════════════════════════════════════════════════ */
 .mpx-post-foot {
   display: flex;
   align-items: center;
-  padding: 8px 16px 18px;
+  padding: 4px 14px 16px;
+  margin: 0;
 }
 
 .mpx-cat-pill {
@@ -329,13 +447,13 @@
 }
 
 /* ─────────────────────────────────────────────
-   Edit form
+   Edit form — keeps a small inset for inputs
    ───────────────────────────────────────────── */
 .mpx-edit {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 14px 16px 18px;
+  padding: 14px 12px 18px;
 }
 
 .mpx-edit-row {
@@ -502,8 +620,7 @@
 .mpx-edit-preview img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: #0b0e12;
+  object-fit: cover;
   display: block;
 }
 
@@ -772,7 +889,8 @@
   }
 
   .mpx-post-header {
-    padding: 12px 14px;
+    padding: 12px 12px;
+    gap: 8px;
   }
 
   .mpx-post-author {
@@ -784,12 +902,12 @@
   }
 
   .mpx-post-body {
-    padding: 16px 14px 8px;
+    padding: 12px 12px 8px;
     gap: 10px;
   }
 
   .mpx-post-title {
-    font-size: 1.35rem;    /* still big on mobile */
+    font-size: 1.35rem;
     font-weight: 900;
   }
 
@@ -799,11 +917,11 @@
   }
 
   .mpx-post-foot {
-    padding: 6px 14px 16px;
+    padding: 4px 12px 14px;
   }
 
   .mpx-edit {
-    padding: 12px 14px 16px;
+    padding: 12px 10px 16px;
   }
 
   .mpx-modal-card {

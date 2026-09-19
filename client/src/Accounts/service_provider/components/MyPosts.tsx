@@ -105,6 +105,13 @@ function timeAgo(iso: string) {
   }
 }
 
+/* Strip HTML tags to measure plain-text length (for edit validation) */
+function plainTextLength(html: string) {
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  return (tmp.textContent || tmp.innerText || '').trim().length
+}
+
 /* ────────────────────────────────────────────────────────
    API helpers
    ──────────────────────────────────────────────────────── */
@@ -447,7 +454,7 @@ const MyPosts = () => {
       toast.error('Title must be at least 3 characters.')
       return
     }
-    if (!form.content.trim() || form.content.trim().length < 10) {
+    if (plainTextLength(form.content) < 10) {
       toast.error('Content must be at least 10 characters.')
       return
     }
@@ -456,7 +463,7 @@ const MyPosts = () => {
       id: editingStory.id,
       payload: {
         title: form.title.trim(),
-        content: form.content.trim(),
+        content: form.content,
         category: form.category,
       },
       image: newImage,
@@ -576,7 +583,7 @@ const MyPosts = () => {
                       />
                     </div>
 
-                    {/* Content */}
+                    {/* Content — plain textarea for edit */}
                     <div className="mpx-edit-field">
                       <label className="mpx-edit-field-label">
                         Content
@@ -588,7 +595,7 @@ const MyPosts = () => {
                           setField('content', e.target.value)
                         }
                         disabled={updateMutation.isPending}
-                        rows={5}
+                        rows={6}
                         maxLength={2000}
                       />
                     </div>
@@ -745,7 +752,7 @@ const MyPosts = () => {
                       </div>
                     </header>
 
-                    {/* ── Full-width image, no crop ───── */}
+                    {/* ── Full-width image — object-fit: cover ── */}
                     {story.image_url && (
                       <div className="mpx-post-media">
                         <img
@@ -757,10 +764,16 @@ const MyPosts = () => {
                       </div>
                     )}
 
-                    {/* ── Title + description below image ─ */}
+                    {/* ── Title + rich HTML description below ── */}
                     <div className="mpx-post-body">
                       <h3 className="mpx-post-title">{story.title}</h3>
-                      <p className="mpx-post-content">{story.content}</p>
+
+                      <div
+                        className="mpx-post-content"
+                        dangerouslySetInnerHTML={{
+                          __html: story.content,
+                        }}
+                      />
                     </div>
 
                     {/* ── Category pill at the bottom ─── */}

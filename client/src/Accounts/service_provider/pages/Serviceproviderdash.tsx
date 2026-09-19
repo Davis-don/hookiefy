@@ -11,7 +11,7 @@ import Stories from '../components/stories/Stories';
 import AddData from '../components/AddData';
 
 /* Tabs that render edge-to-edge (no content-wrapper padding) */
-const FULL_BLEED_TABS = new Set(['home']);
+const FULL_BLEED_TABS = new Set(['home', 'add-data']);
 
 const Serviceproviderdash = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -69,7 +69,7 @@ const Serviceproviderdash = () => {
   const handleAddClick = () => {
     setShowProfile(false);
     setShowAddData(true);
-    setActiveTab('');
+    setActiveTab('add-data');
   };
 
   const toggleSidebar = () => {
@@ -90,7 +90,7 @@ const Serviceproviderdash = () => {
 
   /* Should the current view render edge-to-edge? */
   const useFullBleed =
-    !showProfile && !showAddData && FULL_BLEED_TABS.has(activeTab);
+    !showProfile && FULL_BLEED_TABS.has(activeTab);
 
   return (
     <div className="yp-dash-container">

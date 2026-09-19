@@ -369,3 +369,187 @@
     animation: none;
   }
 }
+/* ═══════════════════════════════════════════════════════
+   RICH TEXT EDITOR (react-quill)
+   Styled to match the rest of the form
+   ═══════════════════════════════════════════════════════ */
+
+.addpost-editor {
+  width: 100%;
+  border-radius: 9px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.addpost-editor:focus-within {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.addpost-editor-error {
+  border-color: #d9534f !important;
+  background: #fff7f7;
+}
+
+.addpost-editor-error:focus-within {
+  box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.12);
+}
+
+/* ── Toolbar ────────────────────────────────── */
+.addpost-editor .ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1.5px solid #e5e5e5;
+  background: #fafafa;
+  padding: 8px 10px;
+  font-family: inherit;
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 10px;
+}
+
+.addpost-editor .ql-toolbar.ql-snow button {
+  border-radius: 6px;
+  padding: 4px;
+  transition: background 0.15s ease;
+}
+
+.addpost-editor .ql-toolbar.ql-snow button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.addpost-editor .ql-toolbar.ql-snow button.ql-active {
+  background: rgba(17, 17, 17, 0.08);
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-stroke {
+  stroke: #555555;
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-fill {
+  fill: #555555;
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-picker {
+  color: #333333;
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-picker-label {
+  border: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-picker-label:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.addpost-editor .ql-toolbar.ql-snow .ql-picker-options {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+}
+
+/* ── Editor body ────────────────────────────── */
+.addpost-editor .ql-container.ql-snow {
+  border: none;
+  font-family: inherit;
+  font-size: 14.5px;
+  background: #ffffff;
+}
+
+.addpost-editor .ql-editor {
+  min-height: 200px;
+  max-height: 420px;
+  padding: 14px 16px;
+  color: #000000;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+.addpost-editor .ql-editor.ql-blank::before {
+  color: #999999;
+  font-style: normal;
+  font-weight: 400;
+  left: 16px;
+  right: 16px;
+}
+
+.addpost-editor .ql-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0.6em 0 0.4em;
+}
+
+.addpost-editor .ql-editor h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0.6em 0 0.4em;
+}
+
+.addpost-editor .ql-editor h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.6em 0 0.4em;
+}
+
+.addpost-editor .ql-editor p {
+  margin: 0 0 0.6em;
+}
+
+.addpost-editor .ql-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.addpost-editor .ql-editor blockquote {
+  border-left: 3px solid #d9d9d9;
+  padding-left: 12px;
+  color: #64748b;
+  margin: 0.6em 0;
+}
+
+.addpost-editor .ql-editor pre.ql-syntax,
+.addpost-editor .ql-editor pre {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+/* Scrollbar for the editor body */
+.addpost-editor .ql-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.addpost-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+/* ── Mobile ─────────────────────────────────── */
+@media (max-width: 560px) {
+  .addpost-editor .ql-toolbar.ql-snow {
+    padding: 6px 8px;
+  }
+
+  .addpost-editor .ql-toolbar.ql-snow .ql-formats {
+    margin-right: 6px;
+  }
+
+  .addpost-editor .ql-editor {
+    padding: 12px 14px;
+    min-height: 180px;
+    font-size: 14px;
+  }
+
+  .addpost-editor .ql-editor.ql-blank::before {
+    left: 14px;
+    right: 14px;
+  }
+}

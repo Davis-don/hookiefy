@@ -1,274 +1,635 @@
-/* addData.css — creative surface with 4 responsive tabs
-   Font Awesome icons, larger mobile-friendly tabs.
-   Sticky header + tab bar inside a self-scrolling panel.
-   Edge-to-edge layout. Works on mobile and desktop. */
+/* ============================================================
+   addData.css
+   Youpata Add Data
+   TRUE EDGE-TO-EDGE LAYOUT
+   NORMAL PAGE SCROLLING
+   ============================================================ */
 
-/* ─────────────────────────────────────────────
-   Root wrapper — becomes its OWN scroll container
-   so sticky positioning inside works reliably.
-   ───────────────────────────────────────────── */
+
+/* ============================================================
+   ROOT
+   ============================================================ */
+
 .adx-root {
   width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
+  max-width: none;
 
-  /* Fill the available height inside the dashboard main area
-     minus the mobile header + bottom nav. The value comes from
-     CSS variables on the dashboard so it stays in sync. */
-  height: calc(
-    100vh
-    - var(--yp-mobile-header-h, 78px)
-    - var(--yp-bottom-nav-h, 68px)
-  );
+  margin: 0;
+  padding: 0;
 
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  /*
+   * IMPORTANT:
+   * Do not create a separate scroll container.
+   */
+  height: auto;
+  min-height: 100%;
 
-  padding: 0 0 24px;
+  overflow: visible;
+
+  position: relative;
+
+  box-sizing: border-box;
 
   animation: adxFadeIn 0.3s ease-out;
-
-  /* Position context for the sticky top bar */
-  position: relative;
 }
+
+
+/* ============================================================
+   FADE ANIMATION
+   ============================================================ */
 
 @keyframes adxFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
 }
 
-/* ─────────────────────────────────────────────
-   Top bar (title + tab bar)
-   Sticky to the top of `.adx-root`'s scroll area.
-   ───────────────────────────────────────────── */
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
 .adx-topbar {
+
   position: sticky;
+
   top: 0;
+
   z-index: 30;
 
   width: 100%;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  max-width: none;
 
-  /* stay above the panel content while scrolling */
+  margin: 0;
+  padding: 0;
+
+  background: #ffffff;
+
+  border-bottom:
+    1px solid rgba(15, 23, 42, 0.08);
+
   isolation: isolate;
+
+  box-sizing: border-box;
 }
 
-/* ─────────────────────────────────────────────
-   Header — compact, tight vertical spacing
-   ───────────────────────────────────────────── */
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
 .adx-header {
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   gap: 12px;
 
   padding: 10px 16px 2px;
+
+  box-sizing: border-box;
 }
 
+
 .adx-title {
+
   margin: 0;
+
   font-size: 1.2rem;
+
   font-weight: 800;
+
   color: #0f172a;
+
   letter-spacing: -0.3px;
 }
 
-/* ─────────────────────────────────────────────
-   Tab bar — underline style, Font Awesome icons
-   ───────────────────────────────────────────── */
+
+/* ============================================================
+   TAB BAR WRAPPER
+   ============================================================ */
+
 .adx-tabbar-wrap {
+
   width: 100%;
+  max-width: none;
+
+  margin: 0;
+  padding: 0;
+
   background: #ffffff;
+
+  box-sizing: border-box;
 }
 
+
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+
 .adx-tabbar {
+
   display: flex;
+
   align-items: stretch;
+
   gap: 2px;
 
   width: 100%;
+  max-width: none;
+
+  /*
+   * Horizontal scrolling is intentional here.
+   * This only allows the tabs to move horizontally
+   * on very small screens.
+   */
   overflow-x: auto;
+
   overflow-y: hidden;
 
   scrollbar-width: none;
+
   -ms-overflow-style: none;
+
   -webkit-overflow-scrolling: touch;
+
   scroll-snap-type: x proximity;
 
   padding: 0;
+
   margin: 0;
+
+  box-sizing: border-box;
 }
 
-.adx-tabbar::-webkit-scrollbar { display: none; }
 
-/* ── Individual tab ───────────────────────────── */
+.adx-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* ============================================================
+   TAB
+   ============================================================ */
+
 .adx-tab {
+
   position: relative;
 
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
+
   gap: 6px;
 
   flex: 1 1 0;
+
   min-width: 0;
+
   max-width: 100%;
 
   padding: 8px 10px 12px;
+
   margin: 0;
 
   border: none;
+
   background: transparent;
 
   color: #64748b;
+
   font-size: 13px;
+
   font-weight: 600;
+
   letter-spacing: -0.005em;
+
   white-space: nowrap;
+
   text-overflow: ellipsis;
+
   overflow: hidden;
 
   cursor: pointer;
+
   scroll-snap-align: start;
 
-  transition: color 0.18s ease;
+  transition:
+    color 0.18s ease;
+
+  box-sizing: border-box;
 }
 
+
+/* ============================================================
+   TAB UNDERLINE
+   ============================================================ */
+
 .adx-tab::after {
+
   content: '';
+
   position: absolute;
+
   left: 8px;
+
   right: 8px;
+
   bottom: 0;
 
   height: 2px;
+
   border-radius: 2px;
 
   background: #2563eb;
 
   transform: scaleX(0);
+
   transform-origin: center;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+
+  transition:
+    transform 0.22s
+      cubic-bezier(0.4, 0, 0.2, 1),
+
     background 0.18s ease;
 }
 
-.adx-tab:hover { color: #0f172a; }
 
-.adx-tab:hover::after {
-  transform: scaleX(0.6);
-  background: rgba(37, 99, 235, 0.4);
+/* ============================================================
+   TAB HOVER
+   ============================================================ */
+
+.adx-tab:hover {
+  color: #0f172a;
 }
 
+
+.adx-tab:hover::after {
+
+  transform: scaleX(0.6);
+
+  background:
+    rgba(37, 99, 235, 0.4);
+}
+
+
+/* ============================================================
+   ACTIVE TAB
+   ============================================================ */
+
 .adx-tab-active {
+
   color: #2563eb;
+
   font-weight: 700;
 }
 
-.adx-tab-active:hover { color: #2563eb; }
+
+.adx-tab-active:hover {
+  color: #2563eb;
+}
+
 
 .adx-tab-active::after {
+
   transform: scaleX(1);
+
   background: #2563eb;
 }
 
+
+/* ============================================================
+   KEYBOARD FOCUS
+   ============================================================ */
+
 .adx-tab:focus-visible {
+
   outline: none;
+
   border-radius: 6px;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.22);
 }
 
-/* Font Awesome icon */
+
+/* ============================================================
+   FONT AWESOME ICON
+   ============================================================ */
+
 .adx-tab-icon {
+
   font-size: 15px;
+
   line-height: 1;
+
   flex-shrink: 0;
-  transition: transform 0.18s ease;
+
+  transition:
+    transform 0.18s ease;
 }
 
-.adx-tab:hover .adx-tab-icon { transform: scale(1.12); }
+
+.adx-tab:hover .adx-tab-icon {
+  transform: scale(1.12);
+}
+
+
+/* ============================================================
+   TAB LABELS
+   ============================================================ */
 
 .adx-tab-label {
+
   font-weight: inherit;
+
   overflow: hidden;
+
   text-overflow: ellipsis;
 }
 
+
 .adx-tab-short {
+
   display: none;
+
   font-weight: inherit;
 }
 
-/* ─────────────────────────────────────────────
-   Panel — content flows inside .adx-root's scroll
-   ───────────────────────────────────────────── */
+
+/* ============================================================
+   PANEL
+   ============================================================ */
+
 .adx-panel {
-  animation: adxFadeIn 0.25s ease-out;
+
+  width: 100%;
+  max-width: none;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+
+  animation:
+    adxFadeIn 0.25s ease-out;
 }
 
-/* ═════════════════════════════════════════════
-   RESPONSIVE
-   ═════════════════════════════════════════════ */
 
-/* ── Medium: swap to short labels ── */
+/* ============================================================
+   MEDIUM SCREENS
+   ============================================================ */
+
 @media (max-width: 520px) {
+
   .adx-header {
-    padding: 8px 14px 2px;
+
+    padding:
+      8px 14px 2px;
   }
 
+
   .adx-title {
+
     font-size: 1.1rem;
   }
 
+
   .adx-tab {
-    padding: 8px 8px 11px;
+
+    padding:
+      8px 8px 11px;
+
     font-size: 12.5px;
+
     gap: 5px;
   }
 
-  .adx-tab-label { display: none; }
-  .adx-tab-short { display: inline; }
+
+  .adx-tab-label {
+    display: none;
+  }
+
+
+  .adx-tab-short {
+    display: inline;
+  }
+
 
   .adx-tab-icon {
     font-size: 16px;
   }
+
 }
 
-/* ── Small: icon + short label stacked ── */
+
+/* ============================================================
+   SMALL SCREENS
+   ============================================================ */
+
 @media (max-width: 400px) {
+
   .adx-tab {
+
     flex-direction: column;
+
     gap: 3px;
-    padding: 8px 6px 11px;
+
+    padding:
+      8px 6px 11px;
   }
 
-  .adx-tab-short { display: none; }
+
+  .adx-tab-short {
+    display: none;
+  }
+
 
   .adx-tab-icon {
     font-size: 18px;
   }
 
+
   .adx-tab::after {
+
     left: 6px;
+
     right: 6px;
   }
+
 }
 
-/* ── Desktop: full viewport height minus nothing ── */
-@media (min-width: 769px) {
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 768px) {
+
   .adx-root {
-    height: 100vh;
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+
+    /*
+     * No internal scrolling.
+     */
+    height: auto;
+
+    min-height: 100%;
+
+    overflow: visible;
+
+    box-sizing: border-box;
   }
+
+
+  .adx-topbar {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+
+    box-sizing: border-box;
+  }
+
+
+  .adx-tabbar-wrap {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+
+  .adx-tabbar {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+
+  .adx-panel {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+
+    box-sizing: border-box;
+  }
+
 }
 
-/* ── Reduced motion ── */
+
+/* ============================================================
+   DESKTOP
+   ============================================================ */
+
+@media (min-width: 769px) {
+
+  .adx-root {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+
+    height: auto;
+
+    min-height: 100vh;
+
+    overflow: visible;
+  }
+
+
+  .adx-topbar {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+
+  .adx-panel {
+
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
 @media (prefers-reduced-motion: reduce) {
+
   .adx-root,
-  .adx-panel { animation: none; }
+  .adx-panel {
+
+    animation: none;
+  }
+
 
   .adx-tab::after,
-  .adx-tab-icon { transition: none; }
+  .adx-tab-icon {
 
-  .adx-tab:hover .adx-tab-icon { transform: none; }
+    transition: none;
+  }
+
+
+  .adx-tab:hover .adx-tab-icon {
+
+    transform: none;
+  }
+
 }
