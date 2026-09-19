@@ -1,3 +1,4 @@
+// Serviceproviderdash.tsx
 import { useState, useEffect } from 'react';
 import './serviceproviderdash.css';
 import Header from '../components/Header';
@@ -6,6 +7,7 @@ import MyServices from '../components/MyServices';
 import Profile from '../components/Profile';
 import Settings from '../components/Settings';
 import Messages from '../components/Messages';
+import Stories from '../components/stories/Stories';
 
 /* Tabs that render edge-to-edge (no content-wrapper padding) */
 const FULL_BLEED_TABS = new Set(['home']);
@@ -29,6 +31,7 @@ const Serviceproviderdash = () => {
 
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
+    { id: 'stories', label: 'Stories', icon: '📸', component: Stories }, // NEW
     { id: 'messages', label: 'Messages', icon: '💬', component: Messages },
     { id: 'my-services', label: 'My Services', icon: '🛠️', component: MyServices },
     { id: 'settings', label: 'Settings', icon: '⚙️', component: Settings },
@@ -63,6 +66,7 @@ const Serviceproviderdash = () => {
 
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
+    { id: 'stories', label: 'Stories', icon: '📸' }, // NEW
     { id: 'messages', label: 'Messages', icon: '💬' },
     { id: 'my-services', label: 'Services', icon: '🛠️' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },

@@ -1,0 +1,209 @@
+/* stories.css — underline tab bar (text + line) */
+
+/* ─────────────────────────────────────────────
+   Root wrapper
+   ───────────────────────────────────────────── */
+.stories-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  background: #ffffff;
+}
+
+/* ─────────────────────────────────────────────
+   Tab bar wrapper — sticky, with bottom line
+   ───────────────────────────────────────────── */
+.stories-tabbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+/* ─────────────────────────────────────────────
+   Tab bar — horizontal scroll on mobile
+   ───────────────────────────────────────────── */
+.stories-tabbar {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.stories-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────
+   Individual tab — text + underline
+   ───────────────────────────────────────────── */
+.stories-tab {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 14px 4px 12px;
+  margin: 0 10px;
+
+  border: none;
+  background: transparent;
+
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+
+  cursor: pointer;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+
+  transition: color 0.18s ease;
+}
+
+/* Animated underline — hidden by default, grows from centre */
+.stories-tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;                     /* sits on the wrapper's border */
+
+  height: 2px;
+  border-radius: 2px;
+
+  background: #2563eb;
+
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s ease;
+}
+
+/* Hover — text darkens, underline previews */
+.stories-tab:hover {
+  color: #0f172a;
+}
+
+.stories-tab:hover::after {
+  transform: scaleX(0.6);
+  background: rgba(37, 99, 235, 0.4);
+}
+
+/* Active — full blue underline + darker text */
+.stories-tab-active {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.stories-tab-active:hover {
+  color: #2563eb;
+}
+
+.stories-tab-active::after {
+  transform: scaleX(1);
+  background: #2563eb;
+}
+
+/* Keyboard focus */
+.stories-tab:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+/* ─────────────────────────────────────────────
+   Emoji + label
+   ───────────────────────────────────────────── */
+.stories-tab-emoji {
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.18s ease;
+}
+
+.stories-tab:hover .stories-tab-emoji {
+  transform: scale(1.12);
+}
+
+.stories-tab-label {
+  font-weight: inherit;
+}
+
+/* ─────────────────────────────────────────────
+   Panel — where active component renders
+   ───────────────────────────────────────────── */
+.stories-panel {
+  flex: 1;
+  width: 100%;
+  padding: 18px 14px 28px;
+  animation: storiesFadeIn 0.25s ease-out;
+}
+
+@keyframes storiesFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Responsive — tighter spacing on small screens
+   ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .stories-tabbar {
+    padding: 0 12px;
+    gap: 0;
+  }
+
+  .stories-tab {
+    padding: 12px 2px 10px;
+    margin: 0 8px;
+    font-size: 13.5px;
+    gap: 5px;
+  }
+
+  .stories-tab-emoji {
+    font-size: 14px;
+  }
+
+  .stories-panel {
+    padding: 14px 12px 22px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stories-tab {
+    margin: 0 6px;
+    font-size: 13px;
+  }
+
+  .stories-tab-emoji {
+    font-size: 13px;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .stories-panel { animation: none; }
+
+  .stories-tab::after,
+  .stories-tab-emoji {
+    transition: none;
+  }
+
+  .stories-tab:hover .stories-tab-emoji {
+    transform: none;
+  }
+}
