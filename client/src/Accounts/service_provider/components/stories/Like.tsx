@@ -1,5 +1,5 @@
-// Like.tsx — self-contained like button with celebratory animation
-import {  useState } from 'react'
+// Like.tsx — self-contained like button with count + immediate celebration
+import { useState } from 'react'
 import { FiHeart } from 'react-icons/fi'
 import {
   useMutation,
@@ -20,6 +20,8 @@ interface LikeProps {
   onToggle?: (liked: boolean) => void
   size?: 'sm' | 'md'
   contentType?: 'story' | 'clientservice'
+  /** Show the count next to the heart. Default: true */
+  showCount?: boolean
 }
 
 interface CheckLikeResponse {
@@ -125,14 +127,14 @@ async function toggleLike(
    ──────────────────────────────────────────────────────── */
 
 const PARTICLE_COLORS = [
-  '#ef4444', // red
-  '#f97316', // orange
-  '#eab308', // yellow
-  '#22c55e', // green
-  '#06b6d4', // cyan
-  '#3b82f6', // blue
-  '#8b5cf6', // violet
-  '#ec4899', // pink
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
 ]
 
 interface Particle {
@@ -148,9 +150,7 @@ interface Particle {
 
 function makeParticles(count: number): Particle[] {
   return Array.from({ length: count }, (_, i) => {
-    // Spread the angles evenly around the circle
     const baseAngle = (360 / count) * i
-    // Add a small jitter so it doesn't look mechanical
     const angle = baseAngle + (Math.random() * 20 - 10)
 
     return {
@@ -170,6 +170,35 @@ function makeParticles(count: number): Particle[] {
 }
 
 /* ────────────────────────────────────────────────────────
+   Count formatter — YouTube / Twitter / TikTok style
+   ──────────────────────────────────────────────────────── */
+function formatCount(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return '0'
+  if (n < 1000) return String(Math.floor(n))
+
+  const units = [
+    { threshold: 1_000_000_000, suffix: 'B' },
+    { threshold: 1_000_000,     suffix: 'M' },
+    { threshold: 1_000,         suffix: 'K' },
+  ] as const
+
+  for (const { threshold, suffix } of units) {
+    if (n >= threshold) {
+      const value = n / threshold
+
+      if (value < 10) {
+        const oneDecimal = (Math.floor(value * 10) / 10).toFixed(1)
+        return `${oneDecimal.replace(/\.0$/, '')}${suffix}`
+      }
+
+      return `${Math.round(value)}${suffix}`
+    }
+  }
+
+  return String(n)
+}
+
+/* ────────────────────────────────────────────────────────
    Component
    ──────────────────────────────────────────────────────── */
 
@@ -179,6 +208,7 @@ function Like({
   onToggle,
   size = 'md',
   contentType = 'story',
+  showCount = true,
 }: LikeProps) {
   const { access } = useAuthStore()
   const queryClient = useQueryClient()
@@ -204,6 +234,18 @@ function Like({
   const liked = data?.liked ?? false
   const likesCount = data?.likes_count ?? 0
 
+  /* ── Helpers to fire the celebration ─────────────── */
+  const firePopAnimation = () => {
+    setPop(true)
+    setTimeout(() => setPop(false), 420)
+  }
+
+  const fireCelebration = () => {
+    setParticles(makeParticles(14))
+    setCelebrate(true)
+    setTimeout(() => setCelebrate(false), 900)
+  }
+
   /* ── Mutation ────────────────────────────────────── */
   const mutation = useMutation<
     ToggleLikeResponse,
@@ -223,6 +265,7 @@ function Like({
         ['like-state', postId, contentType, access]
       )
 
+      // Optimistic flip — state + count change instantly
       queryClient.setQueryData<CheckLikeResponse>(
         ['like-state', postId, contentType, access],
         {
@@ -235,13 +278,20 @@ function Like({
         }
       )
 
-      setPop(true)
-      setTimeout(() => setPop(false), 420)
+      // ── Fire the UI response IMMEDIATELY ──────────
+      // This is what makes the button feel instant.
+      firePopAnimation()
+
+      // Confetti only when going from unliked → liked
+      if (!currentlyLiked) {
+        fireCelebration()
+      }
 
       return { previous }
     },
 
     onSuccess: (result) => {
+      // Confirm with the server's authoritative values
       queryClient.setQueryData<CheckLikeResponse>(
         ['like-state', postId, contentType, access],
         {
@@ -253,15 +303,17 @@ function Like({
 
       onToggle?.(result.liked)
 
-      // Fire the celebration ONLY when liking (not unliking)
+      // ── Fire a second, smaller celebration on success ──
+      // The user sees the pop once on click and again here
+      // as confirmation that the server confirmed the like.
       if (result.liked) {
-        setParticles(makeParticles(14))
-        setCelebrate(true)
-        setTimeout(() => setCelebrate(false), 900)
+        firePopAnimation()
+        fireCelebration()
       }
     },
 
     onError: (err, _vars, context) => {
+      // Roll back state
       if (context?.previous) {
         queryClient.setQueryData(
           ['like-state', postId, contentType, access],
@@ -273,7 +325,10 @@ function Like({
         })
       }
 
+      // Kill any in-flight visuals
       setPop(false)
+      setCelebrate(false)
+      setParticles([])
 
       toast.error(
         err.message || 'Could not update like. Please try again.',
@@ -297,7 +352,9 @@ function Like({
       type="button"
       className={`lk-btn-root lk-btn-root-${size} ${
         liked ? 'lk-btn-root-liked' : ''
-      } ${pop ? 'lk-btn-root-pop' : ''}`}
+      } ${pop ? 'lk-btn-root-pop' : ''} ${
+        showCount ? '' : 'lk-btn-root-icon-only'
+      }`}
       onClick={handleClick}
       aria-label={liked ? 'Unlike this post' : 'Like this post'}
       aria-pressed={liked}
@@ -306,32 +363,38 @@ function Like({
       data-post-id={postId}
       title={`${likesCount} ${likesCount === 1 ? 'like' : 'likes'}`}
     >
-      {/* ── The heart icon itself ─────────────────── */}
-      <FiHeart className="lk-btn-icon" />
+      <span className="lk-btn-icon-wrap">
+        <FiHeart className="lk-btn-icon" />
 
-      {/* ── Celebration particles ─────────────────── */}
-      {celebrate && (
-        <span className="lk-burst" aria-hidden="true">
-          {particles.map((p) => {
-            const rad = (p.angle * Math.PI) / 180
-            const tx = Math.cos(rad) * p.distance
-            const ty = Math.sin(rad) * p.distance
+        {celebrate && (
+          <span className="lk-burst" aria-hidden="true">
+            {particles.map((p) => {
+              const rad = (p.angle * Math.PI) / 180
+              const tx = Math.cos(rad) * p.distance
+              const ty = Math.sin(rad) * p.distance
 
-            return (
-              <span
-                key={p.id}
-                className={`lk-particle lk-particle-${p.shape}`}
-                style={{
-                  '--lk-tx': `${tx}px`,
-                  '--lk-ty': `${ty}px`,
-                  '--lk-size': `${p.size}px`,
-                  '--lk-color': p.color,
-                  '--lk-delay': `${p.delay}ms`,
-                  '--lk-duration': `${p.duration}ms`,
-                } as React.CSSProperties}
-              />
-            )
-          })}
+              return (
+                <span
+                  key={p.id}
+                  className={`lk-particle lk-particle-${p.shape}`}
+                  style={{
+                    '--lk-tx': `${tx}px`,
+                    '--lk-ty': `${ty}px`,
+                    '--lk-size': `${p.size}px`,
+                    '--lk-color': p.color,
+                    '--lk-delay': `${p.delay}ms`,
+                    '--lk-duration': `${p.duration}ms`,
+                  } as React.CSSProperties}
+                />
+              )
+            })}
+          </span>
+        )}
+      </span>
+
+      {showCount && likesCount > 0 && (
+        <span className="lk-btn-count">
+          {formatCount(likesCount)}
         </span>
       )}
     </button>
