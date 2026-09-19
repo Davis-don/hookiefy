@@ -1,9 +1,11 @@
-/* like.css — animated heart button */
+/* like.css — animated heart button with confetti burst */
 
-/* ─────────────────────────────────────────────
-   Button shell
-   ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   BUTTON SHELL
+   ═══════════════════════════════════════════════════════════ */
 .lk-btn-root {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -21,7 +23,6 @@
 
   -webkit-tap-highlight-color: transparent;
 
-  /* Prevent accidental text selection on long press */
   user-select: none;
   -webkit-user-select: none;
 }
@@ -63,13 +64,14 @@
   color: #dc2626;
 }
 
-/* Fill the heart when liked */
 .lk-btn-root-liked .lk-btn-icon {
   fill: #dc2626;
   stroke: #dc2626;
 }
 
-/* ── Pop animation on toggle ─────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   HEART — pop animation on toggle
+   ═══════════════════════════════════════════════════════════ */
 .lk-btn-root-pop .lk-btn-icon {
   animation: lk-pop 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -89,18 +91,97 @@
   }
 }
 
-/* ── Icon ────────────────────────────────────── */
 .lk-btn-icon {
   width: 1em;
   height: 1em;
   stroke-width: 2.2;
+
+  position: relative;
+  z-index: 2;
 
   transition:
     fill 0.2s ease,
     stroke 0.2s ease;
 }
 
-/* ── Reduced motion ──────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   CONFETTI BURST
+   ═══════════════════════════════════════════════════════════ */
+
+/* Container for all particles — centered on the button */
+.lk-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 0;
+  height: 0;
+
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Individual particle */
+.lk-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: var(--lk-size);
+  height: var(--lk-size);
+
+  background: var(--lk-color);
+
+  /* Start hidden and small, at the button's centre */
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+
+  /* Fire the animation */
+  animation: lk-confetti var(--lk-duration)
+    cubic-bezier(0.16, 1, 0.3, 1) var(--lk-delay) forwards;
+
+  /* Small glow */
+  box-shadow:
+    0 0 6px var(--lk-color),
+    0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+.lk-particle-circle {
+  border-radius: 50%;
+}
+
+.lk-particle-square {
+  border-radius: 1px;
+}
+
+/* The burst: outward + slight upward drift + fade out */
+@keyframes lk-confetti {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(20deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + var(--lk-tx)),
+        calc(-50% + var(--lk-ty) - 12px)
+      )
+      scale(0.9)
+      rotate(140deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Reduced motion — skip the celebration
+   ═══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .lk-btn-root:hover,
   .lk-btn-root:active {
@@ -109,5 +190,9 @@
 
   .lk-btn-root-pop .lk-btn-icon {
     animation: none;
+  }
+
+  .lk-particle {
+    display: none;
   }
 }

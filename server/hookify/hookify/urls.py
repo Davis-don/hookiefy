@@ -8,58 +8,227 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from account.views import health_check
 
+
 urlpatterns = [
-    # API root / health check
-    path("", health_check, name="health_check"),
 
-    # Django Admin
-    path("admin/", admin.site.urls),
+    # ============================================================
+    # API ROOT / HEALTH CHECK
+    # ============================================================
 
-    # Authentication & Account APIs
-    path("account/", include("account.urls")),
-    # Assignments
-    path("assignments/", include("assignments.urls")),
+    path(
+        "",
+        health_check,
+        name="health_check",
+    ),
 
-     # User Profile
-    path("profile/", include("userprofile.urls")),
 
-    # User preference
-    path("preference/", include("userpreference.urls")),
+    # ============================================================
+    # DJANGO ADMIN
+    # ============================================================
 
-     # User feed
-    path("feed/", include("feed.urls")),
-    # User connections
-    path("connections/", include("connections.urls")),
-    # Notifications
-    path("notifications/", include("notification.urls")),
+    path(
+        "admin/",
+        admin.site.urls,
+    ),
 
-    # JWT Token Refresh
+
+    # ============================================================
+    # AUTHENTICATION & ACCOUNT APIs
+    # ============================================================
+
+    path(
+        "account/",
+        include("account.urls"),
+    ),
+
+
+    # ============================================================
+    # ASSIGNMENTS
+    # ============================================================
+
+    path(
+        "assignments/",
+        include("assignments.urls"),
+    ),
+
+
+    # ============================================================
+    # USER PROFILE
+    # ============================================================
+
+    path(
+        "profile/",
+        include("userprofile.urls"),
+    ),
+
+
+    # ============================================================
+    # USER PREFERENCE
+    # ============================================================
+
+    path(
+        "preference/",
+        include("userpreference.urls"),
+    ),
+
+
+    # ============================================================
+    # USER FEED
+    # ============================================================
+
+    path(
+        "feed/",
+        include("feed.urls"),
+    ),
+
+
+    # ============================================================
+    # USER CONNECTIONS
+    # ============================================================
+
+    path(
+        "connections/",
+        include("connections.urls"),
+    ),
+
+
+    # ============================================================
+    # NOTIFICATIONS
+    # ============================================================
+
+    path(
+        "notifications/",
+        include("notification.urls"),
+    ),
+
+
+    # ============================================================
+    # JWT TOKEN REFRESH
+    # ============================================================
+
     path(
         "api/token/refresh/",
         TokenRefreshView.as_view(),
         name="token_refresh",
     ),
 
-    # Administration APIs
-    path("administration/", include("administration.urls")),
-    # Payments APIs
-    path("payments/", include("payments.urls")),
-    # User Balance APIs
-    path("balance/", include("UserBalance.urls")),
-    # Stats APIs
-    path("stats/", include("stats.urls")),
-    # Commissions APIs
-    path("commissions/", include("commisions.urls")),
-    # Paystack URLs
-    path('paystack/', include('paystack.urls')),
-    # System configuration
-    path('system-config/', include('system_config.urls')),
-    # Withdrawals
-    path('withdrawals/', include('withdrawals.urls')),
-    # Adverts
-    path('adverts/', include('adverts.urls')),
-    path("services/", include("services.urls")),
+
+    # ============================================================
+    # ADMINISTRATION APIs
+    # ============================================================
+
+    path(
+        "administration/",
+        include("administration.urls"),
+    ),
+
+
+    # ============================================================
+    # PAYMENTS APIs
+    # ============================================================
+
+    path(
+        "payments/",
+        include("payments.urls"),
+    ),
+
+
+    # ============================================================
+    # USER BALANCE APIs
+    # ============================================================
+
+    path(
+        "balance/",
+        include("UserBalance.urls"),
+    ),
+
+
+    # ============================================================
+    # STATS APIs
+    # ============================================================
+
+    path(
+        "stats/",
+        include("stats.urls"),
+    ),
+
+
+    # ============================================================
+    # COMMISSIONS APIs
+    # ============================================================
+
+    path(
+        "commissions/",
+        include("commisions.urls"),
+    ),
+
+
+    # ============================================================
+    # PAYSTACK
+    # ============================================================
+
+    path(
+        "paystack/",
+        include("paystack.urls"),
+    ),
+
+
+    # ============================================================
+    # SYSTEM CONFIGURATION
+    # ============================================================
+
+    path(
+        "system-config/",
+        include("system_config.urls"),
+    ),
+
+
+    # ============================================================
+    # WITHDRAWALS
+    # ============================================================
+
+    path(
+        "withdrawals/",
+        include("withdrawals.urls"),
+    ),
+
+
+    # ============================================================
+    # ADVERTS
+    # ============================================================
+
+    path(
+        "adverts/",
+        include("adverts.urls"),
+    ),
+
+
+    # ============================================================
+    # SERVICES
+    # ============================================================
+
+    path(
+        "services/",
+        include("services.urls"),
+    ),
+
+
+    # ============================================================
+    # STORIES
+    # ============================================================
+
     path(
         "stories/",
-        include("stories.urls"),)
+        include("stories.urls"),
+    ),
+
+
+    # ============================================================
+    # LIKES / ENGAGEMENT
+    # ============================================================
+
+    path(
+        "engagement/",
+        include("engagement.urls"),
+    ),
 ]
