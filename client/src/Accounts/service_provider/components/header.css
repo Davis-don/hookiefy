@@ -32,7 +32,9 @@
   height: 74px;
   background: var(--yp-white);
   border-bottom: 1px solid var(--yp-line);
-  z-index: 200;
+
+  /* Above the AddData tab bar (z-index 500) */
+  z-index: 1000;
 }
 
 .yp-dash-header::before {
@@ -84,6 +86,9 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.25s ease;
+
+  /* Own positioning context for the refresh dot */
+  position: relative;
 }
 
 .yp-dash-avatar-btn:hover  { transform: scale(1.05); }
@@ -149,7 +154,7 @@
   .yp-dash-header { display: none; }
 }
 
-/* ── Clickable wordmark (added traits only) ─────────────── */
+/* ── Clickable wordmark ─────────────────────────────────── */
 .yp-dash-wordmark {
   cursor: pointer;
   user-select: none;
@@ -174,7 +179,7 @@
   transform: scale(0.98);
 }
 
-/* ── Avatar image (smooth fade, no flash) ───────────────── */
+/* ── Avatar image ───────────────────────────────────────── */
 .yp-dash-avatar-img {
   object-fit: cover;
   background: #FBFCFE;
@@ -193,7 +198,7 @@
   filter: none;
 }
 
-/* ── Fallback (image failed) ─────────────────────────────── */
+/* ── Fallback ───────────────────────────────────────────── */
 .yp-dash-avatar-btn.yp-avatar-fallback::after {
   content: 'SP';
   width: 44px;
@@ -210,7 +215,7 @@
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
 }
 
-/* ── Tiny silent-refresh dot (no layout shift) ──────────── */
+/* ── Tiny refresh dot ───────────────────────────────────── */
 .yp-avatar-refresh-dot {
   position: absolute;
   top: 2px;
@@ -228,51 +233,32 @@
   50%      { opacity: 1;   transform: scale(1.1); }
 }
 
-/* Make the button the positioning context for the dot */
-.yp-dash-avatar-btn {
-  position: relative;
-}
-
 /* ─────────────────────────────────────────────
-   Header layout
-   ───────────────────────────────────────────── */
-.yp-dash-header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ─────────────────────────────────────────────
-   Avatar wrapper (positions halo + seal + menu)
+   Avatar wrapper
    ───────────────────────────────────────────── */
 .yp-dash-avatar-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Give the ring room to breathe outside the avatar */
   padding: 3px;
 }
 
 /* ─────────────────────────────────────────────
    Premium halo ring
    ───────────────────────────────────────────── */
-
-/* Hidden by default (non-premium users) */
 .yp-avatar-halo {
   display: none;
 }
 
-/* Only render the ring when the wrapper is flagged premium */
 .yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo {
   display: block;
   position: absolute;
-  inset: -2px;                     /* sits just outside the avatar */
+  inset: -2px;
   border-radius: 50%;
   z-index: 0;
   pointer-events: none;
 
-  /* The gold ring itself: a conic gradient that rotates */
   background: conic-gradient(
     from 0deg,
     #f5d16a 0deg,
@@ -284,42 +270,30 @@
     #f5d16a 360deg
   );
 
-  /* Gentle breathing pulse */
   animation: yp-halo-spin 8s linear infinite;
-
-  /* Soft outer glow so it feels like real metal */
   filter: drop-shadow(0 0 4px rgba(212, 160, 44, 0.55));
 }
 
-/* Inner mask — punches a hole so only the thin ring shows */
 .yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo::after {
   content: '';
   position: absolute;
-  inset: 2px;                     /* ring thickness = 2px */
+  inset: 2px;
   border-radius: 50%;
-  background: var(--yp-header-bg, #ffffff);  /* matches header background */
+  background: var(--yp-header-bg, #ffffff);
 }
 
-/* The avatar sits above the ring */
 .yp-dash-avatar-wrap .yp-dash-avatar-btn {
   position: relative;
   z-index: 1;
 }
 
-/* ─────────────────────────────────────────────
-   Rotation + subtle breathing
-   ───────────────────────────────────────────── */
 @keyframes yp-halo-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ─────────────────────────────────────────────
-   Corner crown seal (smaller now — ring does the heavy lifting)
+   Corner crown seal
    ───────────────────────────────────────────── */
 .yp-dash-avatar-seal {
   position: absolute;
@@ -339,9 +313,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-/* ─────────────────────────────────────────────
-   Reduced-motion: freeze the ring, keep the look
-   ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .yp-dash-avatar-wrap[data-premium='true'] .yp-avatar-halo {
     animation: none;
@@ -349,8 +320,9 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   AVATAR DROPDOWN MENU  —  redesigned
-   Clean, airy card with clear hierarchy
+   AVATAR DROPDOWN MENU
+   Above the AddData tab bar, the sticky post header,
+   and everything else in the app.
    ═══════════════════════════════════════════════════════════ */
 
 .yp-avatar-menu {
@@ -360,7 +332,6 @@
 
   min-width: 240px;
 
-  /* Solid surface, soft depth — no harsh borders */
   background: #FFFFFF;
   border-radius: 16px;
 
@@ -371,17 +342,17 @@
     0 12px 24px -12px rgba(15, 23, 42, 0.14),
     0 0 0 1px rgba(15, 23, 42, 0.05);
 
-  z-index: 1000;
+  /* Above everything else in the app.
+     Tab bar is 500, dashboard header is 1000 — this is 2000. */
+  z-index: 2000;
 
   animation: yp-menu-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top right;
 
-  /* Prevent accidental text selection on long-press (mobile) */
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Small upward-pointing caret */
 .yp-avatar-menu::before {
   content: '';
   position: absolute;
@@ -410,7 +381,6 @@
 }
 
 /* ── Optional user header block ──────────────────────────── */
-
 .yp-avatar-menu-header {
   padding: 12px 14px 10px;
 }
@@ -433,7 +403,6 @@
   letter-spacing: -0.005em;
   line-height: 1.3;
 
-  /* Truncate long emails gracefully */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -446,7 +415,6 @@
 }
 
 /* ── Menu row ────────────────────────────────────────────── */
-
 .yp-avatar-menu-item {
   display: flex;
   align-items: center;
@@ -496,9 +464,7 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-
   color: #64748B;
-
   transition: color 0.15s ease;
 }
 
@@ -506,8 +472,7 @@
   color: #2563EB;
 }
 
-/* ── Logout row (blends LogoutButton into the menu) ──────── */
-
+/* ── Logout row ──────────────────────────────────────────── */
 .yp-avatar-menu-item--logout {
   padding: 0;
   cursor: default;
@@ -518,8 +483,6 @@
   background: rgba(239, 68, 68, 0.07);
 }
 
-/* Strip LogoutButton's standalone pill styling and
-   make it align exactly like the Profile row. */
 .yp-avatar-menu-item--logout .logout-btn {
   display: flex;
   align-items: center;
@@ -575,7 +538,6 @@
   line-height: inherit;
   color: inherit;
 
-  /* NEVER hide the label — keep "Logout" visible on all screens */
   display: inline-block;
   white-space: nowrap;
   overflow: visible;
@@ -589,7 +551,6 @@
 }
 
 /* ── Mobile tweaks ───────────────────────────────────────── */
-
 @media (max-width: 480px) {
   .yp-avatar-menu {
     min-width: 224px;
@@ -633,7 +594,6 @@
     height: 16px;
   }
 
-  /* Label stays visible — no display: none here */
   .yp-avatar-menu-item--logout .logout-btn-label {
     display: inline-block;
     font-size: inherit;
