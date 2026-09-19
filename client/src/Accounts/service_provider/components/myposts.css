@@ -1,0 +1,266 @@
+/* myposts.css — My Posts list */
+
+.myposts-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  background: #ffffff;
+  padding: 16px;
+}
+
+/* ─────────────────────────────────────────────
+   Toolbar
+   ───────────────────────────────────────────── */
+.myposts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.myposts-toolbar-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.myposts-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.myposts-icon-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.myposts-icon-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.4);
+  color: #2563eb;
+}
+
+.myposts-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.myposts-icon-spinning {
+  animation: myposts-spin 0.9s linear infinite;
+}
+
+@keyframes myposts-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────
+   Empty / loading states
+   ───────────────────────────────────────────── */
+.myposts-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.myposts-state-icon {
+  font-size: 42px;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+}
+
+.myposts-state-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.myposts-state-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  max-width: 320px;
+  line-height: 1.55;
+}
+
+/* ─────────────────────────────────────────────
+   Post list
+   ───────────────────────────────────────────── */
+.myposts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.myposts-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.myposts-card:hover {
+  box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.16);
+  transform: translateY(-1px);
+}
+
+.myposts-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.myposts-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.myposts-card-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.myposts-card-author {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.myposts-card-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.myposts-card-time {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.myposts-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.myposts-card-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.myposts-card-icon:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.myposts-card-icon-danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.myposts-card-body {
+  font-size: 14px;
+  color: #1e293b;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.myposts-card-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.myposts-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.myposts-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.myposts-card-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* ─────────────────────────────────────────────
+   Mobile
+   ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .myposts-root {
+    padding: 14px;
+  }
+
+  .myposts-toolbar-title {
+    font-size: 1rem;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .myposts-icon-spinning { animation: none; }
+
+  .myposts-card:hover { transform: none; }
+}

@@ -1,0 +1,276 @@
+/* addpost.css — Add Post form */
+
+.addpost-root {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ─────────────────────────────────────────────
+   Header
+   ───────────────────────────────────────────── */
+.addpost-header {
+  margin-bottom: 14px;
+}
+
+.addpost-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.addpost-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+/* ─────────────────────────────────────────────
+   Form
+   ───────────────────────────────────────────── */
+.addpost-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.addpost-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addpost-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.addpost-textarea,
+.addpost-input {
+  width: 100%;
+  padding: 12px 13px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  color: #0f172a;
+  background: #ffffff;
+
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.addpost-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.addpost-textarea::placeholder,
+.addpost-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.addpost-textarea:hover,
+.addpost-input:hover {
+  border-color: rgba(15, 23, 42, 0.24);
+}
+
+.addpost-textarea:focus,
+.addpost-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ─────────────────────────────────────────────
+   Media upload zone
+   ───────────────────────────────────────────── */
+.addpost-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 26px 16px;
+  border-radius: 14px;
+  border: 2px dashed rgba(15, 23, 42, 0.18);
+  background: #f8fafc;
+
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.addpost-upload:hover {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.addpost-upload-icon {
+  font-size: 1.8rem;
+  color: #2563eb;
+  line-height: 1;
+}
+
+.addpost-upload-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  word-break: break-word;
+}
+
+.addpost-upload-input {
+  display: none;
+}
+
+/* Image preview */
+.addpost-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.addpost-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.addpost-preview-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(15, 23, 42, 0.7);
+  color: #ffffff;
+
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.addpost-preview-remove:hover {
+  background: #dc2626;
+  transform: scale(1.06);
+}
+
+/* ─────────────────────────────────────────────
+   Actions
+   ───────────────────────────────────────────── */
+.addpost-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.addpost-submit,
+.addpost-cancel {
+  flex: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 12px 18px;
+  border-radius: 11px;
+  border: 1.5px solid transparent;
+
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.addpost-submit {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.addpost-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.5);
+}
+
+.addpost-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.addpost-cancel {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.addpost-cancel:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.32);
+}
+
+.addpost-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.addpost-btn-icon { font-size: 14px; }
+
+/* ─────────────────────────────────────────────
+   Mobile
+   ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .addpost-root {
+    padding: 14px;
+  }
+
+  .addpost-title { font-size: 1.05rem; }
+
+  .addpost-actions { flex-direction: column-reverse; }
+
+  .addpost-submit,
+  .addpost-cancel {
+    width: 100%;
+    padding: 12px 16px;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .addpost-submit:hover:not(:disabled),
+  .addpost-preview-remove:hover {
+    transform: none;
+  }
+}

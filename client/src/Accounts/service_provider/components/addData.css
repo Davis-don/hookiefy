@@ -1,0 +1,248 @@
+/* addData.css — creative surface with 4 responsive tabs
+   Unique `adx-` class prefix to avoid collisions.
+   Tabs: text + emoji on wide screens, icon-only on small.
+   No close button — the bottom nav handles navigation.
+   Edge-to-edge layout — no side padding.
+   Page scrolls naturally — the fixed bottom nav stays put. */
+
+/* ─────────────────────────────────────────────
+   Root wrapper — no side padding, content touches edges
+   ───────────────────────────────────────────── */
+.adx-root {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+
+  /* only vertical padding — content runs edge to edge */
+  padding: 24px 0 40px;
+
+  animation: adxFadeIn 0.3s ease-out;
+}
+
+@keyframes adxFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Header (title only) — keeps its own inset so the
+   title doesn't hug the screen edge
+   ───────────────────────────────────────────── */
+.adx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 0 16px;
+}
+
+.adx-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.4px;
+}
+
+/* ─────────────────────────────────────────────
+   Top tab bar — underline style, never overflows
+   ───────────────────────────────────────────── */
+.adx-tabbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  margin-bottom: 20px;
+
+  width: 100%;
+  overflow: hidden;
+}
+
+.adx-tabbar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+
+  padding: 0;
+  margin: 0;
+}
+
+.adx-tabbar::-webkit-scrollbar { display: none; }
+
+/* ── Individual tab ───────────────────────────── */
+.adx-tab {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+
+  padding: 14px 8px 12px;
+  margin: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+
+  cursor: pointer;
+  scroll-snap-align: start;
+
+  transition: color 0.18s ease;
+}
+
+.adx-tab::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+
+  height: 2px;
+  border-radius: 2px;
+
+  background: #2563eb;
+
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s ease;
+}
+
+.adx-tab:hover { color: #0f172a; }
+
+.adx-tab:hover::after {
+  transform: scaleX(0.6);
+  background: rgba(37, 99, 235, 0.4);
+}
+
+.adx-tab-active {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.adx-tab-active:hover { color: #2563eb; }
+
+.adx-tab-active::after {
+  transform: scaleX(1);
+  background: #2563eb;
+}
+
+.adx-tab:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+.adx-tab-emoji {
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.adx-tab:hover .adx-tab-emoji { transform: scale(1.12); }
+
+.adx-tab-label {
+  font-weight: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Short label hidden by default — shown on small screens */
+.adx-tab-short {
+  display: none;
+  font-weight: inherit;
+}
+
+/* ─────────────────────────────────────────────
+   Panel — the child components (MyPosts, AddPost,
+   AllServices, AddService) provide their own
+   internal padding so their content sits nicely.
+   The panel itself stays edge-to-edge.
+   ───────────────────────────────────────────── */
+.adx-panel {
+  animation: adxFadeIn 0.25s ease-out;
+}
+
+/* ═════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════ */
+
+/* ── Medium: swap to short labels ── */
+@media (max-width: 520px) {
+  .adx-root {
+    padding: 20px 0 36px;
+  }
+
+  .adx-header {
+    padding: 0 14px;
+  }
+
+  .adx-title {
+    font-size: 1.5rem;
+  }
+
+  .adx-tab {
+    padding: 13px 6px 11px;
+    font-size: 13px;
+    gap: 5px;
+  }
+
+  .adx-tab-label { display: none; }
+  .adx-tab-short { display: inline; }
+}
+
+/* ── Small: icon-only tabs ── */
+@media (max-width: 400px) {
+  .adx-tab {
+    padding: 13px 4px 11px;
+    gap: 0;
+  }
+
+  .adx-tab-short { display: none; }
+
+  .adx-tab-emoji {
+    font-size: 1.35rem;
+  }
+
+  .adx-tab::after {
+    left: 6px;
+    right: 6px;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .adx-root,
+  .adx-panel { animation: none; }
+
+  .adx-tab::after,
+  .adx-tab-emoji { transition: none; }
+
+  .adx-tab:hover .adx-tab-emoji { transform: none; }
+}

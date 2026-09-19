@@ -8,6 +8,7 @@ import Profile from '../components/Profile';
 import Settings from '../components/Settings';
 import Messages from '../components/Messages';
 import Stories from '../components/stories/Stories';
+import AddData from '../components/AddData';
 
 /* Tabs that render edge-to-edge (no content-wrapper padding) */
 const FULL_BLEED_TABS = new Set(['home']);
@@ -17,6 +18,7 @@ const Serviceproviderdash = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAddData, setShowAddData] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -31,13 +33,14 @@ const Serviceproviderdash = () => {
 
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
-    { id: 'stories', label: 'Stories', icon: '📸', component: Stories }, // NEW
+    { id: 'stories', label: 'Stories', icon: '📸', component: Stories },
     { id: 'messages', label: 'Messages', icon: '💬', component: Messages },
     { id: 'my-services', label: 'My Services', icon: '🛠️', component: MyServices },
     { id: 'settings', label: 'Settings', icon: '⚙️', component: Settings },
   ];
 
   const renderActiveComponent = () => {
+    if (showAddData) return <AddData onClose={() => setShowAddData(false)} />;
     if (showProfile) return <Profile />;
     const activeItem = menuItems.find((item) => item.id === activeTab);
     const ActiveComponent = activeItem?.component || Home;
@@ -46,35 +49,48 @@ const Serviceproviderdash = () => {
 
   const handleHeaderProfileClick = () => {
     setShowProfile(true);
+    setShowAddData(false);
     setActiveTab('');
   };
 
   const handleNavClick = (id: string) => {
     setShowProfile(false);
+    setShowAddData(false);
     setActiveTab(id);
   };
 
   const handleBrandClick = () => {
     setShowProfile(false);
+    setShowAddData(false);
     setActiveTab('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddClick = () => {
+    setShowProfile(false);
+    setShowAddData(true);
+    setActiveTab('');
   };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  /* Mobile nav — 4 items + centered "+" */
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
-    { id: 'stories', label: 'Stories', icon: '📸' }, // NEW
+    { id: 'stories', label: 'Stories', icon: '📸' },
     { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'my-services', label: 'Services', icon: '🛠️' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
+  /* Split items into left / right of the "+" */
+  const leftItems = mobileNavItems.slice(0, 2);
+  const rightItems = mobileNavItems.slice(2);
+
   /* Should the current view render edge-to-edge? */
   const useFullBleed =
-    !showProfile && FULL_BLEED_TABS.has(activeTab);
+    !showProfile && !showAddData && FULL_BLEED_TABS.has(activeTab);
 
   return (
     <div className="yp-dash-container">
@@ -122,7 +138,7 @@ const Serviceproviderdash = () => {
             {menuItems.map((item) => (
               <button
                 key={item.id}
-                className={`yp-dash-sidebar-item ${activeTab === item.id && !showProfile ? 'yp-dash-sidebar-item-active' : ''}`}
+                className={`yp-dash-sidebar-item ${activeTab === item.id && !showProfile && !showAddData ? 'yp-dash-sidebar-item-active' : ''}`}
                 onClick={() => handleNavClick(item.id)}
                 type="button"
               >
@@ -130,6 +146,16 @@ const Serviceproviderdash = () => {
                 <span className="yp-dash-sidebar-label">{item.label}</span>
               </button>
             ))}
+
+            {/* Add data button on desktop sidebar */}
+            <button
+              className={`yp-dash-sidebar-item ${showAddData ? 'yp-dash-sidebar-item-active' : ''}`}
+              onClick={handleAddClick}
+              type="button"
+            >
+              <span className="yp-dash-sidebar-icon">➕</span>
+              <span className="yp-dash-sidebar-label">Add Data</span>
+            </button>
           </nav>
 
           <div className="yp-dash-sidebar-footer">
@@ -162,13 +188,35 @@ const Serviceproviderdash = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav — TikTok style with centered + */}
       {isMobile && (
         <nav className="yp-dash-bottom-nav">
-          {mobileNavItems.map((item) => (
+          {leftItems.map((item) => (
             <button
               key={item.id}
-              className={`yp-dash-nav-item ${activeTab === item.id && !showProfile ? 'yp-dash-nav-item-active' : ''}`}
+              className={`yp-dash-nav-item ${activeTab === item.id && !showProfile && !showAddData ? 'yp-dash-nav-item-active' : ''}`}
+              onClick={() => handleNavClick(item.id)}
+              aria-label={item.label}
+              type="button"
+            >
+              <span className="yp-dash-nav-icon">{item.icon}</span>
+            </button>
+          ))}
+
+          {/* Centered + button — clean circle, bold, larger */}
+          <button
+            className="yp-dash-nav-add"
+            onClick={handleAddClick}
+            aria-label="Add"
+            type="button"
+          >
+            <span className="yp-dash-nav-add-icon">+</span>
+          </button>
+
+          {rightItems.map((item) => (
+            <button
+              key={item.id}
+              className={`yp-dash-nav-item ${activeTab === item.id && !showProfile && !showAddData ? 'yp-dash-nav-item-active' : ''}`}
               onClick={() => handleNavClick(item.id)}
               aria-label={item.label}
               type="button"

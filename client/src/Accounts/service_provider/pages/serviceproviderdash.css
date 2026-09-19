@@ -1,10 +1,13 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — SERVICE PROVIDER DASHBOARD
    Icon-only mobile bottom nav (no labels)
+   Centered "+" sits in the flex row, evenly spaced.
+   Page scrolls naturally on mobile — fixed bottom nav
+   stays pinned because it's position: fixed.
    No global reset — only scoped .yp-dash-* classes
    ───────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   --yp-blue:      #2563EB;
@@ -284,10 +287,6 @@
 
 /* ============================================
    FULL-BLEED CONTENT AREA
-   Used by tabs that need edge-to-edge rendering
-   (e.g. the Home / feed). No padding, no
-   max-width cap — the content runs wall-to-wall
-   inside the main column.
    ============================================ */
 
 .yp-dash-full-bleed {
@@ -323,6 +322,12 @@
   padding: 0 12px;
   padding-bottom: env(safe-area-inset-bottom, 0);
   box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.05);
+
+  /* Own compositing layer — iOS keeps it pinned while
+     content scrolls behind it */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .yp-dash-nav-item {
@@ -370,15 +375,75 @@
   border-radius: 0 0 3px 3px;
 }
 
-/* Even bigger icons on small phones */
+/* ============================================
+   CENTERED "+" — sits IN the flex row like the
+   other icons. No floating. Evenly spaced.
+   ============================================ */
+
+.yp-dash-nav-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 1;
+  max-width: 84px;
+  height: 100%;
+
+  padding: 0;
+  margin: 0;
+
+  border: none;
+  background: transparent;
+
+  color: var(--yp-ink);
+  cursor: pointer;
+
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.yp-dash-nav-add:hover {
+  color: var(--yp-blue);
+}
+
+.yp-dash-nav-add:active {
+  transform: scale(0.94);
+}
+
+.yp-dash-nav-add:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* The + glyph itself */
+.yp-dash-nav-add-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1;
+  color: inherit;
+}
+
+/* Small phones */
 @media (max-width: 480px) {
   .yp-dash-bottom-nav { height: 70px; }
   .yp-dash-nav-icon   { font-size: 2rem; }
+
+  .yp-dash-nav-add-icon {
+    font-size: 2.75rem;
+  }
 }
 
 @media (max-width: 360px) {
   .yp-dash-bottom-nav { height: 66px; }
   .yp-dash-nav-icon   { font-size: 1.8rem; }
+
+  .yp-dash-nav-add-icon {
+    font-size: 2.5rem;
+  }
 }
 
 /* ============================================
@@ -393,11 +458,12 @@
     min-height: calc(100vh - var(--yp-mobile-header-h) - var(--yp-bottom-nav-h));
   }
 
+  /* Let the page scroll naturally on mobile — the fixed
+     bottom nav stays pinned because it's position: fixed. */
   .yp-dash-content-wrapper {
     padding: 16px;
   }
 
-  /* Full-bleed area stays edge-to-edge on mobile too */
   .yp-dash-full-bleed {
     padding: 0;
   }
@@ -529,7 +595,7 @@
   .yp-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 
-/* ── Clickable sidebar wordmark (added traits only) ─────── */
+/* ── Clickable sidebar wordmark ─────── */
 .yp-dash-sidebar-logo {
   cursor: pointer;
   user-select: none;
@@ -552,4 +618,20 @@
 
 .yp-dash-sidebar-logo:active {
   transform: scale(0.98);
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .yp-dash-nav-add,
+  .yp-dash-nav-add:hover,
+  .yp-dash-nav-add:active {
+    transition: none;
+  }
+
+  .yp-dash-nav-add:active {
+    transform: none;
+  }
 }
