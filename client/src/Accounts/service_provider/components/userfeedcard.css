@@ -1,8 +1,7 @@
 /* userfeedcard.css */
 
 /* ─────────────────────────────────────────────
-   Post shell — full bleed, no outer margins,
-   no radius, no card outline.
+   Post shell
    ───────────────────────────────────────────── */
 .ufc-post {
   display: flex;
@@ -19,7 +18,6 @@
   overflow: hidden;
 }
 
-/* A thin divider between posts — not on the last one */
 .ufc-post + .ufc-post {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
@@ -207,7 +205,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   CAROUSEL — swipeable multi-image post media
+   CAROUSEL
    ───────────────────────────────────────────── */
 .ufc-carousel {
   position: relative;
@@ -221,7 +219,6 @@
   user-select: none;
   -webkit-user-select: none;
 
-  /* Allow vertical page scroll while capturing horizontal drags */
   touch-action: pan-y;
 }
 
@@ -230,8 +227,6 @@
     aspect-ratio: 1 / 1;
   }
 }
-
-/* ── Track ─────────────────────────────────── */
 
 .ufc-carousel-track {
   display: flex;
@@ -246,8 +241,6 @@
 .ufc-carousel-track-dragging {
   transition: none;
 }
-
-/* ── Slide ─────────────────────────────────── */
 
 .ufc-carousel-slide {
   flex: 0 0 100%;
@@ -270,8 +263,6 @@
 
   background: #0f0f0f;
 }
-
-/* ── Arrows ────────────────────────────────── */
 
 .ufc-carousel-nav {
   position: absolute;
@@ -325,15 +316,12 @@
   right: 12px;
 }
 
-/* Always show arrows on touch-only devices */
 @media (hover: none) {
   .ufc-carousel-nav {
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
 }
-
-/* ── Dots ──────────────────────────────────── */
 
 .ufc-carousel-dots {
   position: absolute;
@@ -381,8 +369,6 @@
   background: #ffffff;
 }
 
-/* ── Counter pill ──────────────────────────── */
-
 .ufc-carousel-count {
   position: absolute;
   top: 12px;
@@ -410,7 +396,61 @@
 }
 
 /* ─────────────────────────────────────────────
-   Body — text content, inset from edges
+   ACTION BAR — Like + Share, directly below the image
+   ───────────────────────────────────────────── */
+.ufc-action-bar {
+  display: flex;
+  align-items: center;
+
+  /* Icons left-aligned */
+  justify-content: flex-start;
+
+  padding: 10px 16px 4px;
+
+  background: #ffffff;
+}
+
+/* Cluster of icon-only actions */
+.ufc-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  flex-shrink: 0;
+}
+
+/* Neutralize Like + Share default sizes */
+.ufc-actions .lk-btn-root,
+.ufc-actions .sh-btn-root {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  border-radius: 50%;
+  color: #6b6b6b;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.ufc-actions .lk-btn-root:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.ufc-actions .sh-btn-root:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.ufc-actions .lk-btn-root:active,
+.ufc-actions .sh-btn-root:active {
+  transform: scale(0.94);
+}
+
+/* ─────────────────────────────────────────────
+   Body — text content
    ───────────────────────────────────────────── */
 .ufc-post-body {
   display: flex;
@@ -498,18 +538,69 @@
   overflow: hidden;
 }
 
+/* ─────────────────────────────────────────────
+   DESCRIPTION — clamped to 3 lines with see-more
+   ───────────────────────────────────────────── */
+.ufc-desc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .ufc-post-description {
   font-size: 14px;
   color: #333333;
   line-height: 1.55;
   margin: 0;
 
+  /* Clamp to 3 lines by default */
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* When expanded, remove the clamp */
+.ufc-post-description-expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* See more / See less toggle */
+.ufc-see-more {
+  align-self: flex-start;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+
+  cursor: pointer;
+
+  transition: color 0.15s ease;
+}
+
+.ufc-see-more:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ufc-see-more:focus-visible {
+  outline: none;
+  border-radius: 4px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+/* ─────────────────────────────────────────────
+   Price row
+   ───────────────────────────────────────────── */
 .ufc-price-row {
   display: flex;
   align-items: center;
@@ -551,6 +642,9 @@
   white-space: nowrap;
 }
 
+/* ─────────────────────────────────────────────
+   Chips
+   ───────────────────────────────────────────── */
 .ufc-chips {
   display: flex;
   flex-wrap: wrap;
@@ -574,7 +668,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Footer — bottom CTA
+   Footer
    ───────────────────────────────────────────── */
 .ufc-footer {
   display: flex;
@@ -588,6 +682,9 @@
   flex: 1;
 }
 
+/* ─────────────────────────────────────────────
+   CTA buttons
+   ───────────────────────────────────────────── */
 .ufc-cta {
   display: inline-flex;
   align-items: center;
@@ -640,14 +737,14 @@
 }
 
 /* ─────────────────────────────────────────────
-   Advert post — subtle background shift
+   Advert post
    ───────────────────────────────────────────── */
 .ufc-post-advert {
   background: #fafafa;
 }
 
 /* ─────────────────────────────────────────────
-   Mobile tweaks
+   Mobile
    ───────────────────────────────────────────── */
 @media (max-width: 480px) {
   .ufc-header {
@@ -657,6 +754,21 @@
   .ufc-header-avatar {
     width: 36px;
     height: 36px;
+  }
+
+  .ufc-action-bar {
+    padding: 8px 14px 4px;
+  }
+
+  .ufc-actions {
+    gap: 4px;
+  }
+
+  .ufc-actions .lk-btn-root,
+  .ufc-actions .sh-btn-root {
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
   }
 
   .ufc-post-body {

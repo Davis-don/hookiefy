@@ -22,6 +22,9 @@ import type {
   FeedAdvert,
 } from './Userservicesesfeed'
 import { usePostActionStore } from '../../common/store/usepaymentstore'
+import { useAuthStore } from '../../../store/authtokenstore'
+import Like from './stories/Like'
+import Share from './stories/Share'
 
 /* ────────────────────────────────────────────────────────
    Helpers
@@ -48,6 +51,47 @@ function initials(first?: string, last?: string) {
   const f = (first || '?').charAt(0).toUpperCase()
   const l = (last || '?').charAt(0).toUpperCase()
   return `${f}${l}`
+}
+
+/* ────────────────────────────────────────────────────────
+   Description with see-more toggle
+   ──────────────────────────────────────────────────────── */
+
+interface DescriptionProps {
+  text: string
+}
+
+function Description({ text }: DescriptionProps) {
+  const [expanded, setExpanded] = useState(false)
+
+  if (!text) return null
+
+  /* Show the toggle whenever the text is longer than
+     roughly 3 lines on mobile. */
+  const likelyLong = text.length > 160
+
+  return (
+    <div className="ufc-desc-wrap">
+      <p
+        className={`ufc-post-description ${
+          expanded ? 'ufc-post-description-expanded' : ''
+        }`}
+      >
+        {text}
+      </p>
+
+      {likelyLong && (
+        <button
+          type="button"
+          className="ufc-see-more"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          {expanded ? 'See less' : 'See more'}
+        </button>
+      )}
+    </div>
+  )
 }
 
 /* ────────────────────────────────────────────────────────
@@ -103,7 +147,7 @@ function SingleImage({ src, alt, count }: SingleImageProps) {
 }
 
 /* ────────────────────────────────────────────────────────
-   Carousel — multi-image, swipeable, auto-advancing
+   Carousel
    ──────────────────────────────────────────────────────── */
 
 interface CarouselImage {
@@ -136,7 +180,6 @@ function Carousel({ images, alt }: CarouselProps) {
   const goNext = () => goTo(index + 1)
   const goPrev = () => goTo(index - 1)
 
-  /* Auto-advance every 4.5s unless paused */
   useEffect(() => {
     if (paused || count <= 1) return
 
@@ -147,7 +190,6 @@ function Carousel({ images, alt }: CarouselProps) {
     return () => clearInterval(t)
   }, [paused, count])
 
-  /* ── Drag / swipe handlers ─────────────────────── */
   const onPointerDown = (e: React.PointerEvent) => {
     setIsDragging(true)
     startXRef.current = e.clientX
@@ -267,17 +309,22 @@ function Carousel({ images, alt }: CarouselProps) {
 
 /* ────────────────────────────────────────────────────────
    SERVICE POST
+   Order: header → media → action bar → body → footer
    ──────────────────────────────────────────────────────── */
 
 function ServicePost({ service }: { service: FeedService }) {
   const isHookup = service.listing_type === 'hookup'
   const open = usePostActionStore((s) => s.open)
+  const { access } = useAuthStore()
+
+  const userId: number =
+    (access as unknown as { id?: number })?.id ??
+    Number(localStorage.getItem('user_id') ?? 0)
 
   const handleGetContact = () => {
     open(service.id)
   }
 
-  /* Prefer the images array. Fall back to the primary URL. */
   const feedImages: CarouselImage[] =
     Array.isArray((service as any).images) &&
     (service as any).images.length > 0
@@ -340,7 +387,7 @@ function ServicePost({ service }: { service: FeedService }) {
         )}
       </header>
 
-      {/* Media — carousel if 2+, single image otherwise */}
+      {/* Media */}
       {feedImages.length > 1 ? (
         <Carousel images={feedImages} alt={service.title} />
       ) : feedImages.length === 1 ? (
@@ -350,6 +397,25 @@ function ServicePost({ service }: { service: FeedService }) {
           count={service.image_count}
         />
       ) : null}
+
+      {/* ACTION BAR — Like + Share, immediately below the image */}
+      <div className="ufc-action-bar">
+        <div className="ufc-actions">
+          <Like
+            postId={service.id}
+            userId={userId}
+            contentType="clientservice"
+            size="md"
+          />
+
+          <Share
+            postId={service.id}
+            userId={userId}
+            postTitle={service.title}
+            size="md"
+          />
+        </div>
+      </div>
 
       {/* Body */}
       <div className="ufc-post-body">
@@ -385,11 +451,7 @@ function ServicePost({ service }: { service: FeedService }) {
           {service.title || 'Untitled listing'}
         </h2>
 
-        {service.description && (
-          <p className="ufc-post-description">
-            {service.description}
-          </p>
-        )}
+        <Description text={service.description || ''} />
 
         {!isHookup ? (
           <div className="ufc-price-row">
@@ -407,7 +469,7 @@ function ServicePost({ service }: { service: FeedService }) {
         )}
       </div>
 
-      {/* Footer CTA */}
+      {/* Footer — Get Contact stays at the bottom */}
       <footer className="ufc-footer">
         <button
           type="button"
@@ -427,6 +489,12 @@ function ServicePost({ service }: { service: FeedService }) {
    ──────────────────────────────────────────────────────── */
 
 function UserPost({ user }: { user: FeedUser }) {
+  const { access } = useAuthStore()
+
+  const userId: number =
+    (access as unknown as { id?: number })?.id ??
+    Number(localStorage.getItem('user_id') ?? 0)
+
   const locationParts = [user.city, user.county, user.country].filter(
     Boolean
   )
@@ -471,10 +539,27 @@ function UserPost({ user }: { user: FeedUser }) {
         />
       )}
 
+      {/* ACTION BAR — Like + Share right below the image */}
+      <div className="ufc-action-bar">
+        <div className="ufc-actions">
+          <Like
+            postId={Number(user.id)}
+            userId={userId}
+            contentType="clientservice"
+            size="md"
+          />
+
+          <Share
+            postId={Number(user.id)}
+            userId={userId}
+            postTitle={`${user.first_name} ${user.last_name}`}
+            size="md"
+          />
+        </div>
+      </div>
+
       <div className="ufc-post-body">
-        {user.bio && (
-          <p className="ufc-post-description">{user.bio}</p>
-        )}
+        {user.bio && <Description text={user.bio} />}
 
         {(user.minimum_age ||
           user.maximum_age ||
@@ -527,6 +612,12 @@ function UserPost({ user }: { user: FeedUser }) {
    ──────────────────────────────────────────────────────── */
 
 function AdvertPost({ advert }: { advert: FeedAdvert }) {
+  const { access } = useAuthStore()
+
+  const userId: number =
+    (access as unknown as { id?: number })?.id ??
+    Number(localStorage.getItem('user_id') ?? 0)
+
   const open = () => {
     if (advert.url) {
       window.open(advert.url, '_blank', 'noopener,noreferrer')
@@ -545,12 +636,29 @@ function AdvertPost({ advert }: { advert: FeedAdvert }) {
         </div>
       </header>
 
+      {/* ACTION BAR */}
+      <div className="ufc-action-bar">
+        <div className="ufc-actions">
+          <Like
+            postId={Number(advert.id)}
+            userId={userId}
+            contentType="clientservice"
+            size="md"
+          />
+
+          <Share
+            postId={Number(advert.id)}
+            userId={userId}
+            postTitle={advert.title}
+            size="md"
+          />
+        </div>
+      </div>
+
       <div className="ufc-post-body">
         <h2 className="ufc-post-title">{advert.title}</h2>
         {advert.description && (
-          <p className="ufc-post-description">
-            {advert.description}
-          </p>
+          <Description text={advert.description} />
         )}
       </div>
 
