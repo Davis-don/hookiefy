@@ -66,8 +66,6 @@ function Description({ text }: DescriptionProps) {
 
   if (!text) return null
 
-  /* Show the toggle whenever the text is longer than
-     roughly 3 lines on mobile. */
   const likelyLong = text.length > 160
 
   return (
@@ -412,6 +410,7 @@ function ServicePost({ service }: { service: FeedService }) {
             postId={service.id}
             userId={userId}
             postTitle={service.title}
+            contentType="clientservice"
             size="md"
           />
         </div>
@@ -489,12 +488,6 @@ function ServicePost({ service }: { service: FeedService }) {
    ──────────────────────────────────────────────────────── */
 
 function UserPost({ user }: { user: FeedUser }) {
-  const { access } = useAuthStore()
-
-  const userId: number =
-    (access as unknown as { id?: number })?.id ??
-    Number(localStorage.getItem('user_id') ?? 0)
-
   const locationParts = [user.city, user.county, user.country].filter(
     Boolean
   )
@@ -538,25 +531,6 @@ function UserPost({ user }: { user: FeedUser }) {
           alt={`${user.first_name} ${user.last_name}`}
         />
       )}
-
-      {/* ACTION BAR — Like + Share right below the image */}
-      <div className="ufc-action-bar">
-        <div className="ufc-actions">
-          <Like
-            postId={Number(user.id)}
-            userId={userId}
-            contentType="clientservice"
-            size="md"
-          />
-
-          <Share
-            postId={Number(user.id)}
-            userId={userId}
-            postTitle={`${user.first_name} ${user.last_name}`}
-            size="md"
-          />
-        </div>
-      </div>
 
       <div className="ufc-post-body">
         {user.bio && <Description text={user.bio} />}
@@ -612,12 +586,6 @@ function UserPost({ user }: { user: FeedUser }) {
    ──────────────────────────────────────────────────────── */
 
 function AdvertPost({ advert }: { advert: FeedAdvert }) {
-  const { access } = useAuthStore()
-
-  const userId: number =
-    (access as unknown as { id?: number })?.id ??
-    Number(localStorage.getItem('user_id') ?? 0)
-
   const open = () => {
     if (advert.url) {
       window.open(advert.url, '_blank', 'noopener,noreferrer')
@@ -635,25 +603,6 @@ function AdvertPost({ advert }: { advert: FeedAdvert }) {
           <span className="ufc-header-sub">Promoted</span>
         </div>
       </header>
-
-      {/* ACTION BAR */}
-      <div className="ufc-action-bar">
-        <div className="ufc-actions">
-          <Like
-            postId={Number(advert.id)}
-            userId={userId}
-            contentType="clientservice"
-            size="md"
-          />
-
-          <Share
-            postId={Number(advert.id)}
-            userId={userId}
-            postTitle={advert.title}
-            size="md"
-          />
-        </div>
-      </div>
 
       <div className="ufc-post-body">
         <h2 className="ufc-post-title">{advert.title}</h2>

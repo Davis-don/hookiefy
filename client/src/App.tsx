@@ -17,6 +17,10 @@ import Header from "./components/Header/Header";
 import Login from "./pages/Login";
 import Accountslayout from "./layouts/Accountslayout";
 
+/* ✅ Public viewers */
+import ServicesInfo from "./pages/ServicesInfo";
+import StoryInfo from "./pages/StoryInfo";
+
 import "./App.css";
 
 function App() {
@@ -36,6 +40,21 @@ function App() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failure" element={<PaymentFailure />} />
           <Route path="/payment-error" element={<PaymentError />} />
+
+          {/* ============================================================
+              ✅ Public standalone viewers
+              - Full-bleed, no external Header/Mainlayout
+              - Each renders its own PublicHeader internally
+              - Reachable from Share.tsx links: /s/<id> and /p/<id>
+              ============================================================ */}
+
+          {/* Story viewer — /s/42  or  /stories/42 */}
+          <Route path="/s/:id" element={<StoryInfo />} />
+          <Route path="/stories/:id" element={<StoryInfo />} />
+
+          {/* Service / Product / Hookup viewer — /p/7  or  /services/7 */}
+          <Route path="/p/:id" element={<ServicesInfo />} />
+          <Route path="/services/:id" element={<ServicesInfo />} />
 
           {/* ============================================================
               ✅ Protected — role-gated
@@ -59,12 +78,11 @@ function App() {
             element={
               <Protectedroute allowedRoles={["serviceseeker"]}>
                 <Accountslayout>
-                <Toastlayout>
-                  <Serviceseekerdash />
-                </Toastlayout>
+                  <Toastlayout>
+                    <Serviceseekerdash />
+                  </Toastlayout>
                 </Accountslayout>
               </Protectedroute>
-              
             }
           />
 
@@ -74,9 +92,9 @@ function App() {
             element={
               <Protectedroute allowedRoles={["serviceprovider"]}>
                 <Accountslayout>
-                <Toastlayout>
-                  <Serviceproviderdash />
-                </Toastlayout>
+                  <Toastlayout>
+                    <Serviceproviderdash />
+                  </Toastlayout>
                 </Accountslayout>
               </Protectedroute>
             }

@@ -9,10 +9,13 @@ import {
   FiMail,
   FiX,
   FiCheck,
-  FiUsers,
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 import './share.css'
+
+/* ────────────────────────────────────────────────────────
+   Types
+   ──────────────────────────────────────────────────────── */
 
 interface ShareProps {
   postId: number
@@ -22,13 +25,25 @@ interface ShareProps {
   postTitle?: string
   /** Optional — render variant */
   size?: 'sm' | 'md'
+  /**
+   * Which kind of content is being shared.
+   *   'story'         → shares via /s/<id>
+   *   'clientservice' → shares via /p/<id>
+   * Defaults to 'story'.
+   */
+  contentType?: 'story' | 'clientservice'
 }
+
+/* ────────────────────────────────────────────────────────
+   Component
+   ──────────────────────────────────────────────────────── */
 
 function Share({
   postId,
   userId,
   postTitle = '',
   size = 'md',
+  contentType = 'story',
 }: ShareProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -53,8 +68,16 @@ function Share({
     }
   }, [open])
 
-  /* Build share payloads */
-  const shareUrl = `${window.location.origin}/stories/${postId}`
+  /* ── Build the public share URL ───────────────────
+     Stories  →  /s/<id>
+     Services →  /p/<id>                              */
+  const publicPath =
+    contentType === 'clientservice'
+      ? `/p/${postId}`
+      : `/s/${postId}`
+
+  const shareUrl = `${window.location.origin}${publicPath}`
+
   const shareText = postTitle
     ? `${postTitle} — check this out on Youpata`
     : 'Check this out on Youpata'
@@ -89,7 +112,7 @@ function Share({
         })
         setOpen(false)
       } catch {
-        // User cancelled — silent
+        /* user cancelled */
       }
     } else {
       handleCopy()
@@ -143,6 +166,7 @@ function Share({
         aria-label="Share this post"
         data-post-id={postId}
         data-user-id={userId ?? ''}
+        data-content-type={contentType}
       >
         <FiShare2 className="sh-btn-icon" />
       </button>
@@ -173,7 +197,9 @@ function Share({
             </button>
 
             <h2 id="sh-title" className="sh-title">
-              Share this story
+              {contentType === 'clientservice'
+                ? 'Share this listing'
+                : 'Share this story'}
             </h2>
 
             <p className="sh-subtitle">
@@ -254,32 +280,6 @@ function Share({
                 <span className="sh-tile-label">More</span>
               </button>
             </div>
-
-            {/* Debug meta — remove in production */}
-            <div className="sh-meta">
-              <div className="sh-meta-row">
-                <span className="sh-meta-label">Post</span>
-                <span className="sh-meta-value">#{postId}</span>
-              </div>
-              <div className="sh-meta-row">
-                <span className="sh-meta-label">
-                  <FiUsers className="sh-meta-icon" /> User
-                </span>
-                <span className="sh-meta-value">
-                  #{userId ?? '—'}
-                </span>
-              </div>
-            </div>
-
-            {/* Full URL copy row */}
-            <button
-              type="button"
-              className="sh-copy-full"
-              onClick={handleCopy}
-            >
-              {copied ? <FiCheck /> : <FiLink />}
-              <span className="sh-copy-full-text">{shareUrl}</span>
-            </button>
           </div>
         </div>
       )}
