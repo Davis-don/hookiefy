@@ -1,4 +1,5 @@
 // PostFullView.tsx — full post page
+// Order: top bar → byline → image → title → content
 import { useEffect } from 'react'
 import { FiArrowLeft } from 'react-icons/fi'
 import { useAuthStore } from '../../../../store/authtokenstore'
@@ -7,7 +8,7 @@ import Share from './Share'
 import './postfullview.css'
 
 /* ────────────────────────────────────────────────────────
-   Types — matches SearchPosts' Story shape exactly
+   Types
    ──────────────────────────────────────────────────────── */
 
 interface StoryAuthor {
@@ -98,12 +99,11 @@ function PostFullView({ story, onBack }: PostFullViewProps) {
         </button>
       </header>
 
-      {/* ── Article header — title + byline ─────────── */}
+      {/* ══════════════════════════════════════════
+          1. BYLINE — author + date + Like/Share
+          ══════════════════════════════════════════ */}
       <div className="pfv-article-head">
-        <h1 className="pfv-title">{story.title}</h1>
-
         <div className="pfv-byline">
-          {/* Author avatar */}
           <div className="pfv-avatar-wrap">
             {story.author.profile_image_url ? (
               <img
@@ -122,17 +122,16 @@ function PostFullView({ story, onBack }: PostFullViewProps) {
             )}
           </div>
 
-          {/* Author name + date + read time */}
           <div className="pfv-byline-meta">
             <span className="pfv-author-name">
               {story.author.full_name || 'Someone'}
             </span>
             <span className="pfv-author-sub">
-              {formatDate(story.created_at)} · {readTime(story.content)}
+              {formatDate(story.created_at)} ·{' '}
+              {readTime(story.content)}
             </span>
           </div>
 
-          {/* Like + Share — inline with the byline */}
           <div className="pfv-byline-actions">
             <Like
               postId={story.id}
@@ -150,7 +149,9 @@ function PostFullView({ story, onBack }: PostFullViewProps) {
         </div>
       </div>
 
-      {/* ── Image — full bleed ──────────────────────── */}
+      {/* ══════════════════════════════════════════
+          2. IMAGE — full-bleed
+          ══════════════════════════════════════════ */}
       {story.image_url && (
         <div className="pfv-media">
           <img
@@ -162,7 +163,16 @@ function PostFullView({ story, onBack }: PostFullViewProps) {
         </div>
       )}
 
-      {/* ── Content ─────────────────────────────────── */}
+      {/* ══════════════════════════════════════════
+          3. TITLE — below the image
+          ══════════════════════════════════════════ */}
+      <div className="pfv-title-wrap">
+        <h1 className="pfv-title">{story.title}</h1>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          4. CONTENT
+          ══════════════════════════════════════════ */}
       <div className="pfv-content-wrap">
         <div
           className="pfv-content"

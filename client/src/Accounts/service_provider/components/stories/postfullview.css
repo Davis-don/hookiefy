@@ -1,6 +1,5 @@
-/* postfullview.css — classic article page
-   Back arrow in top bar. Title, byline with author + Like/Share,
-   image, then content. All in a centered column.
+/* postfullview.css — full post page
+   Order: top bar → byline → image → title → content.
    Uses pfv- prefix — no collisions. */
 
 /* ═══════════════════════════════════════════════════════════
@@ -75,32 +74,21 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   ARTICLE HEAD — title + byline
+   ARTICLE HEAD — byline only
    ═══════════════════════════════════════════════════════════ */
 .pfv-article-head {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
 
-  padding: 34px 20px 22px;
+  padding: 22px 20px 8px;
 
   box-sizing: border-box;
 }
 
-/* ── Title — classic article headline ─────────── */
-.pfv-title {
-  margin: 0 0 24px;
-
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.04em;
-  line-height: 1.12;
-  word-break: break-word;
-}
-
-/* ── Byline — author avatar + name + actions ──── */
+/* ═══════════════════════════════════════════════════════════
+   1. BYLINE — author avatar + name + date + Like/Share
+   ═══════════════════════════════════════════════════════════ */
 .pfv-byline {
   display: flex;
   align-items: center;
@@ -165,7 +153,7 @@
   text-overflow: ellipsis;
 }
 
-/* Like + Share sit inline with the author row */
+/* Like + Share inline with the byline */
 .pfv-byline-actions {
   display: flex;
   align-items: center;
@@ -174,7 +162,6 @@
   flex-shrink: 0;
 }
 
-/* Resize Like + Share to fit neatly next to the byline */
 .pfv-byline-actions .lk-btn-root,
 .pfv-byline-actions .sh-btn-root {
   width: 40px;
@@ -205,7 +192,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   IMAGE — full viewport width, no crop
+   2. IMAGE — full viewport width, no crop
    ═══════════════════════════════════════════════════════════ */
 .pfv-media {
   position: relative;
@@ -214,7 +201,7 @@
 
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
-  margin-top: 8px;
+  margin-top: 16px;
   margin-bottom: 0;
 
   background: #f1f5f9;
@@ -239,14 +226,39 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CONTENT — centered reading column
+   3. TITLE — below the image
+   ═══════════════════════════════════════════════════════════ */
+.pfv-title-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+
+  padding: 32px 20px 20px;
+
+  box-sizing: border-box;
+}
+
+.pfv-title {
+  margin: 0;
+
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  word-break: break-word;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. CONTENT — centered reading column
    ═══════════════════════════════════════════════════════════ */
 .pfv-content-wrap {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
 
-  padding: 36px 20px 72px;
+  padding: 0 20px 72px;
 
   box-sizing: border-box;
 }
@@ -421,14 +433,11 @@
   }
 
   .pfv-article-head {
-    padding: 26px 16px 18px;
+    padding: 18px 16px 4px;
   }
 
-  .pfv-title {
-    font-size: 1.85rem;
-    letter-spacing: -0.035em;
-    line-height: 1.16;
-    margin-bottom: 20px;
+  .pfv-byline {
+    gap: 10px;
   }
 
   .pfv-avatar,
@@ -448,8 +457,22 @@
     font-size: 17px;
   }
 
+  .pfv-media {
+    margin-top: 12px;
+  }
+
+  .pfv-title-wrap {
+    padding: 24px 16px 16px;
+  }
+
+  .pfv-title {
+    font-size: 1.85rem;
+    letter-spacing: -0.035em;
+    line-height: 1.16;
+  }
+
   .pfv-content-wrap {
-    padding: 28px 16px 56px;
+    padding: 0 16px 56px;
   }
 
   .pfv-content {
