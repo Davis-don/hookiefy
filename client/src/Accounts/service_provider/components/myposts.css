@@ -1,4 +1,5 @@
-/* myposts.css — unique mpx- prefix, image edge-to-edge */
+/* myposts.css — sticky post header pinned below the AddData
+   tab bar (which pins below the Youpata mobile header) */
 
 /* ─────────────────────────────────────────────
    Root
@@ -14,7 +15,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Toolbar — the only place with wide side padding
+   Toolbar
    ───────────────────────────────────────────── */
 .mpx-toolbar {
   display: flex;
@@ -43,8 +44,7 @@
   background: #ffffff;
   color: #0f172a;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease,
-    color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .mpx-icon-btn:hover:not(:disabled) {
@@ -128,7 +128,7 @@
   background: #ffffff;
   border: none;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   margin: 0;
   padding: 0;
 }
@@ -142,7 +142,9 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   POST HEADER — small side inset for readable text
+   POST HEADER — sticky, pinned BELOW the AddData tab bar
+   Mobile: top = mobile header (78px) + tab bar (48px) = 126px
+   Desktop: top = tab bar height only (48px)
    ═══════════════════════════════════════════════════════════ */
 .mpx-post-header {
   display: flex;
@@ -150,6 +152,26 @@
   gap: 10px;
   padding: 12px 14px;
   margin: 0;
+
+  position: sticky;
+
+  top: calc(
+    var(--yp-mobile-header-h, 78px) + var(--adx-topbar-h, 48px)
+  );
+
+  z-index: 10;
+
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+
+  box-sizing: border-box;
+}
+
+/* Desktop — no mobile header, just below the tab bar */
+@media (min-width: 769px) {
+  .mpx-post-header {
+    top: var(--adx-topbar-h, 48px);
+  }
 }
 
 .mpx-post-avatar-wrap {
@@ -245,28 +267,26 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   IMAGE — full viewport width, flush to both edges,
-   no gap above or below. Breaks out of the parent
-   inset via the 100vw + translateX(-50%) trick.
+   IMAGE — full viewport width via negative margins
    ═══════════════════════════════════════════════════════════ */
 .mpx-post-media {
   width: 100vw;
   max-width: 100vw;
 
-  margin: 0;
-  padding: 0;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  margin-top: 0;
+  margin-bottom: 0;
 
-  position: relative;
-  left: 50%;
-  right: 50%;
-  transform: translateX(-50%);
+  padding: 0;
 
   background: #f1f5f9;
   overflow: hidden;
 
-  /* Kill the inline baseline gap */
   line-height: 0;
   font-size: 0;
+
+  box-sizing: border-box;
 }
 
 .mpx-post-media img {
@@ -284,31 +304,32 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   BODY — small side inset for readable text
+   BODY
    ═══════════════════════════════════════════════════════════ */
 .mpx-post-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px 8px;
+  gap: 14px;
+  padding: 18px 16px 12px;
   margin: 0;
 }
 
 .mpx-post-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.85rem;
   font-weight: 900;
   color: #0f172a;
-  letter-spacing: -0.035em;
-  line-height: 1.2;
+  letter-spacing: -0.045em;
+  line-height: 1.15;
   word-break: break-word;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 .mpx-post-content {
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 400;
   color: #1e293b;
-  line-height: 1.65;
+  line-height: 1.7;
   word-break: break-word;
 }
 
@@ -316,7 +337,7 @@
 .mpx-post-content > *:last-child  { margin-bottom: 0; }
 
 .mpx-post-content p {
-  margin: 0 0 0.75em;
+  margin: 0 0 0.85em;
   font-size: inherit;
   line-height: inherit;
   color: inherit;
@@ -325,31 +346,32 @@
 .mpx-post-content h1,
 .mpx-post-content h2,
 .mpx-post-content h3 {
-  margin: 0.6em 0 0.35em;
+  margin: 0.7em 0 0.4em;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
   line-height: 1.25;
 }
 
-.mpx-post-content h1 { font-size: 1.4rem; }
-.mpx-post-content h2 { font-size: 1.2rem; }
-.mpx-post-content h3 { font-size: 1.05rem; }
+.mpx-post-content h1 { font-size: 1.5rem; }
+.mpx-post-content h2 { font-size: 1.3rem; }
+.mpx-post-content h3 { font-size: 1.1rem; }
 
 .mpx-post-content ul,
 .mpx-post-content ol {
-  margin: 0.4em 0 0.75em;
-  padding-left: 1.4em;
+  margin: 0.4em 0 0.85em;
+  padding-left: 1.5em;
 }
 
 .mpx-post-content li {
-  margin: 0.15em 0;
+  margin: 0.25em 0;
   line-height: inherit;
 }
 
 .mpx-post-content a {
   color: #2563eb;
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .mpx-post-content a:hover {
@@ -358,10 +380,11 @@
 
 .mpx-post-content blockquote {
   border-left: 3px solid #cbd5e1;
-  padding-left: 12px;
-  margin: 0.6em 0;
+  padding-left: 14px;
+  margin: 0.8em 0;
   color: #475569;
   font-style: italic;
+  font-size: 1.05em;
 }
 
 .mpx-post-content strong,
@@ -389,7 +412,7 @@
   background: #f1f5f9;
   border-radius: 6px;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .mpx-post-content code {
@@ -397,34 +420,35 @@
 }
 
 .mpx-post-content pre {
-  padding: 10px 12px;
+  padding: 12px 14px;
   overflow-x: auto;
-  margin: 0.6em 0;
+  margin: 0.8em 0;
+  line-height: 1.5;
 }
 
 .mpx-post-content img {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  margin: 0.4em 0;
+  margin: 0.6em 0;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   FOOT — small side inset for the category pill
-   ═══════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────
+   Foot
+   ───────────────────────────────────────────── */
 .mpx-post-foot {
   display: flex;
   align-items: center;
-  padding: 4px 14px 16px;
+  padding: 4px 16px 18px;
   margin: 0;
 }
 
 .mpx-cat-pill {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -447,7 +471,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Edit form — keeps a small inset for inputs
+   Edit form
    ───────────────────────────────────────────── */
 .mpx-edit {
   display: flex;
@@ -889,7 +913,7 @@
   }
 
   .mpx-post-header {
-    padding: 12px 12px;
+    padding: 10px 12px;
     gap: 8px;
   }
 
@@ -902,22 +926,33 @@
   }
 
   .mpx-post-body {
-    padding: 12px 12px 8px;
-    gap: 10px;
+    padding: 16px 12px 10px;
+    gap: 12px;
   }
 
   .mpx-post-title {
-    font-size: 1.35rem;
+    font-size: 1.6rem;
     font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.18;
   }
 
   .mpx-post-content {
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.7;
   }
 
+  .mpx-post-content h1 { font-size: 1.35rem; }
+  .mpx-post-content h2 { font-size: 1.2rem; }
+  .mpx-post-content h3 { font-size: 1.05rem; }
+
   .mpx-post-foot {
-    padding: 4px 12px 14px;
+    padding: 4px 12px 16px;
+  }
+
+  .mpx-cat-pill {
+    font-size: 11.5px;
+    padding: 5px 12px;
   }
 
   .mpx-edit {

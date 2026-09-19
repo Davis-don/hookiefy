@@ -1,10 +1,6 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — SERVICE PROVIDER DASHBOARD
-   Icon-only mobile bottom nav (no labels)
-   Centered "+" sits in the flex row, evenly spaced.
-   Page scrolls naturally on mobile — fixed bottom nav
-   stays pinned because it's position: fixed.
-   No global reset — only scoped .yp-dash-* classes
+   No transforms on any wrapper — sticky works everywhere.
    ───────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -62,7 +58,7 @@
   left: 0;
   height: 100vh;
   z-index: 100;
-  transition: var(--yp-transition);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .yp-dash-sidebar:not(.yp-dash-sidebar-open) {
@@ -87,7 +83,7 @@
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
-  transition: var(--yp-transition);
+  transition: opacity 0.2s ease;
 }
 
 .yp-dash-sidebar-logo .yp-logo-you { color: var(--yp-blue); }
@@ -111,7 +107,7 @@
   justify-content: center;
   font-size: 12px;
   color: var(--yp-ink-soft);
-  transition: var(--yp-transition);
+  transition: background 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -139,7 +135,7 @@
   background: transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: var(--yp-transition);
+  transition: background 0.2s ease, color 0.2s ease;
   color: var(--yp-ink-soft);
   font-size: 0.925rem;
   font-weight: 600;
@@ -176,7 +172,7 @@
 }
 
 .yp-dash-sidebar-label {
-  transition: var(--yp-transition);
+  transition: opacity 0.2s ease;
   overflow: hidden;
 }
 
@@ -202,7 +198,7 @@
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: var(--yp-transition);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .yp-dash-user-info:hover {
@@ -228,7 +224,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: var(--yp-transition);
+  transition: opacity 0.2s ease;
 }
 
 .yp-dash-sidebar:not(.yp-dash-sidebar-open) .yp-dash-user-details {
@@ -269,7 +265,7 @@
 .yp-dash-main {
   flex: 1;
   margin-left: var(--yp-sidebar-width);
-  transition: var(--yp-transition);
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 100vh;
   background: var(--yp-bg);
 }
@@ -282,11 +278,10 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  animation: ypFadeIn 0.3s ease-in-out;
 }
 
 /* ============================================
-   FULL-BLEED CONTENT AREA
+   FULL-BLEED CONTENT AREA — NO TRANSFORMS
    ============================================ */
 
 .yp-dash-full-bleed {
@@ -295,16 +290,11 @@
   max-width: 100%;
   margin: 0;
   background: var(--yp-white);
-  animation: ypFadeIn 0.3s ease-in-out;
-}
-
-@keyframes ypFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  /* NO animation, NO transform */
 }
 
 /* ============================================
-   MOBILE BOTTOM NAV — ICON ONLY
+   MOBILE BOTTOM NAV
    ============================================ */
 
 .yp-dash-bottom-nav {
@@ -322,12 +312,6 @@
   padding: 0 12px;
   padding-bottom: env(safe-area-inset-bottom, 0);
   box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.05);
-
-  /* Own compositing layer — iOS keeps it pinned while
-     content scrolls behind it */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
 }
 
 .yp-dash-nav-item {
@@ -338,20 +322,21 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: var(--yp-transition);
+  transition: transform 0.15s ease;
   flex: 1;
   max-width: 84px;
   height: 100%;
   position: relative;
 }
 
-.yp-dash-nav-item:active { transform: scale(0.9); }
+.yp-dash-nav-item:active {
+  transform: scale(0.9);
+}
 
-/* Big icon, no label */
 .yp-dash-nav-icon {
   font-size: 1.85rem;
   line-height: 1;
-  transition: var(--yp-transition);
+  transition: transform 0.2s ease, filter 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -376,8 +361,7 @@
 }
 
 /* ============================================
-   CENTERED "+" — sits IN the flex row like the
-   other icons. No floating. Evenly spaced.
+   CENTERED "+"
    ============================================ */
 
 .yp-dash-nav-add {
@@ -415,7 +399,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 
-/* The + glyph itself */
 .yp-dash-nav-add-icon {
   display: flex;
   align-items: center;
@@ -427,23 +410,16 @@
   color: inherit;
 }
 
-/* Small phones */
 @media (max-width: 480px) {
   .yp-dash-bottom-nav { height: 70px; }
   .yp-dash-nav-icon   { font-size: 2rem; }
-
-  .yp-dash-nav-add-icon {
-    font-size: 2.75rem;
-  }
+  .yp-dash-nav-add-icon { font-size: 2.75rem; }
 }
 
 @media (max-width: 360px) {
   .yp-dash-bottom-nav { height: 66px; }
   .yp-dash-nav-icon   { font-size: 1.8rem; }
-
-  .yp-dash-nav-add-icon {
-    font-size: 2.5rem;
-  }
+  .yp-dash-nav-add-icon { font-size: 2.5rem; }
 }
 
 /* ============================================
@@ -458,8 +434,6 @@
     min-height: calc(100vh - var(--yp-mobile-header-h) - var(--yp-bottom-nav-h));
   }
 
-  /* Let the page scroll naturally on mobile — the fixed
-     bottom nav stays pinned because it's position: fixed. */
   .yp-dash-content-wrapper {
     padding: 16px;
   }
@@ -504,11 +478,11 @@
 }
 
 /* ============================================
-   UTILITY CLASSES FOR CHILD COMPONENTS
+   UTILITY CLASSES
    ============================================ */
 
 .yp-page-container {
-  animation: ypFadeIn 0.3s ease-in-out;
+  /* no animation */
 }
 
 .yp-page-header {
@@ -539,12 +513,11 @@
   padding: 24px;
   border: 1px solid var(--yp-line);
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-  transition: var(--yp-transition);
+  transition: box-shadow 0.2s ease;
 }
 
 .yp-card:hover {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
 }
 
 .yp-btn {
@@ -558,7 +531,7 @@
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-  transition: var(--yp-transition);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .yp-btn-primary {
@@ -566,21 +539,10 @@
   color: var(--yp-white);
 }
 
-.yp-btn-primary:hover {
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-  transform: translateY(-1px);
-}
-
 .yp-btn-secondary {
   background: var(--yp-bg);
   color: var(--yp-ink);
   border: 1px solid var(--yp-line);
-}
-
-.yp-btn-secondary:hover {
-  background: rgba(37, 99, 235, 0.06);
-  border-color: rgba(37, 99, 235, 0.2);
-  color: var(--yp-blue);
 }
 
 .yp-grid {
@@ -595,7 +557,6 @@
   .yp-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 
-/* ── Clickable sidebar wordmark ─────── */
 .yp-dash-sidebar-logo {
   cursor: pointer;
   user-select: none;
@@ -603,21 +564,11 @@
   border-radius: 8px;
   padding: 2px 4px;
   margin-left: -4px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.yp-dash-sidebar-logo:hover {
-  transform: scale(1.03);
-  opacity: 0.92;
 }
 
 .yp-dash-sidebar-logo:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
-}
-
-.yp-dash-sidebar-logo:active {
-  transform: scale(0.98);
 }
 
 /* ============================================
