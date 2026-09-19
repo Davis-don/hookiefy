@@ -1,10 +1,8 @@
-// SearchPosts.tsx — search FAB + refresh FAB + post modal
+// SearchPosts.tsx — feed OR full post view (replaces the whole component)
 import { useEffect, useRef, useState } from 'react'
 import {
   FiSearch,
   FiX,
-  FiSliders,
-  FiRefreshCw,
 } from 'react-icons/fi'
 import {
   useQuery,
@@ -14,14 +12,12 @@ import {
 import { useAuthStore } from '../../../../store/authtokenstore'
 import Spinner from '../../../../components/Publicspinner/Spinner'
 import PostCard from './PostCard'
-import PostDetailModal from './PostDetailModal'
+import PostFullView from './PostFullView'
 import './searchposts.css'
 
 /* ────────────────────────────────────────────────────────
    Types
    ──────────────────────────────────────────────────────── */
-
-type StoryCategory = 'ideas' | 'success' | 'fun'
 
 interface StoryAuthor {
   id: number
@@ -36,7 +32,6 @@ interface Story {
   id: number
   title: string
   content: string
-  category: StoryCategory
   image_url: string | null
   created_at: string
   updated_at?: string
@@ -50,22 +45,7 @@ interface StoriesResponse {
 
 interface Filters {
   search: string
-  category: StoryCategory | ''
 }
-
-/* ────────────────────────────────────────────────────────
-   Constants
-   ──────────────────────────────────────────────────────── */
-
-const CATEGORY_OPTIONS: {
-  value: StoryCategory | ''
-  label: string
-}[] = [
-  { value: '',        label: 'All' },
-  { value: 'ideas',   label: 'Ideas & Tips' },
-  { value: 'success', label: 'Success Stories' },
-  { value: 'fun',     label: 'Fun' },
-]
 
 /* ────────────────────────────────────────────────────────
    API
@@ -78,7 +58,6 @@ async function fetchStories(
   const params = new URLSearchParams()
 
   if (filters.search.trim()) params.set('search', filters.search.trim())
-  if (filters.category) params.set('category', filters.category)
 
   const qs = params.toString()
   const url = `${import.meta.env.VITE_API_URL}/stories/${
@@ -109,20 +88,18 @@ function SearchPosts() {
   const { access } = useAuthStore()
   const queryClient = useQueryClient()
 
-  /* Applied filters */
+  /* Applied search */
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [category, setCategory] = useState<StoryCategory | ''>('')
 
-  /* Draft state while the overlay is open */
+  /* Draft search while the overlay is open */
   const [draftSearch, setDraftSearch] = useState('')
-  const [draftCategory, setDraftCategory] =
-    useState<StoryCategory | ''>('')
 
   /* Overlay open/close */
   const [searchOpen, setSearchOpen] = useState(false)
 
-  /* Which post is currently open in the modal */
+  /* Which post is currently open in full view (replaces this
+     whole component when non-null) */
   const [openStory, setOpenStory] = useState<Story | null>(null)
 
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -139,12 +116,11 @@ function SearchPosts() {
   useEffect(() => {
     if (searchOpen) {
       setDraftSearch(searchInput)
-      setDraftCategory(category)
       setTimeout(() => searchInputRef.current?.focus(), 80)
     }
   }, [searchOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Close on Escape */
+  /* Close search on Escape */
   useEffect(() => {
     if (!searchOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -154,10 +130,19 @@ function SearchPosts() {
     return () => document.removeEventListener('keydown', onKey)
   }, [searchOpen])
 
+  /* When a post is open, still allow Escape to close it */
+  useEffect(() => {
+    if (!openStory) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenStory(null)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [openStory])
+
   /* ── Query ─────────────────────────────────────── */
   const filters: Filters = {
     search: debouncedSearch,
-    category,
   }
 
   const {
@@ -165,7 +150,6 @@ function SearchPosts() {
     isLoading,
     isError,
     error,
-    isFetching,
     refetch,
   } = useQuery<StoriesResponse, Error>({
     queryKey: ['stories', access, filters],
@@ -188,26 +172,36 @@ function SearchPosts() {
   const applyFilters = () => {
     setSearchInput(draftSearch)
     setDebouncedSearch(draftSearch)
-    setCategory(draftCategory)
     setSearchOpen(false)
   }
 
   const resetDrafts = () => {
     setDraftSearch('')
-    setDraftCategory('')
   }
 
   const clearApplied = () => {
     setSearchInput('')
     setDebouncedSearch('')
-    setCategory('')
     queryClient.invalidateQueries({ queryKey: ['stories'] })
   }
 
-  const hasAppliedFilters =
-    searchInput.trim() !== '' || category !== ''
+  const hasAppliedSearch = searchInput.trim() !== ''
 
-  /* ── Render ────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════
+     FULL POST VIEW — replaces the entire feed
+     ═══════════════════════════════════════════════════ */
+  if (openStory) {
+    return (
+      <PostFullView
+        story={openStory}
+        onBack={() => setOpenStory(null)}
+      />
+    )
+  }
+
+  /* ═══════════════════════════════════════════════════
+     FEED VIEW
+     ═══════════════════════════════════════════════════ */
   return (
     <div className="sp-root">
       {/* ── States ─────────────────────────────────── */}
@@ -241,17 +235,17 @@ function SearchPosts() {
         <div className="sp-state">
           <h3 className="sp-state-title">No stories found</h3>
           <p className="sp-state-text">
-            {hasAppliedFilters
-              ? 'Try adjusting your filters or search term.'
+            {hasAppliedSearch
+              ? 'Try adjusting your search term.'
               : 'No stories have been shared yet.'}
           </p>
-          {hasAppliedFilters && (
+          {hasAppliedSearch && (
             <button
               type="button"
               className="sp-retry-btn"
               onClick={clearApplied}
             >
-              Clear filters
+              Clear search
             </button>
           )}
         </div>
@@ -270,31 +264,18 @@ function SearchPosts() {
         </div>
       )}
 
-      {/* ── Refresh FAB (bottom-left) ──────────────── */}
-      <button
-        type="button"
-        className={`sp-refresh-fab ${
-          isFetching ? 'sp-refresh-fab-spinning' : ''
-        }`}
-        onClick={() => refetch()}
-        disabled={isFetching}
-        aria-label="Refresh stories"
-      >
-        <FiRefreshCw className="sp-refresh-fab-icon" />
-      </button>
-
       {/* ── Search FAB (bottom-right) ──────────────── */}
       <button
         type="button"
         className={`sp-search-fab ${
-          hasAppliedFilters ? 'sp-search-fab-active' : ''
+          hasAppliedSearch ? 'sp-search-fab-active' : ''
         }`}
         onClick={() => setSearchOpen(true)}
         aria-label="Open search"
       >
         <FiSearch className="sp-search-fab-icon" />
 
-        {hasAppliedFilters && (
+        {hasAppliedSearch && (
           <span className="sp-search-fab-dot" aria-hidden="true" />
         )}
       </button>
@@ -346,28 +327,6 @@ function SearchPosts() {
               </button>
             </div>
 
-            <div className="sp-search-group">
-              <span className="sp-search-group-label">
-                <FiSliders /> Category
-              </span>
-              <div className="sp-search-pills">
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value || 'all'}
-                    type="button"
-                    className={`sp-search-pill ${
-                      draftCategory === opt.value
-                        ? 'sp-search-pill-active'
-                        : ''
-                    }`}
-                    onClick={() => setDraftCategory(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="sp-search-count">
               Showing <strong>{count}</strong>{' '}
               {count === 1 ? 'story' : 'stories'}
@@ -392,12 +351,6 @@ function SearchPosts() {
           </div>
         </div>
       )}
-
-      {/* ── Full post modal ────────────────────────── */}
-      <PostDetailModal
-        story={openStory}
-        onClose={() => setOpenStory(null)}
-      />
     </div>
   )
 }

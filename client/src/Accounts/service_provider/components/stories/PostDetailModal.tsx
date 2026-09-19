@@ -1,7 +1,14 @@
 // PostDetailModal.tsx — full post view
 import { useEffect } from 'react'
 import { FiX } from 'react-icons/fi'
+import { useAuthStore } from '../../../../store/authtokenstore'
+import Like from './Like'
+import Share from './Share'
 import './postdetailmodal.css'
+
+/* ────────────────────────────────────────────────────────
+   Types
+   ──────────────────────────────────────────────────────── */
 
 type StoryCategory = 'ideas' | 'success' | 'fun'
 
@@ -30,6 +37,10 @@ interface PostDetailModalProps {
   onClose: () => void
 }
 
+/* ────────────────────────────────────────────────────────
+   Helpers
+   ──────────────────────────────────────────────────────── */
+
 function initials(first?: string, last?: string) {
   const f = (first || '?').charAt(0).toUpperCase()
   const l = (last || '?').charAt(0).toUpperCase()
@@ -48,7 +59,13 @@ function formatDate(iso: string) {
   }
 }
 
+/* ────────────────────────────────────────────────────────
+   Component
+   ──────────────────────────────────────────────────────── */
+
 function PostDetailModal({ story, onClose }: PostDetailModalProps) {
+  const { access } = useAuthStore()
+
   /* Lock body scroll + Escape to close */
   useEffect(() => {
     if (!story) return
@@ -69,6 +86,11 @@ function PostDetailModal({ story, onClose }: PostDetailModalProps) {
 
   if (!story) return null
 
+  /* The logged-in user's id — adapt to your auth store */
+  const userId: number =
+    (access as unknown as { id?: number })?.id ??
+    Number(localStorage.getItem('user_id') ?? 0)
+
   return (
     <div
       className="pdm-overlay"
@@ -81,47 +103,69 @@ function PostDetailModal({ story, onClose }: PostDetailModalProps) {
         className="pdm-panel"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <button
-          type="button"
-          className="pdm-close"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <FiX />
-        </button>
-
-        {/* Author bar */}
+        {/* ══════════════════════════════════════════
+            HEADER — owner on the left, actions on the right
+            ══════════════════════════════════════════ */}
         <header className="pdm-header">
-          <div className="pdm-avatar-wrap">
-            {story.author.profile_image_url ? (
-              <img
-                src={story.author.profile_image_url}
-                alt={story.author.full_name}
-                className="pdm-avatar"
-                loading="lazy"
-              />
-            ) : (
-              <div className="pdm-avatar-fallback">
-                {initials(
-                  story.author.first_name,
-                  story.author.last_name
-                )}
-              </div>
-            )}
+          {/* ── Owner details ───────────────────── */}
+          <div className="pdm-owner">
+            <div className="pdm-avatar-wrap">
+              {story.author.profile_image_url ? (
+                <img
+                  src={story.author.profile_image_url}
+                  alt={story.author.full_name}
+                  className="pdm-avatar"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="pdm-avatar-fallback">
+                  {initials(
+                    story.author.first_name,
+                    story.author.last_name
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="pdm-owner-meta">
+              <span className="pdm-author">
+                {story.author.full_name || 'Someone'}
+              </span>
+              <span className="pdm-submeta">
+                {formatDate(story.created_at)}
+              </span>
+            </div>
           </div>
 
-          <div className="pdm-meta">
-            <span className="pdm-author">
-              {story.author.full_name || 'Someone'}
-            </span>
-            <span className="pdm-submeta">
-              {formatDate(story.created_at)}
-            </span>
+          {/* ── Actions — Like + Share + Close ──── */}
+          <div className="pdm-header-actions">
+            <Like
+              postId={story.id}
+              userId={userId}
+              size="md"
+            />
+
+            <Share
+              postId={story.id}
+              userId={userId}
+              postTitle={story.title}
+              size="md"
+            />
+
+            <button
+              type="button"
+              className="pdm-close"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <FiX />
+            </button>
           </div>
         </header>
 
-        {/* Scrollable body */}
+        {/* ══════════════════════════════════════════
+            BODY — scrollable
+            ══════════════════════════════════════════ */}
         <div className="pdm-body">
           {/* Full-width image */}
           {story.image_url && (

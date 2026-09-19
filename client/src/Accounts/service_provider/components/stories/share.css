@@ -1,0 +1,401 @@
+/* share.css — animated share button + sheet */
+
+/* ═══════════════════════════════════════════════════════════
+   TRIGGER BUTTON — icon-only
+   ═══════════════════════════════════════════════════════════ */
+.sh-btn-root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #6b6b6b;
+
+  cursor: pointer;
+
+  transition:
+    color 0.18s ease,
+    transform 0.1s ease;
+
+  -webkit-tap-highlight-color: transparent;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sh-btn-root-md {
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+}
+
+.sh-btn-root-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+}
+
+.sh-btn-root:hover {
+  color: #2563eb;
+  transform: scale(1.08);
+}
+
+.sh-btn-root:hover .sh-btn-icon {
+  animation: sh-wiggle 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sh-btn-root:active {
+  transform: scale(0.92);
+}
+
+.sh-btn-root:focus-visible {
+  outline: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+.sh-btn-icon {
+  width: 1em;
+  height: 1em;
+  stroke-width: 2.2;
+}
+
+@keyframes sh-wiggle {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-14deg); }
+  50%  { transform: rotate(10deg); }
+  75%  { transform: rotate(-6deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OVERLAY
+   ═══════════════════════════════════════════════════════════ */
+.sh-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  padding: 0;
+
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  z-index: 9500;
+
+  animation: sh-fade 0.2s ease-out;
+}
+
+@keyframes sh-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Panel ─────────────────────────────────── */
+.sh-panel {
+  position: relative;
+
+  width: 100%;
+  max-width: 480px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  padding: 24px 20px
+    calc(22px + env(safe-area-inset-bottom, 0px));
+
+  background: #ffffff;
+  border-radius: 22px 22px 0 0;
+
+  text-align: center;
+
+  animation: sh-sheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sh-sheet {
+  from {
+    opacity: 0.6;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 769px) {
+  .sh-overlay {
+    align-items: center;
+    padding: 20px;
+  }
+
+  .sh-panel {
+    border-radius: 22px;
+    padding: 28px 24px 22px;
+    animation: sh-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes sh-pop {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+.sh-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 34px;
+  height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+
+  color: #94a3b8;
+  font-size: 18px;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.sh-close:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+  transform: rotate(90deg);
+}
+
+/* ── Text ─────────────────────────────────── */
+.sh-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.sh-subtitle {
+  margin: -6px 0 0;
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Grid ─────────────────────────────────── */
+.sh-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (min-width: 480px) {
+  .sh-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+}
+
+.sh-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 12px 6px;
+
+  background: transparent;
+  border: none;
+
+  cursor: pointer;
+
+  transition: transform 0.15s ease;
+}
+
+.sh-tile:hover {
+  transform: translateY(-2px);
+}
+
+.sh-tile:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.sh-tile:focus-visible {
+  outline: none;
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.sh-tile-icon {
+  width: 48px;
+  height: 48px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+  font-size: 20px;
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sh-tile:hover .sh-tile-icon {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px -6px rgba(15, 23, 42, 0.35);
+}
+
+.sh-tile-icon-copy { background: #64748b; }
+.sh-tile-icon-wa   { background: #25d366; }
+.sh-tile-icon-tw   { background: #1da1f2; }
+.sh-tile-icon-fb   { background: #1877f2; }
+.sh-tile-icon-mail { background: #f59e0b; }
+.sh-tile-icon-more { background: #6366f1; }
+
+.sh-tile-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ── Meta (ids) ───────────────────────────── */
+.sh-meta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.sh-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+
+.sh-meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.sh-meta-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.sh-meta-value {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 12.5px;
+}
+
+/* ── Full URL copy ───────────────────────── */
+.sh-copy-full {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+
+  color: #0f172a;
+
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  text-align: left;
+
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sh-copy-full:hover {
+  background: rgba(37, 99, 235, 0.05);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.sh-copy-full > svg {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #2563eb;
+}
+
+.sh-copy-full-text {
+  flex: 1;
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #475569;
+}
+
+/* ── Reduced motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .sh-overlay,
+  .sh-panel {
+    animation: none;
+  }
+
+  .sh-close:hover,
+  .sh-tile:hover,
+  .sh-tile:hover .sh-tile-icon,
+  .sh-btn-root:hover,
+  .sh-btn-root:active {
+    transform: none;
+  }
+
+  .sh-btn-root:hover .sh-btn-icon {
+    animation: none;
+  }
+}

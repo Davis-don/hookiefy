@@ -1,6 +1,6 @@
-/* postcard.css — Medium-style article preview
-   Author on top, title + short description on the left,
-   image thumbnail on the right.
+/* postcard.css — Medium-style preview
+   Title + description + thumbnail + Like/Share.
+   No bookmark.
    Uses pc- prefix — no collisions. */
 
 /* ─────────────────────────────────────────────
@@ -17,7 +17,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Author row — avatar + name + time + more button
+   Author row
    ═══════════════════════════════════════════════════════════ */
 .pc-header {
   display: flex;
@@ -83,7 +83,6 @@
   text-overflow: ellipsis;
 }
 
-/* The bullet separator between author and meta */
 .pc-submeta::before {
   content: '·';
   margin-right: 6px;
@@ -112,7 +111,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Main — text on left, thumbnail on right
+   Main row — text on left, thumb on right
    ═══════════════════════════════════════════════════════════ */
 .pc-main {
   display: flex;
@@ -120,6 +119,14 @@
   gap: 16px;
 
   padding: 0 16px 12px;
+
+  cursor: pointer;
+  outline: none;
+}
+
+.pc-main:focus-visible {
+  background: rgba(37, 99, 235, 0.04);
+  border-radius: 8px;
 }
 
 .pc-text {
@@ -131,7 +138,7 @@
   gap: 6px;
 }
 
-/* ── Title — bold Medium-style headline ──────── */
+/* ── Title — Medium-style headline ────────────── */
 .pc-title {
   margin: 0;
 
@@ -150,7 +157,7 @@
   overflow: hidden;
 }
 
-/* ── Preview / subtitle — short grey text ────── */
+/* ── Description / preview text ───────────────── */
 .pc-preview {
   margin: 0;
 
@@ -161,12 +168,12 @@
   word-break: break-word;
 
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* ── Thumbnail — right-side image ────────────── */
+/* ── Thumbnail ────────────────────────────────── */
 .pc-thumb {
   position: relative;
   flex-shrink: 0;
@@ -207,58 +214,14 @@
 .pc-thumb-img-loaded  { opacity: 1; }
 
 /* ═══════════════════════════════════════════════════════════
-   Footer — actions row
+   Footer — Like + Share
    ═══════════════════════════════════════════════════════════ */
 .pc-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 
-  padding: 8px 16px 18px;
-}
-
-.pc-action {
-  width: 24px;
-  height: 24px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border: none;
-  background: transparent;
-
-  color: #6b6b6b;
-  font-size: 17px;
-
-  cursor: pointer;
-
-  transition: color 0.15s ease, transform 0.1s ease;
-}
-
-.pc-action:hover {
-  color: #242424;
-  transform: scale(1.1);
-}
-
-.pc-action:active {
-  transform: scale(0.94);
-}
-
-.pc-action-liked {
-  color: #dc2626;
-}
-
-.pc-action-liked:hover {
-  color: #dc2626;
-}
-
-.pc-action-saved {
-  color: #2563eb;
-}
-
-.pc-action-saved:hover {
-  color: #1d4ed8;
+  padding: 6px 16px 16px;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -305,16 +268,12 @@
   }
 
   .pc-actions {
-    padding: 6px 14px 16px;
-    gap: 12px;
-  }
-
-  .pc-action {
-    font-size: 16px;
+    padding: 4px 14px 14px;
+    gap: 6px;
   }
 }
 
-/* Very small phones — smaller thumbnail */
+/* Very small phones */
 @media (max-width: 360px) {
   .pc-thumb {
     width: 72px;
@@ -336,5 +295,4 @@
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .pc-thumb-skeleton { animation: none; }
-  .pc-action:hover   { transform: none; }
 }

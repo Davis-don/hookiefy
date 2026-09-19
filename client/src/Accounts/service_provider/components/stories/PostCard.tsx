@@ -1,18 +1,14 @@
-// PostCard.tsx — Medium-style article preview
+// PostCard.tsx — Medium-style preview with description + Like/Share
 import { useState } from 'react'
-import {
-  FiHeart,
-  FiBookmark,
-  FiShare2,
-  FiMoreHorizontal,
-} from 'react-icons/fi'
+import { FiMoreHorizontal } from 'react-icons/fi'
+import { useAuthStore } from '../../../../store/authtokenstore'
+import Like from './Like'
+import Share from './Share'
 import './postcard.css'
 
 /* ────────────────────────────────────────────────────────
-   Types
+   Types — matches SearchPosts' Story shape exactly
    ──────────────────────────────────────────────────────── */
-
-type StoryCategory = 'ideas' | 'success' | 'fun'
 
 interface StoryAuthor {
   id: number
@@ -27,7 +23,6 @@ interface Story {
   id: number
   title: string
   content: string
-  category: StoryCategory
   image_url: string | null
   created_at: string
   updated_at?: string
@@ -100,15 +95,19 @@ function previewText(html: string) {
    ──────────────────────────────────────────────────────── */
 
 function PostCard({ story, onOpen }: PostCardProps) {
+  const { access } = useAuthStore()
+
   const [imgLoaded, setImgLoaded] = useState(false)
   const [imgErrored, setImgErrored] = useState(false)
-  const [liked, setLiked] = useState(false)
-  const [saved, setSaved] = useState(false)
 
   const showImage = story.image_url && !imgErrored
   const preview = previewText(story.content)
 
-  /* Clicking the card body opens the full post */
+  /* The logged-in user's id — adapt to your auth store */
+  const userId: number =
+    (access as unknown as { id?: number })?.id ??
+    Number(localStorage.getItem('user_id') ?? 0)
+
   const handleOpen = () => {
     onOpen?.()
   }
@@ -170,7 +169,9 @@ function PostCard({ story, onOpen }: PostCardProps) {
       >
         <div className="pc-text">
           <h2 className="pc-title">{story.title}</h2>
-          {preview && <p className="pc-preview">{preview}</p>}
+          {preview && (
+            <p className="pc-preview">{preview}</p>
+          )}
         </div>
 
         {showImage && (
@@ -198,40 +199,20 @@ function PostCard({ story, onOpen }: PostCardProps) {
         )}
       </div>
 
-      {/* ── Footer actions ──────────────────────────── */}
+      {/* ── Footer — Like + Share only ──────────────── */}
       <footer className="pc-actions">
-        <button
-          type="button"
-          className={`pc-action ${liked ? 'pc-action-liked' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            setLiked((v) => !v)
-          }}
-          aria-label={liked ? 'Unlike' : 'Like'}
-        >
-          <FiHeart />
-        </button>
+        <Like
+          postId={story.id}
+          userId={userId}
+          size="md"
+        />
 
-        <button
-          type="button"
-          className={`pc-action ${saved ? 'pc-action-saved' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            setSaved((v) => !v)
-          }}
-          aria-label={saved ? 'Unsave' : 'Save'}
-        >
-          <FiBookmark />
-        </button>
-
-        <button
-          type="button"
-          className="pc-action"
-          aria-label="Share"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <FiShare2 />
-        </button>
+        <Share
+          postId={story.id}
+          userId={userId}
+          postTitle={story.title}
+          size="md"
+        />
       </footer>
     </article>
   )
