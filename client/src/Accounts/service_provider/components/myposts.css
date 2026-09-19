@@ -1,42 +1,39 @@
-/* myposts.css — My Posts list */
+/* myposts.css — unique mpx- prefix, bold readable text */
 
-.myposts-root {
+/* ─────────────────────────────────────────────
+   Root
+   ───────────────────────────────────────────── */
+.mpx-root {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 100%;
-  background: #ffffff;
-  padding: 16px;
+  background: transparent;
+  color: inherit;
+  padding: 0;
 }
 
 /* ─────────────────────────────────────────────
    Toolbar
    ───────────────────────────────────────────── */
-.myposts-toolbar {
+.mpx-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  padding: 14px 16px 6px;
 }
 
-.myposts-toolbar-title {
+.mpx-toolbar-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
 }
 
-.myposts-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.myposts-icon-btn {
-  width: 38px;
-  height: 38px;
+.mpx-icon-btn {
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -49,29 +46,39 @@
     color 0.15s ease;
 }
 
-.myposts-icon-btn:hover:not(:disabled) {
+.mpx-icon-btn:hover:not(:disabled) {
   background: rgba(37, 99, 235, 0.06);
   border-color: rgba(37, 99, 235, 0.4);
   color: #2563eb;
 }
 
-.myposts-icon-btn:disabled {
+.mpx-icon-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.myposts-icon-spinning {
-  animation: myposts-spin 0.9s linear infinite;
+.mpx-icon { font-size: 17px; }
+
+.mpx-icon-spinning {
+  animation: mpx-spin 0.9s linear infinite;
 }
 
-@keyframes myposts-spin {
+@keyframes mpx-spin {
   to { transform: rotate(360deg); }
 }
 
 /* ─────────────────────────────────────────────
-   Empty / loading states
+   Loader + empty
    ───────────────────────────────────────────── */
-.myposts-state {
+.mpx-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+
+.mpx-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -81,137 +88,410 @@
   text-align: center;
 }
 
-.myposts-state-icon {
-  font-size: 42px;
+.mpx-state-icon {
+  font-size: 44px;
   color: #cbd5e1;
   margin-bottom: 6px;
 }
 
-.myposts-state-title {
+.mpx-state-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #0f172a;
 }
 
-.myposts-state-text {
+.mpx-state-text {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   color: #64748b;
   max-width: 320px;
   line-height: 1.55;
 }
 
 /* ─────────────────────────────────────────────
-   Post list
+   Feed — edge-to-edge
    ───────────────────────────────────────────── */
-.myposts-list {
+.mpx-feed {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.myposts-card {
-  position: relative;
+.mpx-post {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  width: 100%;
   background: #ffffff;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
-.myposts-card:hover {
-  box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.16);
-  transform: translateY(-1px);
+.mpx-post + .mpx-post {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.myposts-card-header {
+.mpx-post-editing {
+  padding: 12px 0;
+}
+
+/* ── Post header ─────────────────────────────── */
+.mpx-post-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  padding: 14px 16px;
 }
 
-.myposts-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
+.mpx-post-avatar-wrap { flex-shrink: 0; }
 
-.myposts-card-avatar {
-  width: 34px;
-  height: 34px;
+.mpx-post-avatar,
+.mpx-post-avatar-fallback {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
+  object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.mpx-post-avatar {
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mpx-post-avatar-fallback {
+  background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.mpx-post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ═══════════════════════════════════════════
+   AUTHOR NAME — bigger, bolder, stands out
+   ═══════════════════════════════════════════ */
+.mpx-post-author {
+  font-size: 16px;        /* was 14px */
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mpx-post-time {
+  font-size: 13px;        /* was 12px */
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mpx-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
 }
 
-.myposts-card-author {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.myposts-card-name {
-  font-size: 13px;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.2;
-}
-
-.myposts-card-time {
-  font-size: 11.5px;
-  color: #64748b;
-}
-
-.myposts-card-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.myposts-card-icon {
-  width: 32px;
-  height: 32px;
+.mpx-post-action {
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   border: none;
+  border-radius: 8px;
   background: transparent;
   color: #64748b;
+  font-size: 16px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.myposts-card-icon:hover {
+.mpx-post-action:hover:not(:disabled) {
   background: rgba(37, 99, 235, 0.08);
   color: #2563eb;
 }
 
-.myposts-card-icon-danger:hover {
+.mpx-post-action-danger:hover:not(:disabled) {
   background: rgba(220, 38, 38, 0.08);
   color: #dc2626;
 }
 
-.myposts-card-body {
-  font-size: 14px;
-  color: #1e293b;
-  line-height: 1.55;
+.mpx-post-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Image — full bleed, no crop ─────────────── */
+.mpx-post-media {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.mpx-post-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+  object-position: center;
+  background: #0b0e12;
+}
+
+/* ── Body — below the image ──────────────────── */
+.mpx-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px 10px;
+}
+
+/* ═══════════════════════════════════════════
+   POST TITLE — big, bold, headline-style
+   ═══════════════════════════════════════════ */
+.mpx-post-title {
+  margin: 0;
+  font-size: 1.5rem;       /* 24px — noticeably big */
+  font-weight: 900;         /* heaviest weight */
+  color: #0f172a;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* ═══════════════════════════════════════════
+   POST CONTENT — comfortable reading size
+   ═══════════════════════════════════════════ */
+.mpx-post-content {
+  margin: 0;
+  font-size: 15.5px;        /* was 14.5px */
+  font-weight: 400;
+  color: #1e293b;           /* slightly darker for readability */
+  line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.myposts-card-media {
+/* ── Category pill ───────────────────────────── */
+.mpx-post-foot {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px 18px;
+}
+
+.mpx-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mpx-cat-ideas {
+  background: rgba(37, 99, 235, 0.09);
+  color: #1d4ed8;
+}
+
+.mpx-cat-success {
+  background: rgba(16, 185, 129, 0.11);
+  color: #059669;
+}
+
+.mpx-cat-fun {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+/* ─────────────────────────────────────────────
+   Edit form
+   ───────────────────────────────────────────── */
+.mpx-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 14px 16px 18px;
+}
+
+.mpx-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mpx-edit-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mpx-edit-close {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mpx-edit-close:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+.mpx-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.mpx-edit-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.mpx-edit-field-icon {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.mpx-edit-input,
+.mpx-edit-textarea,
+.mpx-edit-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+
+  color: #0f172a;
+  background: #ffffff;
+
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mpx-edit-textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.55;
+}
+
+.mpx-edit-input:hover:not(:disabled),
+.mpx-edit-textarea:hover:not(:disabled),
+.mpx-edit-select:hover:not(:disabled) {
+  border-color: rgba(15, 23, 42, 0.24);
+}
+
+.mpx-edit-input:focus:not(:disabled),
+.mpx-edit-textarea:focus:not(:disabled),
+.mpx-edit-select:focus:not(:disabled) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.mpx-edit-input:disabled,
+.mpx-edit-textarea:disabled,
+.mpx-edit-select:disabled {
+  background: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.mpx-edit-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.mpx-edit-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mpx-edit-photo-current {
+  width: 76px;
+  height: 76px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
+}
+
+.mpx-edit-photo-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1.5px dashed rgba(15, 23, 42, 0.2);
+  background: #f8fafc;
+
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mpx-edit-photo-pick:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.mpx-edit-preview {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
   border-radius: 12px;
@@ -219,40 +499,319 @@
   background: #f1f5f9;
 }
 
-.myposts-card-media img {
+.mpx-edit-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #0b0e12;
   display: block;
 }
 
-.myposts-card-footer {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
-}
+.mpx-edit-preview-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 
-.myposts-card-stat {
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  justify-content: center;
+
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mpx-edit-preview-remove:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.mpx-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mpx-edit-save,
+.mpx-edit-cancel {
+  flex: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 13px 20px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+
+  font-size: 14.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.mpx-edit-save {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.mpx-edit-save:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.5);
+}
+
+.mpx-edit-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mpx-edit-cancel {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.mpx-edit-cancel:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.32);
+}
+
+.mpx-edit-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mpx-spinner-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: mpx-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ─────────────────────────────────────────────
+   Confirm delete modal
+   ───────────────────────────────────────────── */
+.mpx-modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  z-index: 9000;
+  animation: mpxFadeIn 0.2s ease-out;
+}
+
+@keyframes mpxFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mpx-modal-card {
+  width: 100%;
+  max-width: 400px;
+
+  padding: 26px 22px 20px;
+
+  background: #ffffff;
+  border-radius: 18px;
+
+  text-align: center;
+
+  box-shadow:
+    0 32px 64px -24px rgba(15, 23, 42, 0.4),
+    0 12px 24px -12px rgba(15, 23, 42, 0.25);
+
+  animation: mpxModalIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mpxModalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mpx-modal-icon-wrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(220, 38, 38, 0.1);
+  border: 2px solid rgba(220, 38, 38, 0.2);
+
+  color: #dc2626;
+}
+
+.mpx-modal-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.mpx-modal-title {
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.mpx-modal-subject {
+  margin: 0 0 8px;
+  font-size: 14px;
   font-weight: 600;
+  color: #2563eb;
+  word-break: break-word;
+}
+
+.mpx-modal-text {
+  margin: 0 0 20px;
+  font-size: 13.5px;
   color: #64748b;
+  line-height: 1.55;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mpx-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.mpx-modal-btn {
+  flex: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.mpx-modal-btn-secondary {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.mpx-modal-btn-secondary:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.32);
+}
+
+.mpx-modal-btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.mpx-modal-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(220, 38, 38, 0.5);
+}
+
+.mpx-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ─────────────────────────────────────────────
    Mobile
    ───────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .myposts-root {
-    padding: 14px;
+  .mpx-toolbar {
+    padding: 12px 14px 6px;
   }
 
-  .myposts-toolbar-title {
-    font-size: 1rem;
+  .mpx-toolbar-title {
+    font-size: 1.1rem;
+  }
+
+  .mpx-post-header {
+    padding: 12px 14px;
+  }
+
+  .mpx-post-author {
+    font-size: 15.5px;
+  }
+
+  .mpx-post-time {
+    font-size: 12.5px;
+  }
+
+  .mpx-post-body {
+    padding: 16px 14px 8px;
+    gap: 10px;
+  }
+
+  .mpx-post-title {
+    font-size: 1.35rem;    /* still big on mobile */
+    font-weight: 900;
+  }
+
+  .mpx-post-content {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .mpx-post-foot {
+    padding: 6px 14px 16px;
+  }
+
+  .mpx-edit {
+    padding: 12px 14px 16px;
+  }
+
+  .mpx-modal-card {
+    padding: 22px 18px 16px;
+  }
+
+  .mpx-modal-actions {
+    flex-direction: column-reverse;
   }
 }
 
@@ -260,7 +819,15 @@
    Reduced motion
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .myposts-icon-spinning { animation: none; }
+  .mpx-icon-spinning,
+  .mpx-spinner-small,
+  .mpx-modal-overlay,
+  .mpx-modal-card {
+    animation: none;
+  }
 
-  .myposts-card:hover { transform: none; }
+  .mpx-edit-save:hover:not(:disabled),
+  .mpx-modal-btn-danger:hover:not(:disabled) {
+    transform: none;
+  }
 }

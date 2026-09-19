@@ -59,4 +59,7 @@ urlpatterns = [
     # Adverts
     path('adverts/', include('adverts.urls')),
     path("services/", include("services.urls")),
+    path(
+        "stories/",
+        include("stories.urls"),)
 ]
