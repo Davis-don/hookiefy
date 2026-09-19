@@ -1,4 +1,4 @@
-// PostCard.tsx — single story card, Medium-style
+// PostCard.tsx — Medium-style article preview
 import { useState } from 'react'
 import {
   FiHeart,
@@ -36,16 +36,7 @@ interface Story {
 
 interface PostCardProps {
   story: Story
-}
-
-/* ────────────────────────────────────────────────────────
-   Constants
-   ──────────────────────────────────────────────────────── */
-
-const CATEGORY_LABELS: Record<StoryCategory, string> = {
-  ideas: 'Ideas & Tips',
-  success: 'Success Stories',
-  fun: 'Fun',
+  onOpen?: () => void
 }
 
 /* ────────────────────────────────────────────────────────
@@ -87,31 +78,44 @@ function timeAgo(iso: string) {
   }
 }
 
-/* Rough reading time from HTML content */
-function readTime(html: string) {
+function plainText(html: string) {
   const tmp = document.createElement('div')
   tmp.innerHTML = html
-  const text = tmp.textContent || ''
-  const words = text.trim().split(/\s+/).length
+  return (tmp.textContent || tmp.innerText || '').trim()
+}
+
+function readTime(html: string) {
+  const text = plainText(html)
+  const words = text.split(/\s+/).filter(Boolean).length
   const mins = Math.max(1, Math.round(words / 200))
   return `${mins} min read`
+}
+
+function previewText(html: string) {
+  return plainText(html).replace(/\s+/g, ' ').trim()
 }
 
 /* ────────────────────────────────────────────────────────
    Component
    ──────────────────────────────────────────────────────── */
 
-function PostCard({ story }: PostCardProps) {
+function PostCard({ story, onOpen }: PostCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false)
   const [imgErrored, setImgErrored] = useState(false)
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
 
   const showImage = story.image_url && !imgErrored
+  const preview = previewText(story.content)
+
+  /* Clicking the card body opens the full post */
+  const handleOpen = () => {
+    onOpen?.()
+  }
 
   return (
     <article className="pc-card">
-      {/* ── Header — avatar + author + time ─────────── */}
+      {/* ── Author row ──────────────────────────────── */}
       <header className="pc-header">
         <div className="pc-avatar-wrap">
           {story.author.profile_image_url ? (
@@ -144,50 +148,54 @@ function PostCard({ story }: PostCardProps) {
           type="button"
           className="pc-more-btn"
           aria-label="More options"
+          onClick={(e) => e.stopPropagation()}
         >
           <FiMoreHorizontal />
         </button>
       </header>
 
-      {/* ── Image — edge-to-edge, no crop ───────────── */}
-      {showImage && (
-        <div className="pc-media">
-          {!imgLoaded && (
-            <div className="pc-media-skeleton" aria-hidden="true" />
-          )}
-          <img
-            src={story.image_url as string}
-            alt={story.title}
-            loading="lazy"
-            decoding="async"
-            className={`pc-media-img ${
-              imgLoaded
-                ? 'pc-media-img-loaded'
-                : 'pc-media-img-loading'
-            }`}
-            onLoad={() => setImgLoaded(true)}
-            onError={() => {
-              setImgErrored(true)
-              setImgLoaded(true)
-            }}
-          />
+      {/* ── Main row — text on left, thumb on right ── */}
+      <div
+        className="pc-main"
+        onClick={handleOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleOpen()
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open story: ${story.title}`}
+      >
+        <div className="pc-text">
+          <h2 className="pc-title">{story.title}</h2>
+          {preview && <p className="pc-preview">{preview}</p>}
         </div>
-      )}
 
-      {/* ── Body — title + rich HTML content ────────── */}
-      <div className="pc-body">
-        <span
-          className={`pc-cat-pill pc-cat-${story.category}`}
-        >
-          {CATEGORY_LABELS[story.category]}
-        </span>
-
-        <h2 className="pc-title">{story.title}</h2>
-
-        <div
-          className="pc-content"
-          dangerouslySetInnerHTML={{ __html: story.content }}
-        />
+        {showImage && (
+          <div className="pc-thumb">
+            {!imgLoaded && (
+              <div className="pc-thumb-skeleton" aria-hidden="true" />
+            )}
+            <img
+              src={story.image_url as string}
+              alt={story.title}
+              loading="lazy"
+              decoding="async"
+              className={`pc-thumb-img ${
+                imgLoaded
+                  ? 'pc-thumb-img-loaded'
+                  : 'pc-thumb-img-loading'
+              }`}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => {
+                setImgErrored(true)
+                setImgLoaded(true)
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Footer actions ──────────────────────────── */}
@@ -195,7 +203,10 @@ function PostCard({ story }: PostCardProps) {
         <button
           type="button"
           className={`pc-action ${liked ? 'pc-action-liked' : ''}`}
-          onClick={() => setLiked((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setLiked((v) => !v)
+          }}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
           <FiHeart />
@@ -204,7 +215,10 @@ function PostCard({ story }: PostCardProps) {
         <button
           type="button"
           className={`pc-action ${saved ? 'pc-action-saved' : ''}`}
-          onClick={() => setSaved((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setSaved((v) => !v)
+          }}
           aria-label={saved ? 'Unsave' : 'Save'}
         >
           <FiBookmark />
@@ -214,6 +228,7 @@ function PostCard({ story }: PostCardProps) {
           type="button"
           className="pc-action"
           aria-label="Share"
+          onClick={(e) => e.stopPropagation()}
         >
           <FiShare2 />
         </button>
