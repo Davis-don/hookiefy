@@ -5,8 +5,6 @@ import Header from '../components/Header';
 import Home from '../components/Home';
 import MyServices from '../components/MyServices';
 import Profile from '../components/Profile';
-import Settings from '../components/Settings';
-import Messages from '../components/Messages';
 import Stories from '../components/stories/Stories';
 import AddData from '../components/AddData';
 
@@ -34,9 +32,7 @@ const Serviceproviderdash = () => {
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
     { id: 'stories', label: 'Stories', icon: '📸', component: Stories },
-    { id: 'messages', label: 'Messages', icon: '💬', component: Messages },
     { id: 'my-services', label: 'My Services', icon: '🛠️', component: MyServices },
-    { id: 'settings', label: 'Settings', icon: '⚙️', component: Settings },
   ];
 
   const renderActiveComponent = () => {
@@ -76,12 +72,11 @@ const Serviceproviderdash = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  /* Mobile nav — 4 items + centered "+" */
+  /* Mobile nav — 2 items + centered "+" + 1 item */
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'stories', label: 'Stories', icon: '📸' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'my-services', label: 'My Services', icon: '🛠️' },
   ];
 
   /* Split items into left / right of the "+" */

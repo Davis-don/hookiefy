@@ -599,3 +599,15 @@
     font-size: inherit;
   }
 }
+/* ── Right-side action cluster (bell + avatar) ──────────── */
+.yp-dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .yp-dash-header-actions {
+    gap: 8px;
+  }
+}

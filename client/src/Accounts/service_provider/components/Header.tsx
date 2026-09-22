@@ -12,6 +12,7 @@ import PremiumBadge, {
   usePremiumStatus,
 } from './PremiumBadge';
 import LogoutButton from './LogoutButton';
+import Notification from './Notification';
 import './header.css';
 
 interface HeaderProps {
@@ -195,88 +196,94 @@ const Header: React.FC<HeaderProps> = ({
           <span className="yp-logo-ata">ata</span>
         </h1>
 
-        {/* ── Avatar with premium halo + crown seal ─────── */}
-        <div
-          ref={menuRef}
-          className="yp-dash-avatar-wrap"
-          data-premium={isPremium ? 'true' : 'false'}
-        >
-          {/* Halo ring — only visible when premium */}
-          <span className="yp-avatar-halo" aria-hidden="true" />
+        {/* ── Right cluster: Bell + Avatar ─────────────── */}
+        <div className="yp-dash-header-actions">
+          {/* ── Notification bell ──────────────────────── */}
+          <Notification />
 
-          <button
-            className="yp-dash-avatar-btn"
-            onClick={toggleMenu}
-            onMouseEnter={() => {
-              prefetchProfile();
-              prefetchPremium();
-            }}
-            onTouchStart={() => {
-              prefetchProfile();
-              prefetchPremium();
-            }}
-            aria-label="Open account menu"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            type="button"
+          {/* ── Avatar with premium halo + crown seal ──── */}
+          <div
+            ref={menuRef}
+            className="yp-dash-avatar-wrap"
+            data-premium={isPremium ? 'true' : 'false'}
           >
-            {imageUrl ? (
-              <img
-                key={imageUrl}
-                src={imageUrl}
-                alt="Profile"
-                className={`yp-dash-avatar yp-dash-avatar-img ${
-                  imgLoaded ? 'yp-avatar-loaded' : 'yp-avatar-loading'
-                }`}
-                onLoad={() => setImgLoaded(true)}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.parentElement?.classList.add(
-                    'yp-avatar-fallback'
-                  );
-                }}
-              />
-            ) : (
-              <div className="yp-dash-avatar">{userName}</div>
-            )}
+            {/* Halo ring — only visible when premium */}
+            <span className="yp-avatar-halo" aria-hidden="true" />
 
-            {isFetching && !imgLoaded && (
-              <span className="yp-avatar-refresh-dot" aria-hidden="true" />
-            )}
-          </button>
-
-          {/* Corner crown — only renders for premium users */}
-          <div className="yp-dash-avatar-seal">
-            <PremiumBadge size="xs" showLabel={false} />
-          </div>
-
-          {/* ── Dropdown menu ─────────────────────────── */}
-          {menuOpen && (
-            <div
-              className="yp-avatar-menu"
-              role="menu"
-              aria-label="Account menu"
+            <button
+              className="yp-dash-avatar-btn"
+              onClick={toggleMenu}
+              onMouseEnter={() => {
+                prefetchProfile();
+                prefetchPremium();
+              }}
+              onTouchStart={() => {
+                prefetchProfile();
+                prefetchPremium();
+              }}
+              aria-label="Open account menu"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              type="button"
             >
-              <button
-                type="button"
-                role="menuitem"
-                className="yp-avatar-menu-item"
-                onClick={handleProfileSelect}
-              >
-                <FiUser className="yp-avatar-menu-icon" />
-                <span>Profile</span>
-              </button>
-
-              {/* LogoutButton renders its own icon + label */}
-              <div className="yp-avatar-menu-item yp-avatar-menu-item--logout">
-                <LogoutButton
-                  redirectTo="/login"
-                  onLoggedOut={() => setMenuOpen(false)}
+              {imageUrl ? (
+                <img
+                  key={imageUrl}
+                  src={imageUrl}
+                  alt="Profile"
+                  className={`yp-dash-avatar yp-dash-avatar-img ${
+                    imgLoaded ? 'yp-avatar-loaded' : 'yp-avatar-loading'
+                  }`}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement?.classList.add(
+                      'yp-avatar-fallback'
+                    );
+                  }}
                 />
-              </div>
+              ) : (
+                <div className="yp-dash-avatar">{userName}</div>
+              )}
+
+              {isFetching && !imgLoaded && (
+                <span className="yp-avatar-refresh-dot" aria-hidden="true" />
+              )}
+            </button>
+
+            {/* Corner crown — only renders for premium users */}
+            <div className="yp-dash-avatar-seal">
+              <PremiumBadge size="xs" showLabel={false} />
             </div>
-          )}
+
+            {/* ── Dropdown menu ─────────────────────────── */}
+            {menuOpen && (
+              <div
+                className="yp-avatar-menu"
+                role="menu"
+                aria-label="Account menu"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="yp-avatar-menu-item"
+                  onClick={handleProfileSelect}
+                >
+                  <FiUser className="yp-avatar-menu-icon" />
+                  <span>Profile</span>
+                </button>
+
+                {/* LogoutButton renders its own icon + label */}
+                <div className="yp-avatar-menu-item yp-avatar-menu-item--logout">
+                  <LogoutButton
+                    redirectTo="/login"
+                    onLoggedOut={() => setMenuOpen(false)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
