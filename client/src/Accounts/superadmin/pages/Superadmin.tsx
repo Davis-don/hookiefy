@@ -9,6 +9,7 @@ import SuperadminServices from '../components/SuperadminServices'
 import SuperadminMessages from '../components/SuperadminMessages'
 import SuperadminSettings from './SuperadminSettings'
 import SuperadminProfile from '../components/SuperadminProfile'
+import SuperadminPlans from '../components/SuperadminPlans'
 
 const Superadmin = () => {
   const [activeTab, setActiveTab] = useState('analytics')
@@ -46,6 +47,12 @@ const Superadmin = () => {
       label: 'Services',
       icon: '🛠️',
       component: SuperadminServices,
+    },
+    {
+      id: 'plans',
+      label: 'Plans',
+      icon: '💎',
+      component: SuperadminPlans,
     },
     {
       id: 'finances',
@@ -96,10 +103,11 @@ const Superadmin = () => {
     setSidebarOpen(!sidebarOpen)
   }
 
-  /* ── Mobile bottom nav: only 3 icons ─────────────── */
+  /* ── Mobile bottom nav: 4 icons ──────────────────── */
   const mobileNavItems = [
     { id: 'analytics', label: 'Analytics', icon: '📊' },
     { id: 'users', label: 'Users', icon: '👥' },
+    { id: 'plans', label: 'Plans', icon: '💎' },
     { id: 'messages', label: 'Messages', icon: '💬' },
   ]
 
@@ -204,7 +212,7 @@ const Superadmin = () => {
         </div>
       </main>
 
-      {/* ── Mobile bottom nav — 3 icons only ──────────────── */}
+      {/* ── Mobile bottom nav ─────────────────────────────── */}
       {isMobile && (
         <nav className="sa-dash-bottom-nav">
           {mobileNavItems.map((item) => (

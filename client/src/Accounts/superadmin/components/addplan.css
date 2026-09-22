@@ -1,0 +1,317 @@
+/* ============================================================
+   addplan.css — scoped to AddPlan only
+   Black accents, light surface, responsive
+   ============================================================ */
+
+.ap-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #0f1118;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.ap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 4px 0 16px;
+}
+
+/* ── Sections ───────────────────────────────────────── */
+.ap-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: #f7f7f9;
+  border: 1px solid rgba(15, 17, 28, 0.06);
+}
+
+.ap-section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #0f1118;
+}
+
+.ap-section-sub {
+  margin: -6px 0 4px;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+/* ── Grid ───────────────────────────────────────────── */
+.ap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.ap-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ap-group-full {
+  grid-column: 1 / -1;
+}
+
+/* ── Labels ─────────────────────────────────────────── */
+.ap-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f1118;
+}
+
+.ap-required {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* ── Inputs ─────────────────────────────────────────── */
+.ap-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  color: #0f1118;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.ap-input::placeholder {
+  color: #9aa0b4;
+  font-weight: 400;
+}
+.ap-input:hover:not(:disabled) {
+  border-color: #bfbfbf;
+}
+.ap-input:focus:not(:disabled) {
+  border-color: #0f1118;
+  box-shadow: 0 0 0 3px rgba(15, 17, 28, 0.08);
+}
+.ap-input:disabled {
+  background: #f1f2f6;
+  color: #666;
+  cursor: not-allowed;
+}
+.ap-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.55;
+}
+
+/* select arrow */
+select.ap-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f1118' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 34px;
+}
+
+.ap-input-error {
+  border-color: #ef4444 !important;
+  background: #fff7f7;
+}
+.ap-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.ap-field-error {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.ap-hint {
+  font-size: 11.5px;
+  color: #8a90a4;
+}
+
+/* ── Toggles (custom checkbox) ──────────────────────── */
+.ap-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ap-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13.5px;
+  color: #0f1118;
+}
+
+.ap-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ap-toggle-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 13px;
+  flex: 0 0 auto;
+  transition: all 0.15s ease;
+}
+
+.ap-toggle:hover .ap-toggle-box {
+  border-color: #0f1118;
+}
+
+.ap-toggle input:checked + .ap-toggle-box {
+  background: #0f1118;
+  border-color: #0f1118;
+  color: #ffffff;
+}
+
+.ap-toggle input:focus-visible + .ap-toggle-box {
+  box-shadow: 0 0 0 3px rgba(15, 17, 28, 0.15);
+}
+
+.ap-toggle input:disabled + .ap-toggle-box {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ap-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+.ap-toggle-icon {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ── Actions ────────────────────────────────────────── */
+.ap-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(15, 17, 28, 0.06);
+  margin-top: 4px;
+}
+
+.ap-save-btn,
+.ap-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 20px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease, opacity 0.15s ease;
+}
+
+.ap-save-btn {
+  background: #0f1118;
+  color: #ffffff;
+}
+.ap-save-btn:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+.ap-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ap-cancel-btn {
+  background: transparent;
+  color: #0f1118;
+  border-color: rgba(15, 17, 28, 0.18);
+}
+.ap-cancel-btn:hover:not(:disabled) {
+  background: rgba(15, 17, 28, 0.04);
+}
+.ap-cancel-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ap-btn-icon {
+  font-size: 14px;
+}
+
+/* ── Spinner ────────────────────────────────────────── */
+.ap-spinner-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: ap-spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes ap-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ap-section {
+    padding: 16px 16px;
+    border-radius: 12px;
+  }
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+  .ap-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .ap-save-btn,
+  .ap-cancel-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-save-btn:hover:not(:disabled) {
+    transform: none;
+  }
+  .ap-spinner-small {
+    animation: none;
+  }
+}

@@ -1,0 +1,585 @@
+/* ============================================================
+   allplans.css — scoped to AllPlans only
+   Black accents, light surface, responsive
+   ============================================================ */
+
+.alp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── KPI strip ──────────────────────────────────────── */
+.alp-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alp-kpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px;
+  border-radius: 14px;
+  background: #f7f7f9;
+  border: 1px solid rgba(15, 17, 28, 0.06);
+}
+
+.alp-kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #ffffff;
+  flex: 0 0 auto;
+}
+.alp-kpi-icon-purple  { background: #6c5ce7; }
+.alp-kpi-icon-emerald { background: #10b981; }
+.alp-kpi-icon-blue    { background: #3b82f6; }
+.alp-kpi-icon-amber   { background: #f59e0b; }
+
+.alp-kpi-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.01em;
+}
+.alp-kpi-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* ── Toolbar ────────────────────────────────────────── */
+.alp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.alp-toolbar-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f1118;
+}
+
+.alp-toolbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alp-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid rgba(15, 17, 28, 0.1);
+  background: #ffffff;
+  color: #0f1118;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.alp-icon-btn:hover:not(:disabled) {
+  background: #f7f7f9;
+  border-color: rgba(15, 17, 28, 0.2);
+}
+.alp-icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.alp-icon-spinning { animation: alp-spin 0.8s linear infinite; }
+
+@keyframes alp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Add button (empty state) ───────────────────────── */
+.alp-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #0f1118;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.alp-add-btn:hover { background: #000000; transform: translateY(-1px); }
+
+/* ── Empty state ────────────────────────────────────── */
+.alp-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 20px;
+  text-align: center;
+  background: #f7f7f9;
+  border: 1px dashed rgba(15, 17, 28, 0.14);
+  border-radius: 16px;
+}
+.alp-state-icon { font-size: 40px; color: #9aa0b4; }
+.alp-state-title { margin: 4px 0 0; font-size: 17px; font-weight: 800; color: #0f1118; }
+.alp-state-text { margin: 0; font-size: 13.5px; color: #6b7280; max-width: 360px; line-height: 1.5; }
+
+/* ── Grid ───────────────────────────────────────────── */
+.alp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1100px) {
+  .alp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .alp-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Card ───────────────────────────────────────────── */
+.alp-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 17, 28, 0.08);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.alp-card:hover {
+  border-color: rgba(15, 17, 28, 0.16);
+  box-shadow: 0 8px 24px -14px rgba(15, 17, 28, 0.18);
+}
+.alp-card-inactive {
+  opacity: 0.72;
+  background: #fafafb;
+}
+.alp-card-editing {
+  border-color: #0f1118;
+  box-shadow: 0 12px 30px -14px rgba(15, 17, 28, 0.25);
+}
+
+/* corner icon actions */
+.alp-card-icons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  gap: 4px;
+  z-index: 2;
+}
+
+.alp-card-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 17, 28, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f1118;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.alp-card-icon-btn:hover:not(:disabled) {
+  background: #0f1118;
+  border-color: #0f1118;
+  color: #ffffff;
+}
+.alp-card-icon-btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+.alp-card-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* card head */
+.alp-card-head {
+  padding-right: 72px; /* leave space for corner icons */
+}
+.alp-card-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f1118;
+}
+.alp-card-desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+/* price */
+.alp-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.alp-card-price-amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.02em;
+}
+.alp-card-price-unit {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* features */
+.alp-card-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alp-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.alp-feature strong {
+  color: #0f1118;
+  font-weight: 700;
+}
+.alp-feature-check {
+  color: #10b981;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+/* flags */
+.alp-card-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.alp-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.alp-flag svg { font-size: 11px; }
+.alp-flag-featured {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+.alp-flag-verified {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+.alp-flag-priority {
+  background: rgba(108, 92, 231, 0.12);
+  color: #4a3ec9;
+}
+
+/* foot */
+.alp-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 17, 28, 0.06);
+}
+.alp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.alp-status-icon { font-size: 12px; }
+.alp-status-active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+}
+.alp-status-inactive {
+  background: rgba(148, 163, 184, 0.15);
+  color: #475569;
+}
+
+/* ══════════════════════════════════════════════════════
+   EDIT MODE
+   ══════════════════════════════════════════════════════ */
+.alp-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.alp-edit-section-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.alp-edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 520px) {
+  .alp-edit-row { grid-template-columns: 1fr; }
+}
+
+.alp-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.alp-edit-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f1118;
+}
+
+.alp-edit-input {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  color: #0f1118;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.alp-edit-input:focus {
+  border-color: #0f1118;
+  box-shadow: 0 0 0 3px rgba(15, 17, 28, 0.08);
+}
+.alp-edit-input:disabled {
+  background: #f1f2f6;
+  color: #666;
+  cursor: not-allowed;
+}
+.alp-edit-textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+/* feature flags */
+.alp-edit-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alp-flag-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: #0f1118;
+}
+.alp-flag-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.alp-flag-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 12px;
+  flex: 0 0 auto;
+  transition: all 0.15s ease;
+}
+.alp-flag-toggle input:checked + .alp-flag-box {
+  background: #0f1118;
+  border-color: #0f1118;
+  color: #ffffff;
+}
+
+/* status toggle */
+.alp-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: #0f1118;
+}
+.alp-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.alp-toggle-box {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  position: relative;
+  transition: background 0.2s ease;
+  flex: 0 0 auto;
+}
+.alp-toggle-box::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.alp-toggle input:checked + .alp-toggle-box {
+  background: #0f1118;
+}
+.alp-toggle input:checked + .alp-toggle-box::after {
+  transform: translateX(14px);
+}
+.alp-toggle-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* edit actions */
+.alp-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(15, 17, 28, 0.06);
+}
+.alp-edit-save,
+.alp-edit-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease, opacity 0.15s ease;
+}
+.alp-edit-save {
+  background: #0f1118;
+  color: #ffffff;
+}
+.alp-edit-save:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+.alp-edit-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.alp-edit-cancel {
+  background: transparent;
+  color: #0f1118;
+  border-color: rgba(15, 17, 28, 0.18);
+}
+.alp-edit-cancel:hover:not(:disabled) {
+  background: rgba(15, 17, 28, 0.04);
+}
+.alp-edit-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.alp-edit-icon { font-size: 13px; }
+
+/* spinner */
+.alp-spinner-small {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: alp-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ── Loader screen ──────────────────────────────────── */
+.alp-loader-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ── Responsive KPI strip ───────────────────────────── */
+@media (max-width: 900px) {
+  .alp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .alp-kpis { grid-template-columns: 1fr; }
+  .alp-card { padding: 16px 16px; }
+  .alp-edit-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .alp-edit-save,
+  .alp-edit-cancel { width: 100%; justify-content: center; }
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .alp-edit-save:hover:not(:disabled),
+  .alp-add-btn:hover { transform: none; }
+  .alp-spinner-small,
+  .alp-icon-spinning { animation: none; }
+}
