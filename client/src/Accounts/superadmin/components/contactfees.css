@@ -1,0 +1,276 @@
+/* ============================================================
+   contactfees.css — scoped to ContactFees only
+   Black accents, light surface, responsive
+   ============================================================ */
+
+.cf-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Card ───────────────────────────────────────────── */
+.cf-card {
+  padding: 22px 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 17, 28, 0.08);
+  box-shadow: 0 8px 24px -18px rgba(15, 17, 28, 0.16);
+}
+
+.cf-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cf-card-icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #0f1118;
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.cf-card-head-text { flex: 1; min-width: 0; }
+
+.cf-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.01em;
+}
+
+.cf-card-sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.cf-icon-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid rgba(15, 17, 28, 0.1);
+  background: #ffffff;
+  color: #0f1118;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.cf-icon-btn:hover:not(:disabled) { background: #f7f7f9; }
+.cf-icon-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.cf-icon-spin { animation: cf-spin 0.8s linear infinite; }
+@keyframes cf-spin { to { transform: rotate(360deg); } }
+
+/* ── Input ──────────────────────────────────────────── */
+.cf-input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid #d9d9d9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cf-input-wrap:focus-within {
+  border-color: #0f1118;
+  box-shadow: 0 0 0 3px rgba(15, 17, 28, 0.08);
+}
+
+.cf-input-prefix,
+.cf-input-suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  background: #f7f7f9;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.cf-input-prefix { border-right: 1.5px solid #e5e5e5; }
+.cf-input-suffix { border-left: 1.5px solid #e5e5e5; font-weight: 600; }
+
+.cf-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 14px;
+  border: none;
+  outline: none;
+  background: #ffffff;
+  color: #0f1118;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.cf-input::placeholder { color: #9aa0b4; font-weight: 500; }
+.cf-input:disabled { background: #f7f7f9; color: #666; cursor: not-allowed; }
+
+.cf-input::-webkit-outer-spin-button,
+.cf-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.cf-input[type='number'] { -moz-appearance: textfield; }
+
+/* ── Preview line ───────────────────────────────────── */
+.cf-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(15, 17, 28, 0.04);
+  border: 1px solid rgba(15, 17, 28, 0.08);
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+}
+.cf-preview-icon { flex: 0 0 auto; font-size: 15px; color: #6b7280; }
+.cf-preview strong {
+  color: #0f1118;
+  font-weight: 800;
+}
+
+/* ── Actions ────────────────────────────────────────── */
+.cf-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 17, 28, 0.06);
+}
+
+.cf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease,
+    opacity 0.15s ease;
+}
+
+.cf-btn-primary {
+  background: #0f1118;
+  color: #ffffff;
+}
+.cf-btn-primary:hover:not(:disabled) {
+  background: #000000;
+  transform: translateY(-1px);
+}
+.cf-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cf-btn-secondary {
+  background: transparent;
+  color: #0f1118;
+  border-color: rgba(15, 17, 28, 0.18);
+}
+.cf-btn-secondary:hover:not(:disabled) {
+  background: rgba(15, 17, 28, 0.04);
+}
+
+.cf-btn-icon { font-size: 15px; }
+
+/* ── Spinner ────────────────────────────────────────── */
+.cf-spinner-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: cf-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ── Loader screen ──────────────────────────────────── */
+.cf-loader-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ── Error state ────────────────────────────────────── */
+.cf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+  background: #f7f7f9;
+  border: 1px dashed rgba(15, 17, 28, 0.14);
+  border-radius: 16px;
+}
+.cf-error-icon { font-size: 40px; }
+.cf-error-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f1118;
+}
+.cf-error-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #6b7280;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 560px) {
+  .cf-card { padding: 18px 16px; border-radius: 14px; }
+
+  .cf-input-wrap { flex-wrap: wrap; }
+  .cf-input-prefix {
+    border-right: none;
+    border-bottom: 1.5px solid #e5e5e5;
+    width: 100%;
+    justify-content: center;
+    padding: 8px 14px;
+  }
+  .cf-input-suffix {
+    border-left: none;
+    border-top: 1.5px solid #e5e5e5;
+    width: 100%;
+    justify-content: center;
+    padding: 8px 14px;
+  }
+  .cf-input { text-align: center; font-size: 20px; }
+
+  .cf-actions { justify-content: stretch; }
+  .cf-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-btn-primary:hover:not(:disabled) { transform: none; }
+  .cf-spinner-small,
+  .cf-icon-spin { animation: none; }
+}

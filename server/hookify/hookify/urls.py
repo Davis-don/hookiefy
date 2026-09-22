@@ -118,7 +118,7 @@ urlpatterns = [
     # ============================================================
 
     path(
-        "administration/",
+        "connection_fee/",
         include("administration.urls"),
     ),
 
