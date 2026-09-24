@@ -6,11 +6,18 @@ from connections.models import Connection
 
 class Payment(models.Model):
 
-    # Gateway choices
+    # ========================================================
+    # GATEWAY
+    # ========================================================
+
     GATEWAY_CHOICES = (
         ('pesapal', 'PesaPal'),
         ('paystack', 'Paystack'),
     )
+
+    # ========================================================
+    # STATUS
+    # ========================================================
 
     STATUS_CHOICES = (
         ("pending", "Pending"),
@@ -19,19 +26,60 @@ class Payment(models.Model):
         ("cancelled", "Cancelled"),
     )
 
-    # User who initiated the payment
+    # ========================================================
+    # PAYMENT TYPE
+    # ========================================================
+
+    PAYMENT_TYPE_CONNECTION = "connection"
+    PAYMENT_TYPE_SERVICE = "service"
+
+    PAYMENT_TYPE_CHOICES = (
+        (PAYMENT_TYPE_CONNECTION, "Connection"),
+        (PAYMENT_TYPE_SERVICE, "Service"),
+    )
+
+    payment_type = models.CharField(
+        max_length=20,
+        choices=PAYMENT_TYPE_CHOICES,
+        default=PAYMENT_TYPE_CONNECTION,
+        help_text="What this payment is for.",
+    )
+
+    # ========================================================
+    # PAYER
+    # ========================================================
+
     user = models.ForeignKey(
         Accounts,
         on_delete=models.CASCADE,
         related_name="payments"
     )
 
-    # Hookup/connection being paid for
+    # ========================================================
+    # TARGETS — ONE OF THESE WILL BE SET
+    # ========================================================
+
     connection = models.ForeignKey(
         Connection,
         on_delete=models.CASCADE,
-        related_name="payments"
+        related_name="payments",
+        blank=True,
+        null=True,
+        help_text="Set for hookup/connection payments.",
     )
+
+    service = models.ForeignKey(
+        "services.ClientService",
+        on_delete=models.SET_NULL,
+        related_name="payments",
+        blank=True,
+        null=True,
+        help_text="Set for service-listing contact-reveal payments.",
+    )
+
+    # ========================================================
+    # PAYMENT DETAILS
+    # ========================================================
 
     merchant_reference = models.CharField(
         max_length=100,
@@ -53,7 +101,6 @@ class Payment(models.Model):
         max_length=20
     )
 
-    # ✅ ADD THIS FIELD
     gateway = models.CharField(
         max_length=20,
         choices=GATEWAY_CHOICES,
@@ -85,4 +132,7 @@ class Payment(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.merchant_reference} - {self.status} ({self.get_gateway_display()})"
+        return (
+            f"{self.merchant_reference} - {self.status} "
+            f"({self.get_gateway_display()})"
+        )

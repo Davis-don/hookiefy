@@ -21,7 +21,6 @@ class PlanReadSerializer(serializers.ModelSerializer):
             # usage limits
             "services_limit",
             "images_per_service",
-            "posts_limit",
             "stories_per_month",
 
             # profile / visibility
@@ -60,7 +59,6 @@ class PlanCreateSerializer(serializers.ModelSerializer):
 
             "services_limit",
             "images_per_service",
-            "posts_limit",
             "stories_per_month",
 
             "profile_images_limit",
@@ -160,7 +158,6 @@ class PlanUpdateSerializer(serializers.ModelSerializer):
 
             "services_limit",
             "images_per_service",
-            "posts_limit",
             "stories_per_month",
 
             "profile_images_limit",

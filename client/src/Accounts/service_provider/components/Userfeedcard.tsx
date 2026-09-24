@@ -21,10 +21,12 @@ import type {
   FeedService,
   FeedAdvert,
 } from './Userservicesesfeed'
-import { usePostActionStore } from '../../common/store/usepaymentstore'
 import { useAuthStore } from '../../../store/authtokenstore'
 import Like from './stories/Like'
 import Share from './stories/Share'
+import GetContactSheet, {
+  type GetContactSheetService,
+} from '../../service_provider/components/GetContactSheet'
 
 /* ────────────────────────────────────────────────────────
    Helpers
@@ -307,20 +309,28 @@ function Carousel({ images, alt }: CarouselProps) {
 
 /* ────────────────────────────────────────────────────────
    SERVICE POST
-   Order: header → media → action bar → body → footer
    ──────────────────────────────────────────────────────── */
 
 function ServicePost({ service }: { service: FeedService }) {
   const isHookup = service.listing_type === 'hookup'
-  const open = usePostActionStore((s) => s.open)
   const { access } = useAuthStore()
+
+  /* Bottom sheet state */
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const userId: number =
     (access as unknown as { id?: number })?.id ??
     Number(localStorage.getItem('user_id') ?? 0)
 
   const handleGetContact = () => {
-    open(service.id)
+    setSheetOpen(true)
+  }
+
+  /* Sheet passes back its own type — we just need the id */
+  const handleConfirmReveal = (svc: GetContactSheetService) => {
+    /* TODO: wire this to the payment/reveal endpoint */
+    console.log('Reveal contact →', svc.id)
+    setSheetOpen(false)
   }
 
   const feedImages: CarouselImage[] =
@@ -337,149 +347,159 @@ function ServicePost({ service }: { service: FeedService }) {
       : []
 
   return (
-    <article
-      className={`ufc-post ufc-post-service ${
-        isHookup ? 'ufc-post-hookup' : ''
-      }`}
-    >
-      {/* Header */}
-      <header className="ufc-header">
-        {service.provider ? (
-          <>
-            {service.provider.profile_image_url ? (
-              <img
-                src={service.provider.profile_image_url}
-                alt={service.provider.full_name}
-                className="ufc-header-avatar"
-                loading="lazy"
-              />
-            ) : (
-              <div className="ufc-header-avatar ufc-header-avatar-fallback">
-                {initials(
-                  service.provider.first_name,
-                  service.provider.last_name
-                )}
-              </div>
-            )}
+    <>
+      <article
+        className={`ufc-post ufc-post-service ${
+          isHookup ? 'ufc-post-hookup' : ''
+        }`}
+      >
+        {/* Header */}
+        <header className="ufc-header">
+          {service.provider ? (
+            <>
+              {service.provider.profile_image_url ? (
+                <img
+                  src={service.provider.profile_image_url}
+                  alt={service.provider.full_name}
+                  className="ufc-header-avatar"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="ufc-header-avatar ufc-header-avatar-fallback">
+                  {initials(
+                    service.provider.first_name,
+                    service.provider.last_name
+                  )}
+                </div>
+              )}
 
+              <div className="ufc-header-meta">
+                <span className="ufc-header-name">
+                  {service.provider.full_name || 'Provider'}
+                </span>
+                <span className="ufc-header-sub">
+                  {service.provider.role === 'serviceprovider'
+                    ? 'Service Provider'
+                    : service.provider.role}
+                  {service.category?.name
+                    ? ` · ${service.category.name}`
+                    : ''}
+                </span>
+              </div>
+            </>
+          ) : (
             <div className="ufc-header-meta">
               <span className="ufc-header-name">
-                {service.provider.full_name || 'Provider'}
-              </span>
-              <span className="ufc-header-sub">
-                {service.provider.role === 'serviceprovider'
-                  ? 'Service Provider'
-                  : service.provider.role}
-                {service.category?.name
-                  ? ` · ${service.category.name}`
-                  : ''}
+                {service.category?.name || 'Listing'}
               </span>
             </div>
-          </>
-        ) : (
-          <div className="ufc-header-meta">
-            <span className="ufc-header-name">
-              {service.category?.name || 'Listing'}
-            </span>
+          )}
+        </header>
+
+        {/* Media */}
+        {feedImages.length > 1 ? (
+          <Carousel images={feedImages} alt={service.title} />
+        ) : feedImages.length === 1 ? (
+          <SingleImage
+            src={feedImages[0].image_url}
+            alt={service.title}
+            count={service.image_count}
+          />
+        ) : null}
+
+        {/* ACTION BAR — Like + Share */}
+        <div className="ufc-action-bar">
+          <div className="ufc-actions">
+            <Like
+              postId={service.id}
+              userId={userId}
+              contentType="clientservice"
+              size="md"
+            />
+
+            <Share
+              postId={service.id}
+              userId={userId}
+              postTitle={service.title}
+              contentType="clientservice"
+              size="md"
+            />
           </div>
-        )}
-      </header>
-
-      {/* Media */}
-      {feedImages.length > 1 ? (
-        <Carousel images={feedImages} alt={service.title} />
-      ) : feedImages.length === 1 ? (
-        <SingleImage
-          src={feedImages[0].image_url}
-          alt={service.title}
-          count={service.image_count}
-        />
-      ) : null}
-
-      {/* ACTION BAR — Like + Share, immediately below the image */}
-      <div className="ufc-action-bar">
-        <div className="ufc-actions">
-          <Like
-            postId={service.id}
-            userId={userId}
-            contentType="clientservice"
-            size="md"
-          />
-
-          <Share
-            postId={service.id}
-            userId={userId}
-            postTitle={service.title}
-            contentType="clientservice"
-            size="md"
-          />
         </div>
-      </div>
 
-      {/* Body */}
-      <div className="ufc-post-body">
-        <div className="ufc-post-tags">
-          <span
-            className={`ufc-type ufc-type-${service.listing_type}`}
-          >
-            {service.listing_type === 'service' && (
-              <>
-                <FiTool /> Service
-              </>
-            )}
-            {service.listing_type === 'product' && (
-              <>
-                <FiPackage /> Product
-              </>
-            )}
-            {service.listing_type === 'hookup' && (
-              <>
-                <FiHeart /> Hookup
-              </>
-            )}
-          </span>
-
-          {service.is_featured && (
-            <span className="ufc-featured">
-              <FiStar /> Featured
+        {/* Body */}
+        <div className="ufc-post-body">
+          <div className="ufc-post-tags">
+            <span
+              className={`ufc-type ufc-type-${service.listing_type}`}
+            >
+              {service.listing_type === 'service' && (
+                <>
+                  <FiTool /> Service
+                </>
+              )}
+              {service.listing_type === 'product' && (
+                <>
+                  <FiPackage /> Product
+                </>
+              )}
+              {service.listing_type === 'hookup' && (
+                <>
+                  <FiHeart /> Hookup
+                </>
+              )}
             </span>
+
+            {service.is_featured && (
+              <span className="ufc-featured">
+                <FiStar /> Featured
+              </span>
+            )}
+          </div>
+
+          <h2 className="ufc-post-title">
+            {service.title || 'Untitled listing'}
+          </h2>
+
+          <Description text={service.description || ''} />
+
+          {!isHookup ? (
+            <div className="ufc-price-row">
+              <span className="ufc-price-label">Price</span>
+              <span className="ufc-price-value">
+                {formatPrice(service.price, service.pricing_unit)}
+              </span>
+            </div>
+          ) : (
+            <div className="ufc-price-row ufc-price-row-hookup">
+              <span className="ufc-hookup-note">
+                Looking for company
+              </span>
+            </div>
           )}
         </div>
 
-        <h2 className="ufc-post-title">
-          {service.title || 'Untitled listing'}
-        </h2>
+        {/* Footer */}
+        <footer className="ufc-footer">
+          <button
+            type="button"
+            className="ufc-cta ufc-cta-primary"
+            onClick={handleGetContact}
+          >
+            <FiPhone />
+            <span>Get Contact</span>
+          </button>
+        </footer>
+      </article>
 
-        <Description text={service.description || ''} />
-
-        {!isHookup ? (
-          <div className="ufc-price-row">
-            <span className="ufc-price-label">Price</span>
-            <span className="ufc-price-value">
-              {formatPrice(service.price, service.pricing_unit)}
-            </span>
-          </div>
-        ) : (
-          <div className="ufc-price-row ufc-price-row-hookup">
-            <span className="ufc-hookup-note">
-              Looking for company
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Footer — Get Contact stays at the bottom */}
-      <footer className="ufc-footer">
-        <button
-          type="button"
-          className="ufc-cta ufc-cta-primary"
-          onClick={handleGetContact}
-        >
-          <FiPhone />
-          <span>Get Contact</span>
-        </button>
-      </footer>
-    </article>
+      {/* Bottom sheet — fetches the fee on its own */}
+      <GetContactSheet
+        open={sheetOpen}
+        service={service}
+        onClose={() => setSheetOpen(false)}
+        onConfirm={handleConfirmReveal}
+      />
+    </>
   )
 }
 

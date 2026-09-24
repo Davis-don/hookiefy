@@ -38,7 +38,6 @@ interface Plan {
 
   services_limit: number | null
   images_per_service: number | null
-  posts_limit: number | null
   stories_per_month: number | null
 
   profile_images_limit: number
@@ -63,7 +62,6 @@ interface EditFormState {
   price: string
   services_limit: string
   images_per_service: string
-  posts_limit: string
   stories_per_month: string
   profile_images_limit: string
   featured_listing: boolean
@@ -108,7 +106,6 @@ function planToForm(p: Plan): EditFormState {
     price: p.price,
     services_limit: limitToInput(p.services_limit),
     images_per_service: limitToInput(p.images_per_service),
-    posts_limit: limitToInput(p.posts_limit),
     stories_per_month: limitToInput(p.stories_per_month),
     profile_images_limit: String(p.profile_images_limit ?? 1),
     featured_listing: p.featured_listing,
@@ -347,7 +344,6 @@ const AllPlans = ({ onAddClick }: AllPlansProps) => {
       price: form.price || '0',
       services_limit: parseLimit(form.services_limit),
       images_per_service: parseLimit(form.images_per_service),
-      posts_limit: parseLimit(form.posts_limit),
       stories_per_month: parseLimit(form.stories_per_month),
       profile_images_limit:
         parseLimit(form.profile_images_limit) ?? 1,
@@ -507,15 +503,6 @@ const AllPlans = ({ onAddClick }: AllPlansProps) => {
                           Images per service:{' '}
                           <strong>
                             {formatLimit(p.images_per_service)}
-                          </strong>
-                        </span>
-                      </li>
-                      <li className="alp-feature">
-                        <FiCheck className="alp-feature-check" />
-                        <span>
-                          Posts:{' '}
-                          <strong>
-                            {formatLimit(p.posts_limit)}
                           </strong>
                         </span>
                       </li>
@@ -717,23 +704,6 @@ const AllPlans = ({ onAddClick }: AllPlansProps) => {
                     <div className="alp-edit-row">
                       <div className="alp-edit-field">
                         <label className="alp-edit-label">
-                          Posts
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          className="alp-edit-input"
-                          placeholder="Unlimited"
-                          value={form?.posts_limit || ''}
-                          onChange={(e) =>
-                            setField('posts_limit', e.target.value)
-                          }
-                          disabled={isSaving}
-                        />
-                      </div>
-
-                      <div className="alp-edit-field">
-                        <label className="alp-edit-label">
                           Stories / Month
                         </label>
                         <input
@@ -751,9 +721,7 @@ const AllPlans = ({ onAddClick }: AllPlansProps) => {
                           disabled={isSaving}
                         />
                       </div>
-                    </div>
 
-                    <div className="alp-edit-row">
                       <div className="alp-edit-field">
                         <label className="alp-edit-label">
                           Profile Images
@@ -772,7 +740,9 @@ const AllPlans = ({ onAddClick }: AllPlansProps) => {
                           disabled={isSaving}
                         />
                       </div>
+                    </div>
 
+                    <div className="alp-edit-row">
                       <div className="alp-edit-field">
                         <label className="alp-edit-label">
                           Analytics

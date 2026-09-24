@@ -46,13 +46,6 @@ class Plan(models.Model):
         help_text="Maximum images per service. Leave blank for unlimited."
     )
 
-    # Maximum number of normal posts
-    posts_limit = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="Maximum number of posts. Leave blank for unlimited."
-    )
-
     # Maximum stories allowed per month
     stories_per_month = models.PositiveIntegerField(
         null=True,

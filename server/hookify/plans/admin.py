@@ -12,7 +12,6 @@ class PlanAdmin(admin.ModelAdmin):
         "price",
         "services_limit",
         "images_per_service",
-        "posts_limit",
         "stories_per_month",
         "featured_listing",
         "verified_premium_badge",
@@ -71,7 +70,6 @@ class PlanAdmin(admin.ModelAdmin):
                 "fields": (
                     "services_limit",
                     "images_per_service",
-                    "posts_limit",
                     "stories_per_month",
                     "profile_images_limit",
                 ),

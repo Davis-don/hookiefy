@@ -1,0 +1,498 @@
+/* ============================================================
+   getcontactsheet.css — bottom sheet for revealing contacts
+   ============================================================ */
+
+/* ── Overlay ───────────────────────────────────────── */
+.gcs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  animation: gcs-fade-in 0.2s ease;
+}
+
+@keyframes gcs-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Sheet ─────────────────────────────────────────── */
+.gcs-sheet {
+  position: relative;
+
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 48px -12px rgba(0, 0, 0, 0.28);
+
+  padding: 10px 20px 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+
+  animation: gcs-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gcs-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (min-width: 641px) {
+  .gcs-overlay { align-items: center; padding: 24px; }
+
+  .gcs-sheet {
+    max-width: 460px;
+    border-radius: 20px;
+    padding: 12px 24px 24px;
+    animation: gcs-fade-scale 0.24s ease;
+  }
+
+  @keyframes gcs-fade-scale {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+}
+
+/* ── Handle ────────────────────────────────────────── */
+.gcs-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 17, 28, 0.18);
+  margin: 4px auto 12px;
+}
+
+@media (min-width: 641px) {
+  .gcs-handle { display: none; }
+}
+
+/* ── Close ─────────────────────────────────────────── */
+.gcs-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  border: none;
+  background: rgba(15, 17, 28, 0.05);
+  color: #0f1118;
+  font-size: 16px;
+
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.gcs-close:hover:not(:disabled) { background: rgba(15, 17, 28, 0.1); }
+.gcs-close:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Header ────────────────────────────────────────── */
+.gcs-header {
+  text-align: center;
+  padding: 6px 32px 20px;
+}
+
+.gcs-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.02em;
+}
+
+.gcs-subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ── Preview ───────────────────────────────────────── */
+.gcs-preview {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+
+  border-radius: 14px;
+  background: #f7f7f9;
+  border: 1px solid rgba(15, 17, 28, 0.06);
+
+  margin-bottom: 20px;
+}
+
+.gcs-preview-img {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.gcs-preview-img-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa0b4;
+  font-size: 26px;
+}
+
+.gcs-preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.gcs-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.gcs-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 9px;
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.gcs-type svg { width: 10px; height: 10px; }
+
+.gcs-type-service  { background: rgba(37, 99, 235, 0.09); color: #1d4ed8; }
+.gcs-type-product  { background: rgba(16, 185, 129, 0.11); color: #059669; }
+.gcs-type-hookup   { background: rgba(217, 83, 79, 0.12); color: #b03a35; }
+.gcs-type-featured { background: #111111; color: #ffffff; }
+
+.gcs-preview-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gcs-provider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.gcs-provider-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.gcs-provider-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #111 0%, #444 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.gcs-provider-name {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gcs-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f1118;
+  margin-top: 2px;
+}
+
+/* ── Benefits ──────────────────────────────────────── */
+.gcs-benefits {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gcs-benefit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gcs-benefit-icon {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(15, 17, 28, 0.06);
+  color: #0f1118;
+  font-size: 16px;
+}
+
+.gcs-benefit-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f1118;
+  line-height: 1.3;
+}
+
+.gcs-benefit-sub {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 1px;
+}
+
+/* ── Phone input ───────────────────────────────────── */
+.gcs-phone-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.gcs-phone-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #0f1118;
+}
+
+.gcs-phone-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+
+  border: 1.5px solid #d9d9d9;
+  background: #ffffff;
+  color: #0f1118;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  box-sizing: border-box;
+}
+
+.gcs-phone-input::placeholder { color: #9aa0b4; font-weight: 500; }
+
+.gcs-phone-input:focus {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(15, 17, 28, 0.08);
+}
+
+.gcs-phone-input:disabled {
+  background: #f7f7f9;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.gcs-phone-input-error {
+  border-color: #d9534f !important;
+  background: #fff7f7;
+}
+
+.gcs-phone-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.12);
+}
+
+.gcs-phone-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #d9534f;
+}
+
+.gcs-phone-hint {
+  font-size: 11.5px;
+  color: #8a90a4;
+  line-height: 1.5;
+}
+
+/* ── Footer ────────────────────────────────────────── */
+.gcs-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 17, 28, 0.06);
+}
+
+.gcs-fee-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.gcs-fee-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.gcs-fee-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f1118;
+  letter-spacing: -0.01em;
+}
+
+/* Fee states */
+.gcs-fee-value-error { font-size: 14px; font-weight: 700; color: #b03a35; }
+.gcs-fee-value-free  { color: #059669; }
+
+.gcs-fee-value-skeleton {
+  display: inline-flex;
+  align-items: center;
+}
+
+.gcs-skeleton {
+  display: inline-block;
+  width: 70px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #ececec 0%, #f5f5f5 40%, #ececec 80%);
+  background-size: 200% 100%;
+  animation: gcs-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes gcs-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── CTA ───────────────────────────────────────────── */
+.gcs-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 12px;
+  border: none;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.gcs-cta:hover:not(:disabled) { background: #000000; transform: translateY(-1px); }
+.gcs-cta:active:not(:disabled) { transform: translateY(0); }
+.gcs-cta:disabled { opacity: 0.6; cursor: not-allowed; }
+.gcs-cta svg { font-size: 16px; }
+
+.gcs-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: #8a90a4;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.gcs-note-link {
+  color: #0f1118;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Spinner ──────────────────────────────────────── */
+.gcs-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: gcs-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes gcs-spin { to { transform: rotate(360deg); } }
+
+/* ── Mobile sizing ─────────────────────────────────── */
+@media (max-width: 480px) {
+  .gcs-sheet {
+    padding: 8px 16px 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .gcs-header { padding: 4px 24px 16px; }
+
+  .gcs-title { font-size: 18px; }
+  .gcs-subtitle { font-size: 13px; }
+
+  .gcs-preview-img { flex: 0 0 68px; width: 68px; height: 68px; }
+
+  .gcs-benefit-icon {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .gcs-overlay,
+  .gcs-sheet { animation: none; }
+  .gcs-cta:hover:not(:disabled) { transform: none; }
+  .gcs-spinner { animation: none; }
+  .gcs-skeleton { animation: none; }
+}

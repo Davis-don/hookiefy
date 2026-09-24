@@ -30,7 +30,6 @@ interface FormState {
 
   services_limit: string
   images_per_service: string
-  posts_limit: string
   stories_per_month: string
 
   profile_images_limit: string
@@ -54,7 +53,6 @@ interface FieldErrors {
   price?: string
   services_limit?: string
   images_per_service?: string
-  posts_limit?: string
   stories_per_month?: string
   profile_images_limit?: string
   analytics_level?: string
@@ -74,7 +72,6 @@ const EMPTY_FORM: FormState = {
 
   services_limit: '',
   images_per_service: '',
-  posts_limit: '',
   stories_per_month: '',
 
   profile_images_limit: '1',
@@ -128,7 +125,6 @@ async function createPlan(
 
     services_limit: parseLimit(form.services_limit),
     images_per_service: parseLimit(form.images_per_service),
-    posts_limit: parseLimit(form.posts_limit),
     stories_per_month: parseLimit(form.stories_per_month),
 
     profile_images_limit:
@@ -479,23 +475,6 @@ const AddPlan = ({ onCreated, onCancel }: AddPlanProps) => {
                 className="ap-input"
                 placeholder="Unlimited"
                 value={form.images_per_service}
-                onChange={handleChange}
-                disabled={isWorking}
-              />
-            </div>
-
-            <div className="ap-group">
-              <label className="ap-label" htmlFor="posts_limit">
-                Posts Limit
-              </label>
-              <input
-                id="posts_limit"
-                name="posts_limit"
-                type="number"
-                min="0"
-                className="ap-input"
-                placeholder="Unlimited"
-                value={form.posts_limit}
                 onChange={handleChange}
                 disabled={isWorking}
               />
