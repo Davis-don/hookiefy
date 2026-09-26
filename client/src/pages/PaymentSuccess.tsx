@@ -21,14 +21,7 @@ const PaymentSuccess: React.FC = () => {
   }, [amount]);
 
   const handleBack = () => {
-    // Go back to whatever page they came from.
-    // Works for any role: service seeker, provider, admin, etc.
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      // Safe fallback — the app's root handles auth-based redirects.
-      navigate('/');
-    }
+    navigate('/login');
   };
 
   return (
@@ -74,7 +67,7 @@ const PaymentSuccess: React.FC = () => {
             onClick={handleBack}
           >
             <ArrowLeft size={20} />
-            <span>Go Back</span>
+            <span>Back</span>
           </button>
         </div>
 
