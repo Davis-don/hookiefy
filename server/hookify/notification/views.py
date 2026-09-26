@@ -150,7 +150,6 @@ def get_connection_requests_all(request):
     total_count = notifications.count()
     unread_count = notifications.filter(is_read=False).count()
 
-    # Status breakdown — derived from payment statuses
     status_counts = {}
     for key in ("completed", "failed", "cancelled"):
         count = notifications.filter(
@@ -276,6 +275,76 @@ def mark_notification_read(request, notification_id):
             "notification_id": str(notification.notification_id),
             "is_read": notification.is_read,
             "read_at": notification.read_at,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================
+# MARK A NOTIFICATION AS READ BY CONNECTION
+# ============================================
+#
+# Used by the frontend: when the user actually opens (reveals) the
+# contact for a paid connection, we mark the corresponding
+# notification(s) as read.
+#
+# This is the endpoint the "Reveal contact" flow calls.
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def mark_connection_notifications_read(request, connection_id):
+    """
+    Mark every unread notification for the current user that is
+    linked to the given connection as read.
+
+    Called by the frontend when the user reveals the contact of a
+    paid connection.
+    """
+
+    user = request.user
+
+    # ---------- Make sure the connection exists ----------
+    try:
+        connection = Connection.objects.get(
+            connection_id=connection_id
+        )
+    except Connection.DoesNotExist:
+        return Response(
+            {
+                "success": False,
+                "message": "Connection not found",
+                "error": "Invalid connection ID",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # ---------- The caller must be part of the connection ----------
+    if (
+        connection.sender_id != user.id
+        and connection.receiver_id != user.id
+    ):
+        return Response(
+            {
+                "success": False,
+                "message": "Permission denied",
+                "error": "You are not part of this connection",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ---------- Mark all unread notifications for this connection ----------
+    updated_count = Notification.objects.filter(
+        receiver=user,
+        connection=connection,
+        is_read=False,
+    ).update(is_read=True, read_at=timezone.now())
+
+    return Response(
+        {
+            "success": True,
+            "message": f"{updated_count} notification(s) marked as read",
+            "updated_count": updated_count,
+            "connection_id": str(connection.connection_id),
         },
         status=status.HTTP_200_OK,
     )
@@ -450,6 +519,53 @@ def has_unread_connection_requests(request):
         {
             "has_unread_connection_requests": has_unread,
             "unread_count": unread_count,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================
+# HAS UNREAD PAID-CONNECTION NOTIFICATIONS  ← NEW
+# ============================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def has_unread_paid_connections(request):
+    """
+    Returns True when the current user has at least one unread
+    notification whose linked connection's payment is COMPLETED.
+
+    This is what the frontend uses to show a red dot on the
+    "Connections" nav item — telling the user there is a paid
+    contact they haven't opened yet.
+
+    Also returns the list of connection ids so the UI can
+    optionally deep-link.
+    """
+
+    user = request.user
+
+    qs = Notification.objects.filter(
+        receiver=user,
+        is_read=False,
+        connection__isnull=False,
+        connection__payment__status="completed",
+    )
+
+    unread_count = qs.count()
+
+    # Distinct connection ids for the unread paid notifications
+    connection_ids = list(
+        qs.values_list(
+            "connection__connection_id", flat=True
+        ).distinct()
+    )
+
+    return Response(
+        {
+            "has_unread": unread_count > 0,
+            "unread_count": unread_count,
+            "connection_ids": [str(cid) for cid in connection_ids],
         },
         status=status.HTTP_200_OK,
     )

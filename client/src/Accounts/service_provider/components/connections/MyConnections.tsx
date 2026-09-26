@@ -1,5 +1,5 @@
 // components/connections/MyConnections.tsx
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   FiLink,
@@ -34,8 +34,10 @@ interface ConnectedUser {
 
 interface PaidConnection {
   connection_id: string;
+  source?: string;
   status: string;
   status_display: string;
+  is_paid?: boolean;
   created_at: string;
   updated_at: string;
   user_role: 'sender' | 'receiver';
@@ -60,12 +62,13 @@ interface ContactResponse {
   message: string;
   data: {
     connection_id: string;
+    source: string;
     status: string;
     status_display: string;
+    is_paid: boolean;
     created_at: string;
     updated_at: string;
     user_role: 'sender' | 'receiver';
-    is_paid: boolean;
     connected_user: ConnectedUser;
     contact_details: {
       phone_number: string;
@@ -81,9 +84,7 @@ function resolveApiBase(): string {
   // @ts-ignore — Vite injects this
   const envUrl: string | undefined = import.meta.env?.VITE_API_URL;
   const NOTIF_PREFIX = '/notifications';
-
   if (!envUrl || !envUrl.trim()) return NOTIF_PREFIX;
-
   const trimmed = envUrl.replace(/\/+$/, '');
   if (trimmed.endsWith(NOTIF_PREFIX)) return trimmed;
   return `${trimmed}${NOTIF_PREFIX}`;
@@ -114,7 +115,6 @@ function readStoredToken(): string | null {
     const v = localStorage.getItem(k) || sessionStorage.getItem(k);
     if (v && v.trim() && !v.startsWith('{')) return v;
   }
-
   const jsonKeys = ['user', 'auth', 'session', 'currentUser'];
   for (const k of jsonKeys) {
     const raw = localStorage.getItem(k) || sessionStorage.getItem(k);
@@ -137,7 +137,6 @@ function readStoredToken(): string | null {
 
 function useAccessToken(): string | null {
   const store = useAuthStore() as unknown;
-
   return useMemo(() => {
     if (store && typeof store === 'object') {
       const s = store as Record<string, unknown>;
@@ -194,9 +193,7 @@ async function fetchPaidConnections(
         /* fall through */
       }
     }
-    if (res.status === 401) {
-      throw new Error('Please log in again.');
-    }
+    if (res.status === 401) throw new Error('Please log in again.');
     throw new Error(
       `Failed to load connections (${res.status}). ${raw.slice(0, 120)}`
     );
@@ -232,7 +229,6 @@ async function fetchConnectionContact(
   const raw = await res.text().catch(() => '');
 
   if (res.status === 402) {
-    // Not paid yet — expected, surface the status
     let parsed: any = null;
     try {
       parsed = raw ? JSON.parse(raw) : null;
@@ -273,6 +269,28 @@ async function fetchConnectionContact(
   return data.data;
 }
 
+async function markConnectionRead(
+  connectionId: string,
+  access: string | null
+): Promise<void> {
+  if (!access) return;
+  try {
+    await fetch(
+      `${API_BASE}/mark-connection-read/${connectionId}/`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${access}`,
+        },
+      }
+    );
+  } catch {
+    /* non-fatal — dot clears on next poll anyway */
+  }
+}
+
 /* ─────────── Helpers ─────────── */
 
 function getInitials(name: string | null | undefined): string {
@@ -302,14 +320,20 @@ function formatDate(iso: string): string {
 interface ConnectionCardProps {
   connection: PaidConnection;
   access: string | null;
+  forceReveal?: boolean;
+  onContactOpened?: (connectionId: string) => void;
 }
 
 const ConnectionCard: React.FC<ConnectionCardProps> = ({
   connection,
   access,
+  forceReveal = false,
+  onContactOpened,
 }) => {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState<'phone' | 'email' | null>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const alreadyMarkedRef = useRef(false);
 
   const user = connection.connected_user;
   const roleLabel =
@@ -317,7 +341,20 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
       ? 'You reached out'
       : 'Reached out to you';
 
-  /* Fetch contact only when revealed (lazy) */
+  const paid = connection.is_paid ?? connection.status === 'completed';
+
+  useEffect(() => {
+    if (forceReveal && !revealed) {
+      setRevealed(true);
+      requestAnimationFrame(() => {
+        cardRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      });
+    }
+  }, [forceReveal, revealed]);
+
   const {
     data: contactData,
     isLoading: contactLoading,
@@ -325,7 +362,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
   } = useQuery({
     queryKey: ['connections', 'contact', connection.connection_id],
     queryFn: () => fetchConnectionContact(connection.connection_id, access),
-    enabled: revealed && !!access && connection.status === 'COMPLETED',
+    enabled: revealed && !!access && paid,
     staleTime: 60_000,
     retry: 1,
   });
@@ -334,6 +371,15 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
   const contactErrorMsg = contactError
     ? (contactError as Error).message
     : null;
+
+  useEffect(() => {
+    if (!contactData) return;
+    if (alreadyMarkedRef.current) return;
+    alreadyMarkedRef.current = true;
+    markConnectionRead(connection.connection_id, access).then(() => {
+      onContactOpened?.(connection.connection_id);
+    });
+  }, [contactData, connection.connection_id, access, onContactOpened]);
 
   const copy = async (value: string, kind: 'phone' | 'email') => {
     try {
@@ -346,8 +392,10 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
   };
 
   return (
-    <article className={`yp-conn-card ${revealed ? 'is-revealed' : ''}`}>
-      {/* ── Hero ─────────────────────────────── */}
+    <article
+      ref={cardRef}
+      className={`yp-conn-card ${revealed ? 'is-revealed' : ''}`}
+    >
       <div className="yp-conn-card-hero">
         <div className="yp-conn-avatar-wrap">
           {user.profile_image_url ? (
@@ -377,7 +425,6 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
         </span>
       </div>
 
-      {/* ── Reveal button (collapsed) ─────────── */}
       {!revealed && (
         <button
           type="button"
@@ -391,7 +438,6 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
         </button>
       )}
 
-      {/* ── Contact block (revealed) ──────────── */}
       {revealed && (
         <div className="yp-conn-contact-block">
           {contactLoading && (
@@ -431,11 +477,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
                       aria-label="Copy phone number"
                       title="Copy"
                     >
-                      {copied === 'phone' ? (
-                        <FiCheck />
-                      ) : (
-                        <FiCopy />
-                      )}
+                      {copied === 'phone' ? <FiCheck /> : <FiCopy />}
                     </button>
                   )}
                 </div>
@@ -507,7 +549,15 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({
 
 /* ─────────── Main ─────────── */
 
-const MyConnections = () => {
+interface MyConnectionsProps {
+  focusConnectionId?: string | null;
+  onContactOpened?: (connectionId: string) => void;
+}
+
+const MyConnections: React.FC<MyConnectionsProps> = ({
+  focusConnectionId = null,
+  onContactOpened,
+}) => {
   const access = useAccessToken();
 
   const {
@@ -526,7 +576,6 @@ const MyConnections = () => {
 
   const errorMessage = error ? (error as Error).message : null;
 
-  /* ── Loading ─────────────────────────────── */
   if (isLoading && connections.length === 0) {
     return (
       <div className="yp-conn-page">
@@ -546,7 +595,6 @@ const MyConnections = () => {
     );
   }
 
-  /* ── Error ───────────────────────────────── */
   if (errorMessage && connections.length === 0) {
     return (
       <div className="yp-conn-page">
@@ -571,7 +619,6 @@ const MyConnections = () => {
     );
   }
 
-  /* ── Empty ───────────────────────────────── */
   if (connections.length === 0) {
     return (
       <div className="yp-conn-page">
@@ -597,7 +644,6 @@ const MyConnections = () => {
     );
   }
 
-  /* ── List ────────────────────────────────── */
   return (
     <div className="yp-conn-page">
       <header className="yp-conn-header">
@@ -621,6 +667,11 @@ const MyConnections = () => {
             key={c.connection_id}
             connection={c}
             access={access}
+            forceReveal={
+              !!focusConnectionId &&
+              focusConnectionId === c.connection_id
+            }
+            onContactOpened={onContactOpened}
           />
         ))}
       </div>

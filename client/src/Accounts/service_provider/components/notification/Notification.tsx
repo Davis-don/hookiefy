@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { FiBell, FiX, FiCheck, FiTrash2 } from 'react-icons/fi';
+import { FiBell, FiX, FiCheck, FiTrash2, FiInfo } from 'react-icons/fi';
 import {
   useQuery,
   useMutation,
@@ -23,25 +23,13 @@ import './notification.css';
 
 /* ─────────── API config ─────────── */
 
-/**
- * Your .env has:
- *   VITE_API_URL=http://localhost:8000
- *
- * Notifications live under /notifications/ on Django, so we append
- * that prefix here. This keeps VITE_API_URL usable by the rest of
- * the app (account, plans, payments, etc.) without breaking them.
- */
 function resolveApiBase(): string {
   // @ts-ignore — Vite injects this
   const envUrl: string | undefined = import.meta.env?.VITE_API_URL;
-
   const NOTIF_PREFIX = '/notifications';
-
   if (!envUrl || !envUrl.trim()) return NOTIF_PREFIX;
-
   const trimmed = envUrl.replace(/\/+$/, '');
   if (trimmed.endsWith(NOTIF_PREFIX)) return trimmed;
-
   return `${trimmed}${NOTIF_PREFIX}`;
 }
 
@@ -58,12 +46,10 @@ function readStoredToken(): string | null {
     'jwt',
     'authToken',
   ];
-
   for (const k of directKeys) {
     const v = localStorage.getItem(k) || sessionStorage.getItem(k);
     if (v && v.trim() && !v.startsWith('{')) return v;
   }
-
   const jsonKeys = ['user', 'auth', 'session', 'currentUser'];
   for (const k of jsonKeys) {
     const raw = localStorage.getItem(k) || sessionStorage.getItem(k);
@@ -81,17 +67,14 @@ function readStoredToken(): string | null {
       /* not JSON */
     }
   }
-
   return null;
 }
 
 function useAccessToken(): string | null {
   const store = useAuthStore() as unknown;
-
   const fromStore = useMemo(() => {
     if (!store || typeof store !== 'object') return null;
     const s = store as Record<string, unknown>;
-
     const candidates = [
       s.access,
       s.accessToken,
@@ -102,7 +85,6 @@ function useAccessToken(): string | null {
     for (const c of candidates) {
       if (typeof c === 'string' && c.trim()) return c;
     }
-
     const nested = (s.tokens || s.auth) as
       | Record<string, unknown>
       | undefined;
@@ -114,10 +96,8 @@ function useAccessToken(): string | null {
         nested.token;
       if (typeof inner === 'string' && inner.trim()) return inner;
     }
-
     return null;
   }, [store]);
-
   return fromStore || readStoredToken();
 }
 
@@ -137,15 +117,12 @@ async function apiFetch<T>(
       ...(options.headers || {}),
     },
   });
-
   const contentType = res.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');
-
   const raw = await res.text().catch(() => '');
 
   if (!res.ok) {
     let detail = `${res.status} ${res.statusText}`;
-
     if (isJson && raw) {
       try {
         const parsed = JSON.parse(raw);
@@ -158,11 +135,8 @@ async function apiFetch<T>(
         `Unexpected ${contentType || 'non-JSON'} response from ${url}. ` +
         `Body starts: ${raw.slice(0, 120)}`;
     }
-
     if (res.status === 401) {
-      throw new Error(
-        'Your session has expired. Please log in again.'
-      );
+      throw new Error('Your session has expired. Please log in again.');
     }
     if (res.status === 404) {
       throw new Error(
@@ -179,13 +153,12 @@ async function apiFetch<T>(
         `Body starts: ${raw.slice(0, 120)}`
     );
   }
-
   return JSON.parse(raw) as T;
 }
 
 /* ─────────── Query keys ─────────── */
 
-const notifKeys = {
+export const notifKeys = {
   all: ['notifications', 'all'] as const,
 };
 
@@ -193,9 +166,18 @@ const notifKeys = {
 
 interface NotificationProps {
   onToggle?: (open: boolean) => void;
+  /**
+   * Called when the user clicks a notification.
+   * The parent should switch to the Connections tab and
+   * open the contact for `connection_id`.
+   */
+  onNavigate?: (connectionId: string | null) => void;
 }
 
-const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
+const Notification: React.FC<NotificationProps> = ({
+  onToggle,
+  onNavigate,
+}) => {
   const access = useAccessToken();
   const queryClient = useQueryClient();
 
@@ -227,7 +209,6 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
     ? (queryError as Error).message || 'Failed to load notifications.'
     : null;
 
-  /* ── Unread count ──────────────────────────────────── */
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.is_read).length,
     [notifications]
@@ -251,64 +232,19 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
   /* ── Escape + body scroll lock ─────────────────────── */
   useEffect(() => {
     if (!open) return;
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close();
     };
-
     document.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
   }, [open, close]);
 
-  /* ── Mutation: mark one read (optimistic) ──────────── */
-  const markOneMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      await apiFetch(
-        `${API_BASE}/mark-read/${notificationId}/`,
-        access,
-        { method: 'PUT' }
-      );
-    },
-    onMutate: async (notificationId: string) => {
-      await queryClient.cancelQueries({ queryKey: notifKeys.all });
-
-      const previous = queryClient.getQueryData<ApiNotification[]>(
-        notifKeys.all
-      );
-
-      queryClient.setQueryData<ApiNotification[]>(
-        notifKeys.all,
-        (old = []) =>
-          old.map((n) =>
-            n.notification_id === notificationId
-              ? {
-                  ...n,
-                  is_read: true,
-                  read_at: n.read_at ?? new Date().toISOString(),
-                }
-              : n
-          )
-      );
-
-      return { previous };
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.previous) {
-        queryClient.setQueryData(notifKeys.all, ctx.previous);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: notifKeys.all });
-    },
-  });
-
-  /* ── Mutation: mark all read (optimistic) ──────────── */
+  /* ── Mutation: mark ALL read ──────────────────────── */
   const markAllMutation = useMutation({
     mutationFn: async () => {
       await apiFetch(
@@ -319,11 +255,9 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: notifKeys.all });
-
       const previous = queryClient.getQueryData<ApiNotification[]>(
         notifKeys.all
       );
-
       queryClient.setQueryData<ApiNotification[]>(
         notifKeys.all,
         (old = []) =>
@@ -333,7 +267,6 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
             read_at: n.read_at ?? new Date().toISOString(),
           }))
       );
-
       return { previous };
     },
     onError: (_err, _v, ctx) => {
@@ -346,14 +279,16 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
     },
   });
 
-  /* ── Click handler: just mark read ─────────────────── */
+  /* ── Click handler: DON'T mark read, just navigate ── */
   const onNotificationClick = useCallback(
     (n: ApiNotification) => {
-      if (!n.is_read) {
-        markOneMutation.mutate(n.notification_id);
-      }
+      // Hand off to the parent — it should open the Connections
+      // tab, reveal the contact, and mark the notification read
+      // only after the user actually opens the contact.
+      onNavigate?.(n.connection?.connection_id ?? null);
+      close();
     },
-    [markOneMutation]
+    [onNavigate, close]
   );
 
   const markAllRead = useCallback(() => {
@@ -378,7 +313,6 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
         aria-expanded={open}
       >
         <FiBell className="yp-notif-bell-icon" />
-
         {unreadCount > 0 && (
           <>
             <span className="yp-notif-badge" aria-hidden="true">
@@ -397,7 +331,6 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
               onClick={close}
               aria-hidden="true"
             />
-
             <div
               ref={panelRef}
               className="yp-notif-panel"
@@ -407,6 +340,7 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
             >
               <div className="yp-notif-handle" aria-hidden="true" />
 
+              {/* ── Header ──────────────────────────── */}
               <div className="yp-notif-header">
                 <div className="yp-notif-header-left">
                   <h3 className="yp-notif-title">Notifications</h3>
@@ -460,6 +394,17 @@ const Notification: React.FC<NotificationProps> = ({ onToggle }) => {
                 </div>
               </div>
 
+              {/* ── Info banner: how to view contacts ─ */}
+              <div className="yp-notif-info-banner">
+                <FiInfo className="yp-notif-info-icon" />
+                <span>
+                  Successful payment notifications stay unread until
+                  you open the contact. Go to <strong>Connections</strong>{' '}
+                  (bottom nav) to view unlocked contacts.
+                </span>
+              </div>
+
+              {/* ── List ─────────────────────────────── */}
               <div className="yp-notif-list">
                 {loading && notifications.length === 0 && (
                   <NotificationEmpty variant="loading" />

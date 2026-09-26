@@ -43,6 +43,14 @@ urlpatterns = [
         name="mark_notification_read",
     ),
 
+    # Mark every unread notification linked to a connection as read
+    # Called when the user reveals the contact of a paid connection.
+    path(
+        "mark-connection-read/<uuid:connection_id>/",
+        views.mark_connection_notifications_read,
+        name="mark_connection_notifications_read",
+    ),
+
     # Mark all PENDING connection notifications as read
     path(
         "mark-all-read/",
@@ -80,6 +88,14 @@ urlpatterns = [
         "has-unread-requests/",
         views.has_unread_connection_requests,
         name="has_unread_connection_requests",
+    ),
+
+    # Has unread notifications for PAID connections
+    # → used to show the red dot on the Connections nav item
+    path(
+        "has-unread-paid-connections/",
+        views.has_unread_paid_connections,
+        name="has_unread_paid_connections",
     ),
 
     # ============================================

@@ -205,3 +205,30 @@
 
   .yp-notif-handle { display: none; }
 }
+
+/* ── Info banner ───────────────────────────────── */
+.yp-notif-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 16px 8px;
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.yp-notif-info-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 15px;
+  color: #2563eb;
+}
+
+.yp-notif-info-banner strong {
+  color: #1d4ed8;
+  font-weight: 700;
+}
