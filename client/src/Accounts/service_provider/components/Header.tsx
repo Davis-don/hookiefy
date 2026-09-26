@@ -12,7 +12,7 @@ import PremiumBadge, {
   usePremiumStatus,
 } from './PremiumBadge';
 import LogoutButton from './LogoutButton';
-import Notification from './Notification';
+import Notification from './notification/Notification';
 import './header.css';
 
 interface HeaderProps {

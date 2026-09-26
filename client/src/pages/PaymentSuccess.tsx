@@ -1,12 +1,13 @@
 // PaymentSuccess.tsx
 import React, { useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import './PaymentSuccess.css';
 
 const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const paymentStatus = searchParams.get('payment_status');
   const amount = searchParams.get('amount');
@@ -18,6 +19,17 @@ const PaymentSuccess: React.FC = () => {
       icon: '✅',
     });
   }, [amount]);
+
+  const handleBack = () => {
+    // Go back to whatever page they came from.
+    // Works for any role: service seeker, provider, admin, etc.
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Safe fallback — the app's root handles auth-based redirects.
+      navigate('/');
+    }
+  };
 
   return (
     <div className="ps-wrapper">
@@ -56,13 +68,14 @@ const PaymentSuccess: React.FC = () => {
         </div>
 
         <div className="ps-actions">
-          <Link to="/user/dashboard" className="ps-btn-primary">
-            <span>Go to Dashboard</span>
-            <ArrowRight size={20} />
-          </Link>
-          <Link to="/" className="ps-btn-secondary">
-            Return Home
-          </Link>
+          <button
+            type="button"
+            className="ps-btn-primary"
+            onClick={handleBack}
+          >
+            <ArrowLeft size={20} />
+            <span>Go Back</span>
+          </button>
         </div>
 
         <div className="ps-footer">

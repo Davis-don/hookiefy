@@ -1,19 +1,43 @@
+# connections/urls.py
 from django.urls import path
 from . import views
 
-app_name = 'connections'
+app_name = "connections"
 
 urlpatterns = [
-    # Hookup view - create connection request
-    path('hookup/<int:id>/', views.hookup_view, name='hookup_view'),
-    
-    # Accept connection request
-    path('accept/<uuid:connection_id>/', views.accept_connection, name='accept_connection'),
-    
-    # Reject connection request
-    path('reject/<uuid:connection_id>/', views.reject_connection, name='reject_connection'),
-     # Admin hookups endpoint
-    path('admin-hookups/', views.get_admin_hookups, name='get_admin_hookups'),
-      # Revenue by location endpoint
-    path('revenue-by-location/', views.get_revenue_by_location, name='revenue_by_location'),
+    # ============================================
+    # INITIATE — "Get Contact" / "Connect"
+    # ============================================
+    path(
+        "initiate/<int:id>/",
+        views.initiate_connection_view,
+        name="initiate_connection",
+    ),
+
+    # ============================================
+    # LIST — every connection the user is part of
+    # ============================================
+    path(
+        "mine/",
+        views.list_my_connections,
+        name="list_my_connections",
+    ),
+
+    # ============================================
+    # FETCH CONTACT (only if paid)
+    # ============================================
+    path(
+        "contact/<uuid:connection_id>/",
+        views.get_connection_contact,
+        name="get_connection_contact",
+    ),
+
+    # ============================================
+    # ADMIN — hookups list
+    # ============================================
+    path(
+        "admin-hookups/",
+        views.get_admin_hookups,
+        name="get_admin_hookups",
+    ),
 ]

@@ -1,0 +1,153 @@
+/* src/components/notifications/NotificationItem.css */
+
+.yp-notif-item {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
+  animation: yp-item-in 0.25s ease-out both;
+}
+
+.yp-notif-item:hover { background: #f8fafc; }
+.yp-notif-item.is-unread { background: #f4f8ff; }
+.yp-notif-item.is-unread:hover { background: #eaf2ff; }
+
+.yp-notif-item-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.yp-notif-item--hookup .yp-notif-item-icon {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+.yp-notif-item--payment .yp-notif-item-icon {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+.yp-notif-item--service .yp-notif-item-icon {
+  background: rgba(168, 85, 247, 0.12);
+  color: #7e22ce;
+}
+.yp-notif-item--system .yp-notif-item-icon {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.yp-notif-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.yp-notif-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.yp-notif-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.yp-notif-item.is-read .yp-notif-item-title {
+  font-weight: 600;
+  color: #334155;
+}
+
+.yp-notif-item-time {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.yp-notif-item-body {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.yp-notif-item-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.yp-notif-dir,
+.yp-notif-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.yp-notif-dir--received {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+.yp-notif-dir--sent {
+  background: rgba(107, 114, 128, 0.12);
+  color: #4b5563;
+}
+
+.yp-notif-status--completed {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+.yp-notif-status--pending,
+.yp-notif-status--accepted {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+.yp-notif-status--rejected,
+.yp-notif-status--cancelled {
+  background: rgba(239, 68, 68, 0.14);
+  color: #b91c1c;
+}
+
+.yp-notif-item-dot {
+  position: absolute;
+  top: 18px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+@keyframes yp-item-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -6,18 +6,10 @@ from connections.models import Connection
 
 class Payment(models.Model):
 
-    # ========================================================
-    # GATEWAY
-    # ========================================================
-
     GATEWAY_CHOICES = (
-        ('pesapal', 'PesaPal'),
-        ('paystack', 'Paystack'),
+        ("pesapal", "PesaPal"),
+        ("paystack", "Paystack"),
     )
-
-    # ========================================================
-    # STATUS
-    # ========================================================
 
     STATUS_CHOICES = (
         ("pending", "Pending"),
@@ -26,10 +18,7 @@ class Payment(models.Model):
         ("cancelled", "Cancelled"),
     )
 
-    # ========================================================
-    # PAYMENT TYPE
-    # ========================================================
-
+    # Keep this as-is, or rename to category
     PAYMENT_TYPE_CONNECTION = "connection"
     PAYMENT_TYPE_SERVICE = "service"
 
@@ -42,22 +31,15 @@ class Payment(models.Model):
         max_length=20,
         choices=PAYMENT_TYPE_CHOICES,
         default=PAYMENT_TYPE_CONNECTION,
-        help_text="What this payment is for.",
     )
 
-    # ========================================================
-    # PAYER
-    # ========================================================
+    # ... everything else unchanged ...
 
     user = models.ForeignKey(
         Accounts,
         on_delete=models.CASCADE,
-        related_name="payments"
+        related_name="payments",
     )
-
-    # ========================================================
-    # TARGETS — ONE OF THESE WILL BE SET
-    # ========================================================
 
     connection = models.ForeignKey(
         Connection,
@@ -65,7 +47,6 @@ class Payment(models.Model):
         related_name="payments",
         blank=True,
         null=True,
-        help_text="Set for hookup/connection payments.",
     )
 
     service = models.ForeignKey(
@@ -74,65 +55,44 @@ class Payment(models.Model):
         related_name="payments",
         blank=True,
         null=True,
-        help_text="Set for service-listing contact-reveal payments.",
     )
 
-    # ========================================================
-    # PAYMENT DETAILS
-    # ========================================================
-
-    merchant_reference = models.CharField(
-        max_length=100,
-        unique=True
-    )
-
-    order_tracking_id = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2
-    )
-
-    phone_number = models.CharField(
-        max_length=20
-    )
+    merchant_reference = models.CharField(max_length=100, unique=True)
+    order_tracking_id = models.CharField(max_length=255, blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    phone_number = models.CharField(max_length=20)
 
     gateway = models.CharField(
         max_length=20,
         choices=GATEWAY_CHOICES,
-        default='pesapal',
-        help_text="Payment gateway used (PesaPal or Paystack)"
+        default="pesapal",
     )
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="pending"
+        default="pending",
     )
 
-    paid_at = models.DateTimeField(
-        blank=True,
-        null=True
-    )
-
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    paid_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'payments'
-        ordering = ['-created_at']
+        db_table = "payments"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return (
             f"{self.merchant_reference} - {self.status} "
             f"({self.get_gateway_display()})"
         )
+
+    # ---------- helpers ----------
+    @property
+    def is_completed(self) -> bool:
+        return self.status == "completed"
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.status in ("completed", "failed", "cancelled")

@@ -1,0 +1,60 @@
+/* src/components/notifications/NotificationEmpty.css */
+
+.yp-notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #475569;
+}
+
+.yp-notif-empty-icon {
+  font-size: 28px;
+  color: #94a3b8;
+}
+
+.yp-notif-empty-icon--round {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.yp-notif-empty-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.yp-notif-empty-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  max-width: 260px;
+}
+
+.yp-notif-retry {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.yp-notif-retry:hover { background: #1f2937; }
+
+.yp-notif-spin { animation: yp-spin 0.9s linear infinite; }
+
+@keyframes yp-spin { to { transform: rotate(360deg); } }

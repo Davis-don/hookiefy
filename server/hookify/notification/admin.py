@@ -1,14 +1,17 @@
+# notifications/admin.py
 from django.contrib import admin
 from .models import Notification
 
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
+
     list_display = (
         "notification_id",
-        "user",
+        "category",
+        "sender",
+        "receiver",
         "connection",
-        "notification_type",
         "title",
         "is_read",
         "created_at",
@@ -16,7 +19,7 @@ class NotificationAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
-        "notification_type",
+        "category",
         "is_read",
         "created_at",
         "read_at",
@@ -24,8 +27,10 @@ class NotificationAdmin(admin.ModelAdmin):
 
     search_fields = (
         "notification_id",
-        "user__username",
-        "user__email",
+        "sender__username",
+        "sender__email",
+        "receiver__username",
+        "receiver__email",
         "title",
         "message",
         "connection__connection_id",
@@ -39,12 +44,19 @@ class NotificationAdmin(admin.ModelAdmin):
 
     ordering = ("-created_at",)
 
+    list_select_related = (
+        "sender",
+        "receiver",
+        "connection",
+    )
+
     fieldsets = (
         ("Notification Information", {
             "fields": (
                 "notification_id",
-                "notification_type",
-                "user",
+                "category",
+                "sender",
+                "receiver",
                 "connection",
             )
         }),
@@ -54,7 +66,7 @@ class NotificationAdmin(admin.ModelAdmin):
                 "message",
             )
         }),
-        ("Status", {
+        ("Read State", {
             "fields": (
                 "is_read",
                 "read_at",
@@ -66,3 +78,26 @@ class NotificationAdmin(admin.ModelAdmin):
             )
         }),
     )
+
+    actions = ("mark_as_read", "mark_as_unread")
+
+    # ========================================================
+    # ADMIN ACTIONS
+    # ========================================================
+
+    @admin.action(description="Mark selected notifications as read")
+    def mark_as_read(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.filter(is_read=False).update(
+            is_read=True,
+            read_at=timezone.now()
+        )
+        self.message_user(request, f"{updated} notification(s) marked as read.")
+
+    @admin.action(description="Mark selected notifications as unread")
+    def mark_as_unread(self, request, queryset):
+        updated = queryset.filter(is_read=True).update(
+            is_read=False,
+            read_at=None
+        )
+        self.message_user(request, f"{updated} notification(s) marked as unread.")

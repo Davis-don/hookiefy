@@ -1,64 +1,126 @@
+# notifications/models.py
+import uuid
+
 from django.db import models
 from django.contrib.auth import get_user_model
-import uuid
 
 User = get_user_model()
 
 
 class Notification(models.Model):
 
-    class NotificationType(models.TextChoices):
-        CONNECTION_REQUEST = "connection_request", "Connection Request"
-        CONNECTION_ACCEPTED = "connection_accepted", "Connection Accepted"
-        CONNECTION_REJECTED = "connection_rejected", "Connection Rejected"
-        CONNECTION_COMPLETED = "connection_completed", "Connection Completed"
-        PAYMENT_PENDING = "payment_pending", "Payment Pending"
-        PAYMENT_SUCCESS = "payment_success", "Payment Success"
-        PAYMENT_FAILED = "payment_failed", "Payment Failed"
+    # ========================================================
+    # CATEGORY
+    # ========================================================
+
+    CATEGORY_HOOKUP = "hookup"
+    CATEGORY_SYSTEM = "system"
+    CATEGORY_PAYMENT = "payment"
+    CATEGORY_SERVICE = "service"
+
+    CATEGORY_CHOICES = (
+        (CATEGORY_HOOKUP, "Hookup"),
+        (CATEGORY_SYSTEM, "System"),
+        (CATEGORY_PAYMENT, "Payment"),
+        (CATEGORY_SERVICE, "Service"),
+    )
+
+    # ========================================================
+    # IDENTIFIER
+    # ========================================================
 
     notification_id = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
-        unique=True
+        unique=True,
     )
 
-    user = models.ForeignKey(
+    # ========================================================
+    # SENDER (null for system)
+    # ========================================================
+
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="sent_notifications",
+        null=True,
+        blank=True,
+        help_text="User who triggered this notification. Null for system notifications.",
+    )
+
+    # ========================================================
+    # RECEIVER (temporarily nullable for migration)
+    # ========================================================
+
+    receiver = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="notifications"
+        related_name="received_notifications",
+        null=True,          # TEMP — remove after backfill
+        blank=True,         # TEMP — remove after backfill
+        help_text="User who receives this notification.",
     )
+
+    # ========================================================
+    # CATEGORY
+    # ========================================================
+
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default=CATEGORY_SYSTEM,
+    )
+
+    # ========================================================
+    # OPTIONAL TARGET
+    # ========================================================
 
     connection = models.ForeignKey(
         "connections.Connection",
         on_delete=models.CASCADE,
         related_name="notifications",
         null=True,
-        blank=True
+        blank=True,
     )
+
+    # ========================================================
+    # CONTENT
+    # ========================================================
 
     title = models.CharField(max_length=255)
-
     message = models.TextField()
 
-    notification_type = models.CharField(
-        max_length=50,
-        choices=NotificationType.choices
-    )
+    # ========================================================
+    # READ STATE
+    # ========================================================
 
     is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
 
-    read_at = models.DateTimeField(
-        null=True,
-        blank=True
-    )
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # ========================================================
+    # META
+    # ========================================================
 
     class Meta:
         db_table = "notifications"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["receiver", "is_read"]),
+            models.Index(fields=["receiver", "category"]),
+        ]
 
     def __str__(self):
-        return f"{self.title} -> {self.user}"
+        return f"[{self.category}] {self.title} -> {self.receiver}"
 
-
+    def mark_as_read(self):
+        from django.utils import timezone
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=["is_read", "read_at"])

@@ -49,9 +49,17 @@ urlpatterns = [
     ),
 
     # ── Status ─────────────────────────────────────────
+    # Legacy manual lookup
     path(
         "status/<int:payment_id>/",
         views.get_payment_status,
         name="get_payment_status",
+    ),
+
+    # NEW: reconcile / live poll (self-healing connection status)
+    path(
+        "reconcile/<int:payment_id>/",
+        views.reconcile_payment,
+        name="reconcile_payment",
     ),
 ]
