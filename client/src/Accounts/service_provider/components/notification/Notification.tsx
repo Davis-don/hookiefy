@@ -8,7 +8,15 @@ import React, {
   useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { FiBell, FiX, FiCheck, FiTrash2, FiInfo } from 'react-icons/fi';
+import {
+  FiBell,
+  FiX,
+  FiCheck,
+  FiTrash2,
+  FiInfo,
+  FiChevronRight,
+  FiExternalLink,
+} from 'react-icons/fi';
 import {
   useQuery,
   useMutation,
@@ -162,15 +170,185 @@ export const notifKeys = {
   all: ['notifications', 'all'] as const,
 };
 
+/* ─────────── Time helper ─────────── */
+
+function formatFullDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+/* ─────────── Detail modal ─────────── */
+
+interface DetailModalProps {
+  notification: ApiNotification | null;
+  onClose: () => void;
+  onViewConnection: (connectionId: string) => void;
+  onMarkRead: (notificationId: string) => void;
+  markingRead: boolean;
+}
+
+const NotificationDetailModal: React.FC<DetailModalProps> = ({
+  notification,
+  onClose,
+  onViewConnection,
+  onMarkRead,
+  markingRead,
+}) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  /* Escape closes the modal */
+  useEffect(() => {
+    if (!notification) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [notification, onClose]);
+
+  if (!notification) return null;
+
+  const hasConnection = !!notification.connection?.connection_id;
+  const isUnread = !notification.is_read;
+
+  return createPortal(
+    <div
+      className="yp-notif-detail-root"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        ref={modalRef}
+        className="yp-notif-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={notification.title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          className="yp-notif-detail-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <FiX />
+        </button>
+
+        {/* Status pill */}
+        <div className="yp-notif-detail-pill-row">
+          <span
+            className={`yp-notif-detail-pill yp-notif-detail-pill--${notification.category}`}
+          >
+            {notification.category_display || notification.category}
+          </span>
+          {isUnread ? (
+            <span className="yp-notif-detail-pill yp-notif-detail-pill--unread">
+              Unread
+            </span>
+          ) : (
+            <span className="yp-notif-detail-pill yp-notif-detail-pill--read">
+              Read
+            </span>
+          )}
+        </div>
+
+        {/* Title */}
+        <h2 className="yp-notif-detail-title">{notification.title}</h2>
+
+        {/* Meta */}
+        <div className="yp-notif-detail-meta">
+          <span className="yp-notif-detail-date">
+            {formatFullDate(notification.created_at)}
+          </span>
+          {notification.sender && (
+            <span className="yp-notif-detail-sender">
+              From: <strong>{notification.sender.full_name}</strong>
+            </span>
+          )}
+        </div>
+
+        {/* Full message */}
+        <div className="yp-notif-detail-body">
+          <p>{notification.message}</p>
+        </div>
+
+        {/* Connection context, if any */}
+        {notification.connection && (
+          <div className="yp-notif-detail-context">
+            <div className="yp-notif-detail-context-row">
+              <span className="yp-notif-detail-context-label">
+                Connection
+              </span>
+              <span className="yp-notif-detail-context-value">
+                {notification.connected_user_name ||
+                  notification.connection.status_display}
+              </span>
+            </div>
+            {notification.connection.status_display && (
+              <div className="yp-notif-detail-context-row">
+                <span className="yp-notif-detail-context-label">
+                  Status
+                </span>
+                <span className="yp-notif-detail-context-value">
+                  {notification.connection.status_display}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="yp-notif-detail-actions">
+          {hasConnection && (
+            <button
+              type="button"
+              className="yp-notif-detail-btn yp-notif-detail-btn--primary"
+              onClick={() =>
+                onViewConnection(
+                  notification.connection!.connection_id
+                )
+              }
+            >
+              <FiExternalLink />
+              <span>View Contact</span>
+              <FiChevronRight />
+            </button>
+          )}
+
+          {isUnread && (
+            <button
+              type="button"
+              className="yp-notif-detail-btn"
+              disabled={markingRead}
+              onClick={() => onMarkRead(notification.notification_id)}
+            >
+              <FiCheck />
+              <span>
+                {markingRead ? 'Marking…' : 'Mark as read'}
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 /* ─────────── Component ─────────── */
 
 interface NotificationProps {
   onToggle?: (open: boolean) => void;
-  /**
-   * Called when the user clicks a notification.
-   * The parent should switch to the Connections tab and
-   * open the contact for `connection_id`.
-   */
   onNavigate?: (connectionId: string | null) => void;
 }
 
@@ -182,6 +360,7 @@ const Notification: React.FC<NotificationProps> = ({
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<ApiNotification | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   /* ── Query: notifications list ─────────────────────── */
@@ -229,11 +408,11 @@ const Notification: React.FC<NotificationProps> = ({
     onToggle?.(false);
   }, [onToggle]);
 
-  /* ── Escape + body scroll lock ─────────────────────── */
+  /* ── Escape + body scroll lock for the panel ──────── */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape' && !detail) close();
     };
     document.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
@@ -242,7 +421,33 @@ const Notification: React.FC<NotificationProps> = ({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, close]);
+  }, [open, close, detail]);
+
+  /* ── Mutation: mark ONE read ──────────────────────── */
+  const markOneMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      await apiFetch(
+        `${API_BASE}/mark-read/${notificationId}/`,
+        access,
+        { method: 'PUT' }
+      );
+    },
+    onSuccess: (_data, notificationId) => {
+      /* Update cache optimistically (already done in onMutate) */
+      queryClient.invalidateQueries({ queryKey: notifKeys.all });
+
+      /* Reflect change in the open detail modal */
+      setDetail((prev) =>
+        prev && prev.notification_id === notificationId
+          ? {
+              ...prev,
+              is_read: true,
+              read_at: new Date().toISOString(),
+            }
+          : prev
+      );
+    },
+  });
 
   /* ── Mutation: mark ALL read ──────────────────────── */
   const markAllMutation = useMutation({
@@ -279,16 +484,33 @@ const Notification: React.FC<NotificationProps> = ({
     },
   });
 
-  /* ── Click handler: DON'T mark read, just navigate ── */
-  const onNotificationClick = useCallback(
-    (n: ApiNotification) => {
-      // Hand off to the parent — it should open the Connections
-      // tab, reveal the contact, and mark the notification read
-      // only after the user actually opens the contact.
-      onNavigate?.(n.connection?.connection_id ?? null);
-      close();
+  /* ── Click → open the detail modal ────────────────── */
+  const onNotificationClick = useCallback((n: ApiNotification) => {
+    setDetail(n);
+  }, []);
+
+  const closeDetail = useCallback(() => {
+    setDetail(null);
+  }, []);
+
+  /* ── Detail modal → View Contact ─────────────────── */
+  const handleViewConnection = useCallback(
+    (connectionId: string) => {
+      /* Close the detail modal + panel, then navigate */
+      setDetail(null);
+      setOpen(false);
+      onToggle?.(false);
+      onNavigate?.(connectionId);
     },
-    [onNavigate, close]
+    [onNavigate, onToggle]
+  );
+
+  /* ── Detail modal → mark single as read ──────────── */
+  const handleMarkReadFromModal = useCallback(
+    (notificationId: string) => {
+      markOneMutation.mutate(notificationId);
+    },
+    [markOneMutation]
   );
 
   const markAllRead = useCallback(() => {
@@ -340,7 +562,6 @@ const Notification: React.FC<NotificationProps> = ({
             >
               <div className="yp-notif-handle" aria-hidden="true" />
 
-              {/* ── Header ──────────────────────────── */}
               <div className="yp-notif-header">
                 <div className="yp-notif-header-left">
                   <h3 className="yp-notif-title">Notifications</h3>
@@ -394,17 +615,15 @@ const Notification: React.FC<NotificationProps> = ({
                 </div>
               </div>
 
-              {/* ── Info banner: how to view contacts ─ */}
               <div className="yp-notif-info-banner">
                 <FiInfo className="yp-notif-info-icon" />
                 <span>
+                  Tap any notification to see the full message.
                   Successful payment notifications stay unread until
-                  you open the contact. Go to <strong>Connections</strong>{' '}
-                  (bottom nav) to view unlocked contacts.
+                  you open the contact in <strong>Connections</strong>.
                 </span>
               </div>
 
-              {/* ── List ─────────────────────────────── */}
               <div className="yp-notif-list">
                 {loading && notifications.length === 0 && (
                   <NotificationEmpty variant="loading" />
@@ -445,6 +664,15 @@ const Notification: React.FC<NotificationProps> = ({
           </div>,
           document.body
         )}
+
+      {/* ── Detail modal ──────────────────────────────── */}
+      <NotificationDetailModal
+        notification={detail}
+        onClose={closeDetail}
+        onViewConnection={handleViewConnection}
+        onMarkRead={handleMarkReadFromModal}
+        markingRead={markOneMutation.isPending}
+      />
     </>
   );
 };
