@@ -196,11 +196,7 @@ const Plans = () => {
     setSheetOpen(true);
   };
 
-  /* ── Sheet reports success ──────────────── */
-  const handleSheetSuccess = (_plan: Plan) => {
-    // PlanPurchaseSheet already invalidated
-    // ['subscription-status'] and ['plans'].
-  };
+ 
 
   /* ── Loading ─────────────────────────────── */
   if (isLoading && plans.length === 0) {
@@ -303,7 +299,6 @@ const Plans = () => {
         open={sheetOpen}
         plan={sheetPlan}
         onClose={() => setSheetOpen(false)}
-        onSuccess={handleSheetSuccess}
       />
     </>
   );
