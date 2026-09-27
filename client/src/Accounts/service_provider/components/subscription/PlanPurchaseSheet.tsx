@@ -147,9 +147,10 @@ const PlanPurchaseSheet: React.FC<Props> = ({
     setPhase('redirecting');
 
     try {
+      // ✅ NEW: subscription_payment app
       const url = API_ORIGIN
-        ? `${API_ORIGIN}/payments/plan/initiate/`
-        : `/payments/plan/initiate/`;
+        ? `${API_ORIGIN}/subscription_payments/plan/initiate/`
+        : `/subscription_payments/plan/initiate/`;
 
       const res = await fetch(url, {
         method: 'POST',
