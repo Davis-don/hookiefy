@@ -241,4 +241,5 @@ urlpatterns = [
         "engagement/",
         include("engagement.urls"),
     ),
+    path("subscription/", include("subscription.urls")),
 ]

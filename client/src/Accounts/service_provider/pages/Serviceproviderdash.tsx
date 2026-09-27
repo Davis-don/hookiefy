@@ -10,12 +10,12 @@ import Stories from '../components/stories/Stories';
 import AddData from '../components/AddData';
 import MyConnections from '../components/connections/MyConnections';
 import Notification from '../components/notification/Notification';
+import Subscription from '../components/subscription/Subscription';
 import { useAuthStore } from '../../../store/authtokenstore';
 
-/* Tabs that render edge-to-edge (no content-wrapper padding) */
 const FULL_BLEED_TABS = new Set(['home', 'add-data', 'connections']);
 
-/* ── Helpers ─────────────────────────────────────────── */
+/* ── API helpers ─────────────────────────────────── */
 
 function resolveApiBase(): string {
   // @ts-ignore
@@ -27,10 +27,18 @@ function resolveApiBase(): string {
   return `${trimmed}${NOTIF_PREFIX}`;
 }
 
+function resolveApiOrigin(): string {
+  // @ts-ignore
+  const envUrl: string | undefined = import.meta.env?.VITE_API_URL;
+  if (!envUrl || !envUrl.trim()) return '';
+  return envUrl.replace(/\/+$/, '');
+}
+
 const API_BASE = resolveApiBase();
+const API_ORIGIN = resolveApiOrigin();
 
 function readStoredToken(): string | null {
-  const directKeys = [
+  const keys = [
     'access_token',
     'accessToken',
     'access',
@@ -38,7 +46,7 @@ function readStoredToken(): string | null {
     'jwt',
     'authToken',
   ];
-  for (const k of directKeys) {
+  for (const k of keys) {
     const v = localStorage.getItem(k) || sessionStorage.getItem(k);
     if (v && v.trim() && !v.startsWith('{')) return v;
   }
@@ -105,22 +113,54 @@ async function fetchUnreadPaidConnections(
   if (!access) {
     return { has_unread: false, unread_count: 0, connection_ids: [] };
   }
-  const res = await fetch(
-    `${API_BASE}/has-unread-paid-connections/`,
-    {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${access}`,
-      },
-    }
-  );
+  const res = await fetch(`${API_BASE}/has-unread-paid-connections/`, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${access}`,
+    },
+  });
   if (!res.ok) {
     return { has_unread: false, unread_count: 0, connection_ids: [] };
   }
   return res.json();
 }
 
-/* ── Dashboard ───────────────────────────────────────── */
+/* ── Premium status ──────────────────────────────── */
+
+interface PremiumStatusResponse {
+  is_premium: boolean;
+  role: string;
+  expires_at: string | null;
+  is_expired: boolean;
+  time_remaining: {
+    total_seconds: number;
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    human: string;
+    short: string;
+  } | null;
+}
+
+async function fetchPremiumStatus(
+  access: string | null
+): Promise<PremiumStatusResponse | null> {
+  if (!access) return null;
+  const url = API_ORIGIN
+    ? `${API_ORIGIN}/account/premium-status/`
+    : `/account/premium-status/`;
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${access}`,
+    },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/* ── Dashboard ───────────────────────────────────── */
 
 const Serviceproviderdash = () => {
   const access = useAccessToken();
@@ -135,7 +175,6 @@ const Serviceproviderdash = () => {
     string | null
   >(null);
 
-  /* ── Responsive ───────────────────────────── */
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -145,18 +184,44 @@ const Serviceproviderdash = () => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  /* ── Query: unread paid connections (drives red dot) ── */
+  /* ── Premium status query ────────────────────────── */
+  const { data: premium } = useQuery({
+    queryKey: ['premium-status', access],
+    queryFn: () => fetchPremiumStatus(access),
+    enabled: !!access,
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (!d) return 60_000;
+      if (d.is_expired) return 30_000;
+      const total = d.time_remaining?.total_seconds;
+      if (!d.is_premium || total == null || total <= 0) return 60_000;
+      if (total > 86400) return 30 * 60_000;
+      if (total > 3600) return 15 * 60_000;
+      if (total > 600) return 5 * 60_000;
+      return 60_000;
+    },
+  });
+
+  /* Gate: service providers without an active premium */
+  const isGated = useMemo(() => {
+    if (!premium) return false;
+    if (premium.role !== 'serviceprovider') return false;
+    if (premium.is_premium) return false;
+    return true;
+  }, [premium]);
+
+  /* ── Unread paid connections (only used when not gated) ── */
   const { data: unreadPaid } = useQuery({
     queryKey: ['notifications', 'unread-paid-connections'],
     queryFn: () => fetchUnreadPaidConnections(access),
-    enabled: !!access,
-    refetchInterval: 30_000,
-    refetchOnWindowFocus: true,
+    enabled: !!access && !isGated,
+    refetchInterval: isGated ? false : 30_000,
+    refetchOnWindowFocus: !isGated,
   });
 
   const hasUnreadPaid = !!unreadPaid?.has_unread;
-
-  /* ── Handlers ─────────────────────────────── */
 
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
@@ -173,9 +238,20 @@ const Serviceproviderdash = () => {
       icon: '🛠️',
       component: MyServices,
     },
+    {
+      id: 'subscription',
+      label: 'Subscription',
+      icon: '💎',
+      component: Subscription,
+    },
   ];
 
+  /* ── Content: gated shows only Subscription ─────── */
   const renderActiveComponent = () => {
+    if (isGated) {
+      return <Subscription />;
+    }
+
     if (showAddData)
       return <AddData onClose={() => setShowAddData(false)} />;
     if (showProfile) return <Profile />;
@@ -183,20 +259,17 @@ const Serviceproviderdash = () => {
     const activeItem = menuItems.find((item) => item.id === activeTab);
     const ActiveComponent = activeItem?.component || Home;
 
-    /* Special props for MyConnections */
     if (activeTab === 'connections') {
       return (
         <MyConnections
           focusConnectionId={focusConnectionId}
           onContactOpened={() => {
-            /* Refresh red-dot state after reveal */
             queryClient.invalidateQueries({
               queryKey: ['notifications', 'unread-paid-connections'],
             });
             queryClient.invalidateQueries({
               queryKey: ['notifications', 'all'],
             });
-            /* Clear local focus once consumed */
             setFocusConnectionId(null);
           }}
         />
@@ -206,13 +279,16 @@ const Serviceproviderdash = () => {
     return <ActiveComponent />;
   };
 
+  /* ── Guarded handlers — no-op while gated ───────── */
   const handleHeaderProfileClick = () => {
+    if (isGated) return;
     setShowProfile(true);
     setShowAddData(false);
     setActiveTab('');
   };
 
   const handleNavClick = (id: string) => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(false);
     setActiveTab(id);
@@ -220,6 +296,7 @@ const Serviceproviderdash = () => {
   };
 
   const handleBrandClick = () => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(false);
     setActiveTab('home');
@@ -228,6 +305,7 @@ const Serviceproviderdash = () => {
   };
 
   const handleAddClick = () => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(true);
     setActiveTab('add-data');
@@ -237,19 +315,26 @@ const Serviceproviderdash = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  /* ── Notification bell → Connections deep-link ────── */
   const handleNotificationNavigate = useCallback(
     (connectionId: string | null) => {
+      if (isGated) return;
       setShowProfile(false);
       setShowAddData(false);
       setActiveTab('connections');
       setFocusConnectionId(connectionId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-    []
+    [isGated]
   );
 
-  /* Mobile nav — 2 + [+] + 2 */
+  const handleOpenSubscription = useCallback(() => {
+    setShowProfile(false);
+    setShowAddData(false);
+    setActiveTab('subscription');
+    setFocusConnectionId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'stories', label: 'Stories', icon: '📸' },
@@ -263,13 +348,24 @@ const Serviceproviderdash = () => {
   const useFullBleed =
     !showProfile && FULL_BLEED_TABS.has(activeTab);
 
-  /* ── Render ───────────────────────────────── */
+  /* ═══════════════════════════════════════════════════
+     DASHBOARD SHELL
+     When gated, all interactive elements are disabled
+     (via `disabled` + the `--gated` class), but the
+     layout is unchanged. The Subscription component
+     fills the main content area.
+     ═══════════════════════════════════════════════════ */
   return (
-    <div className="yp-dash-container">
+    <div
+      className={`yp-dash-container ${
+        isGated ? 'yp-dash-container--gated' : ''
+      }`}
+    >
       {isMobile && (
         <Header
           onProfileClick={handleHeaderProfileClick}
           onBrandClick={handleBrandClick}
+          onSubscriptionClick={handleOpenSubscription}
         />
       )}
 
@@ -277,7 +373,7 @@ const Serviceproviderdash = () => {
         <aside
           className={`yp-dash-sidebar ${
             sidebarOpen ? 'yp-dash-sidebar-open' : ''
-          }`}
+          } ${isGated ? 'yp-dash-sidebar--gated' : ''}`}
         >
           <div className="yp-dash-sidebar-header">
             <h2
@@ -292,6 +388,7 @@ const Serviceproviderdash = () => {
               role="link"
               tabIndex={0}
               aria-label="Go to home"
+              aria-disabled={isGated}
             >
               <span className="yp-logo-you">You</span>
               <span className="yp-logo-p">p</span>
@@ -303,6 +400,7 @@ const Serviceproviderdash = () => {
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
               type="button"
+              disabled={isGated}
             >
               {sidebarOpen ? '◀' : '▶'}
             </button>
@@ -312,6 +410,9 @@ const Serviceproviderdash = () => {
             {menuItems.map((item) => {
               const showDot =
                 item.id === 'connections' && hasUnreadPaid;
+              const isSubscription = item.id === 'subscription';
+              const disabled = isGated && !isSubscription;
+
               return (
                 <button
                   key={item.id}
@@ -321,9 +422,11 @@ const Serviceproviderdash = () => {
                     !showAddData
                       ? 'yp-dash-sidebar-item-active'
                       : ''
-                  }`}
+                  } ${disabled ? 'is-disabled' : ''}`}
                   onClick={() => handleNavClick(item.id)}
                   type="button"
+                  disabled={disabled}
+                  aria-disabled={disabled}
                 >
                   <span className="yp-dash-sidebar-icon-wrap">
                     <span className="yp-dash-sidebar-icon">
@@ -346,9 +449,11 @@ const Serviceproviderdash = () => {
             <button
               className={`yp-dash-sidebar-item ${
                 showAddData ? 'yp-dash-sidebar-item-active' : ''
-              }`}
+              } ${isGated ? 'is-disabled' : ''}`}
               onClick={handleAddClick}
               type="button"
+              disabled={isGated}
+              aria-disabled={isGated}
             >
               <span className="yp-dash-sidebar-icon">➕</span>
               <span className="yp-dash-sidebar-label">Add Data</span>
@@ -357,10 +462,14 @@ const Serviceproviderdash = () => {
 
           <div className="yp-dash-sidebar-footer">
             <button
-              className="yp-dash-user-info"
+              className={`yp-dash-user-info ${
+                isGated ? 'is-disabled' : ''
+              }`}
               onClick={handleHeaderProfileClick}
               aria-label="Open profile"
               type="button"
+              disabled={isGated}
+              aria-disabled={isGated}
             >
               <div className="yp-dash-user-avatar">SP</div>
               <div className="yp-dash-user-details">
@@ -390,18 +499,28 @@ const Serviceproviderdash = () => {
         )}
       </main>
 
-      {/* Notification bell — desktop header, or mobile floating */}
       {!isMobile && (
-        <div className="yp-dash-bell-slot">
+        <div
+          className={`yp-dash-bell-slot ${
+            isGated ? 'is-disabled' : ''
+          }`}
+          aria-disabled={isGated}
+        >
           <Notification onNavigate={handleNotificationNavigate} />
         </div>
       )}
 
       {isMobile && (
-        <nav className="yp-dash-bottom-nav">
+        <nav
+          className={`yp-dash-bottom-nav ${
+            isGated ? 'yp-dash-bottom-nav--gated' : ''
+          }`}
+        >
           {leftItems.map((item) => {
             const showDot =
               item.id === 'connections' && hasUnreadPaid;
+            const disabled = isGated;
+
             return (
               <button
                 key={item.id}
@@ -411,10 +530,12 @@ const Serviceproviderdash = () => {
                   !showAddData
                     ? 'yp-dash-nav-item-active'
                     : ''
-                }`}
+                } ${disabled ? 'is-disabled' : ''}`}
                 onClick={() => handleNavClick(item.id)}
                 aria-label={item.label}
                 type="button"
+                disabled={disabled}
+                aria-disabled={disabled}
               >
                 <span className="yp-dash-nav-icon-wrap">
                   <span className="yp-dash-nav-icon">
@@ -432,10 +553,14 @@ const Serviceproviderdash = () => {
           })}
 
           <button
-            className="yp-dash-nav-add"
+            className={`yp-dash-nav-add ${
+              isGated ? 'is-disabled' : ''
+            }`}
             onClick={handleAddClick}
             aria-label="Add"
             type="button"
+            disabled={isGated}
+            aria-disabled={isGated}
           >
             <span className="yp-dash-nav-add-icon">+</span>
           </button>
@@ -443,6 +568,8 @@ const Serviceproviderdash = () => {
           {rightItems.map((item) => {
             const showDot =
               item.id === 'connections' && hasUnreadPaid;
+            const disabled = isGated;
+
             return (
               <button
                 key={item.id}
@@ -452,10 +579,12 @@ const Serviceproviderdash = () => {
                   !showAddData
                     ? 'yp-dash-nav-item-active'
                     : ''
-                }`}
+                } ${disabled ? 'is-disabled' : ''}`}
                 onClick={() => handleNavClick(item.id)}
                 aria-label={item.label}
                 type="button"
+                disabled={disabled}
+                aria-disabled={disabled}
               >
                 <span className="yp-dash-nav-icon-wrap">
                   <span className="yp-dash-nav-icon">

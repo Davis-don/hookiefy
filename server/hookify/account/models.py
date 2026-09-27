@@ -1,9 +1,7 @@
-
 # account/models.py
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-from django.utils import timezone
 
 
 # ============================================================
@@ -128,10 +126,6 @@ class Accounts(AbstractUser):
     # --------------------------------------------------------
     # PROFILE IMAGE URL
     # --------------------------------------------------------
-    #
-    # Stores the Cloudinary HTTPS URL of the user's
-    # profile image.
-    # --------------------------------------------------------
 
     profile_image_url = models.URLField(
         max_length=1000,
@@ -143,9 +137,6 @@ class Accounts(AbstractUser):
     # --------------------------------------------------------
     # CLOUDINARY PUBLIC ID
     # --------------------------------------------------------
-    #
-    # Stores the Cloudinary public ID of the profile image.
-    # --------------------------------------------------------
 
     profile_image_public_id = models.CharField(
         max_length=500,
@@ -156,10 +147,6 @@ class Accounts(AbstractUser):
 
     # --------------------------------------------------------
     # GOOGLE ACCOUNT
-    # --------------------------------------------------------
-    #
-    # Used to identify users who registered/logged in
-    # through Google.
     # --------------------------------------------------------
 
     google_id = models.CharField(
@@ -191,47 +178,6 @@ class Accounts(AbstractUser):
 
     is_active = models.BooleanField(
         default=True
-    )
-
-    # ========================================================
-    # PREMIUM / VERIFIED SERVICE PROVIDER
-    # ========================================================
-    #
-    # Premium and Verified are treated as ONE status.
-    #
-    # Only service providers are allowed to have this status.
-    #
-    # Default:
-    #     is_premium = False
-    #     premium_expires_at = None
-    #
-    # A service provider becomes Premium/Verified when:
-    #
-    #     is_premium = True
-    #
-    # and:
-    #
-    #     premium_expires_at > current time
-    #
-    # Service seekers and superadmins should never receive
-    # Premium/Verified status.
-    # ========================================================
-
-    is_premium = models.BooleanField(
-        default=False,
-        help_text=(
-            "Premium/Verified status. "
-            "Only applicable to service providers."
-        ),
-    )
-
-    premium_expires_at = models.DateTimeField(
-        blank=True,
-        null=True,
-        help_text=(
-            "Date and time when Premium/Verified status expires. "
-            "Only applicable to service providers."
-        ),
     )
 
     # --------------------------------------------------------
@@ -307,53 +253,54 @@ class Accounts(AbstractUser):
         return self.auth_provider == "google"
 
     # ========================================================
-    # PREMIUM / VERIFIED STATUS CHECK
+    # SUBSCRIPTION HELPERS
+    # ========================================================
+    #
+    # Premium / Verified / Plan state is no longer stored on
+    # this model. Everything lives on `subscription.Subscription`.
+    # These convenience properties read through the OneToOne
+    # relation so callers can keep using `user.is_premium`
+    # without touching the Subscription directly.
+    #
+    # Both properties are safe when no Subscription exists.
     # ========================================================
 
     @property
-    def premium_is_active(self):
+    def subscription_plan(self):
         """
-        Return True only when this account is a
-        service provider with an active Premium/Verified
-        subscription.
-
-        A service seeker or superadmin will always return False.
+        Return the current Subscription's plan, or None.
         """
 
-        # Only service providers can be Premium/Verified.
-        if self.role != "serviceprovider":
-            return False
-
-        # Premium must be enabled.
-        if not self.is_premium:
-            return False
-
-        # An expiry date must exist.
-        if not self.premium_expires_at:
-            return False
-
-        # The expiry date must still be in the future.
-        return self.premium_expires_at > timezone.now()
-
-    # ========================================================
-    # PREMIUM / VERIFIED EXPIRED CHECK
-    # ========================================================
+        sub = getattr(self, "subscription", None)
+        return sub.plan if sub else None
 
     @property
-    def premium_is_expired(self):
+    def subscription_is_active(self):
         """
-        Return True if this service provider's
-        Premium/Verified period has expired.
+        True if the user has an active subscription.
         """
 
-        if self.role != "serviceprovider":
+        sub = getattr(self, "subscription", None)
+        return bool(sub and sub.is_active)
+
+    @property
+    def subscription_is_free(self):
+        """
+        True if the user is on the Free plan.
+        """
+
+        plan = self.subscription_plan
+        if not plan:
             return False
+        return (plan.slug or "").lower() == "free"
 
-        if not self.is_premium:
-            return False
+    @property
+    def is_premium(self):
+        """
+        True only when the user has an active PAID plan.
+        """
 
-        if not self.premium_expires_at:
-            return False
-
-        return self.premium_expires_at <= timezone.now()
-
+        return (
+            self.subscription_is_active
+            and not self.subscription_is_free
+        )

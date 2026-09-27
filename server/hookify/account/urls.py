@@ -12,9 +12,8 @@ from .views import (
     auth_check,
     profile_image_url,
     upload_profile_image,
-    check_premium_status,
     update_user,
-    update_password, 
+    update_password,
     logout_view,
 )
 
@@ -83,24 +82,25 @@ urlpatterns = [
         upload_profile_image,
         name="upload-profile-image"
     ),
-        # PREMIUM / VERIFIED STATUS CHECK
-    path(
-        "premium-status/",
-        check_premium_status,
-        name="premium-status"
-    ),
-        # UPDATE CURRENT USER
+
+    # UPDATE CURRENT USER
     path(
         "update-user/",
         update_user,
         name="update-user"
     ),
-        # UPDATE PASSWORD
+
+    # UPDATE PASSWORD
     path(
         "update-password/",
         update_password,
         name="update-password"
     ),
-    path("logout/", logout_view, name="logout"),
-    
+
+    # LOGOUT
+    path(
+        "logout/",
+        logout_view,
+        name="logout"
+    ),
 ]

@@ -1,0 +1,135 @@
+/* pages/plans.css */
+
+.plans-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 96px;
+  width: 100%;
+  color: #0f172a;
+}
+
+/* ── Header ─────────────────────────────────── */
+
+.plans-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.plans-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  margin: 0 0 8px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.plans-title svg {
+  color: #7c3aed;
+}
+
+.plans-subtitle {
+  margin: 0;
+  font-size: 14.5px;
+  color: #64748b;
+}
+
+/* ── Grid ───────────────────────────────────── */
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* ── States ─────────────────────────────────── */
+
+.plans-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 72px 24px;
+  text-align: center;
+  color: #475569;
+}
+
+.plans-state p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.plans-state-sub {
+  font-size: 13px;
+  color: #64748b;
+  max-width: 320px;
+}
+
+.plans-state--error {
+  color: #b91c1c;
+}
+
+.plans-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f3eefe;
+  color: #7c3aed;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.plans-spin {
+  font-size: 26px;
+  color: #94a3b8;
+  animation: plans-spin 0.9s linear infinite;
+}
+
+@keyframes plans-spin {
+  to { transform: rotate(360deg); }
+}
+
+.plans-retry {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.plans-retry:hover {
+  background: #1e293b;
+}
+
+/* ── Mobile ─────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .plans-page {
+    padding: 18px 14px 96px;
+  }
+
+  .plans-title {
+    font-size: 22px;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

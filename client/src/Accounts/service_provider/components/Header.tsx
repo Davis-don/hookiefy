@@ -5,7 +5,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
-import { FiUser } from 'react-icons/fi';
+import { FiUser, FiAward } from 'react-icons/fi';
 import { useAuthStore } from '../../../store/authtokenstore';
 import PremiumBadge, {
   fetchPremiumStatus,
@@ -18,6 +18,8 @@ import './header.css';
 interface HeaderProps {
   onProfileClick: () => void;
   onBrandClick?: () => void;
+  /** NEW — fired when the subscription / premium icon is tapped */
+  onSubscriptionClick?: () => void;
   userName?: string;
 }
 
@@ -55,6 +57,7 @@ async function fetchProfileImage(
 const Header: React.FC<HeaderProps> = ({
   onProfileClick,
   onBrandClick,
+  onSubscriptionClick,
   userName = 'SP',
 }) => {
   const { access } = useAuthStore();
@@ -177,7 +180,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="yp-dash-header">
       <div className="yp-dash-header-content">
-        {/* ── Brand ─────────────────────────────────────── */}
+        {/* ── Brand ──────────────────────────────────── */}
         <h1
           className="yp-dash-wordmark"
           onClick={onBrandClick}
@@ -196,18 +199,36 @@ const Header: React.FC<HeaderProps> = ({
           <span className="yp-logo-ata">ata</span>
         </h1>
 
-        {/* ── Right cluster: Bell + Avatar ─────────────── */}
+        {/* ── Right cluster: Subscription + Bell + Avatar ── */}
         <div className="yp-dash-header-actions">
-          {/* ── Notification bell ──────────────────────── */}
+          {/* ── Subscription / Premium icon ─────────── */}
+          <button
+            type="button"
+            className={`yp-dash-sub-btn ${
+              isPremium ? 'is-premium' : ''
+            }`}
+            onClick={onSubscriptionClick}
+            aria-label="Open subscription"
+            title="Subscription"
+          >
+            <FiAward className="yp-dash-sub-icon" />
+            {isPremium && (
+              <span
+                className="yp-dash-sub-glow"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+
+          {/* ── Notification bell ────────────────────── */}
           <Notification />
 
-          {/* ── Avatar with premium halo + crown seal ──── */}
+          {/* ── Avatar with premium halo + crown seal ── */}
           <div
             ref={menuRef}
             className="yp-dash-avatar-wrap"
             data-premium={isPremium ? 'true' : 'false'}
           >
-            {/* Halo ring — only visible when premium */}
             <span className="yp-avatar-halo" aria-hidden="true" />
 
             <button
@@ -248,16 +269,17 @@ const Header: React.FC<HeaderProps> = ({
               )}
 
               {isFetching && !imgLoaded && (
-                <span className="yp-avatar-refresh-dot" aria-hidden="true" />
+                <span
+                  className="yp-avatar-refresh-dot"
+                  aria-hidden="true"
+                />
               )}
             </button>
 
-            {/* Corner crown — only renders for premium users */}
             <div className="yp-dash-avatar-seal">
               <PremiumBadge size="xs" showLabel={false} />
             </div>
 
-            {/* ── Dropdown menu ─────────────────────────── */}
             {menuOpen && (
               <div
                 className="yp-avatar-menu"
@@ -274,7 +296,6 @@ const Header: React.FC<HeaderProps> = ({
                   <span>Profile</span>
                 </button>
 
-                {/* LogoutButton renders its own icon + label */}
                 <div className="yp-avatar-menu-item yp-avatar-menu-item--logout">
                   <LogoutButton
                     redirectTo="/login"

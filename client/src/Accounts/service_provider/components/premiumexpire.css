@@ -9,12 +9,11 @@
   --pe-accent: #2f6fdb;
   --pe-text: #14418a;
 
-  display: flex;                 /* was inline-flex → full-width row */
+  display: flex;
   align-items: center;
-  justify-content: center;       /* ← centers content inside */
+  justify-content: center;
   gap: 10px;
 
-  /* Center the alert itself inside its parent */
   margin-left: auto;
   margin-right: auto;
 
@@ -22,8 +21,8 @@
   border-radius: 12px;
 
   font: inherit;
-  font-size: 15px;               /* ← was 13px — larger */
-  font-weight: 600;              /* ← bolder base weight */
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.15px;
 
@@ -31,7 +30,7 @@
   background: var(--pe-bg);
 
   border: 1px solid var(--pe-border);
-  border-left: 5px solid var(--pe-accent);   /* ← thicker accent */
+  border-left: 5px solid var(--pe-accent);
 
   box-shadow: 0 2px 6px rgba(20, 65, 138, 0.08);
 
@@ -43,18 +42,17 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 
-  /* Let it size to content but never overflow */
   max-width: 100%;
-  width: fit-content;            /* keeps the pill shape */
+  width: fit-content;
   text-align: center;
 }
 
 /* ─────────────────────────────────────────────
-   Icon — slightly larger, matches new text size
+   Icon
    ───────────────────────────────────────────── */
 .premium-expire-alert-icon {
   flex: 0 0 auto;
-  width: 22px;                   /* ← was 18px */
+  width: 22px;
   height: 22px;
   border-radius: 50%;
 
@@ -62,7 +60,7 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 13px;               /* ← was 11px */
+  font-size: 13px;
   font-weight: 800;
   font-style: italic;
 
@@ -87,7 +85,7 @@
 }
 
 .premium-expire-alert-text strong {
-  font-weight: 800;              /* ← was 700 — bolder headline */
+  font-weight: 800;
   letter-spacing: 0.2px;
 }
 
@@ -100,8 +98,8 @@
 .premium-expire-countdown {
   display: inline-block;
 
-  font-size: 1.05em;             /* ← countdown slightly bigger */
-  font-weight: 800;              /* ← bolder countdown */
+  font-size: 1.05em;
+  font-weight: 800;
   color: var(--pe-accent);
   letter-spacing: 0.3px;
 
@@ -123,13 +121,68 @@
 }
 
 /* ─────────────────────────────────────────────
-   Error variant (soft red)
+   FREE variant (soft indigo)
+   ───────────────────────────────────────────── */
+.premium-expire-alert-free {
+  --pe-bg: #f3eefe;
+  --pe-border: #d9c7fb;
+  --pe-accent: #7c3aed;
+  --pe-text: #4c1d95;
+
+  box-shadow: 0 2px 6px rgba(76, 29, 149, 0.08);
+}
+
+.premium-expire-alert-free .premium-expire-alert-icon {
+  font-style: normal;
+}
+
+/* ─────────────────────────────────────────────
+   EXPIRED variant (soft red)
+   ───────────────────────────────────────────── */
+.premium-expire-alert-expired {
+  --pe-bg: #fdeaea;
+  --pe-border: #f6c4c4;
+  --pe-accent: #d9534f;
+  --pe-text: #8a2020;
+
+  box-shadow: 0 2px 6px rgba(138, 32, 32, 0.1);
+}
+
+.premium-expire-alert-expired .premium-expire-alert-icon {
+  font-style: normal;
+  font-weight: 900;
+}
+
+.premium-expire-alert-expired .premium-expire-countdown {
+  animation: none;
+  color: var(--pe-accent);
+  font-weight: 800;
+}
+
+/* Elapsed hint line ("Renew to unlock...") */
+.premium-expire-expired-hint {
+  display: block;
+  flex-basis: 100%;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  color: var(--pe-text);
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────────
+   Error variant
    ───────────────────────────────────────────── */
 .premium-expire-alert-error {
   --pe-bg: #fdeaea;
   --pe-border: #f6c4c4;
   --pe-accent: #d9534f;
   --pe-text: #8a2020;
+}
+
+.premium-expire-alert-error .premium-expire-countdown {
+  animation: none;
 }
 
 /* ─────────────────────────────────────────────
@@ -142,7 +195,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   Small screens — still centered, slightly tighter
+   Small screens
    ───────────────────────────────────────────── */
 @media (max-width: 420px) {
   .premium-expire-alert {
@@ -160,5 +213,9 @@
 
   .premium-expire-countdown {
     font-size: 1em;
+  }
+
+  .premium-expire-expired-hint {
+    font-size: 12px;
   }
 }

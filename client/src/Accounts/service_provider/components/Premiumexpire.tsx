@@ -5,22 +5,48 @@ import { useAuthStore } from '../../../store/authtokenstore';
 import './premiumexpire.css';
 
 /* ────────────────────────────────────────────────────────
-   Response type — mirrors what the backend returns
+   Response type — mirrors /subscription/status/
    ──────────────────────────────────────────────────────── */
-interface PremiumStatusResponse {
+interface SubscriptionPlan {
+  id: number;
+  name: string;
+  slug: string;
+  price: string;
+}
+
+interface TimeRemaining {
+  total_seconds: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  human: string;
+  short: string;
+}
+
+interface ElapsedSince {
+  total_seconds: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  human: string;
+}
+
+interface SubscriptionStatusResponse {
+  has_subscription: boolean;
+  is_free: boolean;
   is_premium: boolean;
-  role: string;
-  expires_at: string | null;
+  is_active: boolean;
   is_expired: boolean;
-  time_remaining: {
-    total_seconds: number;
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-    human: string;
-    short: string;
-  } | null;
+  status: 'active' | 'expired' | 'free' | 'no_subscription';
+  plan: SubscriptionPlan | null;
+  start_date: string | null;
+  end_date: string | null;
+  time_remaining: TimeRemaining | null;
+  elapsed_since_expiry: ElapsedSince | null;
+  role: string;
+  message?: string;
 }
 
 const API_URL =
@@ -28,12 +54,12 @@ const API_URL =
   'https://hookiefy-server-7d6d.onrender.com';
 
 /* ────────────────────────────────────────────────────────
-   Fetch premium status
+   Fetch subscription status
    ──────────────────────────────────────────────────────── */
-async function fetchPremiumStatus(
+async function fetchSubscriptionStatus(
   access: string
-): Promise<PremiumStatusResponse> {
-  const response = await fetch(`${API_URL}/account/premium-status/`, {
+): Promise<SubscriptionStatusResponse> {
+  const response = await fetch(`${API_URL}/subscription/status/`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -46,15 +72,15 @@ async function fetchPremiumStatus(
   if (!response.ok) {
     const message =
       (data && (data.message || data.detail)) ||
-      `Failed to load premium status (${response.status})`;
+      `Failed to load subscription status (${response.status})`;
     throw new Error(message);
   }
 
-  return data as PremiumStatusResponse;
+  return data as SubscriptionStatusResponse;
 }
 
 /* ────────────────────────────────────────────────────────
-   Format seconds as "Xd Xh Xm Xs"
+   Format a POSITIVE remaining time as "Xd Xh Xm Xs"
    ──────────────────────────────────────────────────────── */
 function formatCountdown(totalSeconds: number) {
   const s = Math.max(0, Math.floor(totalSeconds));
@@ -75,98 +101,166 @@ function formatCountdown(totalSeconds: number) {
 }
 
 /* ────────────────────────────────────────────────────────
+   Format an ELAPSED time as "X days, Y hours ago"
+   ──────────────────────────────────────────────────────── */
+function formatElapsed(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(Math.abs(totalSeconds)));
+
+  const days = Math.floor(s / 86400);
+  const hours = Math.floor((s % 86400) / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+
+  if (days > 0) {
+    if (hours > 0) {
+      return `${days} day${days === 1 ? '' : 's'}, ${hours} hour${
+        hours === 1 ? '' : 's'
+      } ago`;
+    }
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
+
+  if (hours > 0) {
+    if (minutes > 0) {
+      return `${hours} hour${hours === 1 ? '' : 's'}, ${minutes} minute${
+        minutes === 1 ? '' : 's'
+      } ago`;
+    }
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  }
+
+  if (seconds > 0) {
+    return `${seconds} second${seconds === 1 ? '' : 's'} ago`;
+  }
+
+  return 'just now';
+}
+
+/* ────────────────────────────────────────────────────────
+   Seconds since an ISO date — null if invalid
+   ──────────────────────────────────────────────────────── */
+function secondsSince(iso: string | null): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.floor((Date.now() - t) / 1000);
+}
+
+/* ────────────────────────────────────────────────────────
    Refetch cadence
-   ────────────────────────────────────────────────────────
-   - The ticker runs every 1s locally (no network).
-   - The server is re-queried at a cadence that scales with
-     how much time is left:
-        > 1 day    → every 30 min
-        > 1 hour   → every 15 min
-        > 10 min   → every 5 min
-        > 1 min    → every 60 s
-        otherwise  → every 30 s
-   This keeps the countdown accurate near expiry without
-   hammering the server for users who have days left.
    ──────────────────────────────────────────────────────── */
 function refetchIntervalFor(totalSeconds: number): number {
-  if (totalSeconds > 86400) return 30 * 60_000; // 30 min
-  if (totalSeconds > 3600) return 15 * 60_000;  // 15 min
-  if (totalSeconds > 600) return 5 * 60_000;    // 5 min
-  if (totalSeconds > 60) return 60_000;         // 1 min
-  return 30_000;                                // 30 s
+  if (totalSeconds > 86400) return 30 * 60_000;
+  if (totalSeconds > 3600) return 15 * 60_000;
+  if (totalSeconds > 600) return 5 * 60_000;
+  if (totalSeconds > 60) return 60_000;
+  return 30_000;
 }
+
+const EXPIRED_REFETCH_INTERVAL = 5 * 60_000;
+const FREE_REFETCH_INTERVAL = 5 * 60_000;
 
 const Premiumexpire = () => {
   const { access } = useAuthStore();
   const queryClient = useQueryClient();
 
-  /* ── Local countdown state ─────────────────────────── */
+  /* Local countdown state:
+     positive → seconds remaining
+     zero / negative → seconds since expiry
+     null → nothing to show (free or no subscription) */
   const [remaining, setRemaining] = useState<number | null>(null);
   const intervalRef = useRef<number | null>(null);
 
-  /* ── Query that fetches premium status ─────────────── */
   const { data, isLoading, isError, error } = useQuery<
-    PremiumStatusResponse,
+    SubscriptionStatusResponse,
     Error
   >({
-    queryKey: ['premium-expire', access],
+    queryKey: ['subscription-status', access],
     queryFn: () => {
       if (!access) throw new Error('You are not signed in.');
-      return fetchPremiumStatus(access);
+      return fetchSubscriptionStatus(access);
     },
     enabled: !!access,
 
-    // Keep cached data alive across navigation.
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
 
-    // No automatic refetch on focus / mount / reconnect —
-    // the smart interval below controls cadence instead.
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
 
-    // Adaptive refetch: how often depends on time left.
     refetchInterval: (query) => {
-      const total = query.state.data?.time_remaining?.total_seconds;
-      if (
-        !query.state.data?.is_premium ||
-        total == null ||
-        total <= 0
-      ) {
-        return false; // stop polling when not premium / expired
-      }
+      const d = query.state.data;
+
+      if (!d) return false;
+
+      // Free plan → slow poll (in case they upgrade)
+      if (d.status === 'free') return FREE_REFETCH_INTERVAL;
+
+      // No subscription → don't poll
+      if (!d.has_subscription) return false;
+
+      // Expired → slow poll (in case they renew)
+      if (d.is_expired) return EXPIRED_REFETCH_INTERVAL;
+
+      // Active → scale with time left
+      const total = d.time_remaining?.total_seconds;
+      if (total == null || total <= 0) return false;
+
       return refetchIntervalFor(total);
     },
 
-    // Pause polling when the tab is hidden — saves battery
-    // and prevents needless requests in background tabs.
     refetchIntervalInBackground: false,
-
     retry: 1,
     retryDelay: 2000,
   });
 
-  /* ── Surface errors as inline state (no toast spam) ── */
-  // Only log once; UI renders a soft fallback message.
-
-  /* ── Seed / re-seed the countdown when fresh data arrives ── */
+  /* ── Seed / re-seed countdown when fresh data arrives ── */
   useEffect(() => {
-    const total = data?.time_remaining?.total_seconds;
+    if (!data) {
+      setRemaining(null);
+      return;
+    }
 
-    if (data?.is_premium && total != null) {
-      // Only reset the local ticker if the server value
-      // differs by more than 2 seconds — prevents visible
-      // jumps every time a background refetch lands.
+    // Free plan or no subscription → no countdown
+    if (data.is_free || !data.has_subscription) {
+      setRemaining(null);
+      return;
+    }
+
+    // Expired → store NEGATIVE seconds since expiry
+    if (data.is_expired) {
+      const since = secondsSince(data.end_date);
+      setRemaining(since != null ? -Math.max(0, since) : 0);
+      return;
+    }
+
+    // Active → store positive seconds remaining
+    const total = data.time_remaining?.total_seconds;
+    if (data.is_active && total != null) {
       setRemaining((prev) => {
         if (prev === null) return total;
+        if (prev <= 0) return total; // was expired, now renewed
         if (Math.abs(prev - total) > 2) return total;
         return prev;
       });
-    } else {
-      setRemaining(null);
+      return;
     }
-  }, [data?.is_premium, data?.time_remaining?.total_seconds]);
+
+    setRemaining(null);
+  }, [
+    data,
+    data?.is_free,
+    data?.is_active,
+    data?.is_expired,
+    data?.has_subscription,
+    data?.end_date,
+    data?.time_remaining?.total_seconds,
+  ]);
 
   /* ── Local ticker: decrement every second ──────────── */
   useEffect(() => {
@@ -180,18 +274,22 @@ const Premiumexpire = () => {
     intervalRef.current = window.setInterval(() => {
       setRemaining((prev) => {
         if (prev === null) return prev;
-        if (prev <= 1) {
-          // Reached zero — stop ticking and force a fresh
-          // query so the backend decides the real state.
+
+        // Reached zero → flip to "expired just now", refetch
+        if (prev === 1) {
           if (intervalRef.current !== null) {
             window.clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
           queryClient.invalidateQueries({
-            queryKey: ['premium-expire', access],
+            queryKey: ['subscription-status', access],
           });
           return 0;
         }
+
+        // Already expired → keep counting up (more negative)
+        if (prev <= 0) return prev - 1;
+
         return prev - 1;
       });
     }, 1000);
@@ -204,8 +302,7 @@ const Premiumexpire = () => {
     };
   }, [remaining === null, access, queryClient]);
 
-  /* ── Silent refetch when the tab regains focus ─────── */
-  // Throttled to at most once every 60 seconds.
+  /* ── Silent refetch on focus, throttled ───────────── */
   const lastFocusRef = useRef<number>(0);
   useEffect(() => {
     const onFocus = () => {
@@ -215,7 +312,7 @@ const Premiumexpire = () => {
 
       if (access) {
         queryClient.invalidateQueries({
-          queryKey: ['premium-expire', access],
+          queryKey: ['subscription-status', access],
           refetchType: 'active',
         });
       }
@@ -228,7 +325,7 @@ const Premiumexpire = () => {
   /* ── Render: nothing until we know status ──────────── */
   if (isLoading && !data) return null;
 
-  /* ── Error state — soft message, no toast spam ─────── */
+  /* ── Error state ───────────────────────────────────── */
   if (isError && !data) {
     return (
       <div className="premium-expire-alert premium-expire-alert-error">
@@ -236,36 +333,96 @@ const Premiumexpire = () => {
           !
         </span>
         <span className="premium-expire-alert-text">
-          {error?.message || 'Could not load premium status.'}
+          {error?.message || 'Could not load subscription status.'}
         </span>
       </div>
     );
   }
 
-  /* ── Not premium → render nothing ──────────────────── */
-  if (!data?.is_premium || remaining === null) return null;
+  if (!data) return null;
 
-  /* ── Premium → show the info alert with live countdown */
-  return (
-    <div
-      className="premium-expire-alert premium-expire-alert-info"
-      role="status"
-      aria-live="polite"
-    >
-      <span className="premium-expire-alert-icon" aria-hidden="true">
-        i
-      </span>
+  /* ── No subscription at all → render nothing ───────── */
+  if (!data.has_subscription) return null;
 
-      <span className="premium-expire-alert-text">
-        <strong>Premium active</strong>
-        <span className="premium-expire-sep">·</span>
-        expires in{' '}
-        <span className="premium-expire-countdown">
-          {formatCountdown(remaining)}
+  /* ── FREE PLAN ─────────────────────────────────────── */
+  if (data.is_free) {
+    return (
+      <div
+        className="premium-expire-alert premium-expire-alert-free"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="premium-expire-alert-icon" aria-hidden="true">
+          ★
         </span>
-      </span>
-    </div>
-  );
+
+        <span className="premium-expire-alert-text">
+          <strong>You're on the Free plan</strong>
+          <span className="premium-expire-sep">·</span>
+          Upgrade to Premium to unlock featured listings and priority
+          visibility.
+        </span>
+      </div>
+    );
+  }
+
+  /* ── EXPIRED ───────────────────────────────────────── */
+  if (data.is_expired) {
+    const elapsedSeconds =
+      remaining !== null && remaining <= 0
+        ? Math.abs(remaining)
+        : data.elapsed_since_expiry?.total_seconds ?? 0;
+
+    return (
+      <div
+        className="premium-expire-alert premium-expire-alert-expired"
+        role="alert"
+        aria-live="polite"
+      >
+        <span className="premium-expire-alert-icon" aria-hidden="true">
+          ⏱
+        </span>
+
+        <span className="premium-expire-alert-text">
+          <strong>Your Premium has expired</strong>
+          <span className="premium-expire-sep">·</span>
+          {elapsedSeconds === 0
+            ? 'just now'
+            : formatElapsed(elapsedSeconds)}
+          <span className="premium-expire-expired-hint">
+            Renew to unlock premium features again.
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  /* ── ACTIVE (paid, counting down) ──────────────────── */
+  if (data.is_active && remaining !== null && remaining > 0) {
+    return (
+      <div
+        className="premium-expire-alert premium-expire-alert-info"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="premium-expire-alert-icon" aria-hidden="true">
+          i
+        </span>
+
+        <span className="premium-expire-alert-text">
+          <strong>{data.plan?.name || 'Premium'} active</strong>
+          <span className="premium-expire-sep">·</span>
+          expires in{' '}
+          <span className="premium-expire-countdown">
+            {formatCountdown(remaining)}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  /* ── Fallback ──────────────────────────────────────── */
+  return null;
 };
 
 export default Premiumexpire;

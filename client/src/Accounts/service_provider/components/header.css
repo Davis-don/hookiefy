@@ -599,7 +599,10 @@
     font-size: inherit;
   }
 }
-/* ── Right-side action cluster (bell + avatar) ──────────── */
+
+/* ─────────────────────────────────────────────
+   Right-side action cluster (sub + bell + avatar)
+   ───────────────────────────────────────────── */
 .yp-dash-header-actions {
   display: flex;
   align-items: center;
@@ -609,5 +612,91 @@
 @media (max-width: 480px) {
   .yp-dash-header-actions {
     gap: 8px;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Subscription / Premium icon
+   ───────────────────────────────────────────── */
+.yp-dash-sub-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #475569;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.yp-dash-sub-btn:hover {
+  background: #f1f5f9;
+  color: #7c3aed;
+}
+
+.yp-dash-sub-btn:active {
+  transform: scale(0.94);
+}
+
+.yp-dash-sub-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+}
+
+.yp-dash-sub-icon {
+  font-size: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Premium state — purple accent + soft pulse glow */
+.yp-dash-sub-btn.is-premium {
+  color: #7c3aed;
+}
+
+.yp-dash-sub-btn.is-premium:hover {
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.yp-dash-sub-glow {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(124, 58, 237, 0.35) 0%,
+    rgba(124, 58, 237, 0) 70%
+  );
+  pointer-events: none;
+  animation: yp-sub-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes yp-sub-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yp-dash-sub-glow {
+    animation: none;
+  }
+}
+
+/* Tighter on the smallest screens so 3 icons + avatar fit */
+@media (max-width: 380px) {
+  .yp-dash-sub-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .yp-dash-sub-icon {
+    font-size: 18px;
   }
 }

@@ -199,8 +199,8 @@ class UserSerializer(serializers.ModelSerializer):
 #
 # NOT updatable (rejected if sent):
 #     role, auth_provider, google_id, profile_image_url,
-#     profile_image_public_id, is_premium, premium_expires_at,
-#     is_active, is_staff, is_superuser, password
+#     profile_image_public_id, is_active, is_staff,
+#     is_superuser, password
 #
 # Uniqueness enforced here:
 #     - email must be unique across all accounts
@@ -279,7 +279,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
                 "Email is required."
             )
 
-        # Basic format check
         import re
 
         if not re.match(
@@ -291,7 +290,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
                 "Enter a valid email address."
             )
 
-        # Uniqueness — exclude the current user
         request = self.context.get("request")
 
         if request and request.user:
@@ -315,7 +313,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
     def validate_phone_number(self, value):
 
-        # Allow clearing the phone number
         if value is None or value == "":
             return None
 
@@ -324,7 +321,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         if not phone:
             return None
 
-        # Uniqueness — exclude the current user
         request = self.context.get("request")
 
         if request and request.user:
@@ -448,17 +444,9 @@ class ProfileImageUploadSerializer(
 
         return value
 
+
 # ============================================================
 # UPDATE PASSWORD SERIALIZER
-# ============================================================
-#
-# Handles the "change my own password" flow.
-#
-# Rules:
-#   - current_password must match the user's actual password
-#   - new_password must meet complexity requirements
-#   - new_password must differ from current_password
-#   - confirm_password must equal new_password
 # ============================================================
 
 class UpdatePasswordSerializer(serializers.Serializer):

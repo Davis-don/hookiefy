@@ -21,6 +21,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "gateway",
         "connection_link",
         "service_link",
+        "plan_link",
         "paid_at",
         "created_at",
     )
@@ -42,6 +43,8 @@ class PaymentAdmin(admin.ModelAdmin):
         "user__last_name",
         "connection__connection_id",
         "service__title",
+        "plan__name",
+        "plan__slug",
     )
 
     readonly_fields = (
@@ -56,7 +59,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
-    list_select_related = ("user", "connection", "service")
+    list_select_related = ("user", "connection", "service", "plan")
     list_per_page = 50
 
     # ========================================================
@@ -83,6 +86,7 @@ class PaymentAdmin(admin.ModelAdmin):
             "fields": (
                 "connection",
                 "service",
+                "plan",
             ),
             "description": (
                 "One of these is set, depending on the "
@@ -143,6 +147,7 @@ class PaymentAdmin(admin.ModelAdmin):
         colors = {
             "connection": ("#1d4ed8", "rgba(59,130,246,0.12)"),
             "service": ("#7e22ce", "rgba(168,85,247,0.12)"),
+            "plan": ("#0f766e", "rgba(20,184,166,0.14)"),
         }
         color, bg = colors.get(
             obj.payment_type, ("#334155", "#f1f5f9")
@@ -200,6 +205,18 @@ class PaymentAdmin(admin.ModelAdmin):
             "</a>",
             obj.service.id,
             getattr(obj.service, "title", "Service"),
+        )
+
+    @admin.display(description="Plan")
+    def plan_link(self, obj):
+        if not obj.plan:
+            return "—"
+        return format_html(
+            '<a href="/admin/plans/plan/{}/change/">'
+            "{}"
+            "</a>",
+            obj.plan.id,
+            obj.plan.name,
         )
 
     # ========================================================
