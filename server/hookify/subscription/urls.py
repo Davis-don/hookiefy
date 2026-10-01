@@ -15,4 +15,9 @@ urlpatterns = [
         views.renew_subscription,
         name="renew_subscription",
     ),
+    path(
+        "premium-status/",
+        views.premium_status,
+        name="premium_status",
+    ),
 ]

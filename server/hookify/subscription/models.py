@@ -34,13 +34,23 @@ class Subscription(models.Model):
 
     start_date = models.DateTimeField(
         default=timezone.now,
-        editable=False,
-        help_text="Start of the current subscription period.",
+        help_text=(
+            "Start of the current subscription period. "
+            "Defaults to now on create; editable to allow "
+            "backdating or testing."
+        ),
     )
 
     end_date = models.DateTimeField(
-        editable=False,
-        help_text="End of the current subscription period.",
+        null=True,
+        blank=True,
+        help_text=(
+            "End of the current subscription period. "
+            "Leave blank to auto-compute: +30 days for paid "
+            "plans, far-future for free plans. You can "
+            "override this in the admin to test the "
+            "active/expired behavior."
+        ),
     )
 
     created_at = models.DateTimeField(

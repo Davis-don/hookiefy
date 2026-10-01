@@ -12,6 +12,10 @@ import MyConnections from '../components/connections/MyConnections';
 import Notification from '../components/notification/Notification';
 import Subscription from '../components/subscription/Subscription';
 import { useAuthStore } from '../../../store/authtokenstore';
+import {
+  fetchPremiumStatus,
+  type PremiumStatusResponse,
+} from '../components/PremiumBadge';
 
 const FULL_BLEED_TABS = new Set(['home', 'add-data', 'connections']);
 
@@ -27,15 +31,7 @@ function resolveApiBase(): string {
   return `${trimmed}${NOTIF_PREFIX}`;
 }
 
-function resolveApiOrigin(): string {
-  // @ts-ignore
-  const envUrl: string | undefined = import.meta.env?.VITE_API_URL;
-  if (!envUrl || !envUrl.trim()) return '';
-  return envUrl.replace(/\/+$/, '');
-}
-
 const API_BASE = resolveApiBase();
-const API_ORIGIN = resolveApiOrigin();
 
 function readStoredToken(): string | null {
   const keys = [
@@ -125,41 +121,6 @@ async function fetchUnreadPaidConnections(
   return res.json();
 }
 
-/* ── Premium status ──────────────────────────────── */
-
-interface PremiumStatusResponse {
-  is_premium: boolean;
-  role: string;
-  expires_at: string | null;
-  is_expired: boolean;
-  time_remaining: {
-    total_seconds: number;
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-    human: string;
-    short: string;
-  } | null;
-}
-
-async function fetchPremiumStatus(
-  access: string | null
-): Promise<PremiumStatusResponse | null> {
-  if (!access) return null;
-  const url = API_ORIGIN
-    ? `${API_ORIGIN}/account/premium-status/`
-    : `/account/premium-status/`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${access}`,
-    },
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 /* ── Dashboard ───────────────────────────────────── */
 
 const Serviceproviderdash = () => {
@@ -185,7 +146,9 @@ const Serviceproviderdash = () => {
   }, []);
 
   /* ── Premium status query ────────────────────────── */
-  const { data: premium } = useQuery({
+  /* Uses the shared fetcher from PremiumBadge so the
+     endpoint lives in exactly one place. */
+  const { data: premium } = useQuery<PremiumStatusResponse | null>({
     queryKey: ['premium-status', access],
     queryFn: () => fetchPremiumStatus(access),
     enabled: !!access,

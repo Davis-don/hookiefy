@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from django.contrib import admin
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
@@ -16,6 +17,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     # ========================================================
 
     list_display = (
+        "id_link",
         "short_user",
         "plan_link",
         "status_badge",
@@ -33,6 +35,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "id",
         "user__email",
         "user__first_name",
         "user__last_name",
@@ -42,8 +45,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = (
-        "start_date",
-        "end_date",
+        "id",
         "created_at",
         "updated_at",
         "is_active_display",
@@ -64,6 +66,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Subscription", {
             "fields": (
+                "id",
                 "user",
                 "plan",
             )
@@ -74,9 +77,11 @@ class SubscriptionAdmin(admin.ModelAdmin):
                 "end_date",
             ),
             "description": (
-                "start_date is auto-set on create. "
-                "end_date is auto-computed as start_date + 30 days "
-                "for paid plans. Free plans never expire."
+                "Both dates are editable. "
+                "Leave end_date blank to auto-compute: "
+                "+30 days for paid plans, far-future for free plans. "
+                "Change end_date to test the active/expired "
+                "behavior — set it in the past to force expired."
             ),
         }),
         ("Derived", {
@@ -110,19 +115,32 @@ class SubscriptionAdmin(admin.ModelAdmin):
     # LIST COLUMNS
     # ========================================================
 
-    @admin.display(
-        description="User",
-        ordering="user__email",
-    )
+    @admin.display(description="ID", ordering="id")
+    def id_link(self, obj):
+        url = reverse(
+            "admin:subscription_subscription_change",
+            args=[obj.id],
+        )
+        return format_html(
+            '<a href="{}" style="font-weight:600;color:#2563eb;">{}</a>',
+            url,
+            obj.id,
+        )
+
+    @admin.display(description="User", ordering="user__email")
     def short_user(self, obj):
         if not obj.user:
             return "—"
 
+        url = reverse(
+            "admin:account_accounts_change",
+            args=[obj.user.id],
+        )
         return format_html(
-            '<a href="/admin/account/accounts/{}/change/">'
+            '<a href="{}">'
             '{} <span style="color:#94a3b8">({})</span>'
             "</a>",
-            obj.user.id,
+            url,
             obj.user.full_name or obj.user.email,
             obj.user.role,
         )
@@ -132,11 +150,15 @@ class SubscriptionAdmin(admin.ModelAdmin):
         if not obj.plan:
             return "—"
 
+        url = reverse(
+            "admin:plans_plan_change",
+            args=[obj.plan.id],
+        )
         return format_html(
-            '<a href="/admin/plans/plan/{}/change/">'
+            '<a href="{}">'
             '{} <span style="color:#94a3b8">(KES {})</span>'
             "</a>",
-            obj.plan.id,
+            url,
             obj.plan.name,
             obj.plan.price,
         )
@@ -284,7 +306,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     @admin.action(description="Expire selected now")
     def expire_now(self, request, queryset):
-        # Free plans never expire — skip them.
         paid = queryset.exclude(plan__name__iexact="free")
         count = paid.update(end_date=timezone.now())
         self.message_user(

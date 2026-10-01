@@ -1,4 +1,5 @@
 # subscription/views.py
+import logging
 from datetime import timedelta
 
 from django.utils import timezone
@@ -9,6 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Subscription
+
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -201,7 +205,12 @@ def subscription_status(request):
     is_free_plan = False
 
     if plan:
-        is_free_plan = (plan.slug or "").lower() == "free"
+        plan_name = (plan.name or "").strip().lower()
+        plan_slug = (plan.slug or "").strip().lower()
+        is_free_plan = (
+            plan_name == "free"
+            or plan_slug == "free"
+        )
         plan_payload = {
             "id": plan.id,
             "name": plan.name,
@@ -214,7 +223,7 @@ def subscription_status(request):
     # --------------------------------------------------------
     #
     # `is_paid` comes straight from the linked payment.
-    # `is_active` requires paid AND end_date in the future.
+    # `is_active` requires end_date in the future.
     # `is_expired` is true once the end_date has passed.
     # --------------------------------------------------------
     is_paid = subscription.is_paid
@@ -234,7 +243,6 @@ def subscription_status(request):
     elif payment_status == "pending":
         status_str = "pending"
     elif is_expired:
-        # Date passed but the payment was never completed
         status_str = "expired"
     else:
         status_str = "no_subscription"
@@ -290,7 +298,8 @@ def subscription_status(request):
 #
 # Extends the end_date by N days. Useful for admin or manual
 # adjustments. The proper paid flow goes through
-# /payments/plan/initiate/ and creates a new Payment row.
+# /subscription_payments/initialize/ and creates a new
+# SubscriptionPayment row.
 #
 # ============================================================
 
@@ -357,6 +366,113 @@ def renew_subscription(request):
             "days_remaining": subscription.days_remaining,
             "is_active": subscription.is_active,
             "is_paid": subscription.is_paid,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# PREMIUM STATUS
+# ============================================================
+#
+# Compact endpoint for the frontend PremiumBadge.
+#
+# Show the badge when:
+#     - the user has a subscription,
+#     - the plan is NOT the free plan,
+#     - the subscription is currently active (end_date in
+#       the future).
+#
+# Returns:
+#
+#   {
+#     "is_premium": true|false,
+#     "role": "serviceprovider",
+#     "expires_at": "2026-11-01T13:55:00Z" | null,
+#     "is_expired": true|false
+#   }
+#
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def premium_status(request):
+    """
+    Return a compact premium-status payload for the badge.
+    """
+
+    user = request.user
+
+    # --------------------------------------------------------
+    # Inactive account
+    # --------------------------------------------------------
+    if not user.is_active:
+        return Response(
+            {
+                "is_premium": False,
+                "role": user.role,
+                "expires_at": None,
+                "is_expired": False,
+                "message": "This account is inactive.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # --------------------------------------------------------
+    # No subscription
+    # --------------------------------------------------------
+    subscription = getattr(user, "subscription", None)
+
+    if not subscription:
+        return Response(
+            {
+                "is_premium": False,
+                "role": user.role,
+                "expires_at": None,
+                "is_expired": False,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    # --------------------------------------------------------
+    # Derive flags
+    # --------------------------------------------------------
+    plan = subscription.plan
+
+    plan_name = (plan.name or "").strip().lower() if plan else ""
+    plan_slug = (plan.slug or "").strip().lower() if plan else ""
+
+    # Free if either name or slug is "free".
+    is_free_plan = (
+        plan_name == "free"
+        or plan_slug == "free"
+    )
+
+    is_active = subscription.is_active
+    is_expired = subscription.is_expired
+
+    is_premium = is_active and not is_free_plan
+
+    logger.debug(
+        "premium_status | user=%s | plan=%s | "
+        "is_free=%s | is_active=%s | is_premium=%s",
+        user.email,
+        plan.name if plan else None,
+        is_free_plan,
+        is_active,
+        is_premium,
+    )
+
+    return Response(
+        {
+            "is_premium": is_premium,
+            "role": user.role,
+            "expires_at": (
+                subscription.end_date
+                if is_premium
+                else None
+            ),
+            "is_expired": is_expired,
         },
         status=status.HTTP_200_OK,
     )
