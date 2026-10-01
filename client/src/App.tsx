@@ -8,6 +8,7 @@ import Protectedroute from "./components/protected/Protectedroute";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import PaymentError from "./pages/PaymentError";
+import PaymentResult from "./pages/PaymentResult";
 import Mainlayout from "./layouts/Mainlayout";
 import Serviceseeker from "./pages/Seviceseeker";
 import Serviceprovider from "./pages/Serviceprovider";
@@ -40,6 +41,12 @@ function App() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failure" element={<PaymentFailure />} />
           <Route path="/payment-error" element={<PaymentError />} />
+
+          {/* ✅ NEW — PesaPal callback redirects here after payment */}
+          <Route
+            path="/subscription/payment-result"
+            element={<PaymentResult />}
+          />
 
           {/* ============================================================
               ✅ Public standalone viewers
