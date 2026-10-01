@@ -7,11 +7,26 @@ import './premiumBadge.css';
 /* ────────────────────────────────────────────────────────
    Response shape — exported so other components can reuse
    ──────────────────────────────────────────────────────── */
+
+export type PremiumState =
+  | 'free'
+  | 'premium_active'
+  | 'premium_expired';
+
 export interface PremiumStatusResponse {
+  /** 3-state flag: which bucket the user is in. */
+  state: PremiumState;
+
+  is_free: boolean;
   is_premium: boolean;
+  is_premium_active: boolean;
+  is_premium_expired: boolean;
+
   role: string;
   expires_at: string | null;
   is_expired: boolean;
+
+  /** Optional — populated by /subscription/status/ */
   time_remaining?: {
     total_seconds: number;
     days: number;
@@ -77,13 +92,13 @@ export function usePremiumStatus() {
 }
 
 /* ────────────────────────────────────────────────────────
-   Helper — the rule for showing the badge
+   Helper — the rule for showing the trophy badge
    ──────────────────────────────────────────────────────── */
 export function shouldShowPremiumBadge(
   data: PremiumStatusResponse | undefined
 ): boolean {
   if (!data) return false;
-  return data.is_premium === true && data.is_expired === false;
+  return data.state === 'premium_active';
 }
 
 interface PremiumBadgeProps {
@@ -91,9 +106,6 @@ interface PremiumBadgeProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-/* ────────────────────────────────────────────────────────
-   Size map
-   ──────────────────────────────────────────────────────── */
 const SIZES = {
   xs: { crest: 18, ribbon: 0, font: 0 },
   sm: { crest: 22, ribbon: 0, font: 9 },
@@ -131,7 +143,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
       aria-label={expiryLabel}
       role="img"
     >
-      {/* ── The trophy crest ────────────────────────── */}
       <span className="yp-trophy-crest">
         <svg
           width={dims.crest}
@@ -141,7 +152,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          {/* Radial glow behind the trophy */}
           <defs>
             <radialGradient
               id="trophyGlow"
@@ -149,21 +159,9 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
               cy="40%"
               r="60%"
             >
-              <stop
-                offset="0%"
-                stopColor="#fde68a"
-                stopOpacity="0.9"
-              />
-              <stop
-                offset="60%"
-                stopColor="#fbbf24"
-                stopOpacity="0.35"
-              />
-              <stop
-                offset="100%"
-                stopColor="#f59e0b"
-                stopOpacity="0"
-              />
+              <stop offset="0%" stopColor="#fde68a" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
             </radialGradient>
 
             <linearGradient
@@ -186,38 +184,15 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
               x2="100%"
               y2="100%"
             >
-              <stop
-                offset="0%"
-                stopColor="#ffffff"
-                stopOpacity="0"
-              />
-              <stop
-                offset="45%"
-                stopColor="#ffffff"
-                stopOpacity="0.85"
-              />
-              <stop
-                offset="55%"
-                stopColor="#ffffff"
-                stopOpacity="0.85"
-              />
-              <stop
-                offset="100%"
-                stopColor="#ffffff"
-                stopOpacity="0"
-              />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="45%" stopColor="#ffffff" stopOpacity="0.85" />
+              <stop offset="55%" stopColor="#ffffff" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* Glow */}
-          <circle
-            cx="24"
-            cy="22"
-            r="22"
-            fill="url(#trophyGlow)"
-          />
+          <circle cx="24" cy="22" r="22" fill="url(#trophyGlow)" />
 
-          {/* Cup bowl */}
           <path
             d="M14 10h20v8a10 10 0 0 1-20 0v-8z"
             fill="url(#trophyGold)"
@@ -226,7 +201,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             strokeLinejoin="round"
           />
 
-          {/* Handles */}
           <path
             d="M14 12H9a4 4 0 0 0 4 4h1"
             stroke="#b45309"
@@ -242,7 +216,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             fill="none"
           />
 
-          {/* Stem */}
           <rect
             x="21"
             y="28"
@@ -254,7 +227,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             strokeWidth="0.8"
           />
 
-          {/* Base plate */}
           <rect
             x="15"
             y="33"
@@ -266,7 +238,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             strokeWidth="0.8"
           />
 
-          {/* Base wider plate */}
           <rect
             x="12"
             y="37"
@@ -278,7 +249,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             strokeWidth="0.8"
           />
 
-          {/* Star on the cup */}
           <path
             d="M24 13.5l1.2 2.4 2.6.35-1.9 1.8.45 2.55L24 19.4l-2.35 1.2.45-2.55-1.9-1.8 2.6-.35L24 13.5z"
             fill="#fff7ed"
@@ -286,7 +256,6 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
             strokeWidth="0.4"
           />
 
-          {/* Diagonal shine sweep */}
           <path
             d="M14 10h20v8a10 10 0 0 1-20 0v-8z"
             fill="url(#trophyShine)"
@@ -294,13 +263,11 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
           />
         </svg>
 
-        {/* Sparkles around the trophy */}
         <span className="yp-trophy-spark yp-trophy-spark--1" />
         <span className="yp-trophy-spark yp-trophy-spark--2" />
         <span className="yp-trophy-spark yp-trophy-spark--3" />
       </span>
 
-      {/* ── Optional ribbon with label ──────────────── */}
       {showRibbon && (
         <span
           className="yp-trophy-ribbon"

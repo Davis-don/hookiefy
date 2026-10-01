@@ -12,6 +12,10 @@ import MyConnections from '../components/connections/MyConnections';
 import Notification from '../components/notification/Notification';
 import Subscription from '../components/subscription/Subscription';
 import { useAuthStore } from '../../../store/authtokenstore';
+import {
+  fetchPremiumStatus,
+  type PremiumStatusResponse,
+} from '../components/PremiumBadge';
 
 const FULL_BLEED_TABS = new Set(['home', 'add-data', 'connections']);
 
@@ -141,13 +145,45 @@ const Serviceproviderdash = () => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  /* ── Premium status query ────────────────────────── */
+  /* Uses the shared fetcher + 3-state model from
+     PremiumBadge so the endpoint lives in one place. */
+  const { data: premium } = useQuery<PremiumStatusResponse | null>({
+    queryKey: ['premium-status', access],
+    queryFn: () => fetchPremiumStatus(access),
+    enabled: !!access,
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (!d) return 60_000;
+      if (d.is_expired) return 30_000;
+      const total = d.time_remaining?.total_seconds;
+      if (!d.is_premium || total == null || total <= 0) return 60_000;
+      if (total > 86400) return 30 * 60_000;
+      if (total > 3600) return 15 * 60_000;
+      if (total > 600) return 5 * 60_000;
+      return 60_000;
+    },
+  });
+
+  /* ── Gate ──────────────────────────────────────────
+     Gate ONLY when the user's premium has expired.
+     Free users and active-premium users get full access.
+     ─────────────────────────────────────────────── */
+  const isGated = useMemo(() => {
+    if (!premium) return false;
+    if (premium.role !== 'serviceprovider') return false;
+    return premium.state === 'premium_expired';
+  }, [premium]);
+
   /* ── Unread paid connections ─────────────────────── */
   const { data: unreadPaid } = useQuery({
     queryKey: ['notifications', 'unread-paid-connections'],
     queryFn: () => fetchUnreadPaidConnections(access),
-    enabled: !!access,
-    refetchInterval: 30_000,
-    refetchOnWindowFocus: true,
+    enabled: !!access && !isGated,
+    refetchInterval: isGated ? false : 30_000,
+    refetchOnWindowFocus: !isGated,
   });
 
   const hasUnreadPaid = !!unreadPaid?.has_unread;
@@ -175,8 +211,12 @@ const Serviceproviderdash = () => {
     },
   ];
 
-  /* ── Content ─────────────────────────────────────── */
+  /* ── Content: gated shows only Subscription ─────── */
   const renderActiveComponent = () => {
+    if (isGated) {
+      return <Subscription />;
+    }
+
     if (showAddData)
       return <AddData onClose={() => setShowAddData(false)} />;
     if (showProfile) return <Profile />;
@@ -204,14 +244,16 @@ const Serviceproviderdash = () => {
     return <ActiveComponent />;
   };
 
-  /* ── Handlers ────────────────────────────────────── */
+  /* ── Guarded handlers — no-op while gated ───────── */
   const handleHeaderProfileClick = () => {
+    if (isGated) return;
     setShowProfile(true);
     setShowAddData(false);
     setActiveTab('');
   };
 
   const handleNavClick = (id: string) => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(false);
     setActiveTab(id);
@@ -219,6 +261,7 @@ const Serviceproviderdash = () => {
   };
 
   const handleBrandClick = () => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(false);
     setActiveTab('home');
@@ -227,6 +270,7 @@ const Serviceproviderdash = () => {
   };
 
   const handleAddClick = () => {
+    if (isGated) return;
     setShowProfile(false);
     setShowAddData(true);
     setActiveTab('add-data');
@@ -238,13 +282,14 @@ const Serviceproviderdash = () => {
 
   const handleNotificationNavigate = useCallback(
     (connectionId: string | null) => {
+      if (isGated) return;
       setShowProfile(false);
       setShowAddData(false);
       setActiveTab('connections');
       setFocusConnectionId(connectionId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-    []
+    [isGated]
   );
 
   const handleOpenSubscription = useCallback(() => {
@@ -272,7 +317,11 @@ const Serviceproviderdash = () => {
      DASHBOARD SHELL
      ═══════════════════════════════════════════════════ */
   return (
-    <div className="yp-dash-container">
+    <div
+      className={`yp-dash-container ${
+        isGated ? 'yp-dash-container--gated' : ''
+      }`}
+    >
       {isMobile && (
         <Header
           onProfileClick={handleHeaderProfileClick}
@@ -285,7 +334,7 @@ const Serviceproviderdash = () => {
         <aside
           className={`yp-dash-sidebar ${
             sidebarOpen ? 'yp-dash-sidebar-open' : ''
-          }`}
+          } ${isGated ? 'yp-dash-sidebar--gated' : ''}`}
         >
           <div className="yp-dash-sidebar-header">
             <h2
@@ -300,6 +349,7 @@ const Serviceproviderdash = () => {
               role="link"
               tabIndex={0}
               aria-label="Go to home"
+              aria-disabled={isGated}
             >
               <span className="yp-logo-you">You</span>
               <span className="yp-logo-p">p</span>
@@ -311,6 +361,7 @@ const Serviceproviderdash = () => {
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
               type="button"
+              disabled={isGated}
             >
               {sidebarOpen ? '◀' : '▶'}
             </button>
@@ -320,6 +371,8 @@ const Serviceproviderdash = () => {
             {menuItems.map((item) => {
               const showDot =
                 item.id === 'connections' && hasUnreadPaid;
+              const isSubscription = item.id === 'subscription';
+              const disabled = isGated && !isSubscription;
 
               return (
                 <button
@@ -330,9 +383,11 @@ const Serviceproviderdash = () => {
                     !showAddData
                       ? 'yp-dash-sidebar-item-active'
                       : ''
-                  }`}
+                  } ${disabled ? 'is-disabled' : ''}`}
                   onClick={() => handleNavClick(item.id)}
                   type="button"
+                  disabled={disabled}
+                  aria-disabled={disabled}
                 >
                   <span className="yp-dash-sidebar-icon-wrap">
                     <span className="yp-dash-sidebar-icon">
@@ -355,9 +410,11 @@ const Serviceproviderdash = () => {
             <button
               className={`yp-dash-sidebar-item ${
                 showAddData ? 'yp-dash-sidebar-item-active' : ''
-              }`}
+              } ${isGated ? 'is-disabled' : ''}`}
               onClick={handleAddClick}
               type="button"
+              disabled={isGated}
+              aria-disabled={isGated}
             >
               <span className="yp-dash-sidebar-icon">➕</span>
               <span className="yp-dash-sidebar-label">Add Data</span>
@@ -366,10 +423,14 @@ const Serviceproviderdash = () => {
 
           <div className="yp-dash-sidebar-footer">
             <button
-              className="yp-dash-user-info"
+              className={`yp-dash-user-info ${
+                isGated ? 'is-disabled' : ''
+              }`}
               onClick={handleHeaderProfileClick}
               aria-label="Open profile"
               type="button"
+              disabled={isGated}
+              aria-disabled={isGated}
             >
               <div className="yp-dash-user-avatar">SP</div>
               <div className="yp-dash-user-details">
@@ -400,16 +461,26 @@ const Serviceproviderdash = () => {
       </main>
 
       {!isMobile && (
-        <div className="yp-dash-bell-slot">
+        <div
+          className={`yp-dash-bell-slot ${
+            isGated ? 'is-disabled' : ''
+          }`}
+          aria-disabled={isGated}
+        >
           <Notification onNavigate={handleNotificationNavigate} />
         </div>
       )}
 
       {isMobile && (
-        <nav className="yp-dash-bottom-nav">
+        <nav
+          className={`yp-dash-bottom-nav ${
+            isGated ? 'yp-dash-bottom-nav--gated' : ''
+          }`}
+        >
           {leftItems.map((item) => {
             const showDot =
               item.id === 'connections' && hasUnreadPaid;
+            const disabled = isGated;
 
             return (
               <button
@@ -420,10 +491,12 @@ const Serviceproviderdash = () => {
                   !showAddData
                     ? 'yp-dash-nav-item-active'
                     : ''
-                }`}
+                } ${disabled ? 'is-disabled' : ''}`}
                 onClick={() => handleNavClick(item.id)}
                 aria-label={item.label}
                 type="button"
+                disabled={disabled}
+                aria-disabled={disabled}
               >
                 <span className="yp-dash-nav-icon-wrap">
                   <span className="yp-dash-nav-icon">
@@ -441,10 +514,14 @@ const Serviceproviderdash = () => {
           })}
 
           <button
-            className="yp-dash-nav-add"
+            className={`yp-dash-nav-add ${
+              isGated ? 'is-disabled' : ''
+            }`}
             onClick={handleAddClick}
             aria-label="Add"
             type="button"
+            disabled={isGated}
+            aria-disabled={isGated}
           >
             <span className="yp-dash-nav-add-icon">+</span>
           </button>
@@ -452,6 +529,7 @@ const Serviceproviderdash = () => {
           {rightItems.map((item) => {
             const showDot =
               item.id === 'connections' && hasUnreadPaid;
+            const disabled = isGated;
 
             return (
               <button
@@ -462,10 +540,12 @@ const Serviceproviderdash = () => {
                   !showAddData
                     ? 'yp-dash-nav-item-active'
                     : ''
-                }`}
+                } ${disabled ? 'is-disabled' : ''}`}
                 onClick={() => handleNavClick(item.id)}
                 aria-label={item.label}
                 type="button"
+                disabled={disabled}
+                aria-disabled={disabled}
               >
                 <span className="yp-dash-nav-icon-wrap">
                   <span className="yp-dash-nav-icon">

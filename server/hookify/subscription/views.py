@@ -39,11 +39,7 @@ def _build_time_remaining(seconds: int) -> dict:
     if minutes > 0:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
-    human = (
-        ", ".join(parts)
-        if parts
-        else "Less than a minute"
-    )
+    human = ", ".join(parts) if parts else "Less than a minute"
 
     short_parts = []
     if days > 0:
@@ -87,11 +83,7 @@ def _build_elapsed(seconds: int) -> dict:
     if minutes > 0:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
-    human = (
-        ", ".join(parts)
-        if parts
-        else "just now"
-    )
+    human = ", ".join(parts) if parts else "just now"
 
     return {
         "total_seconds": total_seconds,
@@ -103,35 +95,25 @@ def _build_elapsed(seconds: int) -> dict:
     }
 
 
+def _is_free_plan(plan) -> bool:
+    if not plan:
+        return False
+    return (
+        (plan.name or "").strip().lower() == "free"
+        or (plan.slug or "").strip().lower() == "free"
+    )
+
+
 # ============================================================
 # SUBSCRIPTION STATUS
 # ============================================================
 #
 # Single source of truth for the frontend.
 #
-# State is derived from the linked Payment (same pattern as
-# Connection). `subscription.is_paid` reads
-# `subscription.payment.status == "completed"`, and
-# `subscription.is_active` requires both a completed payment
-# AND `end_date > now`.
-#
-# Returns:
-#
-#   {
-#     "has_subscription": true|false,
-#     "is_free": true|false,
-#     "is_premium": true|false,
-#     "is_paid": true|false,
-#     "is_active": true|false,
-#     "is_expired": true|false,
-#     "status": "active" | "expired" | "free" | "pending" | "no_subscription",
-#     "plan": { "id", "name", "slug", "price" } | null,
-#     "start_date": "...",
-#     "end_date": "...",
-#     "time_remaining": { ... } | null,
-#     "elapsed_since_expiry": { ... } | null,
-#     "role": "serviceprovider"
-#   }
+# Returns everything the UI might need about the user's
+# subscription, including a `state` string and three
+# convenience booleans (`is_free`, `is_premium_active`,
+# `is_premium_expired`).
 #
 # ============================================================
 
@@ -151,8 +133,11 @@ def subscription_status(request):
         return Response(
             {
                 "has_subscription": False,
-                "is_free": False,
+                "state": "free",
+                "is_free": True,
                 "is_premium": False,
+                "is_premium_active": False,
+                "is_premium_expired": False,
                 "is_paid": False,
                 "is_active": False,
                 "is_expired": False,
@@ -169,19 +154,19 @@ def subscription_status(request):
         )
 
     # --------------------------------------------------------
-    # Load the subscription
+    # No subscription on file at all
     # --------------------------------------------------------
     subscription = getattr(user, "subscription", None)
 
-    # --------------------------------------------------------
-    # No subscription on file at all
-    # --------------------------------------------------------
     if not subscription:
         return Response(
             {
                 "has_subscription": False,
-                "is_free": False,
+                "state": "free",
+                "is_free": True,
                 "is_premium": False,
+                "is_premium_active": False,
+                "is_premium_expired": False,
                 "is_paid": False,
                 "is_active": False,
                 "is_expired": False,
@@ -200,17 +185,10 @@ def subscription_status(request):
     # Plan payload
     # --------------------------------------------------------
     plan = subscription.plan
+    is_free_plan = _is_free_plan(plan)
 
     plan_payload = None
-    is_free_plan = False
-
     if plan:
-        plan_name = (plan.name or "").strip().lower()
-        plan_slug = (plan.slug or "").strip().lower()
-        is_free_plan = (
-            plan_name == "free"
-            or plan_slug == "free"
-        )
         plan_payload = {
             "id": plan.id,
             "name": plan.name,
@@ -219,31 +197,44 @@ def subscription_status(request):
         }
 
     # --------------------------------------------------------
-    # Payment-derived status
-    # --------------------------------------------------------
-    #
-    # `is_paid` comes straight from the linked payment.
-    # `is_active` requires end_date in the future.
-    # `is_expired` is true once the end_date has passed.
+    # Derived flags
     # --------------------------------------------------------
     is_paid = subscription.is_paid
     is_active = subscription.is_active
     is_expired = subscription.is_expired
-    payment_status = subscription.status  # "pending" / "completed" / etc.
+    payment_status = subscription.status
 
     # --------------------------------------------------------
-    # Status string
+    # 3-state model
+    #
+    #   free             → no subscription, or on Free plan
+    #   premium_active   → paid plan, end_date in the future
+    #   premium_expired  → paid plan, end_date in the past
     # --------------------------------------------------------
-    if is_active and is_free_plan:
-        status_str = "free"
+    if is_free_plan or not plan:
+        state = "free"
+        is_premium_active = False
+        is_premium_expired = False
     elif is_active:
+        state = "premium_active"
+        is_premium_active = True
+        is_premium_expired = False
+    else:
+        state = "premium_expired"
+        is_premium_active = False
+        is_premium_expired = True
+
+    # --------------------------------------------------------
+    # Status string (kept for backwards compatibility)
+    # --------------------------------------------------------
+    if state == "free":
+        status_str = "free"
+    elif state == "premium_active":
         status_str = "active"
-    elif is_paid and is_expired:
+    elif state == "premium_expired":
         status_str = "expired"
     elif payment_status == "pending":
         status_str = "pending"
-    elif is_expired:
-        status_str = "expired"
     else:
         status_str = "no_subscription"
 
@@ -251,31 +242,26 @@ def subscription_status(request):
     # Time remaining (when active)
     # --------------------------------------------------------
     time_remaining = None
-
-    if is_active and subscription.end_date:
-        now = timezone.now()
-        delta = subscription.end_date - now
-        time_remaining = _build_time_remaining(
-            delta.total_seconds()
-        )
+    if is_premium_active and subscription.end_date:
+        delta = subscription.end_date - timezone.now()
+        time_remaining = _build_time_remaining(delta.total_seconds())
 
     # --------------------------------------------------------
     # Elapsed since expiry (when expired)
     # --------------------------------------------------------
     elapsed_since_expiry = None
-
-    if is_expired and subscription.end_date:
-        now = timezone.now()
-        delta = now - subscription.end_date
-        elapsed_since_expiry = _build_elapsed(
-            delta.total_seconds()
-        )
+    if is_premium_expired and subscription.end_date:
+        delta = timezone.now() - subscription.end_date
+        elapsed_since_expiry = _build_elapsed(delta.total_seconds())
 
     return Response(
         {
             "has_subscription": True,
-            "is_free": is_free_plan,
-            "is_premium": is_active and not is_free_plan,
+            "state": state,
+            "is_free": state == "free",
+            "is_premium": is_premium_active,
+            "is_premium_active": is_premium_active,
+            "is_premium_expired": is_premium_expired,
             "is_paid": is_paid,
             "is_active": is_active,
             "is_expired": is_expired,
@@ -294,13 +280,6 @@ def subscription_status(request):
 
 # ============================================================
 # RENEW / EXTEND SUBSCRIPTION
-# ============================================================
-#
-# Extends the end_date by N days. Useful for admin or manual
-# adjustments. The proper paid flow goes through
-# /subscription_payments/initialize/ and creates a new
-# SubscriptionPayment row.
-#
 # ============================================================
 
 @api_view(["POST"])
@@ -329,11 +308,7 @@ def renew_subscription(request):
 
     if not subscription:
         return Response(
-            {
-                "message": (
-                    "You don't have a subscription to renew."
-                ),
-            },
+            {"message": "You don't have a subscription to renew."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -375,18 +350,28 @@ def renew_subscription(request):
 # PREMIUM STATUS
 # ============================================================
 #
-# Compact endpoint for the frontend PremiumBadge.
+# Compact endpoint for the frontend PremiumBadge and any
+# component that needs to gate premium-only features.
 #
-# Show the badge when:
-#     - the user has a subscription,
-#     - the plan is NOT the free plan,
-#     - the subscription is currently active (end_date in
-#       the future).
+# 3-state model:
+#
+#   "free"             → no subscription, or on Free plan.
+#   "premium_active"   → paid plan, end_date in the future.
+#   "premium_expired"  → paid plan, end_date in the past.
+#
+# Frontend can:
+#   - show the trophy badge only when state === "premium_active"
+#   - allow premium actions only when state === "premium_active"
+#   - prompt renewal when state === "premium_expired"
 #
 # Returns:
 #
 #   {
+#     "state": "free" | "premium_active" | "premium_expired",
+#     "is_free": true|false,
 #     "is_premium": true|false,
+#     "is_premium_active": true|false,
+#     "is_premium_expired": true|false,
 #     "role": "serviceprovider",
 #     "expires_at": "2026-11-01T13:55:00Z" | null,
 #     "is_expired": true|false
@@ -398,7 +383,10 @@ def renew_subscription(request):
 @permission_classes([IsAuthenticated])
 def premium_status(request):
     """
-    Return a compact premium-status payload for the badge.
+    Return a compact premium-status payload.
+
+    Uses a 3-state model so the frontend can distinguish
+    between free, premium active, and premium expired.
     """
 
     user = request.user
@@ -409,7 +397,11 @@ def premium_status(request):
     if not user.is_active:
         return Response(
             {
+                "state": "free",
+                "is_free": True,
                 "is_premium": False,
+                "is_premium_active": False,
+                "is_premium_expired": False,
                 "role": user.role,
                 "expires_at": None,
                 "is_expired": False,
@@ -426,7 +418,11 @@ def premium_status(request):
     if not subscription:
         return Response(
             {
+                "state": "free",
+                "is_free": True,
                 "is_premium": False,
+                "is_premium_active": False,
+                "is_premium_expired": False,
                 "role": user.role,
                 "expires_at": None,
                 "is_expired": False,
@@ -438,38 +434,51 @@ def premium_status(request):
     # Derive flags
     # --------------------------------------------------------
     plan = subscription.plan
-
-    plan_name = (plan.name or "").strip().lower() if plan else ""
-    plan_slug = (plan.slug or "").strip().lower() if plan else ""
-
-    # Free if either name or slug is "free".
-    is_free_plan = (
-        plan_name == "free"
-        or plan_slug == "free"
-    )
+    is_free_plan = _is_free_plan(plan)
 
     is_active = subscription.is_active
     is_expired = subscription.is_expired
 
-    is_premium = is_active and not is_free_plan
+    # --------------------------------------------------------
+    # 3-state classification
+    # --------------------------------------------------------
+    if is_free_plan or not plan:
+        state = "free"
+        is_premium_active = False
+        is_premium_expired = False
+
+    elif is_active:
+        state = "premium_active"
+        is_premium_active = True
+        is_premium_expired = False
+
+    else:
+        state = "premium_expired"
+        is_premium_active = False
+        is_premium_expired = True
 
     logger.debug(
-        "premium_status | user=%s | plan=%s | "
-        "is_free=%s | is_active=%s | is_premium=%s",
+        "premium_status | user=%s | plan=%s | state=%s | "
+        "is_free=%s | is_active=%s | is_expired=%s",
         user.email,
         plan.name if plan else None,
+        state,
         is_free_plan,
         is_active,
-        is_premium,
+        is_expired,
     )
 
     return Response(
         {
-            "is_premium": is_premium,
+            "state": state,
+            "is_free": state == "free",
+            "is_premium": is_premium_active,
+            "is_premium_active": is_premium_active,
+            "is_premium_expired": is_premium_expired,
             "role": user.role,
             "expires_at": (
                 subscription.end_date
-                if is_premium
+                if is_premium_active
                 else None
             ),
             "is_expired": is_expired,
