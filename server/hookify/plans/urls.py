@@ -3,6 +3,7 @@ from django.urls import path
 
 from .views import (
     plans_list,
+    plans_for_me,
     plan_create,
     plan_detail,
     plan_update,
@@ -22,11 +23,17 @@ urlpatterns = [
         name="plans-list",
     ),
 
+    # GET /plans/for-me/         → auth-required, filtered
+    path(
+        "for-me/",
+        plans_for_me,
+        name="plans-for-me",
+    ),
+
     # ────────────────────────────────────────────────────────
     # CREATE
     # ────────────────────────────────────────────────────────
 
-    # POST /plans/create/        → create (superadmin only)
     path(
         "create/",
         plan_create,
@@ -37,7 +44,6 @@ urlpatterns = [
     # DETAIL (READ)
     # ────────────────────────────────────────────────────────
 
-    # GET /plans/<pk>/           → public read
     path(
         "<int:pk>/",
         plan_detail,
@@ -48,8 +54,6 @@ urlpatterns = [
     # UPDATE
     # ────────────────────────────────────────────────────────
 
-    # PUT    /plans/<pk>/update/ → full update (superadmin only)
-    # PATCH  /plans/<pk>/update/ → partial update (superadmin only)
     path(
         "<int:pk>/update/",
         plan_update,
@@ -60,7 +64,6 @@ urlpatterns = [
     # DELETE
     # ────────────────────────────────────────────────────────
 
-    # DELETE /plans/<pk>/delete/ → delete (superadmin only)
     path(
         "<int:pk>/delete/",
         plan_delete,

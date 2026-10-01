@@ -1,5 +1,6 @@
 // pages/Plans.tsx
-import { useMemo, useState } from 'react';
+
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   FiAward,
@@ -7,34 +8,40 @@ import {
   FiAlertCircle,
   FiRefreshCw,
 } from 'react-icons/fi';
+
 import PlanCard from './PlanCard';
 import type { Plan } from './PlanCard';
 import PlanPurchaseSheet from './PlanPurchaseSheet';
+
 import { useAuthStore } from '../../../../store/authtokenstore';
+
 import './plans.css';
 
 /* ─────────── Types ─────────── */
 
-interface SubscriptionPlanRef {
-  id: number;
-  name: string;
-  slug: string;
-  price: string;
+interface PlanCta {
+  label: string;
+  disabled: boolean;
 }
 
-interface SubscriptionStatusResponse {
+interface PlanForMe extends Plan {
+  is_current: boolean;
+  cta: PlanCta;
+}
+
+interface SubscriptionSummary {
   has_subscription: boolean;
   is_free: boolean;
-  is_premium: boolean;
   is_active: boolean;
   is_expired: boolean;
-  status: 'active' | 'expired' | 'free' | 'no_subscription';
-  plan: SubscriptionPlanRef | null;
-  start_date: string | null;
-  end_date: string | null;
-  time_remaining: unknown;
-  elapsed_since_expiry: unknown;
-  role: string;
+  plan_id: number | null;
+  plan_name: string | null;
+}
+
+interface PlansForMeResponse {
+  count: number;
+  plans: PlanForMe[];
+  subscription: SubscriptionSummary;
 }
 
 /* ─────────── API ─────────── */
@@ -42,24 +49,44 @@ interface SubscriptionStatusResponse {
 function resolveApiOrigin(): string {
   // @ts-ignore
   const envUrl: string | undefined = import.meta.env?.VITE_API_URL;
-  if (!envUrl || !envUrl.trim()) return '';
+
+  if (!envUrl || !envUrl.trim()) {
+    return '';
+  }
+
   return envUrl.replace(/\/+$/, '');
 }
 
 const API_ORIGIN = resolveApiOrigin();
 
-async function fetchPlans(): Promise<Plan[]> {
+/* ─────────── Fetch plans for current user ─────────── */
+
+async function fetchPlansForMe(
+  access: string
+): Promise<PlansForMeResponse> {
   const url = API_ORIGIN
-    ? `${API_ORIGIN}/plans/?active=true`
-    : `/plans/?active=true`;
+    ? `${API_ORIGIN}/plans/for-me/`
+    : `/plans/for-me/`;
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  const contentType = res.headers.get('content-type') || '';
-  const raw = await res.text().catch(() => '');
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${access}`,
+    },
+  });
 
-  if (!res.ok) {
+  const contentType =
+    response.headers.get('content-type') || '';
+
+  const raw = await response.text().catch(() => '');
+
+  if (!response.ok) {
     throw new Error(
-      `Failed to load plans (${res.status}). ${raw.slice(0, 120)}`
+      `Failed to load plans (${response.status}). ${raw.slice(
+        0,
+        120
+      )}`
     );
   }
 
@@ -69,30 +96,13 @@ async function fetchPlans(): Promise<Plan[]> {
     );
   }
 
-  const data = JSON.parse(raw);
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.data)) return data.data;
-  if (Array.isArray(data?.plans)) return data.plans;
-  if (Array.isArray(data?.results)) return data.results;
-  return [];
-}
-
-async function fetchSubscriptionStatus(
-  access: string
-): Promise<SubscriptionStatusResponse | null> {
-  const url = API_ORIGIN
-    ? `${API_ORIGIN}/subscription/status/`
-    : `/subscription/status/`;
-
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${access}`,
-    },
-  });
-
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error(
+      'The server returned invalid JSON.'
+    );
+  }
 }
 
 /* ─────────── Page ─────────── */
@@ -101,105 +111,73 @@ const Plans = () => {
   const { access } = useAuthStore();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetPlan, setSheetPlan] = useState<Plan | null>(null);
 
-  /* ── Plans ────────────────────────────────── */
+  const [sheetPlan, setSheetPlan] =
+    useState<Plan | null>(null);
+
+  /* ─────────── Plans Query ─────────── */
+
   const {
-    data: plans = [],
+    data,
     isLoading,
     isError,
     error,
     refetch,
-  } = useQuery<Plan[], Error>({
-    queryKey: ['plans'],
-    queryFn: fetchPlans,
-    staleTime: 5 * 60_000,
-    enabled: true,
-  });
+  } = useQuery<PlansForMeResponse, Error>({
+    queryKey: ['plans-for-me', access],
 
-  /* ── Subscription ─────────────────────────── */
-  const { data: subscription } = useQuery<
-    SubscriptionStatusResponse | null,
-    Error
-  >({
-    queryKey: ['subscription-status', access],
     queryFn: () => {
-      if (!access) return Promise.resolve(null);
-      return fetchSubscriptionStatus(access);
+      if (!access) {
+        throw new Error(
+          'Authentication required.'
+        );
+      }
+
+      return fetchPlansForMe(access);
     },
+
     enabled: !!access,
-    staleTime: 60_000,
+
+    staleTime: 5 * 60_000,
+
     refetchOnWindowFocus: false,
   });
 
-  const errorMessage = error?.message ?? null;
+  const plans = data?.plans ?? [];
 
-  const currentPlanId = useMemo(() => {
-    return subscription?.plan?.id ?? null;
-  }, [subscription]);
+  const subscription =
+    data?.subscription ?? null;
 
-  const isOnFreePlan = useMemo(() => {
-    if (!subscription) return false;
-    if (subscription.is_free) return true;
-    if (!subscription.has_subscription) return true;
-    return false;
-  }, [subscription]);
+  /* ─────────── Subscription State ─────────── */
 
-  const hasActivePaidPlan = useMemo(() => {
-    if (!subscription) return false;
-    return subscription.is_active && !subscription.is_free;
-  }, [subscription]);
+  const isFreeSubscription =
+    subscription?.is_free === true;
 
-  const popularPlanId = useMemo(() => {
-    const paid = plans
-      .filter((p) => Number(p.price) > 0)
-      .sort((a, b) => Number(a.price) - Number(b.price));
+  const isActivePaidSubscription =
+    subscription?.has_subscription === true &&
+    subscription?.is_active === true &&
+    subscription?.is_free === false;
 
-    if (paid.length === 0) return null;
-    if (paid.length === 1) return paid[0].id;
-    return paid[Math.floor(paid.length / 2)].id;
-  }, [plans]);
+  const isExpiredPaidSubscription =
+    subscription?.has_subscription === true &&
+    subscription?.is_expired === true &&
+    subscription?.is_free === false;
 
-  const getPlanCtaState = (plan: Plan) => {
-    const isCurrent = plan.id === currentPlanId;
-    const isFreePlan = Number(plan.price) === 0;
+  /* ─────────── Open Purchase Sheet ─────────── */
 
-    if (isCurrent) {
-      return { label: 'Current Plan', disabled: true };
-    }
-
-    if (isFreePlan) {
-      if (hasActivePaidPlan) {
-        return { label: 'Cannot downgrade', disabled: true };
-      }
-      return { label: 'Get Started', disabled: false };
-    }
-
-    if (!subscription?.has_subscription || subscription.is_expired) {
-      return { label: 'Upgrade', disabled: false };
-    }
-
-    if (isOnFreePlan) {
-      return { label: 'Upgrade', disabled: false };
-    }
-
-    return { label: 'Switch Plan', disabled: false };
-  };
-
-  /* ── Open the sheet ──────────────────────── */
   const handleUpgrade = (plan: Plan) => {
     if (!access) {
       alert('Please sign in again.');
       return;
     }
+
     setSheetPlan(plan);
     setSheetOpen(true);
   };
 
- 
+  /* ─────────── Loading ─────────── */
 
-  /* ── Loading ─────────────────────────────── */
-  if (isLoading && plans.length === 0) {
+  if (isLoading) {
     return (
       <div className="plans-page">
         <header className="plans-header">
@@ -207,16 +185,21 @@ const Plans = () => {
             <FiAward /> Plans &amp; Pricing
           </h1>
         </header>
+
         <div className="plans-state">
           <FiLoader className="plans-spin" />
-          <p>Loading plans…</p>
+
+          <p>
+            Loading plans…
+          </p>
         </div>
       </div>
     );
   }
 
-  /* ── Error ───────────────────────────────── */
-  if (isError && plans.length === 0) {
+  /* ─────────── Error ─────────── */
+
+  if (isError) {
     return (
       <div className="plans-page">
         <header className="plans-header">
@@ -224,23 +207,33 @@ const Plans = () => {
             <FiAward /> Plans &amp; Pricing
           </h1>
         </header>
+
         <div className="plans-state plans-state--error">
           <FiAlertCircle />
-          <p>Couldn't load plans</p>
-          <span className="plans-state-sub">{errorMessage}</span>
+
+          <p>
+            Couldn't load plans
+          </p>
+
+          <span className="plans-state-sub">
+            {error?.message}
+          </span>
+
           <button
             type="button"
             className="plans-retry"
             onClick={() => refetch()}
           >
-            <FiRefreshCw /> Retry
+            <FiRefreshCw />
+            Retry
           </button>
         </div>
       </div>
     );
   }
 
-  /* ── Empty ───────────────────────────────── */
+  /* ─────────── Empty ─────────── */
+
   if (plans.length === 0) {
     return (
       <div className="plans-page">
@@ -249,20 +242,27 @@ const Plans = () => {
             <FiAward /> Plans &amp; Pricing
           </h1>
         </header>
+
         <div className="plans-state plans-state--empty">
           <div className="plans-empty-icon">
             <FiAward />
           </div>
-          <p>No plans available</p>
+
+          <p>
+            No plans available
+          </p>
+
           <span className="plans-state-sub">
-            Plans will appear here once the admin publishes them.
+            Plans will appear here once the admin
+            publishes them.
           </span>
         </div>
       </div>
     );
   }
 
-  /* ── Grid + sheet ────────────────────────── */
+  /* ─────────── Render ─────────── */
+
   return (
     <>
       <div className="plans-page">
@@ -270,24 +270,130 @@ const Plans = () => {
           <h1 className="plans-title">
             <FiAward /> Plans &amp; Pricing
           </h1>
+
           <p className="plans-subtitle">
-            Choose the plan that matches your business.
+            Choose the plan that matches your
+            business.
           </p>
         </header>
 
         <div className="plans-grid">
-          {plans.map((plan) => {
-            const cta = getPlanCtaState(plan);
-            const isCurrent = plan.id === currentPlanId;
+          {plans.map((plan: PlanForMe) => {
+            const isFreePlan =
+              Number(plan.price) === 0;
+
+            let isCurrent = false;
+            let ctaLabel = 'Upgrade';
+            let ctaDisabled = false;
+
+            /*
+             * ─────────────────────────────────────
+             * CASE 1: USER IS ON FREE PLAN
+             * ─────────────────────────────────────
+             *
+             * Free is the current plan.
+             *
+             * Paid plans can be purchased.
+             */
+
+            if (isFreeSubscription) {
+              if (isFreePlan) {
+                isCurrent = true;
+
+                ctaLabel = 'Current Plan';
+
+                ctaDisabled = true;
+              } else {
+                isCurrent = false;
+
+                ctaLabel = 'Upgrade';
+
+                ctaDisabled = false;
+              }
+            }
+
+            /*
+             * ─────────────────────────────────────
+             * CASE 2: ACTIVE PAID SUBSCRIPTION
+             * ─────────────────────────────────────
+             *
+             * The user cannot change plans while
+             * their current paid subscription is
+             * still active.
+             *
+             * ALL plans are disabled.
+             */
+
+            else if (isActivePaidSubscription) {
+              if (plan.is_current) {
+                isCurrent = true;
+
+                ctaLabel = 'Current Plan';
+              } else {
+                isCurrent = false;
+
+                ctaLabel = 'Not Available';
+              }
+
+              ctaDisabled = true;
+            }
+
+            /*
+             * ─────────────────────────────────────
+             * CASE 3: PAID SUBSCRIPTION EXPIRED
+             * ─────────────────────────────────────
+             *
+             * Free is NEVER available.
+             *
+             * Every paid plan can be purchased.
+             */
+
+            else if (isExpiredPaidSubscription) {
+              if (isFreePlan) {
+                isCurrent = false;
+
+                ctaLabel = 'Not Available';
+
+                ctaDisabled = true;
+              } else {
+                isCurrent = false;
+
+                ctaLabel = 'Upgrade';
+
+                ctaDisabled = false;
+              }
+            }
+
+            /*
+             * ─────────────────────────────────────
+             * CASE 4: NO SUBSCRIPTION
+             * ─────────────────────────────────────
+             *
+             * Normally this should only occur
+             * before the account's Free subscription
+             * has been created.
+             */
+
+            else {
+              if (isFreePlan) {
+                ctaLabel = 'Get Started';
+
+                ctaDisabled = false;
+              } else {
+                ctaLabel = 'Upgrade';
+
+                ctaDisabled = false;
+              }
+            }
 
             return (
               <PlanCard
                 key={plan.id}
                 plan={plan}
-                isPopular={plan.id === popularPlanId}
+                isPopular={false}
                 isCurrent={isCurrent}
-                ctaLabel={cta.label}
-                ctaDisabled={cta.disabled}
+                ctaLabel={ctaLabel}
+                ctaDisabled={ctaDisabled}
                 onUpgrade={handleUpgrade}
               />
             );
@@ -295,10 +401,15 @@ const Plans = () => {
         </div>
       </div>
 
+      {/* ─────────── Purchase Sheet ─────────── */}
+
       <PlanPurchaseSheet
         open={sheetOpen}
         plan={sheetPlan}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => {
+          setSheetOpen(false);
+          setSheetPlan(null);
+        }}
       />
     </>
   );
