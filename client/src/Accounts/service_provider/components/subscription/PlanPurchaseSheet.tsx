@@ -22,6 +22,13 @@ function resolveApiOrigin(): string {
 
 const API_ORIGIN = resolveApiOrigin();
 
+/* Build the initialize URL once, so it's the same everywhere. */
+function buildInitializeUrl(): string {
+  return API_ORIGIN
+    ? `${API_ORIGIN}/subscription_payments/initialize/`
+    : `/subscription_payments/initialize/`;
+}
+
 function readStoredToken(): string | null {
   const keys = ['access_token', 'accessToken', 'access', 'token', 'jwt'];
   for (const k of keys) {
@@ -140,11 +147,17 @@ const PlanPurchaseSheet: React.FC<Props> = ({
 
     setPhase('redirecting');
 
-    try {
-      const url = API_ORIGIN
-        ? `${API_ORIGIN}/subscription_payments/initialize/`
-        : `/subscription_payments/initialize/`;
+    const url = buildInitializeUrl();
 
+    /* ── DIAGNOSTIC ── */
+    console.log('[PlanPurchaseSheet] POST →', url);
+    console.log('[PlanPurchaseSheet] plan:', plan);
+    console.log(
+      '[PlanPurchaseSheet] body:',
+      JSON.stringify({ plan_id: plan.id, phone_number: phone.trim() })
+    );
+
+    try {
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -158,9 +171,17 @@ const PlanPurchaseSheet: React.FC<Props> = ({
         }),
       });
 
+      console.log(
+        '[PlanPurchaseSheet] response status:',
+        res.status,
+        res.statusText
+      );
+
       const data: InitiateResponse = await res
         .json()
         .catch(() => ({} as InitiateResponse));
+
+      console.log('[PlanPurchaseSheet] response body:', data);
 
       if (!res.ok) {
         throw new Error(
@@ -201,6 +222,7 @@ const PlanPurchaseSheet: React.FC<Props> = ({
       // Hand off to Pesapal — full page navigation
       window.location.href = data.redirect_url;
     } catch (e) {
+      console.error('[PlanPurchaseSheet] error:', e);
       setError((e as Error).message);
       setPhase('failed');
     }
