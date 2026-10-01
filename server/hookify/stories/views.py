@@ -1,9 +1,11 @@
 # stories/views.py
 import logging
+from datetime import timedelta
 
 from django.db import transaction
 from django.db import models
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.decorators import (
@@ -77,6 +79,160 @@ def _unauthorized(message="Authentication required."):
 
 
 # ============================================================
+# STORY-LIMIT HELPERS
+# ============================================================
+
+def _current_month_bounds():
+    """
+    Return (start_of_month, start_of_next_month) in UTC.
+    Used to count stories created during the current
+    calendar month.
+    """
+    now = timezone.now()
+    start = now.replace(
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    # First day of next month
+    if start.month == 12:
+        next_start = start.replace(year=start.year + 1, month=1)
+    else:
+        next_start = start.replace(month=start.month + 1)
+    return start, next_start
+
+
+def _stories_used_this_month(user):
+    start, next_start = _current_month_bounds()
+    return Story.objects.filter(
+        user=user,
+        created_at__gte=start,
+        created_at__lt=next_start,
+    ).count()
+
+
+def _find_upgrade_plan(current_plan):
+    """
+    Return the next plan the user should upgrade to, based on
+    display_order. If we can't determine it, return None.
+    """
+    from plans.models import Plan
+
+    qs = Plan.objects.filter(is_active=True)
+
+    if current_plan is not None:
+        qs = qs.filter(display_order__gt=current_plan.display_order)
+
+    return qs.order_by("display_order", "price").first()
+
+
+def _check_story_limit(user):
+    """
+    Returns None if the user can create another story.
+
+    Otherwise returns a Response object with a helpful
+    message explaining the limit and how to upgrade.
+    """
+
+    # Superadmins bypass all limits.
+    if _is_superadmin(user):
+        return None
+
+    subscription = getattr(user, "subscription", None)
+
+    # No subscription row → treat as the most restrictive plan.
+    if not subscription:
+        return Response(
+            {
+                "message": (
+                    "You don't have a subscription yet. "
+                    "Please choose a plan to start posting "
+                    "stories."
+                ),
+                "error_code": "NO_SUBSCRIPTION",
+                "limit": 0,
+                "used": 0,
+                "remaining": 0,
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    plan = subscription.plan
+
+    if not plan:
+        return Response(
+            {
+                "message": (
+                    "Your subscription has no plan assigned. "
+                    "Please contact support."
+                ),
+                "error_code": "NO_PLAN",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Free plan handling: free users can still post stories,
+    # but the limit still comes from the plan.
+    limit = plan.stories_per_month
+
+    # None means unlimited.
+    if limit is None:
+        return None
+
+    used = _stories_used_this_month(user)
+
+    if used < limit:
+        return None
+
+    # Limit reached — find the next plan for a helpful message.
+    upgrade_plan = _find_upgrade_plan(plan)
+
+    if upgrade_plan:
+        upgrade_hint = (
+            f" Upgrade to {upgrade_plan.name} "
+            f"(KES {upgrade_plan.price}/month) to post more."
+        )
+        upgrade_plan_payload = {
+            "id": upgrade_plan.id,
+            "name": upgrade_plan.name,
+            "slug": upgrade_plan.slug,
+            "price": str(upgrade_plan.price),
+            "stories_per_month": upgrade_plan.stories_per_month,
+        }
+    else:
+        upgrade_hint = (
+            " You're already on the highest plan. "
+            "Contact support if you need more."
+        )
+        upgrade_plan_payload = None
+
+    return Response(
+        {
+            "message": (
+                f"You've reached the monthly story limit "
+                f"for the {plan.name} plan "
+                f"({used}/{limit})."
+                f"{upgrade_hint}"
+            ),
+            "error_code": "STORY_LIMIT_REACHED",
+            "plan": {
+                "id": plan.id,
+                "name": plan.name,
+                "slug": plan.slug,
+                "stories_per_month": limit,
+            },
+            "used": used,
+            "limit": limit,
+            "remaining": 0,
+            "upgrade_plan": upgrade_plan_payload,
+        },
+        status=status.HTTP_403_FORBIDDEN,
+    )
+
+
+# ============================================================
 # STORIES — LIST + CREATE
 # ============================================================
 
@@ -145,6 +301,11 @@ def stories_list_create(request):
     if not request.user.is_authenticated:
         return _unauthorized()
 
+    # ── PLAN LIMIT CHECK ─────────────────────────────────
+    limit_response = _check_story_limit(request.user)
+    if limit_response is not None:
+        return limit_response
+
     # image is required — check before we validate the rest
     image = request.FILES.get("image")
     if not image:
@@ -170,7 +331,10 @@ def stories_list_create(request):
             folder="story_images",
         )
     except Exception as e:
-        logger.exception("Cloudinary upload failed for user_id=%s", request.user.id)
+        logger.exception(
+            "Cloudinary upload failed for user_id=%s",
+            request.user.id,
+        )
         return Response(
             {"message": "Failed to upload story image.", "error": str(e)},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -203,7 +367,10 @@ def stories_list_create(request):
                 image_public_id,
             )
 
-        logger.exception("Failed to save story user_id=%s", request.user.id)
+        logger.exception(
+            "Failed to save story user_id=%s",
+            request.user.id,
+        )
         return Response(
             {"message": "Failed to create story.", "error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -263,7 +430,9 @@ def story_detail(request, pk):
     if not request.user.is_authenticated:
         return _unauthorized()
     if not _can_manage(request.user, story):
-        return _forbidden("You do not have permission to modify this story.")
+        return _forbidden(
+            "You do not have permission to modify this story."
+        )
 
     # ── DELETE ───────────────────────────────────────────
     if request.method == "DELETE":
@@ -274,7 +443,8 @@ def story_detail(request, pk):
                 delete_image_from_cloudinary(old_public_id)
             except Exception as e:
                 logger.exception(
-                    "Cloudinary delete failed for story_id=%s", story.id
+                    "Cloudinary delete failed for story_id=%s",
+                    story.id,
                 )
                 return Response(
                     {
@@ -291,7 +461,10 @@ def story_detail(request, pk):
             with transaction.atomic():
                 story.delete()
         except Exception as e:
-            logger.exception("Failed to delete story_id=%s", story.id)
+            logger.exception(
+                "Failed to delete story_id=%s",
+                story.id,
+            )
             return Response(
                 {"message": "Failed to delete story.", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -336,7 +509,10 @@ def story_detail(request, pk):
                 story.id,
             )
             return Response(
-                {"message": "Failed to upload new story image.", "error": str(e)},
+                {
+                    "message": "Failed to upload new story image.",
+                    "error": str(e),
+                },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

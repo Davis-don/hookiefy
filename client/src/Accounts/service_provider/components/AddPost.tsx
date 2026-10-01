@@ -28,6 +28,33 @@ interface FieldErrors {
   image?: string
 }
 
+/**
+ * Shape of business / limit errors returned by the server.
+ */
+interface ServerErrorPayload {
+  message?: string
+  error_code?: string
+  detail?: string
+  plan?: {
+    id: number
+    name: string
+    slug: string
+    stories_per_month?: number | null
+  } | null
+  used?: number
+  limit?: number | null
+  remaining?: number
+  upgrade_plan?: {
+    id: number
+    name: string
+    slug: string
+    price: string
+    stories_per_month?: number | null
+  } | null
+  errors?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 const CATEGORY_OPTIONS: {
   value: StoryCategory
   label: string
@@ -37,7 +64,8 @@ const CATEGORY_OPTIONS: {
   { value: 'fun',     label: 'Fun' },
 ]
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024 // 8 MB
+/* NOTE: no image size limit. The server enforces anything
+   it needs to; the client just lets the user pick a file. */
 
 /* ────────────────────────────────────────────────────────
    Quill editor configuration
@@ -73,6 +101,72 @@ function plainTextLength(html: string) {
   return (tmp.textContent || tmp.innerText || '').trim().length
 }
 
+/* ────────────────────────────────────────────────────────
+   Response parsing helpers
+   ──────────────────────────────────────────────────────── */
+
+function isPlainObject(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value)
+  )
+}
+
+function isFieldErrorMap(
+  data: unknown,
+): data is Record<string, unknown> {
+  if (!isPlainObject(data)) return false
+
+  if ('error_code' in data) return false
+
+  const hasFieldKey =
+    'title' in data ||
+    'content' in data ||
+    'category' in data ||
+    'image' in data
+
+  if (typeof data.message === 'string' && !hasFieldKey) {
+    return false
+  }
+
+  return hasFieldKey
+}
+
+function extractFieldErrors(data: unknown): FieldErrors {
+  const flat: FieldErrors = {}
+  if (!isPlainObject(data)) return flat
+
+  const source =
+    isPlainObject(data.errors) ? data.errors : data
+
+  for (const k of [
+    'title',
+    'content',
+    'category',
+    'image',
+  ] as const) {
+    const v = source[k]
+    if (v == null) continue
+    flat[k] = Array.isArray(v) ? v.join(', ') : String(v)
+  }
+
+  return flat
+}
+
+function asServerError(
+  data: unknown,
+): ServerErrorPayload | null {
+  if (!isPlainObject(data)) return null
+  return data as ServerErrorPayload
+}
+
+/* ────────────────────────────────────────────────────────
+   Component
+   ──────────────────────────────────────────────────────── */
+
 function AddPost({ onCreated, onCancel }: AddPostProps) {
   const { access: accessToken } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -87,18 +181,15 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitting, setSubmitting] = useState(false)
 
-  /* ── Image pick ───────────────────────────── */
+  /* ── Image pick ─────────────────────────────
+     No size check. Any image is accepted as long
+     as the browser reports an image MIME type. */
   const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0]
     if (!picked) return
 
     if (!picked.type.startsWith('image/')) {
       toast.error('Please choose an image file.')
-      return
-    }
-
-    if (picked.size > MAX_IMAGE_BYTES) {
-      toast.error('Image must be under 8MB.')
       return
     }
 
@@ -131,7 +222,7 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
     setFieldErrors({})
   }
 
-  /* ── Submit to /stories/create/ ───────────── */
+  /* ── Submit to /stories/ ──────────────────── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -171,7 +262,7 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
     /* ---- build the multipart payload ---- */
     const fd = new FormData()
     fd.append('title', title.trim())
-    fd.append('content', content)          // HTML string
+    fd.append('content', content) // HTML string
     fd.append('category', category as string)
     fd.append('image', file as File)
 
@@ -180,48 +271,72 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/stories/create/`,
+        `${import.meta.env.VITE_API_URL}/stories/`,
         {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
             Accept: 'application/json',
-            // NOTE: do NOT set Content-Type — the browser
-            // adds the correct multipart boundary for us.
           },
           body: fd,
         }
       )
 
-      const data = await res.json().catch(() => null)
+      /* Parse body as `unknown`. */
+      const raw: unknown = await res
+        .json()
+        .catch(() => null)
 
       if (!res.ok) {
-        const err = data as Record<string, unknown> | null
-        if (err && typeof err === 'object') {
-          const flat: FieldErrors = {}
-          for (const [k, v] of Object.entries(err)) {
-            if (
-              k === 'title' ||
-              k === 'content' ||
-              k === 'category' ||
-              k === 'image'
-            ) {
-              flat[k as keyof FieldErrors] = Array.isArray(v)
-                ? v.join(', ')
-                : String(v)
-            }
-          }
+        /* ------------------------------------------------
+           1) Field-level errors
+           ------------------------------------------------ */
+        if (isFieldErrorMap(raw)) {
+          const flat = extractFieldErrors(raw)
           if (Object.keys(flat).length > 0) {
             setFieldErrors(flat)
           }
+
+          const payload = asServerError(raw)
+          toast.error(
+            payload?.message || 'Please fix the highlighted fields.',
+            { duration: 4500 }
+          )
+          return
         }
 
+        /* ------------------------------------------------
+           2) Business / limit errors
+           ------------------------------------------------ */
+        const payload = asServerError(raw)
+
+        const serverMessage =
+          payload?.message || payload?.detail
+
+        if (serverMessage) {
+          const upgrade = payload?.upgrade_plan
+          if (upgrade?.name) {
+            toast.error(serverMessage, {
+              description: `Upgrade to ${upgrade.name} for more stories.`,
+              duration: 7000,
+            })
+          } else {
+            toast.error(serverMessage, { duration: 6000 })
+          }
+          return
+        }
+
+        /* ------------------------------------------------
+           3) Fallback
+           ------------------------------------------------ */
         throw new Error(
-          (data && (data.detail || data.message)) ||
-            'Failed to publish story'
+          `Failed to publish story (${res.status}).`
         )
       }
 
+      /* --------------------------------------------------
+         Success
+         -------------------------------------------------- */
       toast.success('Story published!', {
         duration: 2500,
         icon: '✅',
@@ -382,7 +497,7 @@ function AddPost({ onCreated, onCancel }: AddPostProps) {
                 Tap to add a photo
               </span>
               <span className="addpost-upload-hint">
-                JPG, PNG, or WEBP — up to 8MB
+                JPG, PNG, or WEBP
               </span>
             </label>
           ) : (

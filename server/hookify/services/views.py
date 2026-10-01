@@ -2,6 +2,7 @@
 import logging
 
 from django.db import transaction
+from django.db import models
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
@@ -69,6 +70,185 @@ def _unauthorized(message="Authentication required."):
         {"message": message},
         status=status.HTTP_401_UNAUTHORIZED,
     )
+
+
+# ============================================================
+# PLAN-LIMIT HELPERS
+# ============================================================
+
+def _find_upgrade_plan(current_plan):
+    """Return the next plan (by display_order) for an upgrade hint."""
+    from plans.models import Plan
+
+    qs = Plan.objects.filter(is_active=True)
+
+    if current_plan is not None:
+        qs = qs.filter(display_order__gt=current_plan.display_order)
+
+    return qs.order_by("display_order", "price").first()
+
+
+def _plan_payload(plan):
+    if not plan:
+        return None
+    return {
+        "id": plan.id,
+        "name": plan.name,
+        "slug": plan.slug,
+        "price": str(plan.price),
+        "services_limit": plan.services_limit,
+        "images_per_service": plan.images_per_service,
+    }
+
+
+def _check_services_limit(user):
+    """
+    Returns None if the user can create another listing.
+
+    Otherwise returns a Response describing the limit and
+    how to upgrade.
+    """
+
+    if _is_superadmin(user):
+        return None
+
+    subscription = getattr(user, "subscription", None)
+
+    if not subscription:
+        return Response(
+            {
+                "message": (
+                    "You don't have a subscription yet. "
+                    "Please choose a plan to start creating services."
+                ),
+                "error_code": "NO_SUBSCRIPTION",
+                "limit": 0,
+                "used": 0,
+                "remaining": 0,
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    plan = subscription.plan
+
+    if not plan:
+        return Response(
+            {
+                "message": (
+                    "Your subscription has no plan assigned. "
+                    "Please contact support."
+                ),
+                "error_code": "NO_PLAN",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    limit = plan.services_limit  # None = unlimited
+
+    if limit is None:
+        return None
+
+    used = ClientService.objects.filter(provider=user).count()
+
+    if used < limit:
+        return None
+
+    upgrade = _find_upgrade_plan(plan)
+
+    if upgrade:
+        hint = (
+            f" Upgrade to {upgrade.name} "
+            f"(KES {upgrade.price}/month) for more."
+        )
+    else:
+        hint = (
+            " You're already on the highest plan. "
+            "Contact support if you need more."
+        )
+
+    return Response(
+        {
+            "message": (
+                f"You've reached the service limit for the "
+                f"{plan.name} plan ({used}/{limit}).{hint}"
+            ),
+            "error_code": "SERVICE_LIMIT_REACHED",
+            "plan": _plan_payload(plan),
+            "used": used,
+            "limit": limit,
+            "remaining": 0,
+            "upgrade_plan": _plan_payload(upgrade),
+        },
+        status=status.HTTP_403_FORBIDDEN,
+    )
+
+
+def _resolve_images_per_service_limit(user):
+    """
+    Return the plan's `images_per_service` limit for the given
+    user, or None if unlimited / no plan.
+
+    Also returns the plan (for upgrade hints).
+    """
+
+    if _is_superadmin(user):
+        return None, None
+
+    subscription = getattr(user, "subscription", None)
+
+    if not subscription or not subscription.plan:
+        return 0, None  # no plan → 0 images allowed
+
+    plan = subscription.plan
+    return plan.images_per_service, plan
+
+
+def _image_limit_error_payload(
+    plan,
+    limit,
+    used,
+    requested,
+    uploaded,
+    skipped,
+    upgrade,
+):
+    """
+    Build a consistent payload describing an image-limit
+    situation, whether it was hit partially or fully.
+    """
+
+    if upgrade:
+        hint = (
+            f" Upgrade to {upgrade.name} "
+            f"(KES {upgrade.price}/month) to add more images."
+        )
+        upgrade_payload = _plan_payload(upgrade)
+    else:
+        hint = (
+            " You're already on the highest plan. "
+            "Contact support if you need more."
+        )
+        upgrade_payload = None
+
+    return {
+        "message": (
+            f"You can have up to {limit} image(s) on the "
+            f"{plan.name} plan. "
+            f"{uploaded} image(s) were uploaded, "
+            f"{skipped} were skipped — you already had "
+            f"{used} of {limit}."
+            f"{hint}"
+        ),
+        "error_code": "IMAGE_LIMIT_REACHED",
+        "plan": _plan_payload(plan),
+        "used": used,
+        "limit": limit,
+        "remaining": max(0, limit - used - uploaded),
+        "requested": requested,
+        "uploaded": uploaded,
+        "skipped": skipped,
+        "upgrade_plan": upgrade_payload,
+    }
 
 
 # ============================================================
@@ -279,14 +459,10 @@ def services_list_create(request):
     """
     GET  /services/
         Public list of active listings.
-        ?mine=true | ?category=<slug|id> | ?search= | ?featured=true
-        ?listing_type=service|product
-        ?ordering=price|-price|created_at|-created_at|title|-title
 
     POST /services/
-        Create a listing. Any authenticated user is allowed.
-        Accepts optional `images` array of dicts with
-        image_url / image_public_id / is_primary / display_order.
+        Create a listing. Any authenticated user is allowed,
+        subject to the plan's `services_limit`.
     """
 
     # ── LIST ─────────────────────────────────────────────
@@ -342,12 +518,13 @@ def services_list_create(request):
         )
 
     # ── CREATE ───────────────────────────────────────────
-    #
-    # Any authenticated user can create a listing. The
-    # provider is set to the request user in the serializer.
-    # ──────────────────────────────────────────────────────
     if not request.user.is_authenticated:
         return _unauthorized()
+
+    # Plan limit check — number of services.
+    limit_response = _check_services_limit(request.user)
+    if limit_response is not None:
+        return limit_response
 
     serializer = ClientServiceWriteSerializer(
         data=request.data,
@@ -392,11 +569,6 @@ def service_detail(request, pk):
     PUT    /services/<pk>/   → full update (owner / superadmin)
     PATCH  /services/<pk>/   → partial update (owner / superadmin)
     DELETE /services/<pk>/   → delete (owner / superadmin)
-
-    On DELETE:
-        1. Fetch every ServiceImage public_id for this listing.
-        2. Delete all Cloudinary assets in bulk.
-        3. Delete the ClientService row (cascade removes image rows).
     """
 
     listing = get_object_or_404(
@@ -545,6 +717,16 @@ def service_detail(request, pk):
 # ============================================================
 # LISTING IMAGES — BULK ADD (multipart upload)
 # ============================================================
+#
+# IMPORTANT: only the images that fit inside the user's plan
+# limit are actually uploaded to Cloudinary. Extra files are
+# silently dropped and reported back in the response.
+#
+# Response shape:
+#   - 201 Created → some images uploaded (may be fewer than requested)
+#   - 403 Forbidden + IMAGE_LIMIT_REACHED → none could be uploaded
+#
+# ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -555,18 +737,10 @@ def upload_service_images(request, pk):
 
     Multipart upload of one or more image files.
 
-    Form data:
-        images: <file> (one or more)
-
-    Optional:
-        make_first_primary: "true" | "false" (default false)
-
-    Behavior:
-        1. Verify ownership of the listing.
-        2. Upload every file to Cloudinary.
-        3. Create a ServiceImage row for each success.
-        4. If make_first_primary=true and none is primary yet,
-           the first uploaded image becomes primary.
+    If the user's plan limits images per service, only the
+    allowed number are uploaded to Cloudinary. Extra files
+    are skipped and the response tells the user what
+    happened and how to upgrade.
     """
 
     listing = get_object_or_404(ClientService, pk=pk)
@@ -581,8 +755,61 @@ def upload_service_images(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # ── Resolve plan limit ───────────────────────────────
+    limit, plan = _resolve_images_per_service_limit(request.user)
+
+    used = listing.images.count()
+
+    # No plan at all → reject outright.
+    if limit is None and plan is None:
+        return Response(
+            {
+                "message": (
+                    "You don't have a subscription plan. "
+                    "Please choose a plan to upload images."
+                ),
+                "error_code": "NO_PLAN",
+                "used": used,
+                "limit": 0,
+                "requested": len(files),
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ---------------------------------------------------
+    # Decide which files we're allowed to upload.
+    #
+    #   limit is None → unlimited, upload everything.
+    #   otherwise     → cap to (limit - used) files.
+    # ---------------------------------------------------
+    if limit is None:
+        allowed_files = list(files)
+        skipped_count = 0
+    else:
+        remaining = max(0, limit - used)
+        allowed_files = list(files[:remaining])
+        skipped_count = len(files) - len(allowed_files)
+
+        # Nothing fits → tell the user directly.
+        if not allowed_files:
+            upgrade = _find_upgrade_plan(plan)
+
+            return Response(
+                _image_limit_error_payload(
+                    plan=plan,
+                    limit=limit,
+                    used=used,
+                    requested=len(files),
+                    uploaded=0,
+                    skipped=len(files),
+                    upgrade=upgrade,
+                ),
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    # ── Upload only the allowed files ────────────────────
     try:
-        result = bulk_upload_service_images(files, listing.id)
+        result = bulk_upload_service_images(allowed_files, listing.id)
     except Exception as e:
         logger.exception("Bulk upload failed for service_id=%s", listing.id)
         return Response(
@@ -613,9 +840,52 @@ def upload_service_images(request, pk):
 
     listing.refresh_from_db()
 
+    uploaded_count = len(created_images)
+    total_skipped = skipped_count + len(result.get("failed", []))
+
+    # ── Partial upload: some skipped due to plan ────────
+    if skipped_count > 0 and plan is not None and limit is not None:
+        upgrade = _find_upgrade_plan(plan)
+
+        return Response(
+            {
+                "message": (
+                    f"{uploaded_count} image(s) uploaded. "
+                    f"{skipped_count} skipped — your "
+                    f"{plan.name} plan allows up to {limit} "
+                    f"image(s) per service."
+                ),
+                "error_code": "IMAGE_LIMIT_PARTIAL",
+                "plan": _plan_payload(plan),
+                "used": used,
+                "limit": limit,
+                "remaining": max(0, limit - listing.images.count()),
+                "requested": len(files),
+                "uploaded": uploaded_count,
+                "skipped": skipped_count,
+                "upgrade_plan": _plan_payload(upgrade),
+                "uploaded_images": [
+                    {
+                        "id": img.id,
+                        "image_url": img.image_url,
+                        "image_public_id": img.image_public_id,
+                        "is_primary": img.is_primary,
+                        "display_order": img.display_order,
+                    }
+                    for img in created_images
+                ],
+                "failed": result.get("failed", []),
+                "service": ClientServiceReadSerializer(listing).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    # ── Normal success ───────────────────────────────────
     return Response(
         {
-            "message": f"{len(created_images)} image(s) uploaded successfully.",
+            "message": (
+                f"{uploaded_count} image(s) uploaded successfully."
+            ),
             "uploaded": [
                 {
                     "id": img.id,
@@ -626,7 +896,8 @@ def upload_service_images(request, pk):
                 }
                 for img in created_images
             ],
-            "failed": result["failed"],
+            "failed": result.get("failed", []),
+            "skipped": total_skipped,
             "service": ClientServiceReadSerializer(listing).data,
         },
         status=status.HTTP_201_CREATED,
@@ -642,11 +913,6 @@ def upload_service_images(request, pk):
 def delete_service_image(request, pk, image_id):
     """
     DELETE /services/<pk>/images/<image_id>/
-
-    Deletes a single image:
-        1. Verify ownership.
-        2. Delete Cloudinary asset first.
-        3. Delete the DB row.
     """
 
     listing = get_object_or_404(ClientService, pk=pk)
@@ -699,12 +965,6 @@ def delete_service_image(request, pk, image_id):
 def bulk_delete_service_images_view(request, pk):
     """
     POST /services/<pk>/images/bulk-delete/
-
-    Body:
-        { "image_ids": [12, 15, 18] }
-
-    Cloudinary cleanup happens first. DB rows only deleted
-    if every asset deletion succeeds.
     """
 
     listing = get_object_or_404(ClientService, pk=pk)
@@ -812,12 +1072,7 @@ def set_primary_service_image(request, pk, image_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def reorder_service_images(request, pk):
-    """
-    POST /services/<pk>/images/reorder/
-
-    Body:
-        { "order": [ {"id": 4, "display_order": 0}, … ] }
-    """
+    """POST /services/<pk>/images/reorder/"""
 
     listing = get_object_or_404(ClientService, pk=pk)
 

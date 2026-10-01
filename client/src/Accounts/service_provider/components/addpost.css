@@ -369,9 +369,11 @@
     animation: none;
   }
 }
+
 /* ═══════════════════════════════════════════════════════
    RICH TEXT EDITOR (react-quill)
-   Styled to match the rest of the form
+   Fixed-height body — scrolls internally, never grows
+   the form beyond the screen.
    ═══════════════════════════════════════════════════════ */
 
 .addpost-editor {
@@ -381,6 +383,12 @@
   background: #ffffff;
   overflow: hidden;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  /* Lock the editor to a predictable height so the
+     rest of the form stays visible. */
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;   /* overall cap including toolbar */
 }
 
 .addpost-editor:focus-within {
@@ -404,10 +412,31 @@
   background: #fafafa;
   padding: 8px 10px;
   font-family: inherit;
+
+  /* Keep toolbar to ONE row and let it scroll
+     horizontally on narrow screens. */
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.addpost-editor .ql-toolbar.ql-snow::-webkit-scrollbar {
+  height: 4px;
+}
+
+.addpost-editor .ql-toolbar.ql-snow::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
 }
 
 .addpost-editor .ql-toolbar.ql-snow .ql-formats {
-  margin-right: 10px;
+  margin-right: 8px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .addpost-editor .ql-toolbar.ql-snow button {
@@ -451,23 +480,40 @@
   border-radius: 8px;
   box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.2);
   padding: 4px;
+  z-index: 10;
 }
 
-/* ── Editor body ────────────────────────────── */
+/* ── Editor body — fixed height, scrolls inside ─ */
 .addpost-editor .ql-container.ql-snow {
   border: none;
   font-family: inherit;
   font-size: 14.5px;
   background: #ffffff;
+
+  /* Take remaining vertical space inside the
+     max-height-locked .addpost-editor wrapper. */
+  flex: 1 1 auto;
+  min-height: 0;      /* critical for flex shrink */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .addpost-editor .ql-editor {
-  min-height: 200px;
-  max-height: 420px;
   padding: 14px 16px;
   color: #000000;
   line-height: 1.6;
   font-family: inherit;
+
+  /* Grow from a small floor up to the flex parent's
+     height. Beyond that, scroll inside. */
+  flex: 1 1 auto;
+  min-height: 180px;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
 .addpost-editor .ql-editor.ql-blank::before {
@@ -520,9 +566,25 @@
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 13px;
   overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-/* Scrollbar for the editor body */
+.addpost-editor .ql-editor img,
+.addpost-editor .ql-editor iframe,
+.addpost-editor .ql-editor video {
+  max-width: 100%;
+  height: auto;
+}
+
+.addpost-editor .ql-editor table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  word-break: break-word;
+}
+
+/* Internal scrollbar */
 .addpost-editor .ql-editor::-webkit-scrollbar {
   width: 6px;
 }
@@ -532,8 +594,16 @@
   border-radius: 3px;
 }
 
+.addpost-editor .ql-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* ── Mobile ─────────────────────────────────── */
 @media (max-width: 560px) {
+  .addpost-editor {
+    max-height: 300px;
+  }
+
   .addpost-editor .ql-toolbar.ql-snow {
     padding: 6px 8px;
   }
@@ -544,7 +614,7 @@
 
   .addpost-editor .ql-editor {
     padding: 12px 14px;
-    min-height: 180px;
+    min-height: 160px;
     font-size: 14px;
   }
 

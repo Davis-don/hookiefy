@@ -70,6 +70,37 @@ interface PendingImage {
   status: 'pending' | 'uploading' | 'done' | 'failed'
 }
 
+/**
+ * Business / limit error payload from the server.
+ */
+interface ServerErrorPayload {
+  message?: string
+  detail?: string
+  error_code?: string
+  plan?: {
+    id: number
+    name: string
+    slug: string
+    price?: string
+    services_limit?: number | null
+    images_per_service?: number | null
+  } | null
+  used?: number
+  limit?: number | null
+  remaining?: number
+  requested?: number
+  upgrade_plan?: {
+    id: number
+    name: string
+    slug: string
+    price?: string
+    services_limit?: number | null
+    images_per_service?: number | null
+  } | null
+  errors?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 const PRICING_UNITS = [
   { value: 'per_hour', label: 'Per Hour' },
   { value: 'per_day', label: 'Per Day' },
@@ -106,6 +137,72 @@ const COMPRESS_TARGET_MB = 4
 const COMPRESS_MAX_DIMENSION = 2400
 
 /* ────────────────────────────────────────────────────────
+   Response parsing helpers
+   ──────────────────────────────────────────────────────── */
+
+function isPlainObject(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value)
+  )
+}
+
+function isFieldErrorMap(
+  data: unknown
+): data is Record<string, unknown> {
+  if (!isPlainObject(data)) return false
+  if ('error_code' in data) return false
+
+  const hasFieldKey =
+    'listing_type' in data ||
+    'title' in data ||
+    'description' in data ||
+    'category_id' in data ||
+    'price' in data ||
+    'pricing_unit' in data
+
+  if (typeof data.message === 'string' && !hasFieldKey) {
+    return false
+  }
+
+  return hasFieldKey
+}
+
+function extractFieldErrors(data: unknown): FieldErrors {
+  const flat: FieldErrors = {}
+  if (!isPlainObject(data)) return flat
+
+  const source = isPlainObject(data.errors)
+    ? data.errors
+    : data
+
+  for (const k of [
+    'listing_type',
+    'title',
+    'description',
+    'category_id',
+    'price',
+    'pricing_unit',
+  ] as const) {
+    const v = source[k]
+    if (v == null) continue
+    flat[k] = Array.isArray(v) ? v.join(', ') : String(v)
+  }
+
+  return flat
+}
+
+function asServerError(
+  data: unknown
+): ServerErrorPayload | null {
+  if (!isPlainObject(data)) return null
+  return data as ServerErrorPayload
+}
+
+/* ────────────────────────────────────────────────────────
    API helpers
    ──────────────────────────────────────────────────────── */
 
@@ -132,10 +229,34 @@ async function fetchCategories(
   return (data?.categories ?? []) as ServiceCategory[]
 }
 
+/**
+ * Custom error that carries the full server payload so
+ * callers can distinguish field errors from business
+ * errors and route the UI accordingly.
+ */
+class ApiError extends Error {
+  status: number
+  payload: ServerErrorPayload | Record<string, unknown> | null
+  fieldErrors?: FieldErrors
+
+  constructor(
+    message: string,
+    status: number,
+    payload: ServerErrorPayload | Record<string, unknown> | null,
+    fieldErrors?: FieldErrors
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.payload = payload
+    this.fieldErrors = fieldErrors
+  }
+}
+
 async function createListing(
   access: string | null,
   form: FormState
-) {
+): Promise<{ service?: { id: number } } & Record<string, unknown>> {
   if (!access) throw new Error('No access token found.')
 
   const isHookup = form.listing_type === 'hookup'
@@ -168,31 +289,36 @@ async function createListing(
       body: JSON.stringify(body),
     }
   )
-  const data = await res.json().catch(() => null)
+
+  const raw: unknown = await res.json().catch(() => null)
 
   if (!res.ok) {
-    const err = new Error(
-      (data && data.message) || 'Failed to create listing'
-    ) as Error & { fieldErrors?: FieldErrors }
-
-    if (data?.errors && typeof data.errors === 'object') {
-      const flat: FieldErrors = {}
-      for (const [field, val] of Object.entries(data.errors)) {
-        flat[field as keyof FieldErrors] = Array.isArray(val)
-          ? val.join(', ')
-          : String(val)
-      }
-      err.fieldErrors = flat
+    if (isFieldErrorMap(raw)) {
+      throw new ApiError(
+        asServerError(raw)?.message || 'Validation failed.',
+        res.status,
+        asServerError(raw),
+        extractFieldErrors(raw)
+      )
     }
 
-    throw err
+    const payload = asServerError(raw)
+    throw new ApiError(
+      payload?.message ||
+        payload?.detail ||
+        `Failed to create listing (${res.status}).`,
+      res.status,
+      payload
+    )
   }
 
-  return data
+  return (raw ?? {}) as { service?: { id: number } } & Record<string, unknown>
 }
 
 /**
  * Upload a single file with real progress via XHR.
+ * Rejects with an `ApiError` if the server returns a
+ * business or field error.
  */
 function uploadSingleImage(
   access: string,
@@ -200,7 +326,7 @@ function uploadSingleImage(
   file: File,
   makeFirstPrimary: boolean,
   onProgress: (percent: number) => void
-): Promise<any> {
+): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const fd = new FormData()
     fd.append('images', file)
@@ -229,23 +355,40 @@ function uploadSingleImage(
     }
 
     xhr.onload = () => {
-      let data: any = null
+      let raw: unknown = null
       try {
-        data = JSON.parse(xhr.responseText)
+        raw = JSON.parse(xhr.responseText)
       } catch {
-        data = null
+        raw = null
       }
 
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(data)
-      } else {
+        resolve(raw)
+        return
+      }
+
+      if (isFieldErrorMap(raw)) {
         reject(
-          new Error(
-            (data && data.message) ||
-              `Upload failed (${xhr.status})`
+          new ApiError(
+            asServerError(raw)?.message || 'Upload failed.',
+            xhr.status,
+            asServerError(raw),
+            extractFieldErrors(raw)
           )
         )
+        return
       }
+
+      const payload = asServerError(raw)
+      reject(
+        new ApiError(
+          payload?.message ||
+            payload?.detail ||
+            `Upload failed (${xhr.status}).`,
+          xhr.status,
+          payload
+        )
+      )
     }
 
     xhr.onerror = () =>
@@ -256,20 +399,16 @@ function uploadSingleImage(
   })
 }
 
-/**
- * Upload images sequentially, one request per file.
- * Reports a single overall progress value to the caller.
- */
 async function uploadListingImages(
   access: string | null,
   serviceId: number,
   images: PendingImage[],
   onProgress: (percent: number) => void
-): Promise<any[]> {
+): Promise<unknown[]> {
   if (!access) throw new Error('No access token found.')
 
   const total = images.length
-  const results: any[] = []
+  const results: unknown[] = []
 
   for (let idx = 0; idx < total; idx++) {
     const img = images[idx]
@@ -278,7 +417,7 @@ async function uploadListingImages(
       access,
       serviceId,
       img.file,
-      idx === 0, // make_first_primary on the first upload
+      idx === 0,
       (localPercent) => {
         const overall = Math.round(
           ((idx + localPercent / 100) / total) * 100
@@ -323,7 +462,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
     staleTime: 5 * 60_000,
   })
 
-  /* Look up the "Hookup" category if it exists */
   const hookupCategory = categories?.find(
     (c) => c.name.trim().toLowerCase() === 'hookup'
   )
@@ -391,9 +529,73 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       onCreated?.()
     },
     onError: (err: Error) => {
-      const e = err as Error & { fieldErrors?: FieldErrors }
-      if (e.fieldErrors) setFieldErrors(e.fieldErrors)
+      /* ------------------------------------------------
+         1) Field-level errors → inline
+         ------------------------------------------------ */
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors)
+        toast.error(err.message, {
+          duration: 4500,
+          icon: '⚠️',
+          style: {
+            background: '#1a1a2e',
+            border: '1px solid #ef4444',
+            color: '#ffffff',
+          },
+        })
+        setUploadPhase('idle')
+        setUploadPercent(0)
+        return
+      }
 
+      /* ------------------------------------------------
+         2) Business / limit errors → toast with hint
+         ------------------------------------------------ */
+      const payload =
+        err instanceof ApiError ? err.payload : null
+
+      const errorCode =
+        payload && isPlainObject(payload)
+          ? (payload.error_code as string | undefined)
+          : undefined
+
+      const upgrade =
+        payload && isPlainObject(payload)
+          ? (payload.upgrade_plan as
+              | ServerErrorPayload['upgrade_plan']
+              | undefined)
+          : undefined
+
+      const isLimitError =
+        errorCode === 'SERVICE_LIMIT_REACHED' ||
+        errorCode === 'IMAGE_LIMIT_REACHED' ||
+        errorCode === 'NO_SUBSCRIPTION' ||
+        errorCode === 'NO_PLAN'
+
+      if (isLimitError) {
+        const description = upgrade?.name
+          ? `Upgrade to ${upgrade.name} for more.`
+          : undefined
+
+        toast.error(err.message, {
+          description,
+          duration: 7000,
+          icon: '🚫',
+          style: {
+            background: '#1a1a2e',
+            border: '1px solid #f59e0b',
+            color: '#ffffff',
+          },
+        })
+
+        setUploadPhase('idle')
+        setUploadPercent(0)
+        return
+      }
+
+      /* ------------------------------------------------
+         3) Generic fallback
+         ------------------------------------------------ */
       toast.error('Failed to create listing', {
         description: err.message,
         duration: 4500,
@@ -496,13 +698,11 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
         initialQuality: 0.85,
       })
 
-      // imageCompression returns a Blob — wrap as a File
       return new File([compressed], file.name, {
         type: compressed.type || file.type,
         lastModified: Date.now(),
       })
     } catch {
-      // Compression failed — fall back to the original
       return file
     }
   }
@@ -529,8 +729,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
       })
     }
 
-    // Filter out obvious non-images and anything above the
-    // hard cap. Compression happens next.
     const valid: File[] = []
     for (const file of limited) {
       if (!file.type.startsWith('image/')) {
@@ -705,7 +903,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
   /* ── Render ───────────────────────────────────────── */
   return (
     <>
-      {/* ── Full-screen overlay ─────────────────────── */}
       {isWorking && (
         <div className="ads-overlay">
           <div className="ads-overlay-card">
@@ -805,7 +1002,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </div>
             </div>
 
-            {/* ── Hookup info banner ────────────────── */}
             {isHookup && (
               <div className="ads-hookup-banner">
                 <FiHeart className="ads-hookup-icon" />
@@ -819,7 +1015,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </div>
             )}
 
-            {/* ── Title / Intro Line ───────────────── */}
             <div className="ads-form-group">
               <label className="ads-form-label" htmlFor="title">
                 {isHookup ? (
@@ -867,7 +1062,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               )}
             </div>
 
-            {/* ── Category ─────────────────────────── */}
             <div className="ads-form-group">
               <label
                 className="ads-form-label"
@@ -911,7 +1105,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               )}
             </div>
 
-            {/* ── Description / About You ──────────── */}
             <div className="ads-form-group">
               <label
                 className="ads-form-label"
@@ -951,7 +1144,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               )}
             </div>
 
-            {/* ── Price + Unit ─────────────────────── */}
             {!isHookup && (
               <div className="ads-form-row">
                 <div className="ads-form-group">
@@ -1009,7 +1201,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </div>
             )}
 
-            {/* ── Images ───────────────────────────── */}
             <div className="ads-form-group">
               <label className="ads-form-label">
                 <FiImage className="ads-label-icon" />{' '}
@@ -1111,8 +1302,7 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
                             <div className="ads-tile-overlay" />
                             <div className="ads-tile-progress">
                               <div className="ads-tile-progress-track">
-                                <div
-                                  className="ads-tile-progress-fill"
+                                <div                                  className="ads-tile-progress-fill"
                                   style={{
                                     width: `${img.progress}%`,
                                   }}
@@ -1143,7 +1333,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </div>
             </div>
 
-            {/* ── Status toggle ────────────────────── */}
             <div className="ads-form-group">
               <span className="ads-form-label">Status</span>
               <label className="ads-toggle">
@@ -1165,7 +1354,6 @@ const AddService = ({ onCreated, onCancel }: AddServiceProps) => {
               </label>
             </div>
 
-            {/* ── Actions ──────────────────────────── */}
             <div className="ads-form-actions">
               <button
                 type="submit"
