@@ -1,3 +1,4 @@
+
 // pages/Plans.tsx
 
 import { useState } from 'react';
@@ -286,102 +287,60 @@ const Plans = () => {
             let ctaLabel = 'Upgrade';
             let ctaDisabled = false;
 
-            /*
-             * ─────────────────────────────────────
-             * CASE 1: USER IS ON FREE PLAN
-             * ─────────────────────────────────────
-             *
-             * Free is the current plan.
-             *
-             * Paid plans can be purchased.
-             */
+            /* ─────────── FREE SUBSCRIPTION ─────────── */
 
             if (isFreeSubscription) {
               if (isFreePlan) {
                 isCurrent = true;
-
                 ctaLabel = 'Current Plan';
-
                 ctaDisabled = true;
               } else {
                 isCurrent = false;
-
                 ctaLabel = 'Upgrade';
-
                 ctaDisabled = false;
               }
             }
 
-            /*
-             * ─────────────────────────────────────
-             * CASE 2: ACTIVE PAID SUBSCRIPTION
-             * ─────────────────────────────────────
-             *
-             * The user cannot change plans while
-             * their current paid subscription is
-             * still active.
-             *
-             * ALL plans are disabled.
-             */
+            /* ─────────── ACTIVE PAID SUBSCRIPTION ─────────── */
 
             else if (isActivePaidSubscription) {
               if (plan.is_current) {
                 isCurrent = true;
 
-                ctaLabel = 'Current Plan';
+                /*
+                 * Current paid plan is renewable.
+                 */
+                ctaLabel = 'Renew';
+                ctaDisabled = false;
               } else {
                 isCurrent = false;
-
                 ctaLabel = 'Not Available';
+                ctaDisabled = true;
               }
-
-              ctaDisabled = true;
             }
 
-            /*
-             * ─────────────────────────────────────
-             * CASE 3: PAID SUBSCRIPTION EXPIRED
-             * ─────────────────────────────────────
-             *
-             * Free is NEVER available.
-             *
-             * Every paid plan can be purchased.
-             */
+            /* ─────────── EXPIRED PAID SUBSCRIPTION ─────────── */
 
             else if (isExpiredPaidSubscription) {
               if (isFreePlan) {
                 isCurrent = false;
-
                 ctaLabel = 'Not Available';
-
                 ctaDisabled = true;
               } else {
                 isCurrent = false;
-
                 ctaLabel = 'Upgrade';
-
                 ctaDisabled = false;
               }
             }
 
-            /*
-             * ─────────────────────────────────────
-             * CASE 4: NO SUBSCRIPTION
-             * ─────────────────────────────────────
-             *
-             * Normally this should only occur
-             * before the account's Free subscription
-             * has been created.
-             */
+            /* ─────────── NO SUBSCRIPTION ─────────── */
 
             else {
               if (isFreePlan) {
                 ctaLabel = 'Get Started';
-
                 ctaDisabled = false;
               } else {
                 ctaLabel = 'Upgrade';
-
                 ctaDisabled = false;
               }
             }
@@ -401,7 +360,7 @@ const Plans = () => {
         </div>
       </div>
 
-      {/* ─────────── Purchase Sheet ─────────── */}
+      {/* ─────────── Purchase / Renewal Sheet ─────────── */}
 
       <PlanPurchaseSheet
         open={sheetOpen}
@@ -416,3 +375,4 @@ const Plans = () => {
 };
 
 export default Plans;
+
