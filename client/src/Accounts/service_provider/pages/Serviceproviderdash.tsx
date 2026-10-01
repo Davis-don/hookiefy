@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import './serviceproviderdash.css';
 import Header from '../components/Header';
 import Home from '../components/Home';
-import MyServices from '../components/MyServices';
 import Profile from '../components/Profile';
 import Stories from '../components/stories/Stories';
 import AddData from '../components/AddData';
@@ -146,8 +145,6 @@ const Serviceproviderdash = () => {
   }, []);
 
   /* ── Premium status query ────────────────────────── */
-  /* Uses the shared fetcher + 3-state model from
-     PremiumBadge so the endpoint lives in one place. */
   const { data: premium } = useQuery<PremiumStatusResponse | null>({
     queryKey: ['premium-status', access],
     queryFn: () => fetchPremiumStatus(access),
@@ -167,10 +164,7 @@ const Serviceproviderdash = () => {
     },
   });
 
-  /* ── Gate ──────────────────────────────────────────
-     Gate ONLY when the user's premium has expired.
-     Free users and active-premium users get full access.
-     ─────────────────────────────────────────────── */
+  /* ── Gate: only when premium has expired ─────────── */
   const isGated = useMemo(() => {
     if (!premium) return false;
     if (premium.role !== 'serviceprovider') return false;
@@ -188,6 +182,7 @@ const Serviceproviderdash = () => {
 
   const hasUnreadPaid = !!unreadPaid?.has_unread;
 
+  /* ── Menu (hammer / My Services removed) ─────────── */
   const menuItems = [
     { id: 'home', label: 'Home', icon: '🏠', component: Home },
     { id: 'stories', label: 'Stories', icon: '📸', component: Stories },
@@ -196,12 +191,6 @@ const Serviceproviderdash = () => {
       label: 'Connections',
       icon: '🔗',
       component: MyConnections,
-    },
-    {
-      id: 'my-services',
-      label: 'My Services',
-      icon: '🛠️',
-      component: MyServices,
     },
     {
       id: 'subscription',
@@ -244,7 +233,7 @@ const Serviceproviderdash = () => {
     return <ActiveComponent />;
   };
 
-  /* ── Guarded handlers — no-op while gated ───────── */
+  /* ── Guarded handlers ───────────────────────────── */
   const handleHeaderProfileClick = () => {
     if (isGated) return;
     setShowProfile(true);
@@ -304,7 +293,6 @@ const Serviceproviderdash = () => {
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'stories', label: 'Stories', icon: '📸' },
     { id: 'connections', label: 'Connections', icon: '🔗' },
-    { id: 'my-services', label: 'My Services', icon: '🛠️' },
   ];
 
   const leftItems = mobileNavItems.slice(0, 2);
