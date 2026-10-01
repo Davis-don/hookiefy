@@ -13,6 +13,42 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# ACTIVE PAYMENT CONFIGURATION
+# ============================================================
+
+def get_active_pesapal_config():
+    """
+    Return the active PaymentConfiguration row for PesaPal.
+
+    Raises if none exists, or if the row has no ipn_id,
+    so the caller can surface a clear error.
+    """
+
+    from paymentconfigurations.models import PaymentConfiguration
+
+    config = (
+        PaymentConfiguration.objects
+        .filter(gateway_name="pesapal", is_active=True)
+        .first()
+    )
+
+    if not config:
+        raise Exception(
+            "No active PesaPal payment configuration found. "
+            "Add one in the admin under Payment Configurations."
+        )
+
+    if not config.ipn_id:
+        raise Exception(
+            "PesaPal PaymentConfiguration exists but has no "
+            "ipn_id. Register the IPN URL first and save the "
+            "returned ipn_id on the configuration."
+        )
+
+    return config
+
+
+# ============================================================
 # RECORD PENDING PAYMENT
 # ============================================================
 

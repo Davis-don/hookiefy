@@ -16,10 +16,9 @@ from rest_framework import status
 from plans.models import Plan
 
 from .controllers.Fetch_plan_amount import Plan_Amount
-from .controllers.fetch_pesapal_token import get_pesapal_token
-from .controllers.get_registered_ipns import get_registered_ipns
 from .controllers.submit_order_request import submit_the_order
 from .controllers.services import (
+    get_active_pesapal_config,
     record_pending_payment,
     sync_payment_from_pesapal,
 )
@@ -59,6 +58,13 @@ def create_subscription_payment(request):
             {"error": f"Plan {plan_id} not found."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    logger.info(
+        "Plan loaded | id=%s | name=%s | price=%s",
+        plan.id,
+        plan.name,
+        plan.price,
+    )
 
     # --------------------------------------------------------
     # 3. User's subscription
@@ -113,64 +119,21 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # 6. Token
-    # --------------------------------------------------------
-    token_response = get_pesapal_token()
-    token = token_response.get("token")
-
-    if not token:
-        logger.error(
-            "PesaPal token failed: %s",
-            token_response,
-        )
-        return Response(
-            {
-                "error": "Failed to get PesaPal token.",
-                "response": token_response,
-            },
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
-
-    # --------------------------------------------------------
-    # 7. IPN
+    # 6. Active PesaPal config → use the stored ipn_id
     # --------------------------------------------------------
     try:
-        registered_ipns = get_registered_ipns(token)
+        config = get_active_pesapal_config()
     except Exception as e:
-        logger.exception("Failed to fetch registered IPNs.")
+        logger.exception("No active PesaPal configuration.")
         return Response(
-            {"error": f"Failed to fetch registered IPNs: {e}"},
+            {"error": str(e)},
             status=status.HTTP_502_BAD_GATEWAY,
         )
 
-    ipn_id = None
-
-    if isinstance(registered_ipns, list) and registered_ipns:
-        for ipn in registered_ipns:
-            if ipn.get("url") == settings.PESAPAL_IPN_URL:
-                ipn_id = ipn.get("ipn_id")
-                break
-        if not ipn_id:
-            ipn_id = registered_ipns[0].get("ipn_id")
-
-    if not ipn_id:
-        logger.error(
-            "No registered IPN id found: %s",
-            registered_ipns,
-        )
-        return Response(
-            {
-                "error": (
-                    "No registered IPN found. "
-                    "Register one first via register_ipn_url()."
-                ),
-                "registered_ipns": registered_ipns,
-            },
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
+    ipn_id = config.ipn_id
 
     # --------------------------------------------------------
-    # 8. Build order
+    # 7. Build order
     # --------------------------------------------------------
     user = request.user
 
@@ -191,7 +154,7 @@ def create_subscription_payment(request):
     }
 
     # --------------------------------------------------------
-    # 9. Submit
+    # 8. Submit
     # --------------------------------------------------------
     try:
         order_response = submit_the_order(order_data)
@@ -219,7 +182,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # 10. Persist pending row — MUST succeed
+    # 9. Persist pending row — MUST succeed
     # --------------------------------------------------------
     try:
         payment = record_pending_payment(
@@ -254,7 +217,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # 11. Respond
+    # 10. Respond
     # --------------------------------------------------------
     return Response(
         {
