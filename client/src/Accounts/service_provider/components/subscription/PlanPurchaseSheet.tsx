@@ -60,22 +60,16 @@ function useAccessToken(): string | null {
 type Phase = 'form' | 'redirecting' | 'failed';
 
 interface InitiateResponse {
-  success: boolean;
-  message: string;
-  payment?: {
-    id: number;
-    merchant_reference: string;
-    amount: string;
-    status: string;
-    order_tracking_id: string | null;
-  };
-  plan?: {
-    id: number;
-    name: string;
-    slug: string;
-    price: string;
-  };
+  message?: string;
+  amount?: number | string;
+  currency?: string;
+  merchant_reference?: string;
+  order_tracking_id?: string;
   redirect_url?: string;
+  ipn_id?: string;
+  payment_id?: string;
+  status?: string;
+  error?: string;
 }
 
 interface Props {
@@ -147,10 +141,9 @@ const PlanPurchaseSheet: React.FC<Props> = ({
     setPhase('redirecting');
 
     try {
-      // ✅ NEW: subscription_payment app
       const url = API_ORIGIN
-        ? `${API_ORIGIN}/subscription_payments/plan/initiate/`
-        : `/subscription_payments/plan/initiate/`;
+        ? `${API_ORIGIN}/subscription_payments/initialize/`
+        : `/subscription_payments/initialize/`;
 
       const res = await fetch(url, {
         method: 'POST',
@@ -167,11 +160,13 @@ const PlanPurchaseSheet: React.FC<Props> = ({
 
       const data: InitiateResponse = await res
         .json()
-        .catch(() => ({ success: false, message: '' } as InitiateResponse));
+        .catch(() => ({} as InitiateResponse));
 
-      if (!res.ok || !data.success) {
+      if (!res.ok) {
         throw new Error(
-          data.message || `Could not start payment (${res.status}).`
+          data.error ||
+            data.message ||
+            `Could not start payment (${res.status}).`
         );
       }
 
@@ -181,12 +176,21 @@ const PlanPurchaseSheet: React.FC<Props> = ({
         );
       }
 
-      // Save the payment id so the success page can look it up
+      // Persist references so the success page can look them up
       try {
-        if (data.payment?.id) {
+        if (data.payment_id) {
+          sessionStorage.setItem('active_payment_id', data.payment_id);
+        }
+        if (data.merchant_reference) {
           sessionStorage.setItem(
-            'active_payment_id',
-            String(data.payment.id)
+            'active_merchant_reference',
+            data.merchant_reference
+          );
+        }
+        if (data.order_tracking_id) {
+          sessionStorage.setItem(
+            'active_order_tracking_id',
+            data.order_tracking_id
           );
         }
         localStorage.setItem('plan_id', String(plan.id));
