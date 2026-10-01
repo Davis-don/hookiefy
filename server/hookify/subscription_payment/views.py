@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 def create_subscription_payment(request):
 
     # --------------------------------------------------------
-    # Get plan ID
+    # 1. plan_id
     # --------------------------------------------------------
     plan_id = request.data.get("plan_id")
 
@@ -50,18 +50,18 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Resolve the plan
+    # 2. Load the plan explicitly
     # --------------------------------------------------------
     try:
         plan = Plan.objects.get(id=plan_id)
     except Plan.DoesNotExist:
         return Response(
-            {"error": "Plan not found."},
+            {"error": f"Plan {plan_id} not found."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     # --------------------------------------------------------
-    # Resolve the user's subscription
+    # 3. User's subscription
     # --------------------------------------------------------
     subscription = getattr(request.user, "subscription", None)
 
@@ -77,7 +77,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Get plan amount
+    # 4. Amount
     # --------------------------------------------------------
     try:
         amount = Plan_Amount(plan_id)
@@ -98,7 +98,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Phone number — required for the PesaPal prompt
+    # 5. Phone
     # --------------------------------------------------------
     phone_number = (
         request.data.get("phone_number")
@@ -113,7 +113,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Get PesaPal token
+    # 6. Token
     # --------------------------------------------------------
     token_response = get_pesapal_token()
     token = token_response.get("token")
@@ -132,7 +132,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Get registered IPNs and pick one
+    # 7. IPN
     # --------------------------------------------------------
     try:
         registered_ipns = get_registered_ipns(token)
@@ -170,7 +170,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Build the order payload
+    # 8. Build order
     # --------------------------------------------------------
     user = request.user
 
@@ -182,7 +182,7 @@ def create_subscription_payment(request):
         "merchant_reference": merchant_reference,
         "amount": float(amount),
         "currency": "KES",
-        "description": f"Subscription plan {plan_id}",
+        "description": f"Subscription plan {plan.name}",
         "notification_id": ipn_id,
         "email": user.email,
         "phone": phone_number,
@@ -191,7 +191,7 @@ def create_subscription_payment(request):
     }
 
     # --------------------------------------------------------
-    # Submit the order to PesaPal
+    # 9. Submit
     # --------------------------------------------------------
     try:
         order_response = submit_the_order(order_data)
@@ -219,9 +219,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Persist the payment row — status "pending".
-    # MUST succeed. If it fails, do NOT hand the client
-    # the redirect URL.
+    # 10. Persist pending row — MUST succeed
     # --------------------------------------------------------
     try:
         payment = record_pending_payment(
@@ -256,7 +254,7 @@ def create_subscription_payment(request):
         )
 
     # --------------------------------------------------------
-    # Safe to send the client to PesaPal
+    # 11. Respond
     # --------------------------------------------------------
     return Response(
         {
@@ -303,7 +301,6 @@ def subscription_payment_status(request, merchant_reference):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Already terminal — no need to ask PesaPal.
     if payment.is_terminal:
         return Response(
             {
@@ -320,7 +317,6 @@ def subscription_payment_status(request, merchant_reference):
             status=status.HTTP_200_OK,
         )
 
-    # Nothing to ask PesaPal about yet.
     if not payment.order_tracking_id:
         return Response(
             {
@@ -332,7 +328,6 @@ def subscription_payment_status(request, merchant_reference):
             status=status.HTTP_200_OK,
         )
 
-    # Ask PesaPal and sync.
     try:
         data = sync_payment_from_pesapal(merchant_reference)
     except Exception as e:
@@ -375,22 +370,34 @@ def subscription_payment_status(request, merchant_reference):
 
 
 # ============================================================
-# IPN (PesaPal server-to-server)
+# IPN (server-to-server)
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def pesapal_ipn(request):
     """
-    PesaPal POSTs here after processing. Source of truth.
+    PesaPal POSTs here after processing.
     """
 
     order_tracking_id = request.data.get("OrderTrackingId")
     merchant_reference = request.data.get("OrderMerchantReference")
 
+    logger.info(
+        "IPN received | tracking=%s | ref=%s | payload=%s",
+        order_tracking_id,
+        merchant_reference,
+        request.data,
+    )
+
     if not order_tracking_id or not merchant_reference:
         return Response(
-            {"error": "Missing OrderTrackingId or OrderMerchantReference."},
+            {
+                "error": (
+                    "Missing OrderTrackingId or "
+                    "OrderMerchantReference."
+                )
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -401,7 +408,6 @@ def pesapal_ipn(request):
             "IPN sync failed for %s", merchant_reference
         )
 
-    # PesaPal expects this exact shape back.
     return Response(
         {
             "orderNotificationType": "IPNCHANGE",
@@ -422,27 +428,44 @@ def pesapal_ipn(request):
 def pesapal_callback(request):
     """
     PesaPal redirects the customer's browser here.
-    Sync, then bounce to the frontend.
     """
 
     order_tracking_id = request.query_params.get("OrderTrackingId")
     merchant_reference = request.query_params.get("OrderMerchantReference")
 
+    logger.info(
+        "Callback received | tracking=%s | ref=%s",
+        order_tracking_id,
+        merchant_reference,
+    )
+
     paid = False
+    failure_reason = None
 
     if merchant_reference:
         try:
             data = sync_payment_from_pesapal(merchant_reference)
             paid = bool(data.get("is_completed"))
-        except Exception:
+
+            if not paid:
+                failure_reason = data.get(
+                    "payment_status_description"
+                ) or data.get("description") or "failed"
+        except Exception as e:
             logger.exception(
                 "Callback sync failed for %s", merchant_reference
             )
+            failure_reason = str(e)
 
     status_flag = "success" if paid else "failed"
 
-    return redirect(
+    url = (
         f"{settings.FRONTEND_URL}/subscription/payment-result"
         f"?status={status_flag}"
         f"&ref={merchant_reference or ''}"
     )
+    if failure_reason:
+        from urllib.parse import quote
+        url += f"&reason={quote(str(failure_reason))}"
+
+    return redirect(url)

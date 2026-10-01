@@ -1,32 +1,45 @@
+# subscription_payment/controllers/get_transaction_status.py
+import logging
+
 import requests
 from django.conf import settings
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_transaction_status(order_tracking_id):
     """
-    Get the status of a Pesapal transaction.
+    Fetch the status of a PesaPal transaction.
 
-    The endpoint is a GET with the orderTrackingId as a query
-    parameter:
+    PesaPal's endpoint is a GET with the orderTrackingId as a
+    query parameter:
 
         GET {PESAPAL_BASE_URL}/api/Transactions/GetTransactionStatus
             ?orderTrackingId=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    Returns the parsed JSON response.
+    Returns a normalized dict:
+      - status_code (int or None)
+      - is_completed (bool)
+      - normalized_status ("COMPLETED" / "FAILED" / ...)
+      - raw (the original JSON)
     """
+
     from .fetch_pesapal_token import get_pesapal_token
 
     # --------------------------------------------------------
-    # Get a fresh token
+    # Token
     # --------------------------------------------------------
     token_response = get_pesapal_token()
     if token_response.get("status") != "200":
-        raise Exception("Failed to get Pesapal token")
+        raise Exception("Failed to get PesaPal token")
 
     token = token_response.get("token")
+    if not token:
+        raise Exception("PesaPal token missing in response.")
 
     # --------------------------------------------------------
-    # Build the request
+    # Request
     # --------------------------------------------------------
     url = (
         f"{settings.PESAPAL_BASE_URL}"
@@ -39,9 +52,7 @@ def get_transaction_status(order_tracking_id):
         "Authorization": f"Bearer {token}",
     }
 
-    params = {
-        "orderTrackingId": order_tracking_id,
-    }
+    params = {"orderTrackingId": order_tracking_id}
 
     response = requests.get(
         url,
@@ -49,26 +60,49 @@ def get_transaction_status(order_tracking_id):
         params=params,
         timeout=30,
     )
-    response.raise_for_status()
+
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        logger.error(
+            "PesaPal GetTransactionStatus HTTP error | "
+            "tracking=%s | status=%s | body=%s",
+            order_tracking_id,
+            response.status_code,
+            response.text,
+        )
+        raise Exception(
+            f"PesaPal GetTransactionStatus failed: {e}"
+        )
 
     data = response.json()
 
     # --------------------------------------------------------
-    # Normalize the status into something predictable
+    # Normalize status_code to int (PesaPal sometimes
+    # returns a string, sometimes an int)
     # --------------------------------------------------------
-    status_code = data.get("status_code")
+    raw_code = data.get("status_code")
+    try:
+        code_int = int(raw_code) if raw_code is not None else None
+    except (TypeError, ValueError):
+        code_int = None
 
-    status_map = {
+    normalized = {
         0: "INVALID",
         1: "COMPLETED",
         2: "FAILED",
         3: "REVERSED",
-    }
+    }.get(code_int, "UNKNOWN")
 
-    data["normalized_status"] = status_map.get(
-        status_code,
-        "UNKNOWN",
+    data["status_code"] = code_int
+    data["is_completed"] = code_int == 1
+    data["normalized_status"] = normalized
+
+    logger.info(
+        "PesaPal status | tracking=%s | code=%s | %s",
+        order_tracking_id,
+        code_int,
+        normalized,
     )
-    data["is_completed"] = status_code == 1
 
     return data

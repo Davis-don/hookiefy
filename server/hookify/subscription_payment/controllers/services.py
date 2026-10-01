@@ -76,9 +76,6 @@ def sync_payment_from_pesapal(merchant_reference):
     subscription too.
 
     Returns the PesaPal response dict.
-
-    Idempotent: safe to call from the IPN, the callback,
-    and the frontend polling endpoint.
     """
 
     payment = (
@@ -98,7 +95,7 @@ def sync_payment_from_pesapal(merchant_reference):
             f"No payment with reference {merchant_reference}"
         )
 
-    # Already terminal — nothing to sync.
+    # Already terminal — return cached.
     if payment.status in (
         "completed", "failed", "reversed", "invalid", "cancelled"
     ):
@@ -119,7 +116,7 @@ def sync_payment_from_pesapal(merchant_reference):
     with transaction.atomic():
 
         # ----------------------------------------------------
-        # Completed
+        # COMPLETED
         # ----------------------------------------------------
         if data.get("is_completed"):
 
@@ -146,7 +143,7 @@ def sync_payment_from_pesapal(merchant_reference):
             activate_subscription(payment)
 
         # ----------------------------------------------------
-        # Failed / reversed / invalid
+        # FAILED / REVERSED / INVALID
         # ----------------------------------------------------
         elif data.get("status_code") in (0, 2, 3):
 
@@ -179,15 +176,11 @@ def sync_payment_from_pesapal(merchant_reference):
 def activate_subscription(payment):
     """
     On a completed payment:
-
-      - Apply the paid plan to the user's Subscription.
-      - Refresh the billing window:
-          * Renewal of the SAME plan → stack on remaining time.
-          * Plan CHANGE (upgrade/downgrade) → reset from now.
-      - Persist the changes.
-
-    Free plans never expire — their dates are left alone
-    (Subscription.save() handles their end_date).
+      - apply the paid plan to the user's Subscription
+      - refresh the billing window:
+          * renewal of SAME plan → stack
+          * plan change / expired → reset from now
+      - persist changes
     """
 
     sub = payment.subscription
@@ -212,23 +205,15 @@ def activate_subscription(payment):
     previous_plan_id = sub.plan_id
     is_free = (purchased_plan.name or "").lower() == "free"
 
-    # --------------------------------------------------------
-    # Apply the plan
-    # --------------------------------------------------------
     sub.plan = purchased_plan
 
-    # --------------------------------------------------------
-    # Refresh the billing window (paid plans only)
-    # --------------------------------------------------------
     if not is_free:
 
         is_renewal = previous_plan_id == purchased_plan.id
 
         if is_renewal and sub.end_date and sub.end_date > now:
-            # Same plan, still in cycle → stack.
             sub.end_date = sub.end_date + timedelta(days=30)
         else:
-            # New plan, or expired cycle → reset.
             sub.start_date = now
             sub.end_date = now + timedelta(days=30)
 
