@@ -551,32 +551,40 @@ PESAPAL_BASE_URL = config(
 # PESAPAL CALLBACK URL
 # ============================================================
 #
-# Pesapal redirects the customer to Django.
+# Pesapal redirects the customer's browser here after
+# payment.
 #
-# Django:
+# The subscription_payment app handles the PesaPal flow
+# end to end:
+#
 #   1. Receives OrderTrackingId
 #   2. Receives OrderMerchantReference
-#   3. Verifies the transaction
-#   4. Updates the Payment
-#   5. Updates the Connection
-#   6. Handles commissions/balances
-#   7. Redirects the browser to Youpata
+#   3. Verifies the transaction via GetTransactionStatus
+#   4. Updates the SubscriptionPayment row
+#   5. Activates the subscription (plan + dates)
+#   6. Redirects the browser to the frontend
 #
 # ============================================================
 
 PESAPAL_CALLBACK_URL = os.environ.get(
     "PESAPAL_CALLBACK_URL",
-    f"{API_BASE_URL}/payments/payment-success/",
+    f"{API_BASE_URL}/subscription_payments/payment-success/",
 )
 
 
 # ============================================================
 # PESAPAL CANCELLATION URL
 # ============================================================
+#
+# Where PesaPal sends the customer if they cancel the
+# payment. We route them to the same view so the
+# SubscriptionPayment row reflects the failure.
+#
+# ============================================================
 
 PESAPAL_CANCELLATION_URL = os.environ.get(
     "PESAPAL_CANCELLATION_URL",
-    f"{API_BASE_URL}/payments/payment-failure/",
+    f"{API_BASE_URL}/subscription_payments/payment-success/",
 )
 
 
@@ -592,7 +600,7 @@ PESAPAL_CANCELLATION_URL = os.environ.get(
 
 PESAPAL_IPN_URL = os.environ.get(
     "PESAPAL_IPN_URL",
-    f"{API_BASE_URL}/payments/ipn/",
+    f"{API_BASE_URL}/subscription_payments/ipn/",
 )
 
 
