@@ -1,52 +1,33 @@
 # subscription_payment/urls.py
 from django.urls import path
-from . import views
 
-app_name = "subscription_payment"
+from .views import (
+    create_subscription_payment,
+    subscription_payment_status,
+    pesapal_ipn,
+    pesapal_callback,
+)
+
 
 urlpatterns = [
-    # Initiate plan payment
     path(
-        "plan/initiate/",
-        views.initiate_plan_payment,
-        name="initiate_plan_payment",
+        "initialize/",
+        create_subscription_payment,
+        name="create-subscription-payment",
     ),
-
-    # Live status poll
     path(
-        "reconcile/<int:payment_id>/",
-        views.reconcile_subscription_payment,
-        name="reconcile_subscription_payment",
+        "status/<str:merchant_reference>/",
+        subscription_payment_status,
+        name="subscription-payment-status",
     ),
-
-    # Single lookup
-    path(
-        "status/<int:payment_id>/",
-        views.get_subscription_payment_status,
-        name="get_subscription_payment_status",
-    ),
-
-    # Pesapal callbacks
     path(
         "ipn/",
-        views.ipn_callback,
-        name="ipn_callback",
+        pesapal_ipn,
+        name="pesapal-ipn",
     ),
     path(
         "payment-success/",
-        views.payment_success,
-        name="payment_success",
-    ),
-    path(
-        "payment-failure/",
-        views.payment_failure,
-        name="payment_failure",
-    ),
-
-    # IPN registration (same service as payments app)
-    path(
-        "register-ipn/",
-        views.register_ipn,
-        name="register_ipn",
+        pesapal_callback,
+        name="pesapal-callback",
     ),
 ]

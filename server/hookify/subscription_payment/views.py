@@ -1,952 +1,448 @@
 # subscription_payment/views.py
-# ============================================================
-# SUBSCRIPTION PAYMENT VIEWS
-# ============================================================
-# Uses the SAME Pesapal services as the payments app:
-#   - submit_order
-#   - get_transaction_status
-#   - SuperAdminValidator
-#   - register_ipn_url
-#
-# Records go into SubscriptionPayment. On success, the
-# payment is linked back on the Subscription — same pattern
-# as Connection.payment.
-# ============================================================
-
-import uuid
 import logging
-from datetime import timedelta
+import time
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+from django.shortcuts import redirect
+
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.utils import timezone
-from django.shortcuts import redirect
-from django.conf import settings
-from django.db import connection as db_connection, close_old_connections
-from django.db.utils import OperationalError, InterfaceError
-
-from account.models import Accounts
-from notification.models import Notification
 from plans.models import Plan
-from subscription.models import Subscription
-from paymentconfigurations.models import PaymentConfiguration
 
-from payments.services.register_ipn import register_ipn_url
-from payments.services.submit_order import submit_order
-from payments.services.get_transaction_status import get_transaction_status
-from payments.services.check_superadmin import SuperAdminValidator
+from .controllers.Fetch_plan_amount import Plan_Amount
+from .controllers.fetch_pesapal_token import get_pesapal_token
+from .controllers.get_registered_ipns import get_registered_ipns
+from .controllers.submit_order_request import submit_the_order
+from .controllers.services import (
+    record_pending_payment,
+    sync_payment_from_pesapal,
+)
 
 from .models import SubscriptionPayment
-from .serializers import (
-    PlanPaymentInitiationSerializer,
-    SubscriptionPaymentSerializer,
-    ReconcileSubscriptionPaymentSerializer,
-)
 
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# HELPERS
-# ============================================================
-
-def notify(
-    receiver,
-    title,
-    message,
-    category=Notification.CATEGORY_PAYMENT,
-    sender=None,
-    connection=None,
-):
-    """Safe notification creator. Never breaks the flow."""
-    try:
-        return Notification.objects.create(
-            sender=sender,
-            receiver=receiver,
-            category=category,
-            connection=connection,
-            title=title,
-            message=message,
-            is_read=False,
-        )
-    except Exception as e:
-        logger.error(
-            f"❌ Notification failed (receiver="
-            f"{getattr(receiver, 'id', receiver)}, "
-            f"title='{title}'): {e}",
-            exc_info=True,
-        )
-        return None
-
-
-def get_superadmin():
-    try:
-        return (
-            Accounts.objects
-            .filter(role="superadmin", is_active=True)
-            .first()
-        )
-    except Exception as e:
-        logger.error(f"❌ Superadmin fetch failed: {e}")
-        return None
-
-
-def get_pesapal_configuration():
-    try:
-        config = PaymentConfiguration.objects.filter(
-            gateway_name__iexact="Pesapal",
-            is_active=True,
-        ).first()
-
-        if config:
-            logger.info(
-                f"✅ Pesapal config found | ID={config.id} | "
-                f"Gateway={config.gateway_name}"
-            )
-            return config
-
-        logger.error(
-            "❌ No active Pesapal configuration found. "
-            f"Available: "
-            f"{list(PaymentConfiguration.objects.values('id', 'gateway_name', 'is_active'))}"
-        )
-        return None
-    except Exception as e:
-        logger.error(f"❌ Pesapal config error: {e}", exc_info=True)
-        return None
-
-
-def ensure_db_connection():
-    try:
-        close_old_connections()
-        db_connection.ensure_connection()
-        with db_connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-        return True
-    except (OperationalError, InterfaceError) as e:
-        logger.warning(f"⚠️ DB connection error: {e}")
-        try:
-            db_connection.close()
-            db_connection.ensure_connection()
-            with db_connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
-            logger.info("✅ DB reconnected")
-            return True
-        except Exception as reconnect_error:
-            logger.error(
-                f"❌ DB reconnect failed: {reconnect_error}"
-            )
-            return False
-    except Exception as e:
-        logger.error(f"❌ Unexpected DB error: {e}")
-        return False
-
-
-def get_frontend_url(path):
-    frontend_url = getattr(settings, "FRONTEND_URL", None)
-    if not frontend_url:
-        raise ValueError(
-            "FRONTEND_URL is not configured in Django settings."
-        )
-    frontend_url = frontend_url.rstrip("/")
-    return f"{frontend_url}/{path.lstrip('/')}"
-
-
-# ============================================================
-# FINALIZE
-# ============================================================
-
-def _finalize_subscription_payment(sub_payment):
-    """
-    Success handler for a SubscriptionPayment. Idempotent.
-
-    - Marks the payment completed.
-    - Extends the subscription plan + end_date.
-    - LINKS the payment back on the subscription
-      (subscription.payment = sub_payment) so that
-      `subscription.status` reads from the payment.
-    """
-    # 1. Flip the payment to completed
-    if sub_payment.status != "completed":
-        sub_payment.status = "completed"
-        sub_payment.paid_at = timezone.now()
-        sub_payment.save(update_fields=["status", "paid_at"])
-
-    subscription = sub_payment.subscription
-    plan = sub_payment.plan
-
-    if subscription and plan:
-        base = (
-            subscription.end_date
-            if subscription.end_date
-            and subscription.end_date > timezone.now()
-            else timezone.now()
-        )
-        subscription.plan = plan
-        subscription.end_date = base + timedelta(days=30)
-
-        # ----------------------------------------------------
-        # CRITICAL: link the payment back on the subscription
-        # so `subscription.status` and `subscription.is_paid`
-        # derive from the completed payment.
-        # ----------------------------------------------------
-        subscription.payment = sub_payment
-        subscription.save(
-            update_fields=[
-                "plan",
-                "end_date",
-                "payment",
-                "updated_at",
-            ]
-        )
-
-        logger.info(
-            f"✅ Subscription {subscription.id} linked to "
-            f"SubscriptionPayment {sub_payment.id} "
-            f"(status={sub_payment.status})"
-        )
-
-    notify(
-        receiver=sub_payment.user,
-        sender=None,
-        category=Notification.CATEGORY_PAYMENT,
-        title=(
-            f"'{plan.name}' Plan Activated 🎉"
-            if plan else "Plan Activated 🎉"
-        ),
-        message=(
-            f"Your payment of KES {sub_payment.amount} was successful. "
-            f"You are now on the '{plan.name}' plan."
-        ),
-    )
-
-    superadmin = get_superadmin()
-    if superadmin and plan:
-        notify(
-            receiver=superadmin,
-            sender=None,
-            category=Notification.CATEGORY_PAYMENT,
-            title="💰 New Plan Subscription Payment",
-            message=(
-                f"{sub_payment.user.full_name} subscribed to the "
-                f"'{plan.name}' plan for KES {sub_payment.amount}."
-            ),
-        )
-
-
-# ============================================================
-# INITIATE PLAN PAYMENT
+# CREATE SUBSCRIPTION PAYMENT
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def initiate_plan_payment(request):
-    """
-    Body:
-        plan_id       (int)  — required
-        phone_number  (str)  — required
-    """
+def create_subscription_payment(request):
 
-    if not ensure_db_connection():
+    # --------------------------------------------------------
+    # Get plan ID
+    # --------------------------------------------------------
+    plan_id = request.data.get("plan_id")
+
+    if not plan_id:
         return Response(
-            {
-                "success": False,
-                "message": "Service temporarily unavailable.",
-                "error_code": "DB_CONNECTION_ERROR",
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    user = request.user
-
-    serializer = PlanPaymentInitiationSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(
-            {
-                "success": False,
-                "message": "Validation failed.",
-                "errors": serializer.errors,
-            },
+            {"error": "plan_id is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    plan_id = serializer.validated_data["plan_id"]
-    phone_number = serializer.validated_data["phone_number"]
-
-    eligible, message, data = (
-        SuperAdminValidator.check_payment_eligibility()
-    )
-    if not eligible:
-        logger.error(f"❌ Plan payment blocked: {message}")
-        return Response(
-            {
-                "success": False,
-                "message": (
-                    "Payment service is currently unavailable. "
-                    "Please try again later."
-                ),
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
+    # --------------------------------------------------------
+    # Resolve the plan
+    # --------------------------------------------------------
     try:
-        plan = Plan.objects.get(id=plan_id, is_active=True)
+        plan = Plan.objects.get(id=plan_id)
     except Plan.DoesNotExist:
-        logger.warning(f"Plan not found or inactive: {plan_id}")
         return Response(
-            {"success": False, "message": "Plan not found."},
-            status=status.HTTP_404_NOT_FOUND,
+            {"error": "Plan not found."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
-    subscription = getattr(user, "subscription", None)
+    # --------------------------------------------------------
+    # Resolve the user's subscription
+    # --------------------------------------------------------
+    subscription = getattr(request.user, "subscription", None)
+
     if not subscription:
         return Response(
             {
-                "success": False,
-                "message": (
-                    "You don't have a subscription yet. "
+                "error": (
+                    "No subscription found for this user. "
                     "Please contact support."
-                ),
+                )
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    is_free_target = (plan.slug or "").lower() == "free"
-    if is_free_target and subscription.is_active:
-        current_is_free = (
-            (subscription.plan.slug or "").lower() == "free"
+    # --------------------------------------------------------
+    # Get plan amount
+    # --------------------------------------------------------
+    try:
+        amount = Plan_Amount(plan_id)
+    except Exception as e:
+        logger.exception(
+            "Failed to fetch plan amount for plan_id=%s",
+            plan_id,
         )
-        if not current_is_free:
-            return Response(
-                {
-                    "success": False,
-                    "message": (
-                        "You cannot downgrade to the Free plan. "
-                        "Please wait for your current plan to expire."
-                    ),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return Response(
+            {"error": f"Failed to fetch plan amount: {e}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    payment_config = get_pesapal_configuration()
-    if not payment_config:
+    if not amount or amount <= 0:
+        return Response(
+            {"error": "Invalid plan amount."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # Phone number — required for the PesaPal prompt
+    # --------------------------------------------------------
+    phone_number = (
+        request.data.get("phone_number")
+        or getattr(request.user, "phone_number", "")
+        or ""
+    ).strip() or None
+
+    if not phone_number:
+        return Response(
+            {"error": "phone_number is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # --------------------------------------------------------
+    # Get PesaPal token
+    # --------------------------------------------------------
+    token_response = get_pesapal_token()
+    token = token_response.get("token")
+
+    if not token:
+        logger.error(
+            "PesaPal token failed: %s",
+            token_response,
+        )
         return Response(
             {
-                "success": False,
-                "message": "Payment service unavailable.",
+                "error": "Failed to get PesaPal token.",
+                "response": token_response,
             },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=status.HTTP_502_BAD_GATEWAY,
         )
 
-    merchant_reference = f"PLAN-{uuid.uuid4().hex[:12].upper()}"
-
     # --------------------------------------------------------
-    # Create the SubscriptionPayment
+    # Get registered IPNs and pick one
     # --------------------------------------------------------
     try:
-        sub_payment = SubscriptionPayment.objects.create(
+        registered_ipns = get_registered_ipns(token)
+    except Exception as e:
+        logger.exception("Failed to fetch registered IPNs.")
+        return Response(
+            {"error": f"Failed to fetch registered IPNs: {e}"},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    ipn_id = None
+
+    if isinstance(registered_ipns, list) and registered_ipns:
+        for ipn in registered_ipns:
+            if ipn.get("url") == settings.PESAPAL_IPN_URL:
+                ipn_id = ipn.get("ipn_id")
+                break
+        if not ipn_id:
+            ipn_id = registered_ipns[0].get("ipn_id")
+
+    if not ipn_id:
+        logger.error(
+            "No registered IPN id found: %s",
+            registered_ipns,
+        )
+        return Response(
+            {
+                "error": (
+                    "No registered IPN found. "
+                    "Register one first via register_ipn_url()."
+                ),
+                "registered_ipns": registered_ipns,
+            },
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    # --------------------------------------------------------
+    # Build the order payload
+    # --------------------------------------------------------
+    user = request.user
+
+    merchant_reference = (
+        f"SUB-{user.id}-{plan_id}-{int(time.time())}"
+    )
+
+    order_data = {
+        "merchant_reference": merchant_reference,
+        "amount": float(amount),
+        "currency": "KES",
+        "description": f"Subscription plan {plan_id}",
+        "notification_id": ipn_id,
+        "email": user.email,
+        "phone": phone_number,
+        "first_name": user.first_name or "",
+        "last_name": user.last_name or "",
+    }
+
+    # --------------------------------------------------------
+    # Submit the order to PesaPal
+    # --------------------------------------------------------
+    try:
+        order_response = submit_the_order(order_data)
+    except Exception as e:
+        logger.exception("Failed to submit order to PesaPal.")
+        return Response(
+            {"error": f"Failed to submit order: {e}"},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    redirect_url = order_response.get("redirect_url")
+    order_tracking_id = order_response.get("order_tracking_id")
+
+    if not redirect_url or not order_tracking_id:
+        logger.error(
+            "PesaPal order response missing fields: %s",
+            order_response,
+        )
+        return Response(
+            {
+                "error": "PesaPal did not return a redirect URL.",
+                "response": order_response,
+            },
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    # --------------------------------------------------------
+    # Persist the payment row — status "pending".
+    # MUST succeed. If it fails, do NOT hand the client
+    # the redirect URL.
+    # --------------------------------------------------------
+    try:
+        payment = record_pending_payment(
             subscription=subscription,
-            user=user,
             plan=plan,
             merchant_reference=merchant_reference,
-            amount=plan.price,
+            order_tracking_id=order_tracking_id,
+            amount=amount,
             phone_number=phone_number,
-            status="pending",
-        )
-    except Exception:
-        logger.exception("❌ Failed to create subscription payment.")
-        return Response(
-            {"success": False, "message": "Payment initiation failed."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    # --------------------------------------------------------
-    # Link the payment on the subscription immediately so
-    # `subscription.status` shows "pending" while awaiting PIN
-    # --------------------------------------------------------
-    if subscription.payment_id != sub_payment.id:
-        subscription.payment = sub_payment
-        subscription.save(update_fields=["payment"])
-
-    notify(
-        receiver=user,
-        sender=None,
-        category=Notification.CATEGORY_PAYMENT,
-        title="Plan Payment Initiated ⏳",
-        message=(
-            f"Your payment of KES {sub_payment.amount} to subscribe "
-            f"to the '{plan.name}' plan has been initiated. "
-            f"Reference: {sub_payment.merchant_reference}."
-        ),
-    )
-
-    # --------------------------------------------------------
-    # Submit to Pesapal — same service used by the payments app
-    # --------------------------------------------------------
-    try:
-        pesapal_response = submit_order(
-            payment=sub_payment,
-            first_name=user.first_name,
-            last_name=user.last_name,
             email=user.email,
+            gateway="pesapal",
+            submit_response=order_response,
         )
     except Exception:
-        sub_payment.status = "failed"
-        sub_payment.save(update_fields=["status"])
-
-        notify(
-            receiver=user,
-            sender=None,
-            category=Notification.CATEGORY_PAYMENT,
-            title="Plan Payment Failed ❌",
-            message=(
-                f"Your payment of KES {sub_payment.amount} for the "
-                f"'{plan.name}' plan could not be initiated. "
-                "Please try again."
-            ),
+        logger.exception(
+            "CRITICAL: PesaPal order %s could not be recorded "
+            "(tracking=%s).",
+            merchant_reference,
+            order_tracking_id,
         )
-
-        logger.exception("❌ Pesapal submit order error (plan).")
         return Response(
-            {"success": False, "message": "Payment initiation failed."},
+            {
+                "error": (
+                    "Payment was submitted to PesaPal but could "
+                    "not be recorded locally. Please contact "
+                    "support with this reference."
+                ),
+                "merchant_reference": merchant_reference,
+                "order_tracking_id": order_tracking_id,
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    if (
-        not pesapal_response
-        or pesapal_response.get("status") != "200"
-    ):
-        sub_payment.status = "failed"
-        sub_payment.save(update_fields=["status"])
-
-        notify(
-            receiver=user,
-            sender=None,
-            category=Notification.CATEGORY_PAYMENT,
-            title="Plan Payment Failed ❌",
-            message=(
-                f"Your payment of KES {sub_payment.amount} for the "
-                f"'{plan.name}' plan failed to start. "
-                "Please try again."
-            ),
-        )
-
-        logger.error(
-            f"❌ Pesapal response error (plan): {pesapal_response}"
-        )
-        return Response(
-            {"success": False, "message": "Payment initiation failed."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    sub_payment.order_tracking_id = pesapal_response.get(
-        "order_tracking_id"
-    )
-    sub_payment.save(update_fields=["order_tracking_id"])
-
-    logger.info(
-        "✅ Plan payment initiated | "
-        f"SubscriptionPayment ID={sub_payment.id} | "
-        f"Plan ID={plan.id} | "
-        f"Tracking ID={sub_payment.order_tracking_id}"
-    )
-
+    # --------------------------------------------------------
+    # Safe to send the client to PesaPal
+    # --------------------------------------------------------
     return Response(
         {
-            "success": True,
-            "message": "Payment initiated.",
-            "payment": SubscriptionPaymentSerializer(
-                sub_payment
-            ).data,
-            "plan": {
-                "id": plan.id,
-                "name": plan.name,
-                "slug": plan.slug,
-                "price": str(plan.price),
-            },
-            "redirect_url": pesapal_response.get("redirect_url"),
+            "message": "Subscription payment created successfully.",
+            "amount": amount,
+            "currency": "KES",
+            "merchant_reference": merchant_reference,
+            "order_tracking_id": order_tracking_id,
+            "redirect_url": redirect_url,
+            "ipn_id": ipn_id,
+            "payment_id": str(payment.subscription_payment_id),
+            "status": payment.status,
         },
-        status=status.HTTP_200_OK,
+        status=status.HTTP_201_CREATED,
     )
 
 
 # ============================================================
-# RECONCILE / LIVE STATUS POLL
+# TRANSACTION STATUS (frontend polling)
 # ============================================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def reconcile_subscription_payment(request, payment_id):
-    """
-    Polled by the frontend after a plan payment is initiated.
-    """
+def subscription_payment_status(request, merchant_reference):
 
-    if not ensure_db_connection():
-        return Response(
-            {
-                "success": False,
-                "message": "Service temporarily unavailable.",
-                "error_code": "DB_CONNECTION_ERROR",
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    sub_payment = (
+    payment = (
         SubscriptionPayment.objects
         .select_related(
             "subscription",
             "subscription__plan",
+            "subscription__user",
             "plan",
-            "user",
         )
-        .filter(id=payment_id, user=request.user)
+        .filter(
+            merchant_reference=merchant_reference,
+            subscription__user=request.user,
+        )
         .first()
     )
 
-    if not sub_payment:
+    if not payment:
         return Response(
-            {"success": False, "message": "Payment not found."},
+            {"error": "Payment not found."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    if (
-        sub_payment.order_tracking_id
-        and not sub_payment.is_terminal
-    ):
-        try:
-            verification = get_transaction_status(
-                sub_payment.order_tracking_id
-            )
-            live = verification.get("payment_status_description")
-
-            status_map = {
-                "Completed": "completed",
-                "Failed": "failed",
-                "Cancelled": "cancelled",
-                "Pending": "pending",
-            }
-            new_status = status_map.get(live)
-
-            if new_status and new_status != sub_payment.status:
-                logger.info(
-                    f"🔄 reconcile: {sub_payment.merchant_reference} "
-                    f"{sub_payment.status} → {new_status}"
-                )
-
-                if new_status == "completed":
-                    _finalize_subscription_payment(sub_payment)
-                else:
-                    sub_payment.status = new_status
-                    sub_payment.save(update_fields=["status"])
-        except Exception as e:
-            logger.warning(
-                f"⚠️ reconcile: {sub_payment.merchant_reference}: {e}"
-            )
-
-    sub_payment.refresh_from_db()
-    subscription = sub_payment.subscription
-    if subscription:
-        subscription.refresh_from_db()
-
-    serializer = ReconcileSubscriptionPaymentSerializer(
-        {
-            "payment": sub_payment,
-            "subscription": subscription,
-            "is_terminal": sub_payment.is_terminal,
-        }
-    )
-
-    return Response(
-        {"success": True, **serializer.data},
-        status=status.HTTP_200_OK,
-    )
-
-
-# ============================================================
-# GET ONE PAYMENT
-# ============================================================
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_subscription_payment_status(request, payment_id):
-    """
-    Return a single SubscriptionPayment for the current user.
-    """
-
-    if not ensure_db_connection():
+    # Already terminal — no need to ask PesaPal.
+    if payment.is_terminal:
         return Response(
             {
-                "success": False,
-                "message": "Service temporarily unavailable.",
+                "merchant_reference": merchant_reference,
+                "status": payment.status,
+                "is_completed": payment.status == "completed",
+                "order_tracking_id": payment.order_tracking_id,
+                "paid_at": payment.paid_at,
+                "confirmation_code": payment.confirmation_code,
+                "payment_method": payment.payment_method,
+                "payment_account": payment.payment_account,
+                "plan_id": payment.plan_id,
             },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=status.HTTP_200_OK,
         )
 
-    sub_payment = (
-        SubscriptionPayment.objects
-        .select_related("subscription", "plan", "user")
-        .filter(id=payment_id, user=request.user)
-        .first()
-    )
-
-    if not sub_payment:
+    # Nothing to ask PesaPal about yet.
+    if not payment.order_tracking_id:
         return Response(
-            {"success": False, "message": "Payment not found."},
-            status=status.HTTP_404_NOT_FOUND,
+            {
+                "merchant_reference": merchant_reference,
+                "status": payment.status,
+                "is_completed": False,
+                "message": "No order tracking id yet.",
+            },
+            status=status.HTTP_200_OK,
         )
+
+    # Ask PesaPal and sync.
+    try:
+        data = sync_payment_from_pesapal(merchant_reference)
+    except Exception as e:
+        logger.exception(
+            "Failed to sync transaction status for ref=%s",
+            merchant_reference,
+        )
+        return Response(
+            {"error": f"Failed to fetch status: {e}"},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    payment.refresh_from_db()
 
     return Response(
         {
-            "success": True,
-            "payment": SubscriptionPaymentSerializer(
-                sub_payment
-            ).data,
+            "merchant_reference": merchant_reference,
+            "status": payment.status,
+            "is_completed": payment.status == "completed",
+            "order_tracking_id": payment.order_tracking_id,
+            "paid_at": payment.paid_at,
+            "confirmation_code": payment.confirmation_code,
+            "payment_method": payment.payment_method,
+            "payment_account": payment.payment_account,
+            "plan_id": payment.plan_id,
+            "pesapal": {
+                "status_code": data.get("status_code"),
+                "payment_status_description": data.get(
+                    "payment_status_description"
+                ),
+                "payment_method": data.get("payment_method"),
+                "amount": data.get("amount"),
+                "currency": data.get("currency"),
+                "confirmation_code": data.get("confirmation_code"),
+                "message": data.get("message"),
+            },
         },
         status=status.HTTP_200_OK,
     )
 
 
 # ============================================================
-# IPN CALLBACK
+# IPN (PesaPal server-to-server)
 # ============================================================
 
-@api_view(["GET", "POST"])
-def ipn_callback(request):
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def pesapal_ipn(request):
     """
-    Handle Pesapal IPN for SubscriptionPayment rows.
+    PesaPal POSTs here after processing. Source of truth.
     """
 
-    if not ensure_db_connection():
+    order_tracking_id = request.data.get("OrderTrackingId")
+    merchant_reference = request.data.get("OrderMerchantReference")
+
+    if not order_tracking_id or not merchant_reference:
         return Response(
-            {
-                "success": False,
-                "message": "Service temporarily unavailable.",
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    data = (
-        request.query_params
-        if request.method == "GET"
-        else request.data
-    )
-
-    logger.info("=" * 60)
-    logger.info("SUBSCRIPTION PAYMENT IPN")
-    logger.info(data)
-    logger.info("=" * 60)
-
-    order_tracking_id = (
-        data.get("OrderTrackingId")
-        or data.get("orderTrackingId")
-        or data.get("order_tracking_id")
-    )
-
-    if not order_tracking_id:
-        return Response(
-            {"success": False, "message": "Invalid IPN."},
+            {"error": "Missing OrderTrackingId or OrderMerchantReference."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    sub_payment = (
-        SubscriptionPayment.objects
-        .select_related("subscription", "plan", "user")
-        .filter(order_tracking_id=order_tracking_id)
-        .first()
-    )
-
-    if not sub_payment:
-        logger.error(
-            f"❌ SubscriptionPayment not found for "
-            f"tracking ID: {order_tracking_id}"
-        )
-        return Response(
-            {"success": False, "message": "Payment not found."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
     try:
-        verification = get_transaction_status(order_tracking_id)
-        status_desc = verification.get("payment_status_description")
-
-        logger.info(f"Verified status: {status_desc}")
-
-        if status_desc == "Completed":
-            _finalize_subscription_payment(sub_payment)
-            return Response(
-                {
-                    "success": True,
-                    "message": "IPN processed.",
-                    "payment_status": sub_payment.status,
-                },
-                status=status.HTTP_200_OK,
-            )
-
-        if status_desc == "Failed":
-            sub_payment.status = "failed"
-            sub_payment.save(update_fields=["status"])
-
-            notify(
-                receiver=sub_payment.user,
-                sender=None,
-                category=Notification.CATEGORY_PAYMENT,
-                title="Plan Payment Failed ❌",
-                message=(
-                    f"Your payment of KES {sub_payment.amount} for "
-                    f"the '{sub_payment.plan.name}' plan failed."
-                ),
-            )
-
-            return Response(
-                {"success": True, "message": "IPN processed."},
-                status=status.HTTP_200_OK,
-            )
-
-        if status_desc == "Cancelled":
-            sub_payment.status = "cancelled"
-            sub_payment.save(update_fields=["status"])
-            return Response(
-                {"success": True, "message": "IPN processed."},
-                status=status.HTTP_200_OK,
-            )
-
-        # Still pending
-        sub_payment.status = "pending"
-        sub_payment.save(update_fields=["status"])
-        return Response(
-            {"success": True, "message": "IPN processed."},
-            status=status.HTTP_200_OK,
+        sync_payment_from_pesapal(merchant_reference)
+    except Exception:
+        logger.exception(
+            "IPN sync failed for %s", merchant_reference
         )
 
-    except Exception as e:
-        logger.error(
-            f"❌ SubscriptionPayment IPN error: {e}",
-            exc_info=True,
-        )
-        return Response(
-            {"success": False, "message": "IPN failed."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # PesaPal expects this exact shape back.
+    return Response(
+        {
+            "orderNotificationType": "IPNCHANGE",
+            "orderTrackingId": order_tracking_id,
+            "orderMerchantReference": merchant_reference,
+            "status": 200,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 # ============================================================
-# PAYMENT SUCCESS (browser redirect)
+# CALLBACK (browser redirect)
 # ============================================================
 
 @api_view(["GET"])
-def payment_success(request):
+@permission_classes([AllowAny])
+def pesapal_callback(request):
     """
-    Handle Pesapal browser redirect for SubscriptionPayment.
-    """
-
-    if not ensure_db_connection():
-        return redirect(
-            get_frontend_url(
-                "/payment-error?message=Payment+failed"
-            )
-        )
-
-    order_tracking_id = request.query_params.get(
-        "OrderTrackingId"
-    )
-    merchant_reference = request.query_params.get(
-        "OrderMerchantReference"
-    )
-
-    if not order_tracking_id:
-        return redirect(
-            get_frontend_url(
-                "/payment-error?message=Payment+failed"
-            )
-        )
-
-    sub_payment = (
-        SubscriptionPayment.objects
-        .select_related("subscription", "plan", "user")
-        .filter(order_tracking_id=order_tracking_id)
-        .first()
-    )
-
-    if not sub_payment:
-        return redirect(
-            get_frontend_url(
-                "/payment-error?message=Payment+failed"
-            )
-        )
-
-    try:
-        verification = get_transaction_status(order_tracking_id)
-        status_desc = verification.get("payment_status_description")
-
-        if status_desc == "Completed":
-            _finalize_subscription_payment(sub_payment)
-
-        frontend_url = get_frontend_url("/payment-success")
-        redirect_url = (
-            f"{frontend_url}"
-            f"?order_tracking_id={order_tracking_id}"
-            f"&merchant_reference="
-            f"{merchant_reference or sub_payment.merchant_reference}"
-            f"&payment_status={sub_payment.status}"
-            f"&amount={sub_payment.amount}"
-            f"&payment_type=plan"
-            f"&plan_id={sub_payment.plan_id}"
-            f"&payment_id={sub_payment.id}"
-        )
-        return redirect(redirect_url)
-
-    except Exception as e:
-        logger.error(
-            f"❌ SubscriptionPayment success error: {e}",
-            exc_info=True,
-        )
-        return redirect(
-            get_frontend_url(
-                "/payment-error?message=Payment+failed"
-            )
-        )
-
-
-# ============================================================
-# PAYMENT FAILURE (browser redirect)
-# ============================================================
-
-@api_view(["GET"])
-def payment_failure(request):
-    """
-    Handle Pesapal browser redirect when the plan payment fails.
+    PesaPal redirects the customer's browser here.
+    Sync, then bounce to the frontend.
     """
 
-    if not ensure_db_connection():
-        return redirect(
-            get_frontend_url(
-                "/payment-error?message=Payment+failed"
-            )
-        )
+    order_tracking_id = request.query_params.get("OrderTrackingId")
+    merchant_reference = request.query_params.get("OrderMerchantReference")
 
-    order_tracking_id = request.query_params.get(
-        "OrderTrackingId"
+    paid = False
+
+    if merchant_reference:
+        try:
+            data = sync_payment_from_pesapal(merchant_reference)
+            paid = bool(data.get("is_completed"))
+        except Exception:
+            logger.exception(
+                "Callback sync failed for %s", merchant_reference
+            )
+
+    status_flag = "success" if paid else "failed"
+
+    return redirect(
+        f"{settings.FRONTEND_URL}/subscription/payment-result"
+        f"?status={status_flag}"
+        f"&ref={merchant_reference or ''}"
     )
-    merchant_reference = request.query_params.get(
-        "OrderMerchantReference"
-    )
-
-    if order_tracking_id:
-        sub_payment = (
-            SubscriptionPayment.objects
-            .select_related("plan", "user")
-            .filter(order_tracking_id=order_tracking_id)
-            .first()
-        )
-
-        if sub_payment:
-            sub_payment.status = "failed"
-            sub_payment.save(update_fields=["status"])
-
-            notify(
-                receiver=sub_payment.user,
-                sender=None,
-                category=Notification.CATEGORY_PAYMENT,
-                title="Plan Payment Failed ❌",
-                message=(
-                    f"Your payment of KES {sub_payment.amount} for "
-                    f"the '{sub_payment.plan.name}' plan failed."
-                ),
-            )
-
-    frontend_url = get_frontend_url("/payment-failure")
-    redirect_url = (
-        f"{frontend_url}"
-        f"?order_tracking_id={order_tracking_id or ''}"
-        f"&merchant_reference={merchant_reference or ''}"
-        "&message=Payment+was+not+completed"
-    )
-    return redirect(redirect_url)
-
-
-# ============================================================
-# REGISTER PESAPAL IPN
-# ============================================================
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def register_ipn(request):
-    """
-    Register IPN URL with Pesapal (uses the same service).
-    """
-
-    try:
-        response = register_ipn_url()
-
-        if not response or response.get("status") != "200":
-            logger.error(
-                f"❌ Pesapal IPN registration failed: {response}"
-            )
-            return Response(
-                {
-                    "success": False,
-                    "message": (
-                        "IPN registration failed. Please try again."
-                    ),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        config = (
-            PaymentConfiguration.objects
-            .filter(gateway_name__iexact="Pesapal")
-            .first()
-        )
-
-        if config:
-            config.ipn_id = response.get("ipn_id")
-            config.ipn_url = response.get("url")
-            config.is_active = True
-            config.save()
-            logger.info(
-                f"✅ Pesapal configuration updated | ID={config.id}"
-            )
-        else:
-            config = PaymentConfiguration.objects.create(
-                gateway_name="Pesapal",
-                ipn_id=response.get("ipn_id"),
-                ipn_url=response.get("url"),
-                is_active=True,
-            )
-            logger.info(
-                f"✅ Pesapal configuration created | ID={config.id}"
-            )
-
-        return Response(
-            {
-                "success": True,
-                "message": "IPN registered successfully.",
-                "data": {
-                    "id": config.id,
-                    "gateway_name": config.gateway_name,
-                    "ipn_id": config.ipn_id,
-                    "ipn_url": config.ipn_url,
-                    "is_active": config.is_active,
-                },
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    except Exception as e:
-        logger.error(
-            f"❌ IPN registration error: {e}",
-            exc_info=True,
-        )
-        return Response(
-            {
-                "success": False,
-                "message": "IPN registration failed.",
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )

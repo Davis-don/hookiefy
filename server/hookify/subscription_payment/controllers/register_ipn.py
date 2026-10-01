@@ -1,0 +1,39 @@
+import requests
+from django.conf import settings
+
+
+def register_ipn_url():
+    """
+    Register IPN URL with Pesapal.
+    Returns ipn_id to be used in payment requests.
+    """
+    from .fetch_pesapal_token import get_pesapal_token
+
+    token_response = get_pesapal_token()
+    if token_response.get("status") != "200":
+        raise Exception("Failed to get Pesapal token")
+
+    token = token_response.get("token")
+
+    # Register IPN URL
+    url = f"{settings.PESAPAL_BASE_URL}/api/URLSetup/RegisterIPN"
+
+    # Use the IPN URL built in settings
+    payload = {
+        "url": settings.PESAPAL_IPN_URL,
+        "ipn_notification_type": "POST",
+    }
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}",
+    }
+
+    response = requests.post(
+        url,
+        json=payload,
+        headers=headers,
+    )
+
+    return response.json()

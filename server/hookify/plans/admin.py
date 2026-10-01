@@ -8,6 +8,7 @@ from .models import Plan
 class PlanAdmin(admin.ModelAdmin):
 
     list_display = (
+        "id",
         "name",
         "price",
         "services_limit",
@@ -50,11 +51,18 @@ class PlanAdmin(admin.ModelAdmin):
         "price",
     )
 
+    readonly_fields = (
+        "id",
+        "created_at",
+        "updated_at",
+    )
+
     fieldsets = (
         (
             "Plan Information",
             {
                 "fields": (
+                    "id",
                     "name",
                     "slug",
                     "description",
@@ -113,9 +121,4 @@ class PlanAdmin(admin.ModelAdmin):
                 )
             },
         ),
-    )
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
     )

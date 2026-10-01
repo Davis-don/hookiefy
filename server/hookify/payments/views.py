@@ -32,11 +32,6 @@ from UserBalance.models import UserBalance
 from .services.register_ipn import register_ipn_url
 from .services.submit_order import submit_order
 from .services.get_transaction_status import get_transaction_status
-from .services.check_superadmin import SuperAdminValidator
-from .services.commission_service import (
-    CommissionService,
-    CommissionDistributionError,
-)
 
 from services.models import ClientService
 
@@ -80,19 +75,6 @@ def notify(
             f"title='{title}'): {str(e)}",
             exc_info=True,
         )
-        return None
-
-
-def get_superadmin():
-    """Return the first active superadmin, or None."""
-    try:
-        return (
-            Accounts.objects
-            .filter(role="superadmin", is_active=True)
-            .first()
-        )
-    except Exception as e:
-        logger.error(f"❌ Failed to fetch superadmin: {str(e)}")
         return None
 
 
@@ -286,12 +268,16 @@ def database_health_check(request):
 
 
 # ============================================================
-# CHECK SUPERADMIN STATUS
+# CHECK PAYMENT STATUS (SIMPLE HEALTH CHECK)
 # ============================================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def check_superadmin_status(request):
+    """
+    Check if the payment service is ready.
+    Payments can be initiated by any authenticated user.
+    """
 
     if not ensure_db_connection():
         return Response(
@@ -306,28 +292,13 @@ def check_superadmin_status(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    status_data = SuperAdminValidator.get_superadmin_status()
-
-    if status_data.get("can_initiate_payment"):
-        return Response(
-            {
-                "success": True,
-                "message": "Payment service is ready.",
-                "can_initiate": True,
-            },
-            status=status.HTTP_200_OK,
-        )
-
     return Response(
         {
-            "success": False,
-            "message": (
-                "Payment service is currently unavailable. "
-                "Please try again later."
-            ),
-            "can_initiate": False,
+            "success": True,
+            "message": "Payment service is ready.",
+            "can_initiate": True,
         },
-        status=status.HTTP_400_BAD_REQUEST,
+        status=status.HTTP_200_OK,
     )
 
 
@@ -382,23 +353,6 @@ def initiate_payment(request):
             {
                 "success": False,
                 "message": "Invalid request. Missing phone_number.",
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    eligible, message, data = (
-        SuperAdminValidator.check_payment_eligibility()
-    )
-
-    if not eligible:
-        logger.error(f"❌ Payment blocked: {message}")
-        return Response(
-            {
-                "success": False,
-                "message": (
-                    "Payment service is currently unavailable. "
-                    "Please try again later."
-                ),
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -751,23 +705,6 @@ def initiate_service_payment(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    eligible, message, data = (
-        SuperAdminValidator.check_payment_eligibility()
-    )
-
-    if not eligible:
-        logger.error(f"❌ Service payment blocked: {message}")
-        return Response(
-            {
-                "success": False,
-                "message": (
-                    "Payment service is currently unavailable. "
-                    "Please try again later."
-                ),
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
     try:
         service = ClientService.objects.get(id=service_id)
     except ClientService.DoesNotExist:
@@ -1002,8 +939,6 @@ def _finalize_completed_payment(payment):
     simply setting payment.status = "completed" is enough.
     """
 
-    result = {"commission_result": None}
-
     # ---------- SERVICE PAYMENT ----------
     if payment.payment_type == Payment.PAYMENT_TYPE_SERVICE:
         if payment.status != "completed":
@@ -1012,22 +947,6 @@ def _finalize_completed_payment(payment):
             payment.save(update_fields=["status", "paid_at"])
 
         connection_obj = payment.connection
-
-        try:
-            commission_result = (
-                CommissionService
-                .distribute_commission_for_payment(payment)
-            )
-        except CommissionDistributionError as e:
-            commission_result = {
-                "success": False,
-                "error": str(e),
-            }
-            logger.error(
-                f"❌ Service commission failed: {str(e)}"
-            )
-
-        result["commission_result"] = commission_result
 
         notify(
             receiver=payment.user,
@@ -1058,26 +977,7 @@ def _finalize_completed_payment(payment):
                 ),
             )
 
-        if (
-            commission_result
-            and commission_result.get("success")
-            and commission_result.get("superadmin_amount", 0) > 0
-        ):
-            superadmin = get_superadmin()
-            if superadmin:
-                notify(
-                    receiver=superadmin,
-                    sender=None,
-                    category=Notification.CATEGORY_PAYMENT,
-                    title="💰 Platform Commission Received",
-                    message=(
-                        "Platform received KES "
-                        f"{commission_result.get('superadmin_amount', 0):.2f} "
-                        "from a service contact unlock."
-                    ),
-                )
-
-        return result
+        return
 
     # ---------- CONNECTION PAYMENT ----------
     connection_obj = payment.connection
@@ -1087,28 +987,12 @@ def _finalize_completed_payment(payment):
             "❌ Connection payment has no connection attached. "
             f"Payment ID={payment.id}"
         )
-        return result
+        return
 
     if payment.status != "completed":
         payment.status = "completed"
         payment.paid_at = timezone.now()
         payment.save(update_fields=["status", "paid_at"])
-
-    try:
-        commission_result = (
-            CommissionService
-            .distribute_commission_for_payment(payment)
-        )
-    except CommissionDistributionError as e:
-        commission_result = {
-            "success": False,
-            "error": str(e),
-        }
-        logger.error(
-            f"❌ Commission distribution failed: {str(e)}"
-        )
-
-    result["commission_result"] = commission_result
 
     notify(
         receiver=connection_obj.sender,
@@ -1123,52 +1007,17 @@ def _finalize_completed_payment(payment):
         ),
     )
 
-    admin_amount = (
-        commission_result.get("admin_amount", 0)
-        if commission_result and commission_result.get("success")
-        else 0
-    )
-
-    if admin_amount > 0:
-        receiver_message = (
-            f"{connection_obj.sender.full_name} has completed payment "
-            "to connect with you. You have received KES "
-            f"{admin_amount:.2f} as your commission."
-        )
-    else:
-        receiver_message = (
-            f"{connection_obj.sender.full_name} has completed payment "
-            "to connect with you. The connection is now ready."
-        )
-
     notify(
         receiver=connection_obj.receiver,
         sender=connection_obj.sender,
         category=Notification.CATEGORY_HOOKUP,
         connection=connection_obj,
         title="New Completed Connection! 🎉",
-        message=receiver_message,
+        message=(
+            f"{connection_obj.sender.full_name} has completed payment "
+            "to connect with you. The connection is now ready."
+        ),
     )
-
-    if (
-        commission_result
-        and commission_result.get("success")
-        and commission_result.get("superadmin_amount", 0) > 0
-    ):
-        superadmin = get_superadmin()
-        if superadmin:
-            notify(
-                receiver=superadmin,
-                sender=None,
-                category=Notification.CATEGORY_PAYMENT,
-                connection=connection_obj,
-                title="💰 Platform Commission Received",
-                message=(
-                    "Platform received KES "
-                    f"{commission_result.get('superadmin_amount', 0):.2f} "
-                    f"from {connection_obj.sender.full_name}'s payment."
-                ),
-            )
 
     Notification.objects.filter(
         connection=connection_obj,
@@ -1179,8 +1028,6 @@ def _finalize_completed_payment(payment):
         ],
         is_read=False,
     ).update(is_read=True, read_at=timezone.now())
-
-    return result
 
 
 # ============================================================
@@ -1254,11 +1101,8 @@ def ipn_callback(request):
 
         logger.info(f"Verified payment status: {payment_status}")
 
-        commission_result = None
-
         if payment_status == "Completed":
-            result = _finalize_completed_payment(payment)
-            commission_result = result.get("commission_result")
+            _finalize_completed_payment(payment)
 
             logger.info(
                 f"✅ Payment {order_tracking_id} finalized (IPN)"
@@ -1274,11 +1118,6 @@ def ipn_callback(request):
                     "connection_id": (
                         str(payment.connection.connection_id)
                         if payment.connection
-                        else None
-                    ),
-                    "commission_distribution": (
-                        commission_result
-                        if commission_result
                         else None
                     ),
                 },
@@ -1351,11 +1190,6 @@ def ipn_callback(request):
                     else None
                 ),
                 "service_id": payment.service_id,
-                "commission_distribution": (
-                    commission_result
-                    if commission_result
-                    else None
-                ),
             },
             status=status.HTTP_200_OK,
         )
@@ -1527,15 +1361,12 @@ def payment_success(request):
 
         logger.info(f"Verified payment status: {payment_status}")
 
-        commission_result = None
-
         # ----------------------------------------------------
         # SERVICE PAYMENT BRANCH
         # ----------------------------------------------------
         if payment.payment_type == Payment.PAYMENT_TYPE_SERVICE:
             if payment_status == "Completed":
-                result = _finalize_completed_payment(payment)
-                commission_result = result.get("commission_result")
+                _finalize_completed_payment(payment)
 
             frontend_url = get_frontend_url("/payment-success")
             redirect_url = (
@@ -1552,23 +1383,6 @@ def payment_success(request):
                 f"{payment.connection.connection_id if payment.connection else ''}"
             )
 
-            if (
-                commission_result
-                and commission_result.get("success")
-            ):
-                redirect_url += (
-                    f"&admin_amount="
-                    f"{commission_result.get('admin_amount', 0)}"
-                )
-                redirect_url += (
-                    f"&superadmin_amount="
-                    f"{commission_result.get('superadmin_amount', 0)}"
-                )
-                redirect_url += (
-                    f"&commission_percentage="
-                    f"{commission_result.get('commission_percentage', 0)}"
-                )
-
             logger.info(f"🔀 Redirecting to: {redirect_url}")
             return redirect(redirect_url)
 
@@ -1576,8 +1390,7 @@ def payment_success(request):
         # CONNECTION PAYMENT
         # ----------------------------------------------------
         if payment_status == "Completed":
-            result = _finalize_completed_payment(payment)
-            commission_result = result.get("commission_result")
+            _finalize_completed_payment(payment)
 
         frontend_url = get_frontend_url("/payment-success")
         redirect_url = (
@@ -1591,23 +1404,6 @@ def payment_success(request):
             f"&connection_id="
             f"{payment.connection.connection_id if payment.connection else ''}"
         )
-
-        if (
-            commission_result
-            and commission_result.get("success")
-        ):
-            redirect_url += (
-                f"&admin_amount="
-                f"{commission_result.get('admin_amount', 0)}"
-            )
-            redirect_url += (
-                f"&superadmin_amount="
-                f"{commission_result.get('superadmin_amount', 0)}"
-            )
-            redirect_url += (
-                f"&commission_percentage="
-                f"{commission_result.get('commission_percentage', 0)}"
-            )
 
         logger.info(f"🔀 Redirecting to: {redirect_url}")
         return redirect(redirect_url)

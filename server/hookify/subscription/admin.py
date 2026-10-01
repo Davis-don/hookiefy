@@ -19,7 +19,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
         "short_user",
         "plan_link",
         "status_badge",
-        "payment_link",
         "start_date",
         "end_date",
         "days_remaining_display",
@@ -40,18 +39,13 @@ class SubscriptionAdmin(admin.ModelAdmin):
         "user__phone_number",
         "plan__name",
         "plan__slug",
-        "payment__merchant_reference",
-        "payment__order_tracking_id",
     )
 
     readonly_fields = (
-        "payment_link_field",
-        "payment_status_display",
         "start_date",
         "end_date",
         "created_at",
         "updated_at",
-        "is_paid_display",
         "is_active_display",
         "is_expired_display",
         "days_remaining_display_full",
@@ -60,7 +54,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     ordering = ("-start_date",)
     date_hierarchy = "start_date"
-    list_select_related = ("user", "plan", "payment")
+    list_select_related = ("user", "plan")
     list_per_page = 50
 
     # ========================================================
@@ -74,18 +68,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
                 "plan",
             )
         }),
-        ("Payment", {
-            "fields": (
-                "payment",
-                "payment_link_field",
-                "payment_status_display",
-            ),
-            "description": (
-                "The subscription's paid state is derived from "
-                "the linked Payment. `is_paid` is true when the "
-                "linked payment's status is 'completed'."
-            ),
-        }),
         ("Dates", {
             "fields": (
                 "start_date",
@@ -93,14 +75,12 @@ class SubscriptionAdmin(admin.ModelAdmin):
             ),
             "description": (
                 "start_date is auto-set on create. "
-                "end_date is auto-computed as start_date + 30 days. "
-                "You can override end_date here to extend a "
-                "subscription."
+                "end_date is auto-computed as start_date + 30 days "
+                "for paid plans. Free plans never expire."
             ),
         }),
         ("Derived", {
             "fields": (
-                "is_paid_display",
                 "is_active_display",
                 "is_expired_display",
                 "days_remaining_display_full",
@@ -123,7 +103,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .select_related("user", "plan", "payment")
+            .select_related("user", "plan")
         )
 
     # ========================================================
@@ -163,28 +143,18 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Status")
     def status_badge(self, obj):
-        # Status is derived from the linked payment
-        # (same pattern as Connection).
-        if obj.is_paid and obj.is_active:
+        if obj.is_free_plan:
+            label = "Free"
+            color = "#1d4ed8"
+            bg = "rgba(59,130,246,0.14)"
+        elif obj.is_active:
             label = "Active"
             color = "#047857"
             bg = "rgba(16,185,129,0.14)"
-        elif obj.is_paid and obj.is_expired:
+        elif obj.is_expired:
             label = "Expired"
             color = "#b91c1c"
             bg = "rgba(239,68,68,0.14)"
-        elif obj.is_pending:
-            label = "Pending"
-            color = "#b45309"
-            bg = "rgba(245,158,11,0.14)"
-        elif obj.is_failed:
-            label = "Failed"
-            color = "#b91c1c"
-            bg = "rgba(239,68,68,0.14)"
-        elif obj.is_cancelled:
-            label = "Cancelled"
-            color = "#64748b"
-            bg = "#f1f5f9"
         else:
             label = "Unknown"
             color = "#64748b"
@@ -199,21 +169,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
             label,
         )
 
-    @admin.display(description="Payment")
-    def payment_link(self, obj):
-        if not obj.payment:
-            return "—"
-
-        return format_html(
-            '<a href="/admin/payments/payment/{}/change/">'
-            "<code>{}</code>"
-            "</a>",
-            obj.payment.id,
-            obj.payment.merchant_reference,
-        )
-
     @admin.display(description="Days left")
     def days_remaining_display(self, obj):
+        if obj.is_free_plan:
+            return format_html(
+                '<strong style="color:{};">∞</strong>',
+                "#1d4ed8",
+            )
+
         if not obj.is_active:
             return "—"
 
@@ -237,28 +200,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     # READ-ONLY DERIVED FIELDS
     # ========================================================
 
-    @admin.display(description="Linked payment")
-    def payment_link_field(self, obj):
-        if not obj.payment:
-            return "No payment linked yet"
-
-        return format_html(
-            '<a href="/admin/payments/payment/{}/change/">'
-            "View payment →"
-            "</a>",
-            obj.payment.id,
-        )
-
-    @admin.display(description="Payment status")
-    def payment_status_display(self, obj):
-        if not obj.payment_id:
-            return "No payment yet"
-        return f"{obj.status_display} ({obj.status})"
-
-    @admin.display(description="Is paid?")
-    def is_paid_display(self, obj):
-        return obj.is_paid
-
     @admin.display(description="Is active?")
     def is_active_display(self, obj):
         return obj.is_active
@@ -269,10 +210,20 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Days remaining")
     def days_remaining_display_full(self, obj):
+        if obj.is_free_plan:
+            return format_html(
+                '<strong style="color:{};">∞</strong>',
+                "#1d4ed8",
+            )
         return obj.days_remaining
 
     @admin.display(description="Seconds remaining")
     def seconds_remaining_display(self, obj):
+        if obj.is_free_plan:
+            return format_html(
+                '<strong style="color:{};">∞</strong>',
+                "#1d4ed8",
+            )
         return obj.seconds_remaining
 
     # ========================================================
@@ -291,6 +242,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
         now = timezone.now()
 
         for sub in queryset:
+            if sub.is_free_plan:
+                continue
+
             base = (
                 sub.end_date
                 if sub.end_date and sub.end_date > now
@@ -311,6 +265,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
         now = timezone.now()
 
         for sub in queryset:
+            if sub.is_free_plan:
+                continue
+
             base = (
                 sub.end_date
                 if sub.end_date and sub.end_date > now
@@ -327,10 +284,13 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     @admin.action(description="Expire selected now")
     def expire_now(self, request, queryset):
-        count = queryset.update(end_date=timezone.now())
+        # Free plans never expire — skip them.
+        paid = queryset.exclude(plan__name__iexact="free")
+        count = paid.update(end_date=timezone.now())
         self.message_user(
             request,
-            f"{count} subscription(s) expired.",
+            f"{count} subscription(s) expired "
+            f"(free plans skipped).",
         )
 
     # ========================================================

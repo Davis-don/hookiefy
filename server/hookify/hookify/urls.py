@@ -40,6 +40,11 @@ urlpatterns = [
         "account/",
         include("account.urls"),
     ),
+    # Subscription payment apis
+    path(
+    "subscription_payments/",
+    include("subscription_payment.urls"),
+),
 
 
     # ============================================================
@@ -241,9 +246,5 @@ urlpatterns = [
         "engagement/",
         include("engagement.urls"),
     ),
-    path("subscription/", include("subscription.urls")),
-    path(
-    "subscription_payments/",
-    include("subscription_payment.urls"),
-),
+    path("subscription/", include("subscription.urls"))
 ]
