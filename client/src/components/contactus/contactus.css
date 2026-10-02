@@ -1,0 +1,160 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — CONTACT US
+   Simple, clean contact block with phone, email, WhatsApp
+   All class names prefixed with .yp-contact- for uniqueness
+   ───────────────────────────────────────────────────────── */
+
+.yp-contact-section {
+  width: 100%;
+  padding: 6rem 32px;
+  background: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #1E293B;
+}
+
+.yp-contact-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── Heading ──────────────────────────────────────────── */
+.yp-contact-head {
+  max-width: 640px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.yp-contact-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin-bottom: 14px;
+}
+
+.yp-contact-title {
+  font-size: clamp(2.1rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: #0F172A;
+  margin: 0 0 20px;
+}
+
+.yp-contact-lead {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Contact cards ────────────────────────────────────── */
+.yp-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.yp-contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 24px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+              border-color 0.25s ease, background 0.25s ease;
+}
+
+.yp-contact-card:hover {
+  transform: translateY(-4px);
+  background: #ffffff;
+  border-color: #10B981;
+  box-shadow: 0 20px 40px -22px rgba(16, 185, 129, 0.4);
+}
+
+.yp-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  color: #ffffff;
+  margin-bottom: 6px;
+  box-shadow: 0 12px 24px -12px rgba(37, 99, 235, 0.65);
+}
+
+.yp-contact-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.2px;
+}
+
+.yp-contact-value {
+  font-size: 1.08rem;
+  line-height: 1.6;
+  color: #475569;
+  word-break: break-word;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Tablets */
+@media (max-width: 900px) {
+  .yp-contact-section { padding: 5rem 24px; }
+
+  .yp-contact-head { margin-bottom: 2.5rem; }
+  .yp-contact-title { font-size: 2.2rem; }
+  .yp-contact-lead { font-size: 1.15rem; }
+
+  .yp-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .yp-contact-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 22px 22px;
+    gap: 16px;
+  }
+  .yp-contact-icon { margin-bottom: 0; flex-shrink: 0; }
+
+  .yp-contact-card > .yp-contact-label,
+  .yp-contact-card > .yp-contact-value {
+    display: block;
+  }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .yp-contact-section { padding: 4rem 20px; }
+
+  .yp-contact-eyebrow { font-size: 0.88rem; }
+  .yp-contact-title { font-size: 1.95rem; }
+  .yp-contact-lead { font-size: 1.12rem; line-height: 1.75; }
+
+  .yp-contact-card { padding: 20px 18px; gap: 14px; }
+  .yp-contact-icon { width: 46px; height: 46px; }
+
+  .yp-contact-label { font-size: 1.05rem; }
+  .yp-contact-value { font-size: 1rem; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .yp-contact-title { font-size: 1.8rem; }
+  .yp-contact-lead { font-size: 1.08rem; }
+  .yp-contact-icon { width: 42px; height: 42px; }
+}

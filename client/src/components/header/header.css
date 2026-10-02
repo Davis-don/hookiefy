@@ -1,0 +1,663 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ─────────────────────────────────────────────────────────
+   YOUPATA PALETTE
+   Blue    #2563EB   Emerald #10B981
+   Amber   #F59E0B   Coral   #F97316
+   Ink     #0F172A
+   ───────────────────────────────────────────────────────── */
+:root {
+  --yp-blue:      #2563EB;
+  --yp-blue-2:    #1D4ED8;
+  --yp-emerald:   #10B981;
+  --yp-emerald-2: #059669;
+  --yp-amber:     #F59E0B;
+  --yp-coral:     #F97316;
+  --yp-ink:       #0F172A;
+  --yp-ink-soft:  #475569;
+  --yp-line:      rgba(15, 23, 42, 0.08);
+  --yp-white:     #FFFFFF;
+  --yp-bg:        #FBFCFE;
+}
+
+/* ── GLOBAL FONT ────────────────────────────────────────── */
+.overall-homepage-header-container,
+.overall-homepage-header-container button,
+.overall-homepage-header-container a {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── HEADER SHELL ───────────────────────────────────────── */
+.overall-homepage-header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  background: var(--yp-white);
+  border-bottom: 1px solid var(--yp-line);
+}
+
+/* multicolor brand ribbon */
+.overall-homepage-header-container::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--yp-blue)    0%,
+    var(--yp-blue)    22%,
+    var(--yp-emerald) 22%,
+    var(--yp-emerald) 48%,
+    var(--yp-amber)   48%,
+    var(--yp-amber)   72%,
+    var(--yp-coral)   72%,
+    var(--yp-coral)   100%
+  );
+}
+
+.header-content-data-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 36px;
+  gap: 28px;
+  position: relative;
+}
+
+/* ── LOGO ───────────────────────────────────────────────── */
+.logo-header-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.logo-wordmark {
+  font-family: 'Pacifico', cursive;
+  font-weight: 400;
+  font-size: 3.4rem;
+  line-height: 1.05;
+  letter-spacing: 1.2px;
+  margin: 0;
+  padding: 4px 0;
+  transition: transform 0.25s ease;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.logo-link:hover .logo-wordmark {
+  transform: scale(1.03);
+}
+
+.logo-you { color: var(--yp-blue); }
+.logo-p   { color: var(--yp-emerald); }
+.logo-ata { color: var(--yp-amber); }
+
+/* ── NAV LINKS ──────────────────────────────────────────── */
+.nav-links-section ul {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 26px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links-section ul li a {
+  position: relative;
+  display: inline-block;
+  /* ⬇️ significantly smaller than before (was 1.15rem) */
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  color: var(--yp-ink);
+  text-decoration: none;
+  padding: 7px 2px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+/* underline bar (grows on hover, stays full when active) */
+.nav-links-section ul li a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--yp-blue);
+  transition: width 0.25s ease;
+}
+
+.nav-links-section ul li a:hover,
+.nav-links-section ul li a:focus-visible {
+  color: var(--yp-blue);
+}
+
+.nav-links-section ul li a:hover::after,
+.nav-links-section ul li a:focus-visible::after {
+  width: 100%;
+}
+
+.nav-links-section ul li a.active {
+  color: var(--yp-blue);
+}
+
+.nav-links-section ul li a.active::after {
+  width: 100%;
+}
+
+/* ── MOBILE HAMBURGER ───────────────────────────────────── */
+.mobile-menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 46px;
+  height: 46px;
+  background: transparent;
+  border: 1px solid var(--yp-line);
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+  background: var(--yp-bg);
+}
+
+.mobile-menu-toggle span {
+  display: block;
+  height: 2px;
+  background: var(--yp-ink);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.mobile-menu-toggle.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+  background: var(--yp-blue);
+}
+.mobile-menu-toggle.is-open span:nth-child(2) {
+  opacity: 0;
+}
+.mobile-menu-toggle.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+  background: var(--yp-blue);
+}
+
+/* ── MOBILE PANEL ───────────────────────────────────────── */
+.mobile-menu-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--yp-white);
+  border-bottom: 1px solid var(--yp-line);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
+  padding: 0 24px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease, padding 0.28s ease;
+}
+
+.mobile-menu-panel.open {
+  max-height: 560px;
+  padding: 12px 24px 24px;
+}
+
+.mobile-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.mobile-nav-list li a {
+  display: block;
+  padding: 14px 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--yp-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--yp-line);
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+
+.mobile-nav-list li a:hover,
+.mobile-nav-list li a:focus-visible {
+  color: var(--yp-blue);
+  padding-left: 10px;
+}
+
+.mobile-nav-list li a.active {
+  color: var(--yp-blue);
+  padding-left: 10px;
+  border-bottom-color: var(--yp-blue);
+}
+
+.mobile-register-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.mobile-cta {
+  display: block;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+
+/* Large laptops */
+@media (max-width: 1200px) {
+  .header-content-data-container {
+    padding: 16px 28px;
+    gap: 22px;
+  }
+  .nav-links-section ul { gap: 22px; }
+  .nav-links-section ul li a { font-size: 0.92rem; }
+  .logo-wordmark { font-size: 3.1rem; }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .nav-links-section ul { gap: 18px; }
+  .nav-links-section ul li a { font-size: 0.88rem; }
+  .logo-wordmark { font-size: 2.9rem; }
+}
+
+/* Small tablets */
+@media (max-width: 900px) {
+  .header-content-data-container {
+    padding: 14px 22px;
+    gap: 16px;
+  }
+  .nav-links-section ul { gap: 14px; }
+  .nav-links-section ul li a { font-size: 0.85rem; }
+  .logo-wordmark { font-size: 2.7rem; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE  ≤768px
+   - Hide inline nav links
+   - KEEP Login + Create Account visible
+   - Show hamburger
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links-section {
+    display: none;
+  }
+
+  .mobile-menu-toggle { display: flex; }
+  .mobile-menu-panel  { display: block; }
+
+  .header-content-data-container {
+    padding: 14px 18px;
+    gap: 12px;
+  }
+
+  /* keep actions visible, shrink to fit alongside hamburger */
+  .header-actions-group {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+
+  /* 📱 bigger logo on phones */
+  .logo-wordmark {
+    font-size: 3.4rem;
+    letter-spacing: 1px;
+    padding: 6px 0;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .header-content-data-container {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .logo-wordmark {
+    font-size: 3.2rem;
+    letter-spacing: 0.9px;
+    padding: 5px 0;
+  }
+  .mobile-menu-toggle {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .header-content-data-container { padding: 10px 14px; }
+  .logo-wordmark {
+    font-size: 2.9rem;
+    letter-spacing: 0.6px;
+    padding: 4px 0;
+  }
+  .mobile-menu-toggle {
+    width: 44px;
+    height: 44px;
+  }
+  .mobile-nav-list li a { font-size: 0.95rem; }
+}
+
+/* Tiny phones */
+@media (max-width: 320px) {
+  .logo-wordmark { font-size: 2.55rem; }
+  .header-content-data-container { padding: 10px 12px; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   HEADER ACTIONS — Login link + Create Account button
+   ───────────────────────────────────────────────────────── */
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Modern Login link ─────────────────────────────────── */
+.login-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.15px;
+  color: var(--yp-ink);
+  text-decoration: none;
+  background: transparent;
+  border: 1.5px solid var(--yp-line);
+  transition:
+    color 0.22s ease,
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.login-link .login-icon {
+  transition: transform 0.25s ease;
+}
+
+.login-link:hover,
+.login-link:focus-visible {
+  color: var(--yp-blue);
+  border-color: var(--yp-blue);
+  background: rgba(37, 99, 235, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14);
+  outline: none;
+}
+
+.login-link:hover .login-icon,
+.login-link:focus-visible .login-icon {
+  transform: translateX(2px);
+}
+
+.login-link:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+}
+
+/* ─────────────────────────────────────────────────────────
+   CREATE ACCOUNT BUTTON
+   Blue gradient pill with soft shadow + icon
+   ───────────────────────────────────────────────────────── */
+
+.create-account-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 22px 11px 18px;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.15px;
+  color: var(--yp-white) !important;
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-blue-2) 100%);
+  box-shadow:
+    0 6px 16px rgba(37, 99, 235, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* soft sheen sweep on hover */
+.create-account-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 45%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+
+.create-account-btn:hover::before,
+.create-account-btn:focus-visible::before {
+  transform: translateX(120%);
+}
+
+.create-account-btn .create-icon {
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.create-account-btn:hover,
+.create-account-btn:focus-visible {
+  background: linear-gradient(135deg, #3B82F6 0%, var(--yp-blue-2) 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 26px rgba(37, 99, 235, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: var(--yp-white) !important;
+  outline: none;
+}
+
+.create-account-btn:hover .create-icon,
+.create-account-btn:focus-visible .create-icon {
+  transform: translateY(-1px) scale(1.08);
+}
+
+.create-account-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 4px 10px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.create-account-btn span {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE CTA — Login + Create Account (inside mobile panel)
+   ───────────────────────────────────────────────────────── */
+
+.mobile-cta-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--yp-ink);
+  color: var(--yp-white);
+  font-weight: 700;
+}
+
+.mobile-cta-login .login-icon {
+  transition: transform 0.25s ease;
+}
+
+.mobile-cta-login:hover,
+.mobile-cta-login:focus-visible {
+  background: var(--yp-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.3);
+  color: var(--yp-white);
+}
+
+.mobile-cta-login:hover .login-icon {
+  transform: translateX(2px);
+}
+
+.mobile-cta-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--yp-white) !important;
+  background: linear-gradient(135deg, var(--yp-blue) 0%, var(--yp-blue-2) 100%);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.mobile-cta-create .create-icon {
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.mobile-cta-create:hover,
+.mobile-cta-create:focus-visible {
+  background: linear-gradient(135deg, #3B82F6 0%, var(--yp-blue-2) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.36);
+  color: var(--yp-white) !important;
+  outline: none;
+}
+
+.mobile-cta-create:hover .create-icon {
+  transform: translateY(-1px) scale(1.08);
+}
+
+/* ── Responsive tweaks for the action group ────────────── */
+@media (max-width: 1200px) {
+  .login-link {
+    padding: 9px 16px;
+    font-size: 0.88rem;
+    gap: 7px;
+  }
+  .create-account-btn {
+    padding: 10px 18px 10px 14px;
+    font-size: 0.88rem;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .login-link {
+    padding: 9px 14px;
+    font-size: 0.85rem;
+  }
+  .create-account-btn {
+    padding: 9px 16px 9px 12px;
+    font-size: 0.85rem;
+    gap: 7px;
+  }
+  .header-actions-group {
+    gap: 8px;
+  }
+}
+
+/* ── Compress header actions on small screens instead of hiding ── */
+@media (max-width: 768px) {
+  .header-actions-group {
+    display: flex;
+    gap: 6px;
+  }
+  .login-link,
+  .create-account-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+  .login-link .login-icon,
+  .create-account-btn .create-icon {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Hide the text label, keep icon-only pills so they fit on phones */
+  .login-link span,
+  .create-account-btn span {
+    display: none;
+  }
+  .login-link,
+  .create-account-btn {
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    gap: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-link,
+  .create-account-btn {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+  }
+  .login-link .login-icon,
+  .create-account-btn .create-icon {
+    width: 12px;
+    height: 12px;
+  }
+}

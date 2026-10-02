@@ -1,0 +1,231 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — SERVICES
+   What we do + 4 simple steps to get started
+   All class names prefixed with .yp-services- for uniqueness
+   ───────────────────────────────────────────────────────── */
+
+.yp-services-section {
+  width: 100%;
+  padding: 6rem 32px;
+  background: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #1E293B;
+}
+
+.yp-services-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── Section headings ─────────────────────────────────── */
+.yp-services-head,
+.yp-services-steps-head {
+  max-width: 680px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.yp-services-steps-head {
+  margin-top: 5.5rem;
+}
+
+.yp-services-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin-bottom: 14px;
+}
+
+.yp-services-title {
+  font-size: clamp(2.1rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: #0F172A;
+  margin: 0 0 20px;
+}
+
+.yp-services-lead {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Services grid ────────────────────────────────────── */
+.yp-services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.yp-services-card {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 34px 30px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+              border-color 0.25s ease;
+}
+
+.yp-services-card:hover {
+  transform: translateY(-4px);
+  border-color: #10B981;
+  box-shadow: 0 20px 40px -22px rgba(16, 185, 129, 0.4);
+}
+
+.yp-services-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 14px;
+  letter-spacing: -0.2px;
+}
+
+.yp-services-card-text {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Steps ────────────────────────────────────────────── */
+.yp-services-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  counter-reset: step;
+}
+
+.yp-services-step {
+  position: relative;
+  padding: 30px 24px;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  text-align: left;
+}
+
+.yp-services-step-number {
+  display: inline-block;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #10B981;
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+}
+
+.yp-services-step-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 10px;
+}
+
+.yp-services-step-text {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #64748B;
+  margin: 0;
+}
+
+/* ── CTA button ───────────────────────────────────────── */
+.yp-services-cta {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.yp-services-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 38px;
+  font-family: inherit;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  box-shadow: 0 14px 30px -12px rgba(37, 99, 235, 0.7);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.yp-services-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px -12px rgba(37, 99, 235, 0.9);
+  color: #ffffff;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Tablets */
+@media (max-width: 900px) {
+  .yp-services-section { padding: 5rem 24px; }
+
+  .yp-services-head,
+  .yp-services-steps-head {
+    margin-bottom: 2.5rem;
+  }
+  .yp-services-steps-head { margin-top: 4rem; }
+
+  .yp-services-title { font-size: 2.2rem; }
+  .yp-services-lead { font-size: 1.15rem; }
+
+  .yp-services-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .yp-services-steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  .yp-services-card-title { font-size: 1.3rem; }
+  .yp-services-card-text { font-size: 1.12rem; }
+
+  .yp-services-step-title { font-size: 1.15rem; }
+  .yp-services-step-text { font-size: 1.05rem; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .yp-services-section { padding: 4rem 20px; }
+
+  .yp-services-eyebrow { font-size: 0.88rem; }
+  .yp-services-title { font-size: 1.95rem; }
+  .yp-services-lead { font-size: 1.12rem; line-height: 1.75; }
+
+  .yp-services-card { padding: 28px 22px; }
+  .yp-services-card-title { font-size: 1.25rem; }
+  .yp-services-card-text { font-size: 1.08rem; }
+
+  .yp-services-steps {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .yp-services-step { padding: 26px 22px; }
+  .yp-services-step-number { font-size: 1.7rem; }
+  .yp-services-step-title { font-size: 1.15rem; }
+  .yp-services-step-text { font-size: 1.05rem; }
+
+  .yp-services-btn {
+    width: 100%;
+    padding: 17px 30px;
+    font-size: 1.08rem;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .yp-services-title { font-size: 1.8rem; }
+  .yp-services-lead { font-size: 1.08rem; }
+  .yp-services-step-number { font-size: 1.55rem; }
+}

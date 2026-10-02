@@ -1,0 +1,183 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — FAQS
+   Simple accordion of questions and answers
+   All class names prefixed with .yp-faq- for uniqueness
+   ───────────────────────────────────────────────────────── */
+
+.yp-faq-section {
+  width: 100%;
+  padding: 6rem 32px;
+  background: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #1E293B;
+}
+
+.yp-faq-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Heading ──────────────────────────────────────────── */
+.yp-faq-head {
+  max-width: 640px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.yp-faq-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin-bottom: 14px;
+}
+
+.yp-faq-title {
+  font-size: clamp(2.1rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: #0F172A;
+  margin: 0 0 20px;
+}
+
+.yp-faq-lead {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── FAQ list ─────────────────────────────────────────── */
+.yp-faq-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.yp-faq-item {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.yp-faq-item:hover {
+  border-color: #CBD5E1;
+}
+
+.yp-faq-item.is-open {
+  border-color: #10B981;
+  box-shadow: 0 18px 38px -24px rgba(16, 185, 129, 0.5);
+}
+
+/* ── Question button ──────────────────────────────────── */
+.yp-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 26px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.2px;
+}
+
+.yp-faq-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #ECFDF5;
+  color: #10B981;
+  transition: transform 0.25s ease, background 0.25s ease,
+              color 0.25s ease;
+}
+
+.yp-faq-item.is-open .yp-faq-icon {
+  transform: rotate(45deg);
+  background: #10B981;
+  color: #ffffff;
+}
+
+/* ── Answer ───────────────────────────────────────────── */
+.yp-faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.yp-faq-item.is-open .yp-faq-answer {
+  max-height: 400px;
+}
+
+.yp-faq-answer p {
+  margin: 0;
+  padding: 0 26px 24px;
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: #475569;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+/* Tablets */
+@media (max-width: 900px) {
+  .yp-faq-section { padding: 5rem 24px; }
+
+  .yp-faq-head { margin-bottom: 2.5rem; }
+  .yp-faq-title { font-size: 2.2rem; }
+  .yp-faq-lead { font-size: 1.15rem; }
+
+  .yp-faq-question { font-size: 1.12rem; padding: 20px 22px; }
+  .yp-faq-answer p { font-size: 1.05rem; padding: 0 22px 22px; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .yp-faq-section { padding: 4rem 20px; }
+
+  .yp-faq-eyebrow { font-size: 0.88rem; }
+  .yp-faq-title { font-size: 1.95rem; }
+  .yp-faq-lead { font-size: 1.12rem; line-height: 1.75; }
+
+  .yp-faq-list { gap: 12px; }
+  .yp-faq-item { border-radius: 14px; }
+
+  .yp-faq-question {
+    font-size: 1.08rem;
+    padding: 18px 18px;
+    gap: 14px;
+  }
+  .yp-faq-icon { width: 28px; height: 28px; }
+
+  .yp-faq-answer p {
+    font-size: 1.02rem;
+    line-height: 1.7;
+    padding: 0 18px 20px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .yp-faq-title { font-size: 1.8rem; }
+  .yp-faq-lead { font-size: 1.08rem; }
+  .yp-faq-question { font-size: 1.02rem; }
+  .yp-faq-answer p { font-size: 0.98rem; }
+}

@@ -1,0 +1,135 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — ABOUT US
+   Simple two-column layout: text on the left, image on the right
+   ───────────────────────────────────────────────────────── */
+
+.yp-about-section {
+  width: 100%;
+  padding: 6rem 32px;
+  background: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #1E293B;
+}
+
+.yp-about-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: center;
+}
+
+/* ── Left: text ───────────────────────────────────────── */
+.yp-about-text {
+  max-width: 560px;
+}
+
+.yp-about-eyebrow {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #10B981;
+  margin-bottom: 14px;
+}
+
+.yp-about-title {
+  font-size: clamp(1.9rem, 3.1vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: #0F172A;
+  margin: 0 0 20px;
+}
+
+.yp-about-lead {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #475569;
+  margin: 0 0 18px;
+}
+
+.yp-about-list {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.yp-about-list li {
+  display: flex;
+  gap: 12px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.yp-about-list strong {
+  color: #0F172A;
+  font-weight: 700;
+}
+
+.yp-about-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  margin-top: 11px;
+}
+
+/* ── Right: image ─────────────────────────────────────── */
+.yp-about-image {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  box-shadow: 0 24px 50px -30px rgba(15, 23, 42, 0.35);
+}
+
+.yp-about-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .yp-about-section { padding: 5rem 24px; }
+  .yp-about-inner {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .yp-about-text { max-width: 100%; }
+  .yp-about-image {
+    aspect-ratio: 16 / 10;
+    max-width: 100%;
+  }
+
+  .yp-about-title { font-size: 2rem; }
+  .yp-about-lead { font-size: 1.08rem; }
+  .yp-about-list li { font-size: 1.02rem; }
+}
+
+@media (max-width: 640px) {
+  .yp-about-section { padding: 4rem 20px; }
+
+  .yp-about-eyebrow { font-size: 0.8rem; }
+  .yp-about-title { font-size: 1.8rem; }
+  .yp-about-lead { font-size: 1.05rem; line-height: 1.75; }
+  .yp-about-list li { font-size: 1rem; line-height: 1.7; }
+  .yp-about-dot { margin-top: 10px; }
+}
+
+@media (max-width: 380px) {
+  .yp-about-title { font-size: 1.65rem; }
+  .yp-about-lead { font-size: 1rem; }
+  .yp-about-list li { font-size: 0.98rem; }
+}
