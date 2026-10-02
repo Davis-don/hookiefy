@@ -54,7 +54,6 @@ function Header(): ReactElement {
     }
   };
 
-  // IDs here MUST match the `id` attributes on your section components
   const navItems: { label: string; id: string; className: string }[] = [
     { label: 'Home',       id: '',             className: 'nav-link-home' },
     { label: 'About Us',   id: 'how-it-works', className: 'nav-link-about' },
@@ -120,7 +119,8 @@ function Header(): ReactElement {
           </ul>
         </nav>
 
-        <div className="header-actions-group">
+        {/* ── Hidden on mobile via .header-actions-desktop ── */}
+        <div className="header-actions-group header-actions-desktop">
           <Link to="/login" className="login-link" onClick={closeAll}>
             <LoginIcon />
             <span>Login</span>
