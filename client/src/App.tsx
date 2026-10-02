@@ -27,8 +27,8 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Mainlayout><Home /></Mainlayout>} />
-        <Route path="/login" element={<Mainlayout><Login /></Mainlayout>} />
-        <Route path="/register" element={<Mainlayout><Register /></Mainlayout>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/terms" element={<Mainlayout><Terms /></Mainlayout>} />
         <Route path="/privacy" element={<Mainlayout><Privacy /></Mainlayout>} />
       </Routes>
