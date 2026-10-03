@@ -12,6 +12,17 @@ from .serializers import (
 
 
 # ============================================================
+# HELPERS
+# ============================================================
+
+def _is_superadmin(user):
+    return (
+        getattr(user, "is_superuser", False)
+        or getattr(user, "role", "") == "superadmin"
+    )
+
+
+# ============================================================
 # CREATE — POST /businesses/create/
 # ============================================================
 
@@ -48,8 +59,7 @@ def create_business(request):
 @permission_classes([IsAuthenticated])
 def list_my_businesses(request):
     """
-    List every business owned by the authenticated user,
-    regardless of status.
+    List every business owned by the authenticated user.
 
     Optional query params:
         ?status=active|paused|draft|closed|suspended
@@ -85,8 +95,7 @@ def list_my_businesses(request):
 def list_all_businesses(request):
     """
     Public marketplace listing. By default, only ACTIVE businesses
-    are returned. Pass ?status=... to override, or ?status=all to
-    see every status.
+    are returned. Pass ?status=all to see every status.
 
     Optional query params:
         ?category=goods|services
@@ -193,21 +202,24 @@ def update_business(request, business_id):
 
 # ============================================================
 # UPDATE STATUS — PATCH /businesses/<id>/status/
+# Superadmins only.
 # ============================================================
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_business_status(request, business_id):
     """
-    Change only the status of a business owned by the user.
+    Change the status of any business. Superadmins only.
     Body: { "status": "active" | "paused" | "draft" | "closed" | "suspended" }
     """
 
-    business = (
-        Businesses.objects
-        .filter(id=business_id, owner=request.user)
-        .first()
-    )
+    if not _is_superadmin(request.user):
+        return Response(
+            {"message": "You don't have permission to change status."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    business = Businesses.objects.filter(id=business_id).first()
 
     if business is None:
         return Response(

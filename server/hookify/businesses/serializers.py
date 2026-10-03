@@ -132,7 +132,6 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data["owner"] = self.context["request"].user
-        # Default status if the client didn't send one
         validated_data.setdefault("status", "active")
         return Businesses.objects.create(**validated_data)
 
@@ -144,8 +143,11 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
 class BusinessUpdateSerializer(serializers.ModelSerializer):
     """
     Update serializer — ownership cannot be changed.
-    Everything is optional; status changes are validated against
-    the model's choices.
+    All fields optional.
+
+    `status` can only be changed by a superadmin. If a
+    non-superadmin sends it, the field is silently dropped
+    so the rest of the update still succeeds.
     """
 
     class Meta:
@@ -178,3 +180,22 @@ class BusinessUpdateSerializer(serializers.ModelSerializer):
                 f"Status must be one of: {', '.join(sorted(valid))}."
             )
         return value
+
+    def validate(self, attrs):
+        """
+        Drop `status` from the payload if the requester is not a
+        superadmin. The rest of the update still goes through.
+        """
+        request = self.context.get("request")
+        new_status = attrs.get("status")
+
+        if new_status is not None and request is not None:
+            user = request.user
+            is_super = (
+                getattr(user, "is_superuser", False)
+                or getattr(user, "role", "") == "superadmin"
+            )
+            if not is_super:
+                attrs.pop("status", None)
+
+        return attrs

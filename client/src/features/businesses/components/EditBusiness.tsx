@@ -48,14 +48,18 @@ const initialState: FormState = {
 function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
   const toast = useToast();
   const access = useAuthStore((s) => s.access);
+  const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+
+  const isSuperadmin =
+    user?.role === 'superadmin' ||
+    (user as any)?.is_superuser === true;
 
   const [phase, setPhase] = useState<Phase>(1);
   const [form, setForm] = useState<FormState>(initialState);
   const [error, setError] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
 
-  // Load the business to edit
   const {
     data: business,
     isLoading,
@@ -68,7 +72,6 @@ function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
     staleTime: 30_000,
   });
 
-  // Pre-fill the form once the business arrives
   useEffect(() => {
     if (business && !hydrated) {
       setForm({
@@ -157,7 +160,7 @@ function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
     const err = validatePhase3();
     if (err) return setError(err);
 
-    mutation.mutate({
+    const payload: UpdateBusinessPayload = {
       businessName: form.businessName.trim(),
       businessCategory: form.businessCategory as BusinessCategory,
       businessType: form.businessType.trim(),
@@ -165,11 +168,15 @@ function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
       county: form.county,
       cityTown: form.cityTown,
       region: form.region.trim(),
-      status: form.status,
-    });
+    };
+
+    if (isSuperadmin) {
+      payload.status = form.status;
+    }
+
+    mutation.mutate(payload);
   };
 
-  // ── Loading ───────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="eb-state">
@@ -187,6 +194,9 @@ function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
   }
 
   const busy = mutation.isPending;
+
+  const statusLabel = (s: string) =>
+    s.charAt(0).toUpperCase() + s.slice(1);
 
   return (
     <div className="eb-shell">
@@ -291,24 +301,47 @@ function EditBusiness({ businessId, onBack, onSaved }: EditBusinessProps) {
               />
             </div>
 
-            <div className="eb-field">
-              <label className="eb-label" htmlFor="eb-status">Status</label>
-              <select
-                id="eb-status"
-                className="eb-input eb-select"
-                value={form.status}
-                onChange={(e) =>
-                  update('status', e.target.value as BusinessStatus)
-                }
-                disabled={busy}
-              >
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="draft">Draft</option>
-                <option value="closed">Closed</option>
-                <option value="suspended">Suspended</option>
-              </select>
-            </div>
+            {isSuperadmin ? (
+              <div className="eb-field">
+                <label className="eb-label" htmlFor="eb-status">Status</label>
+                <select
+                  id="eb-status"
+                  className="eb-input eb-select"
+                  value={form.status}
+                  onChange={(e) =>
+                    update('status', e.target.value as BusinessStatus)
+                  }
+                  disabled={busy}
+                >
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="draft">Draft</option>
+                  <option value="closed">Closed</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+                <p className="eb-help">
+                  Only superadmins can change the status.
+                </p>
+              </div>
+            ) : (
+              <div className="eb-field">
+                <label className="eb-label">Status</label>
+                <div className="eb-readonly">
+                  <span
+                    className={`eb-status-pill is-${String(
+                      form.status || 'active'
+                    )
+                      .toLowerCase()
+                      .trim()}`}
+                  >
+                    {statusLabel(form.status || 'active')}
+                  </span>
+                  <span className="eb-readonly-hint">
+                    Managed by the platform.
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {error && <p className="eb-error">{error}</p>}

@@ -225,6 +225,61 @@
 
 .eb-select option { color: #0F172A; background: #FFFFFF; }
 
+/* ── Read-only status (non-superadmin) ───────────────── */
+.eb-readonly {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+}
+
+.eb-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  background: #F1F5F9;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.eb-status-pill::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.eb-status-pill.is-active    { background: #ECFDF5; color: #047857; }
+.eb-status-pill.is-paused    { background: #FFF7ED; color: #C2410C; }
+.eb-status-pill.is-draft     { background: #F1F5F9; color: #64748B; }
+.eb-status-pill.is-closed    { background: #F3F4F6; color: #6B7280; }
+.eb-status-pill.is-suspended { background: #FEF2F2; color: #B91C1C; }
+
+.eb-readonly-hint {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  font-style: italic;
+}
+
+.eb-help {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #94A3B8;
+}
+
 /* ── Category tiles ──────────────────────────────────── */
 .eb-cat-grid {
   display: grid;
