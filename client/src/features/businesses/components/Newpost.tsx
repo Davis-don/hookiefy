@@ -10,6 +10,7 @@ import './newpost.css';
 type NewpostProps = {
   businessId: number;
   businessName?: string;
+  onBack?: () => void;
   onCreated?: () => void;
 };
 
@@ -28,6 +29,7 @@ const initialState: FormState = {
 function Newpost({
   businessId,
   businessName,
+  onBack,
   onCreated,
 }: NewpostProps) {
   const toast = useToast();
@@ -114,6 +116,26 @@ function Newpost({
 
   return (
     <div className="np-shell">
+      {/* ── Top bar with back ──────────────────────── */}
+      {onBack && (
+        <div className="np-topbar">
+          <button
+            type="button"
+            className="np-icon-btn np-icon-btn-back"
+            onClick={onBack}
+            aria-label="Back"
+            title="Back"
+            disabled={busy}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Header ─────────────────────────────────── */}
       <div className="np-header">
         <h2 className="np-title">Add a post</h2>
@@ -223,6 +245,16 @@ function Newpost({
 
         {/* Actions */}
         <div className="np-actions">
+          {onBack && (
+            <button
+              type="button"
+              className="np-btn np-btn-ghost"
+              onClick={onBack}
+              disabled={busy}
+            >
+              Cancel
+            </button>
+          )}
           <button
             type="submit"
             className="np-btn np-btn-primary"

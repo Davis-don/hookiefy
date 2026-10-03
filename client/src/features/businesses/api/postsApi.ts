@@ -162,3 +162,31 @@ async function handleResponse(
 
   return data as { message: string; post: Post };
 }
+
+// Add to src/features/businesses/api/postsApi.ts
+
+export async function fetchPost(
+  token: string | null,
+  postId: number
+): Promise<Post> {
+  if (!token) throw new Error('Not authenticated.');
+
+  const res = await fetch(`${API_BASE}/posts/${postId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const text = await res.text();
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+  if (!res.ok) {
+    let message = 'Could not load that post.';
+    if (data && typeof data === 'object') {
+      if (typeof data.message === 'string') message = data.message;
+      else if (typeof data.detail === 'string') message = data.detail;
+    }
+    throw new Error(message);
+  }
+
+  return data as Post;
+}

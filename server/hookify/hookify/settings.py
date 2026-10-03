@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "account",
     "businesses",
     "posts",
+    "products",
     "userprofile",
     "services",
     "stories",

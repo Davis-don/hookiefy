@@ -1,0 +1,354 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — EDIT POST
+   Image-first editor. Tight spacing, no card box.
+   All classes prefixed .ep-editor-.
+   ───────────────────────────────────────────────────────── */
+
+.ep-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── States ──────────────────────────────────────────── */
+.ep-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #475569;
+  font-size: 0.96rem;
+}
+
+.ep-state-error { color: #B91C1C; }
+
+/* ── Image — first ───────────────────────────────────── */
+.ep-editor-image {
+  width: 100%;
+}
+
+.ep-editor-image-frame {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F1F5F9;
+  aspect-ratio: 4 / 5;
+  max-height: 560px;
+}
+
+.ep-editor-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Overlay that appears on hover / focus */
+.ep-editor-image-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #FFFFFF;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  white-space: nowrap;
+}
+
+.ep-editor-image-frame:hover .ep-editor-image-overlay,
+.ep-editor-image-frame:focus-within .ep-editor-image-overlay {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Empty placeholder */
+.ep-editor-image-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 40px 20px;
+  border-radius: 16px;
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  color: #64748B;
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease,
+              color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ep-editor-image-empty:hover {
+  border-color: #2563EB;
+  background: #F8FAFF;
+  color: #2563EB;
+}
+
+/* Note bar when a new file is pending */
+.ep-editor-image-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #065F46;
+}
+
+.ep-editor-image-note-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
+}
+
+.ep-editor-image-note-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ep-editor-image-undo {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #A7F3D0;
+  background: #FFFFFF;
+  color: #065F46;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.ep-editor-image-undo:hover:not(:disabled) {
+  background: #D1FAE5;
+  border-color: #10B981;
+}
+
+.ep-editor-image-undo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Fields ──────────────────────────────────────────── */
+.ep-editor-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ep-editor-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+/* ── Title ───────────────────────────────────────────── */
+.ep-editor-title {
+  width: 100%;
+  padding: 4px 0 8px;
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0F172A;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid #E2E8F0;
+  outline: none;
+  letter-spacing: -0.3px;
+  transition: border-color 0.2s ease;
+}
+
+.ep-editor-title::placeholder {
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+.ep-editor-title:focus {
+  border-bottom-color: #2563EB;
+}
+
+.ep-editor-title:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Body — compact ──────────────────────────────────── */
+.ep-editor-body {
+  width: 100%;
+  padding: 6px 0;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #334155;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  min-height: 88px;
+}
+
+.ep-editor-body::placeholder { color: #CBD5E1; }
+
+.ep-editor-body:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Counter ─────────────────────────────────────────── */
+.ep-editor-counter {
+  align-self: flex-end;
+  font-size: 0.74rem;
+  color: #94A3B8;
+  margin-top: -2px;
+}
+
+/* ── Hidden file input ───────────────────────────────── */
+.ep-file-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ── Error ───────────────────────────────────────────── */
+.ep-editor-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.ep-editor-error svg {
+  flex-shrink: 0;
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+.ep-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #EEF2F7;
+}
+
+.ep-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+              background 0.18s ease, color 0.18s ease,
+              border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ep-editor-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ep-editor-btn-ghost {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  color: #0F172A;
+}
+
+.ep-editor-btn-ghost:hover:not(:disabled) {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+}
+
+.ep-editor-btn-primary {
+  border: none;
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  box-shadow: 0 12px 26px -12px rgba(37, 99, 235, 0.7);
+}
+
+.ep-editor-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
+}
+
+.ep-editor-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ep-editor { gap: 14px; }
+
+  .ep-editor-title { font-size: 1.12rem; }
+  .ep-editor-body  { font-size: 0.96rem; min-height: 76px; }
+
+  .ep-editor-image-frame {
+    max-height: 440px;
+    border-radius: 14px;
+  }
+
+  .ep-editor-image-overlay {
+    opacity: 1;                        /* always visible on touch */
+    padding: 9px 14px;
+    font-size: 0.84rem;
+  }
+
+  .ep-editor-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .ep-editor-btn { width: 100%; text-align: center; }
+}
+
+@media (max-width: 380px) {
+  .ep-editor-title { font-size: 1.05rem; }
+  .ep-editor-body  { min-height: 68px; }
+  .ep-editor-image-frame { max-height: 380px; }
+}

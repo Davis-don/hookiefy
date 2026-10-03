@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import Newpost from './Newpost';
 import Allposts from './Allposts';
+import Allproducts from './Allproducts';
+import Newpost from './Newpost';
+import Newproduct from './Newproduct';
 import './addpost.css';
 
-type View = 'new' | 'all';
+type View = 'posts' | 'products';
+type Composer = 'none' | 'post' | 'product';
 
 type AddpostProps = {
   businessId: number;
@@ -18,14 +21,23 @@ function Addpost({
   onBack,
   onCreated,
 }: AddpostProps) {
-  const [view, setView] = useState<View>('new');
+  const [view, setView] = useState<View>('posts');
+  const [composer, setComposer] = useState<Composer>('none');
+
+  // Close the composer and return to the tab we came from
+  const closeComposer = () => {
+    const cameFrom = composer === 'post' ? 'posts' : 'products';
+    setComposer('none');
+    setView(cameFrom);
+    onCreated?.();
+  };
 
   return (
     <div className="ap-shell">
       {/* ── Top bar: back ───────────────────────────── */}
       <div className="ap-topbar">
         <div className="ap-topbar-left">
-          {onBack && (
+          {onBack && composer === 'none' && (
             <button
               type="button"
               className="ap-icon-btn ap-icon-btn-back"
@@ -47,59 +59,80 @@ function Addpost({
         </div>
       </div>
 
-      {/* ── Segmented switcher ─────────────────────── */}
-      <div className="ap-switch" role="tablist" aria-label="Posts view">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'new'}
-          className={'ap-switch-btn' + (view === 'new' ? ' is-active' : '')}
-          onClick={() => setView('new')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>New post</span>
-        </button>
+      {/* ── Segmented switcher (hidden while composing) ── */}
+      {composer === 'none' && (
+        <div className="ap-switch" role="tablist" aria-label="Posts view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'posts'}
+            className={'ap-switch-btn' + (view === 'posts' ? ' is-active' : '')}
+            onClick={() => setView('posts')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <line x1="7" y1="9" x2="17" y2="9" />
+              <line x1="7" y1="13" x2="17" y2="13" />
+              <line x1="7" y1="17" x2="13" y2="17" />
+            </svg>
+            <span>Posts</span>
+          </button>
 
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'all'}
-          className={'ap-switch-btn' + (view === 'all' ? ' is-active' : '')}
-          onClick={() => setView('all')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="2" />
-            <line x1="7" y1="9" x2="17" y2="9" />
-            <line x1="7" y1="13" x2="17" y2="13" />
-            <line x1="7" y1="17" x2="13" y2="17" />
-          </svg>
-          <span>All posts</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'products'}
+            className={'ap-switch-btn' + (view === 'products' ? ' is-active' : '')}
+            onClick={() => setView('products')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 8l-9-5-9 5 9 5 9-5z" />
+              <path d="M3 8v8l9 5 9-5V8" />
+              <path d="M12 13v8" />
+            </svg>
+            <span>Products</span>
+          </button>
+        </div>
+      )}
 
       {/* ── Content ─────────────────────────────────── */}
       <div className="ap-content">
-        {view === 'new' && (
+        {/* Composer open — shows just the relevant composer */}
+        {composer === 'post' && (
           <Newpost
             businessId={businessId}
             businessName={businessName}
-            onCreated={() => {
-              onCreated?.();
-              // After a successful post, switch to the list
-              setView('all');
-            }}
+            onBack={() => setComposer('none')}
+            onCreated={closeComposer}
           />
         )}
 
-        {view === 'all' && (
-          <Allposts businessId={businessId} />
+        {composer === 'product' && (
+          <Newproduct
+            businessId={businessId}
+            businessName={businessName}
+            onBack={() => setComposer('none')}
+            onCreated={closeComposer}
+          />
+        )}
+
+        {/* No composer open — the tabs */}
+        {composer === 'none' && view === 'posts' && (
+          <Allposts
+            businessId={businessId}
+            onAdd={() => setComposer('post')}
+          />
+        )}
+
+        {composer === 'none' && view === 'products' && (
+          <Allproducts
+            businessId={businessId}
+            onAdd={() => setComposer('product')}
+          />
         )}
       </div>
     </div>

@@ -5,81 +5,84 @@ import { useAuthStore } from '../../../store/authStore';
 import { useToast } from '../../../components/toast/ToastContext';
 import { Spinner } from '../../../components/spinner/Spinner';
 import {
-  fetchPosts,
-  deletePost,
-  type Post,
-} from '../api/postsApi';
+  fetchProducts,
+  deleteProduct,
+  type Product,
+} from '../api/productsApi';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
-import Editpost from './Editpost';
-import './allposts.css';
+import Editproduct from './Editproduct';
+import './allproducts.css';
 
-type AllpostsProps = {
+type AllproductsProps = {
   businessId: number;
   onAdd?: () => void;
 };
 
-function Allposts({ businessId, onAdd }: AllpostsProps) {
+function Allproducts({ businessId, onAdd }: AllproductsProps) {
   const access = useAuthStore((s) => s.access);
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
   const {
-    data: posts = [],
+    data: products = [],
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['business-posts', businessId, access],
-    queryFn: () => fetchPosts(access, businessId),
+    queryKey: ['business-products', businessId, access],
+    queryFn: () => fetchProducts(access, businessId),
     enabled: !!access && !!businessId,
     staleTime: 30_000,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (postId: number) => deletePost(access, postId),
+    mutationFn: (productId: number) => deleteProduct(access, productId),
     onSuccess: (res) => {
-      toast.success(res.message || 'Post deleted.');
+      toast.success(res.message || 'Product deleted.');
       queryClient.invalidateQueries({
-        queryKey: ['business-posts', businessId],
+        queryKey: ['business-products', businessId],
       });
       setDeleteTarget(null);
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Could not delete this post.');
+      toast.error(err?.message || 'Could not delete this product.');
       setDeleteTarget(null);
     },
   });
 
+  // ── Loading ───────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="alp-state">
-        <Spinner size={20} color="#2563EB" label="Loading posts…" />
+      <div className="apd-state">
+        <Spinner size={20} color="#2563EB" label="Loading products…" />
       </div>
     );
   }
 
+  // ── Error ─────────────────────────────────────────────
   if (isError) {
     return (
-      <div className="alp-state alp-state-error">
-        {(error as Error)?.message || 'Could not load posts.'}
+      <div className="apd-state apd-state-error">
+        {(error as Error)?.message || 'Could not load products.'}
       </div>
     );
   }
 
-  if (posts.length === 0) {
+  // ── Empty ─────────────────────────────────────────────
+  if (products.length === 0) {
     return (
-      <div className="alp-shell">
-        <div className="alp-empty">
-          <p className="alp-empty-title">No posts yet</p>
-          <p className="alp-empty-sub">
-            Your published posts will show up here.
+      <div className="apd-shell">
+        <div className="apd-empty">
+          <p className="apd-empty-title">No products yet</p>
+          <p className="apd-empty-sub">
+            Your products will show up here.
           </p>
           {onAdd && (
-            <button type="button" className="alp-empty-btn" onClick={onAdd}>
-              + Add your first post
+            <button type="button" className="apd-empty-btn" onClick={onAdd}>
+              + Add your first product
             </button>
           )}
         </div>
@@ -87,10 +90,10 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
         {onAdd && (
           <button
             type="button"
-            className="alp-fab"
+            className="apd-fab"
             onClick={onAdd}
-            aria-label="Add a post"
-            title="Add post"
+            aria-label="Add a product"
+            title="Add product"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
@@ -104,25 +107,26 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
     );
   }
 
+  // ── List ──────────────────────────────────────────────
   return (
-    <div className="alp-shell">
-      <ul className="alp-list">
-        {posts.map((p) => (
+    <div className="apd-shell">
+      <ul className="apd-list">
+        {products.map((p) => (
           <li
             key={p.id}
-            className={'alp-item' + (editingId === p.id ? ' is-editing' : '')}
+            className={'apd-item' + (editingId === p.id ? ' is-editing' : '')}
           >
             {editingId === p.id ? (
-              <Editpost
-                postId={p.id}
+              <Editproduct
+                productId={p.id}
                 onCancel={() => setEditingId(null)}
                 onSaved={() => setEditingId(null)}
               />
             ) : (
               <>
                 {/* ── Header: date + actions ───────────── */}
-                <div className="alp-item-header">
-                  <span className="alp-item-when">
+                <div className="apd-item-header">
+                  <span className="apd-item-when">
                     {new Date(p.created_at).toLocaleDateString(undefined, {
                       day: 'numeric',
                       month: 'short',
@@ -130,12 +134,12 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
                     })}
                   </span>
 
-                  <div className="alp-item-actions">
+                  <div className="apd-item-actions">
                     <button
                       type="button"
-                      className="alp-icon-btn alp-icon-btn-edit"
+                      className="apd-icon-btn apd-icon-btn-edit"
                       onClick={() => setEditingId(p.id)}
-                      aria-label="Edit post"
+                      aria-label="Edit product"
                       title="Edit"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24"
@@ -149,9 +153,9 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
 
                     <button
                       type="button"
-                      className="alp-icon-btn alp-icon-btn-danger"
+                      className="apd-icon-btn apd-icon-btn-danger"
                       onClick={() => setDeleteTarget(p)}
-                      aria-label="Delete post"
+                      aria-label="Delete product"
                       title="Delete"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24"
@@ -168,20 +172,47 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
                   </div>
                 </div>
 
-                {/* ── Title ────────────────────────────── */}
-                <h4 className="alp-item-title">
-                  {p.title || 'Untitled post'}
+                {/* ── Name ─────────────────────────────── */}
+                <h4 className="apd-item-title">
+                  {p.name || 'Untitled product'}
                 </h4>
 
-                {/* ── Image — first ────────────────────── */}
+                {/* ── Image — first visual ─────────────── */}
                 {p.image_url && (
-                  <div className="alp-item-image">
-                    <img src={p.image_url} alt={p.title} loading="lazy" />
+                  <div className="apd-item-image">
+                    <img src={p.image_url} alt={p.name} loading="lazy" />
                   </div>
                 )}
 
-                {/* ── Description — below the image ──── */}
-                {p.body && <p className="alp-item-text">{p.body}</p>}
+                {/* ── Description — below image ────────── */}
+                {p.description && (
+                  <p className="apd-item-text">{p.description}</p>
+                )}
+
+                {/* ── Properties — optional chips ──────── */}
+                {p.properties && p.properties.length > 0 && (
+                  <ul className="apd-item-props">
+                    {p.properties.map((prop) => (
+                      <li key={prop} className="apd-item-prop">
+                        {prop}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* ── Footer: price + date ─────────────── */}
+                <div className="apd-item-footer">
+                  {typeof p.price === 'number' && (
+                    <span className="apd-item-price">
+                      KES {p.price.toLocaleString()}
+                    </span>
+                  )}
+                  {typeof p.price !== 'number' && (
+                    <span className="apd-item-price apd-item-price-muted">
+                      Price on request
+                    </span>
+                  )}
+                </div>
               </>
             )}
           </li>
@@ -191,10 +222,10 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
       {onAdd && (
         <button
           type="button"
-          className="alp-fab"
+          className="apd-fab"
           onClick={onAdd}
-          aria-label="Add a post"
-          title="Add post"
+          aria-label="Add a product"
+          title="Add product"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
@@ -207,8 +238,8 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
 
       <ConfirmDeleteModal
         open={deleteTarget !== null}
-        title={`Delete "${deleteTarget?.title || 'this post'}"?`}
-        message="This action cannot be undone. The post and its Cloudinary image will be permanently removed."
+        title={`Delete "${deleteTarget?.name || 'this product'}"?`}
+        message="This action cannot be undone. The product and its Cloudinary image will be permanently removed."
         confirmLabel="Yes, delete"
         cancelLabel="Cancel"
         busy={deleteMutation.isPending}
@@ -221,4 +252,4 @@ function Allposts({ businessId, onAdd }: AllpostsProps) {
   );
 }
 
-export default Allposts;
+export default Allproducts;

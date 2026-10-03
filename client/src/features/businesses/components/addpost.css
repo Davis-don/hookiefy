@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — POSTS SHELL
-   Segmented switcher: New post · All posts
+   Two tabs: Posts · Products
    All classes prefixed .ap-.
    ───────────────────────────────────────────────────────── */
 
@@ -76,7 +76,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 9px 18px;
   border: none;
   border-radius: 9px;
   background: transparent;
