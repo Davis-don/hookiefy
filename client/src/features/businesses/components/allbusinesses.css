@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — ALL BUSINESSES
-   Heading · table · hover-manage chevron
+   Flat, edge-to-edge table. No card outline.
    All classes prefixed .ab-.
    ───────────────────────────────────────────────────────── */
 
@@ -8,10 +8,11 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+/* ── Heading ─────────────────────────────────────────── */
 .ab-heading {
   font-size: 1.75rem;
   font-weight: 800;
@@ -19,6 +20,7 @@
   letter-spacing: -0.5px;
   line-height: 1.2;
   margin: 0;
+  padding: 0 4px;
 }
 
 /* ── States ──────────────────────────────────────────── */
@@ -27,16 +29,13 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  border-radius: 14px;
-  background: #FFFFFF;
-  border: 1.5px dashed #E2E8F0;
+  background: #F8FAFC;
   color: #475569;
   font-size: 0.98rem;
 }
 
 .ab-state-error {
   background: #FEF2F2;
-  border-color: #FECACA;
   color: #B91C1C;
 }
 
@@ -47,10 +46,8 @@
   justify-content: center;
   gap: 8px;
   padding: 48px 24px;
-  border-radius: 16px;
-  background: #FFFFFF;
-  border: 1.5px dashed #E2E8F0;
   text-align: center;
+  background: #F8FAFC;
 }
 
 .ab-empty-title {
@@ -89,25 +86,22 @@
   box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
 }
 
-/* ── Table shell ─────────────────────────────────────── */
+/* ── Table shell — flat, edge to edge ────────────────── */
 .ab-table-scroll {
   width: 100%;
   overflow-x: auto;
   background: #FFFFFF;
-  border: 1.5px solid #E0E7FF;
-  border-radius: 16px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -16px rgba(37, 99, 235, 0.25);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #C7D2FE transparent;
 }
 
-.ab-table-scroll::-webkit-scrollbar { height: 8px; }
+.ab-table-scroll::-webkit-scrollbar { height: 6px; }
 .ab-table-scroll::-webkit-scrollbar-track {
   background: transparent;
-  margin: 0 12px 6px;
 }
 .ab-table-scroll::-webkit-scrollbar-thumb {
   background: #C7D2FE;
@@ -118,7 +112,7 @@
 /* ── Table ───────────────────────────────────────────── */
 .ab-table {
   width: 100%;
-  min-width: 720px;                /* gives every column enough room */
+  min-width: 720px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.95rem;
@@ -126,9 +120,6 @@
 }
 
 /* ── Column widths ───────────────────────────────────── */
-/* Sum of min-widths = 720px. Status column is now wide
-   enough that the "Active / Paused / Suspended" pill never
-   gets clipped. */
 .ab-col-name   { width: 30%; min-width: 200px; }
 .ab-col-cat    { width: 15%; min-width: 120px; }
 .ab-col-type   { width: 25%; min-width: 170px; }
@@ -138,7 +129,7 @@
 /* ── Header ──────────────────────────────────────────── */
 .ab-table thead th {
   text-align: left;
-  padding: 15px 20px;
+  padding: 13px 14px;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -149,10 +140,8 @@
   white-space: nowrap;
 }
 
-.ab-table thead th.ab-col-go { padding: 15px 20px 15px 0; }
-
-.ab-table thead th:first-child { border-top-left-radius: 14.5px; }
-.ab-table thead th:last-child  { border-top-right-radius: 14.5px; }
+.ab-table thead th:first-child { padding-left: 4px; }
+.ab-table thead th.ab-col-go   { padding-right: 4px; }
 
 /* ── Rows ────────────────────────────────────────────── */
 .ab-row {
@@ -174,15 +163,16 @@
 .ab-row:last-child .ab-cell { border-bottom: none; }
 
 /* ── Cells ───────────────────────────────────────────── */
-/* overflow visible on the status cell so the pill is never
-   clipped. All other cells keep the ellipsis treatment. */
 .ab-cell {
-  padding: 18px 20px;
+  padding: 16px 14px;
   border-bottom: 1px solid #EEF2F7;
   color: #334155;
   vertical-align: middle;
   background: #FFFFFF;
 }
+
+.ab-cell:first-child { padding-left: 4px; }
+.ab-cell.ab-cell-go  { padding-right: 4px; }
 
 .ab-cell-name,
 .ab-cell-type {
@@ -199,7 +189,6 @@
 
 .ab-cell-type { color: #475569; }
 
-/* Status cell — no overflow clipping, keep pill fully visible */
 .ab-cell.ab-cell-status {
   overflow: visible;
   white-space: nowrap;
@@ -207,7 +196,6 @@
 
 /* Chevron / Manage cell */
 .ab-cell-go {
-  padding: 18px 20px 18px 0;
   text-align: right;
   display: flex;
   align-items: center;
@@ -330,46 +318,29 @@
 @media (max-width: 900px) {
   .ab-heading { font-size: 1.55rem; }
   .ab-table { font-size: 0.9rem; min-width: 700px; }
-  .ab-table thead th { padding: 14px 16px; }
-  .ab-table thead th.ab-col-go { padding: 14px 16px 14px 0; }
-  .ab-cell { padding: 16px 16px; }
-  .ab-cell-go { padding: 16px 16px 16px 0; }
+  .ab-table thead th { padding: 12px 12px; }
+  .ab-cell { padding: 14px 12px; }
   .ab-cell-name { font-size: 0.96rem; }
 }
 
 @media (max-width: 640px) {
-  .ab-shell { gap: 18px; }
+  .ab-shell { gap: 14px; }
   .ab-heading { font-size: 1.4rem; letter-spacing: -0.4px; }
 
-  .ab-table-scroll {
-    border-radius: 14px;
-    box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.04),
-      0 6px 20px -14px rgba(37, 99, 235, 0.22);
-  }
-
-  /* The table scrolls sideways — keep the min-width so
-     Status + chevron stay visible when the user scrolls. */
-  .ab-table {
-    font-size: 0.88rem;
-    min-width: 680px;
-  }
+  .ab-table { font-size: 0.88rem; min-width: 680px; }
 
   .ab-table thead th {
-    padding: 13px 14px;
+    padding: 11px 12px;
     font-size: 0.7rem;
     letter-spacing: 1px;
   }
-  .ab-table thead th.ab-col-go { padding: 13px 14px 13px 0; }
 
-  .ab-cell { padding: 14px 14px; }
-  .ab-cell-go { padding: 14px 14px 14px 0; }
+  .ab-cell { padding: 13px 12px; }
   .ab-cell-name { font-size: 0.94rem; }
 
   .ab-pill,
   .ab-status { font-size: 0.68rem; padding: 3px 10px; }
 
-  /* Hide the word "Manage" on phones, keep the arrow */
   .ab-go-hint { display: none; }
 }
 
@@ -381,10 +352,8 @@
   .ab-empty-sub { font-size: 0.9rem; }
 
   .ab-table { font-size: 0.84rem; min-width: 660px; }
-  .ab-table thead th { padding: 12px 12px; font-size: 0.68rem; }
-  .ab-table thead th.ab-col-go { padding: 12px 12px 12px 0; }
-  .ab-cell { padding: 13px 12px; }
-  .ab-cell-go { padding: 13px 12px 13px 0; }
+  .ab-table thead th { padding: 10px 10px; font-size: 0.68rem; }
+  .ab-cell { padding: 12px 10px; }
   .ab-cell-name { font-size: 0.9rem; }
 
   .ab-go-arrow { width: 28px; height: 28px; }
@@ -393,8 +362,6 @@
 @media (max-width: 380px) {
   .ab-heading { font-size: 1.15rem; }
   .ab-table { font-size: 0.82rem; min-width: 640px; }
-  .ab-table thead th { padding: 11px 10px; }
-  .ab-table thead th.ab-col-go { padding: 11px 10px 11px 0; }
-  .ab-cell { padding: 12px 10px; }
-  .ab-cell-go { padding: 12px 10px 12px 0; }
+  .ab-table thead th { padding: 10px 8px; }
+  .ab-cell { padding: 11px 8px; }
 }
