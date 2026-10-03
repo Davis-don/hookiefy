@@ -1,4 +1,3 @@
-# account/admin.py
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -6,7 +5,6 @@ from django.contrib.auth.forms import (
     UserCreationForm,
     UserChangeForm,
 )
-from django.utils.html import format_html
 
 from .models import Accounts
 
@@ -47,6 +45,8 @@ class AccountsAdmin(UserAdmin):
     Custom admin for the Accounts model.
 
     Uses email instead of username and includes:
+    - Profile information
+    - Authentication information
     - Cloudinary profile image information
     """
 
@@ -223,4 +223,8 @@ class AccountsAdmin(UserAdmin):
     # READ-ONLY FIELDS
     # --------------------------------------------------------
 
-    readonly_fields = ()
+    readonly_fields = (
+        "last_login",
+        "date_joined",
+    )
+

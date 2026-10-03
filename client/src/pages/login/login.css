@@ -1,0 +1,387 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — LOGIN (minimal blue gradient)
+   Includes "Login with Google" + divider + email form.
+   Transparent inputs, no white focus box.
+   ───────────────────────────────────────────────────────── */
+
+.yp-login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 20px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #FFFFFF;
+  background:
+    radial-gradient(circle at 15% 20%, #5B9BE0 0%, transparent 55%),
+    radial-gradient(circle at 90% 90%, #123F7A 0%, transparent 55%),
+    linear-gradient(135deg, #4A8ED6 0%, #1E5AA8 55%, #0F3B7A 100%);
+}
+
+.yp-login-card {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Avatar circle ─────────────────────────────────────── */
+.yp-login-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: #0B3B7A;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 26px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Title ─────────────────────────────────────────────── */
+.yp-login-title {
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin: 0 0 36px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Google login button ───────────────────────────────── */
+.yp-login-google {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 20px;
+  margin-bottom: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  background: #FFFFFF;
+  color: #1F2937;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.yp-login-google:hover,
+.yp-login-google:focus-visible {
+  background: #F5F7FB;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+
+.yp-login-google:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.yp-login-google svg { flex-shrink: 0; display: block; }
+.yp-login-google span { line-height: 1; }
+
+/* ── Divider ──────────────────────────────────────────── */
+.yp-login-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.yp-login-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.yp-login-divider-text {
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── Form ─────────────────────────────────────────────── */
+.yp-login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.yp-login-field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 4px 10px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.85);
+  transition: border-color 0.2s ease;
+}
+
+.yp-login-field:focus-within {
+  border-bottom-color: #FFFFFF;
+}
+
+.yp-login-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FFFFFF;
+  opacity: 0.95;
+}
+
+.yp-login-field input {
+  flex: 1;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: #FFFFFF;
+  padding: 8px 0;
+  letter-spacing: 0.3px;
+  caret-color: #FFFFFF;
+}
+
+.yp-login-field input:focus,
+.yp-login-field input:focus-visible,
+.yp-login-field input:active {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.yp-login-field input::placeholder {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+}
+
+/* ── Remember / Forgot row ─────────────────────────────── */
+.yp-login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.yp-login-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.98rem;
+  font-weight: 400;
+  color: #FFFFFF;
+  cursor: pointer;
+  user-select: none;
+}
+
+.yp-login-remember input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.yp-login-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: #FFFFFF;
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.yp-login-remember input[type='checkbox']:checked + .yp-login-check {
+  background: #0B3B7A;
+  color: #FFFFFF;
+}
+
+.yp-login-forgot {
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 400;
+  color: #FFFFFF;
+  text-decoration: none;
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
+
+.yp-login-forgot:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ── Submit button ─────────────────────────────────────── */
+.yp-login-submit {
+  margin-top: 18px;
+  width: 100%;
+  padding: 18px 24px;
+  border: none;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: #0B3B7A;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+
+.yp-login-submit:hover,
+.yp-login-submit:focus-visible {
+  background: #0F4A94;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32);
+  outline: none;
+}
+
+.yp-login-submit:active { transform: translateY(0); }
+
+/* ── Alt links ─────────────────────────────────────────── */
+.yp-login-alt {
+  text-align: center;
+  font-size: 0.98rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 8px 0 0;
+}
+
+.yp-login-alt a {
+  color: #FFFFFF;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.yp-login-alt a:hover { opacity: 0.85; }
+
+.yp-login-terms {
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+}
+
+.yp-login-terms a {
+  color: #FFFFFF;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .yp-login-page { padding: 2.5rem 18px; }
+
+  .yp-login-avatar {
+    width: 92px;
+    height: 92px;
+    margin-bottom: 22px;
+  }
+  .yp-login-avatar svg { width: 44px; height: 44px; }
+
+  .yp-login-title {
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    margin-bottom: 28px;
+  }
+
+  .yp-login-google {
+    padding: 12px 16px;
+    font-size: 0.92rem;
+    gap: 10px;
+  }
+
+  .yp-login-divider { gap: 10px; margin-bottom: 18px; }
+  .yp-login-divider-text { font-size: 0.78rem; }
+
+  .yp-login-form { gap: 22px; }
+  .yp-login-field input { font-size: 1.05rem; }
+
+  .yp-login-row { font-size: 0.92rem; }
+  .yp-login-remember,
+  .yp-login-forgot { font-size: 0.9rem; }
+  .yp-login-check { width: 18px; height: 18px; }
+
+  .yp-login-submit {
+    padding: 16px 20px;
+    letter-spacing: 3px;
+    font-size: 0.95rem;
+  }
+
+  .yp-login-alt { font-size: 0.94rem; }
+  .yp-login-terms { font-size: 0.78rem; }
+}
+
+@media (max-width: 360px) {
+  .yp-login-title {
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+  }
+  .yp-login-field input { font-size: 1rem; }
+  .yp-login-google { font-size: 0.86rem; padding: 11px 14px; }
+}
+
+.yp-login-error {
+  margin: -6px 0 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #FFFFFF;
+}
+.yp-login-google-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  min-height: 44px;
+}
+
+.yp-login-google-wrap > div {
+  width: 100% !important;
+}
+
+.yp-login-google-wrap iframe {
+  width: 100% !important;
+}
+
+.yp-login-google-loading {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}

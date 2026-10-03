@@ -6,22 +6,9 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from account.views import health_check
 
 
 urlpatterns = [
-
-    # ============================================================
-    # API ROOT / HEALTH CHECK
-    # ============================================================
-
-    path(
-        "",
-        health_check,
-        name="health_check",
-    ),
-
-
     # ============================================================
     # DJANGO ADMIN
     # ============================================================
@@ -40,6 +27,7 @@ urlpatterns = [
         "account/",
         include("account.urls"),
     ),
+
     # Subscription payment apis
     path(
     "subscription_payments/",
@@ -155,36 +143,6 @@ urlpatterns = [
     path(
         "stats/",
         include("stats.urls"),
-    ),
-
-
-    # ============================================================
-    # COMMISSIONS APIs
-    # ============================================================
-
-    path(
-        "commissions/",
-        include("commisions.urls"),
-    ),
-
-
-    # ============================================================
-    # PAYSTACK
-    # ============================================================
-
-    path(
-        "paystack/",
-        include("paystack.urls"),
-    ),
-
-
-    # ============================================================
-    # SYSTEM CONFIGURATION
-    # ============================================================
-
-    path(
-        "system-config/",
-        include("system_config.urls"),
     ),
 
 

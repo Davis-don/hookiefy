@@ -108,9 +108,7 @@ INSTALLED_APPS = [
     "paymentconfigurations",
     "UserBalance",
     "stats",
-    "commisions",
     "paystack",
-    "system_config",
     "withdrawals",
     "adverts",
 

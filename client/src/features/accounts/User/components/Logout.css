@@ -1,0 +1,80 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — LOGOUT BUTTON
+   Idle: transparent (inherits nav look)
+   Busy: solid blue background + white spinner so it's visible
+   ───────────────────────────────────────────────────────── */
+
+/* ── Base button shape ─────────────────────────────────── */
+
+.ua-sidebar-link,
+.ua-bottom-link {
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Busy (logging out) state ─────────────────────────── */
+
+/* Solid blue background so the white spinner stands out */
+.ua-sidebar-link.is-busy,
+.ua-bottom-link.is-busy {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  cursor: progress;
+  opacity: 1;
+  pointer-events: none;
+  border-radius: 10px;
+}
+
+/* Freeze hover so the button doesn't flicker while busy */
+.ua-sidebar-link.is-busy:hover,
+.ua-bottom-link.is-busy:hover {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+}
+
+/* Bottom-nav variant sits in a fixed strip — keep the same
+   radius and shape as the other bottom icons when busy */
+.ua-bottom-link.is-busy {
+  border-radius: 12px;
+}
+
+/* ── Spinner slot ─────────────────────────────────────── */
+
+/* Matches the icon slot so the swap is visually seamless */
+.ua-logout-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #FFFFFF;
+}
+
+/* Force the spinner ring to white while inside the logout
+   button, regardless of what colour the parent context
+   would otherwise inherit */
+.ua-logout-spinner .yp-spinner-ring {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  border-top-color: #FFFFFF !important;
+}
+
+/* ── Responsive tweaks ────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .ua-logout-spinner { width: 22px; height: 22px; }
+}
+
+@media (max-width: 640px) {
+  .ua-logout-spinner { width: 24px; height: 24px; }
+}
+
+@media (max-width: 480px) {
+  .ua-logout-spinner { width: 22px; height: 22px; }
+}
+
+@media (max-width: 380px) {
+  .ua-logout-spinner { width: 20px; height: 20px; }
+}

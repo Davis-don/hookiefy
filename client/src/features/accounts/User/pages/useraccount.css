@@ -1,0 +1,254 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — USER DASHBOARD
+   Instagram-style shell: desktop sidebar + mobile bottom nav
+   ───────────────────────────────────────────────────────── */
+
+.ua-shell {
+  min-height: 100vh;
+  width: 100%;
+  background: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #0F172A;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.ua-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  background: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ua-sidebar-logo {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: 1px;
+  padding: 6px 10px;
+}
+
+.ua-logo-you { color: #2563EB; }
+.ua-logo-p   { color: #10B981; }
+.ua-logo-ata { color: #F59E0B; }
+
+.ua-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+/* nav links are buttons now */
+.ua-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: #334155;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.ua-sidebar-link:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.ua-sidebar-link.is-active {
+  background: #EEF2FF;
+  color: #2563EB;
+}
+
+.ua-sidebar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ua-sidebar-label {
+  line-height: 1;
+}
+
+/* ── Main content ─────────────────────────────────────── */
+.ua-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ua-content {
+  flex: 1;
+  padding: 26px 32px 100px;
+}
+
+/* ── Header (rendered by UserHeader) ───────────────────── */
+.ua-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ua-header-greeting {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+/* ── Tab content shell ────────────────────────────────── */
+.ua-tab {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 28px 26px;
+}
+
+.ua-tab-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+}
+
+.ua-tab-text {
+  font-size: 1.02rem;
+  color: #475569;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Mobile bottom nav ────────────────────────────────── */
+.ua-bottom-nav {
+  display: none;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .ua-shell {
+    grid-template-columns: 84px 1fr;
+  }
+  .ua-sidebar {
+    padding: 18px 10px;
+    align-items: center;
+  }
+  .ua-sidebar-logo {
+    font-size: 1.4rem;
+    padding: 4px 0;
+  }
+  .ua-sidebar-link {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 6px;
+    font-size: 0.72rem;
+  }
+  .ua-content {
+    padding: 22px 22px 100px;
+  }
+  .ua-header {
+    padding: 12px 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ua-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .ua-sidebar {
+    display: none;
+  }
+
+  .ua-header {
+    padding: 12px 16px;
+  }
+
+  .ua-content {
+    padding: 18px 16px 90px;
+  }
+
+  .ua-bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -8px 20px -12px rgba(15, 23, 42, 0.15);
+  }
+
+  .ua-bottom-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #64748B;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+
+  .ua-bottom-link.is-active {
+    background: #EEF2FF;
+    color: #2563EB;
+  }
+
+  /* The "Create" tab gets a bigger, gradient accent */
+  .ua-bottom-link[aria-label="Create"] {
+    background: linear-gradient(135deg, #2563EB, #10B981);
+    color: #FFFFFF;
+    width: 54px;
+    height: 54px;
+    margin-top: -14px;
+    border-radius: 50%;
+    box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.7);
+  }
+
+  .ua-bottom-link[aria-label="Create"].is-active {
+    background: linear-gradient(135deg, #3B82F6, #059669);
+  }
+
+  .ua-tab {
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+  .ua-tab-title { font-size: 1.2rem; }
+  .ua-tab-text { font-size: 0.98rem; }
+}
+.ua-sidebar-link.ua-logout-accent {
+  color: #DC2626;
+}
+.ua-sidebar-link.ua-logout-accent:hover {
+  background: #FEF2F2;
+  color: #B91C1C;
+}

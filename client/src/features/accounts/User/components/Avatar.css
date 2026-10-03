@@ -1,0 +1,68 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — AVATAR
+   Round · gradient background · falls back to initials
+   ───────────────────────────────────────────────────────── */
+
+.ua-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.ua-avatar-sm { width: 32px; height: 32px; font-size: 0.78rem; }
+.ua-avatar-md { width: 42px; height: 42px; font-size: 0.95rem; }
+.ua-avatar-lg { width: 64px; height: 64px; font-size: 1.3rem; }
+
+.ua-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ua-avatar-initials {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* When the avatar itself is a button */
+.ua-avatar-btn {
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ua-avatar-btn:hover,
+.ua-avatar-btn:focus-visible {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.5);
+  outline: none;
+}
+
+.ua-avatar-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Responsive tweaks ─────────────────────────────────── */
+@media (max-width: 640px) {
+  .ua-avatar-md { width: 38px; height: 38px; font-size: 0.88rem; }
+}
+
+@media (max-width: 480px) {
+  .ua-avatar-md { width: 36px; height: 36px; font-size: 0.84rem; }
+}
+
+@media (max-width: 380px) {
+  .ua-avatar-md { width: 34px; height: 34px; font-size: 0.8rem; }
+}
