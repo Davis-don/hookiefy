@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import MyBusiness from './Business';
-import MyStories from './MyStories';
+import MyBusiness from '../../../businesses/components/MyBusiness';
+import MyStories from '../../../stories/components/MyStories';
 import './add.css';
 
 type TabKey = 'business' | 'stories';

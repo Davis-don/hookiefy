@@ -1,4 +1,4 @@
-
+import './mystories.css'
 
 function MyStories() {
   return (

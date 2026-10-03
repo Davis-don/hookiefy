@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import UserHeader from '../components/UserHeader';
 import HomeTab from '../components/Home';
-import StoriesTab from '../components/Stories';
+import StoriesTab from '../components/StoriesTab';
 import AddTab from '../components/Add';
 import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
