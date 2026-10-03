@@ -1,41 +1,11 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+
 import { useAuthStore } from '../../../store/authStore';
 import { Spinner } from '../../../components/spinner/Spinner';
+import { fetchMyBusinesses, type Business } from '../api/businessApi';
+import Currentbusiness from './Currentbusiness';
 import './allbusinesses.css';
-
-type BusinessItem = {
-  id: number;
-  kind: 'service' | 'offer' | 'product' | 'location';
-  title: string;
-  description: string;
-  status?: 'active' | 'draft' | 'paused';
-  price?: number;
-};
-
-const API_BASE =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-async function fetchBusinesses(token: string | null): Promise<BusinessItem[]> {
-  if (!token) return [];
-
-  const res = await fetch(`${API_BASE}/services/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) throw new Error('Could not load your businesses.');
-
-  const data = await res.json();
-  const list = Array.isArray(data) ? data : data.results ?? [];
-
-  return list.map((row: any) => ({
-    id: row.id,
-    kind: row.kind ?? 'service',
-    title: row.title ?? row.name ?? 'Untitled',
-    description: row.description ?? '',
-    status: row.status ?? 'active',
-    price: row.price,
-  }));
-}
 
 type AllbusinessesProps = {
   onAdd?: () => void;
@@ -43,13 +13,29 @@ type AllbusinessesProps = {
 
 function Allbusinesses({ onAdd }: AllbusinessesProps) {
   const access = useAuthStore((s) => s.access);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { data: items = [], isLoading, isError, error } = useQuery({
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['business-items', access],
-    queryFn: () => fetchBusinesses(access),
+    queryFn: () => fetchMyBusinesses(access),
     enabled: !!access,
     staleTime: 30_000,
   });
+
+  // ── Detail view replaces the table ─────────────────────
+  if (selectedId !== null) {
+    return (
+      <Currentbusiness
+        businessId={selectedId}
+        onBack={() => setSelectedId(null)}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -72,7 +58,7 @@ function Allbusinesses({ onAdd }: AllbusinessesProps) {
       <div className="ab-empty">
         <p className="ab-empty-title">No businesses yet</p>
         <p className="ab-empty-sub">
-          Add your first service, offer, or product so customers can find you.
+          Add your first business so customers can find you.
         </p>
         {onAdd && (
           <button type="button" className="ab-empty-btn" onClick={onAdd}>
@@ -84,42 +70,63 @@ function Allbusinesses({ onAdd }: AllbusinessesProps) {
   }
 
   return (
-    <ul className="ab-list">
-      {items.map((item) => (
-        <li key={item.id} className="ab-item">
-          <div className="ab-item-main">
-            <span className={`ab-item-badge ab-item-badge-${item.kind}`}>
-              {item.kind}
-            </span>
-            <h4 className="ab-item-title">{item.title}</h4>
-            {item.description && (
-              <p className="ab-item-desc">{item.description}</p>
-            )}
-            <div className="ab-item-meta">
-              {item.status && (
-                <span className={`ab-item-status is-${item.status}`}>
-                  {item.status}
-                </span>
-              )}
-              {typeof item.price === 'number' && (
-                <span className="ab-item-price">
-                  KES {item.price.toLocaleString()}
-                </span>
-              )}
-            </div>
-          </div>
+    <div className="ab-table-scroll">
+      <table className="ab-table">
+        <thead>
+          <tr>
+            <th className="ab-col-name">Business name</th>
+            <th className="ab-col-cat">Category</th>
+            <th className="ab-col-type">Type</th>
+            <th className="ab-col-status">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((b: Business) => {
+            // Normalise the status so the CSS class always matches,
+            // regardless of case coming back from the API.
+            const statusKey = String(b.status || 'active')
+              .toLowerCase()
+              .trim();
 
-          <div className="ab-item-actions">
-            <button type="button" className="ab-item-btn ab-item-btn-edit">
-              Edit
-            </button>
-            <button type="button" className="ab-item-btn ab-item-btn-delete">
-              Delete
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
+            return (
+              <tr
+                key={b.id}
+                className="ab-row"
+                onClick={() => setSelectedId(b.id)}
+                tabIndex={0}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedId(b.id);
+                  }
+                }}
+              >
+                <td className="ab-cell ab-cell-name">
+                  {b.business_name || '—'}
+                </td>
+
+                <td className="ab-cell">
+                  <span className={`ab-pill ab-pill-${b.business_category}`}>
+                    {b.business_category_display}
+                  </span>
+                </td>
+
+                <td className="ab-cell ab-cell-type">
+                  {b.business_type || '—'}
+                </td>
+
+                <td className="ab-cell">
+                  <span className={`ab-status ab-status-${statusKey}`}>
+                    {b.status_display || b.status || 'Unknown'}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

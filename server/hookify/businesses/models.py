@@ -52,9 +52,6 @@ class Businesses(models.Model):
 
     # --------------------------------------------------------
     # DESCRIPTION
-    # Default "" so migrations don't need to ask for a value on
-    # existing rows. Blank is allowed at the serializer level only
-    # when it's optional; here the frontend enforces non-empty.
     # --------------------------------------------------------
 
     description = models.TextField(
@@ -81,6 +78,25 @@ class Businesses(models.Model):
     )
 
     # --------------------------------------------------------
+    # STATUS
+    # --------------------------------------------------------
+
+    STATUS_CHOICES = (
+        ("active",    "Active"),
+        ("paused",    "Paused"),
+        ("draft",     "Draft"),
+        ("closed",    "Closed"),
+        ("suspended", "Suspended"),
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="active",
+        help_text="Current lifecycle state of the business.",
+    )
+
+    # --------------------------------------------------------
     # TIMESTAMPS
     # --------------------------------------------------------
 
@@ -104,6 +120,7 @@ class Businesses(models.Model):
             models.Index(fields=("owner",)),
             models.Index(fields=("business_category",)),
             models.Index(fields=("county", "city_town")),
+            models.Index(fields=("status",)),
         )
 
     # --------------------------------------------------------
@@ -112,3 +129,27 @@ class Businesses(models.Model):
 
     def __str__(self):
         return f"{self.business_name} ({self.get_business_category_display()})"
+
+    # --------------------------------------------------------
+    # STATUS HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def is_active(self):
+        return self.status == "active"
+
+    @property
+    def is_paused(self):
+        return self.status == "paused"
+
+    @property
+    def is_closed(self):
+        return self.status == "closed"
+
+    @property
+    def is_suspended(self):
+        return self.status == "suspended"
+
+    @property
+    def status_display(self):
+        return self.get_status_display()

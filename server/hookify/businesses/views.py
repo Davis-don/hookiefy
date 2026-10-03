@@ -47,11 +47,24 @@ def create_business(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_my_businesses(request):
+    """
+    List every business owned by the authenticated user,
+    regardless of status.
+
+    Optional query params:
+        ?status=active|paused|draft|closed|suspended
+    """
+
     qs = (
         Businesses.objects
         .filter(owner=request.user)
         .order_by("-created_at")
     )
+
+    status_filter = request.query_params.get("status")
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+
     serializer = BusinessSerializer(qs, many=True)
 
     return Response(
@@ -70,7 +83,23 @@ def list_my_businesses(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_all_businesses(request):
+    """
+    Public marketplace listing. By default, only ACTIVE businesses
+    are returned. Pass ?status=... to override, or ?status=all to
+    see every status.
+
+    Optional query params:
+        ?category=goods|services
+        ?county=Nairobi
+        ?region=Kasuku
+        ?status=active|paused|draft|closed|suspended|all
+    """
+
     qs = Businesses.objects.all().order_by("-created_at")
+
+    status_filter = request.query_params.get("status", "active")
+    if status_filter and status_filter != "all":
+        qs = qs.filter(status=status_filter)
 
     category = request.query_params.get("category")
     county = request.query_params.get("county")
@@ -156,6 +185,51 @@ def update_business(request, business_id):
     return Response(
         {
             "message": "Business updated successfully.",
+            "business": BusinessSerializer(business).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# UPDATE STATUS — PATCH /businesses/<id>/status/
+# ============================================================
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_business_status(request, business_id):
+    """
+    Change only the status of a business owned by the user.
+    Body: { "status": "active" | "paused" | "draft" | "closed" | "suspended" }
+    """
+
+    business = (
+        Businesses.objects
+        .filter(id=business_id, owner=request.user)
+        .first()
+    )
+
+    if business is None:
+        return Response(
+            {"message": "Business not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    new_status = request.data.get("status")
+
+    valid = {choice[0] for choice in Businesses.STATUS_CHOICES}
+    if new_status not in valid:
+        return Response(
+            {"message": f"Status must be one of: {', '.join(sorted(valid))}."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    business.status = new_status
+    business.save(update_fields=["status", "updated_at"])
+
+    return Response(
+        {
+            "message": "Business status updated.",
             "business": BusinessSerializer(business).data,
         },
         status=status.HTTP_200_OK,

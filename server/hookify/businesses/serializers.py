@@ -23,6 +23,10 @@ class BusinessSerializer(serializers.ModelSerializer):
         source="get_business_category_display",
         read_only=True,
     )
+    status_display = serializers.CharField(
+        source="get_status_display",
+        read_only=True,
+    )
 
     class Meta:
         model = Businesses
@@ -39,6 +43,8 @@ class BusinessSerializer(serializers.ModelSerializer):
             "county",
             "city_town",
             "region",
+            "status",
+            "status_display",
             "created_at",
             "updated_at",
         )
@@ -51,7 +57,8 @@ class BusinessSerializer(serializers.ModelSerializer):
 
 class BusinessCreateSerializer(serializers.ModelSerializer):
     """
-    All fields required. Owner comes from the request.
+    Create serializer — owner comes from the request.
+    Status is optional; defaults to "active" from the model.
     """
 
     class Meta:
@@ -64,7 +71,11 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
             "county",
             "city_town",
             "region",
+            "status",
         )
+        extra_kwargs = {
+            "status": {"required": False},
+        }
 
     def validate_business_name(self, value):
         value = (value or "").strip()
@@ -109,8 +120,20 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Region cannot be empty.")
         return value
 
+    def validate_status(self, value):
+        if value in (None, ""):
+            return "active"
+        valid = {choice[0] for choice in Businesses.STATUS_CHOICES}
+        if value not in valid:
+            raise serializers.ValidationError(
+                f"Status must be one of: {', '.join(sorted(valid))}."
+            )
+        return value
+
     def create(self, validated_data):
         validated_data["owner"] = self.context["request"].user
+        # Default status if the client didn't send one
+        validated_data.setdefault("status", "active")
         return Businesses.objects.create(**validated_data)
 
 
@@ -121,6 +144,8 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
 class BusinessUpdateSerializer(serializers.ModelSerializer):
     """
     Update serializer — ownership cannot be changed.
+    Everything is optional; status changes are validated against
+    the model's choices.
     """
 
     class Meta:
@@ -133,4 +158,23 @@ class BusinessUpdateSerializer(serializers.ModelSerializer):
             "county",
             "city_town",
             "region",
+            "status",
         )
+        extra_kwargs = {
+            "status": {"required": False},
+        }
+
+    def validate_business_category(self, value):
+        if value not in ("goods", "services"):
+            raise serializers.ValidationError(
+                "Category must be 'goods' or 'services'."
+            )
+        return value
+
+    def validate_status(self, value):
+        valid = {choice[0] for choice in Businesses.STATUS_CHOICES}
+        if value not in valid:
+            raise serializers.ValidationError(
+                f"Status must be one of: {', '.join(sorted(valid))}."
+            )
+        return value
