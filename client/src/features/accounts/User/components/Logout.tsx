@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../../store/authStore';
 import { useToast } from '../../../../components/toast/ToastContext';
-import { Spinner } from '../../../../components/spinner/Spinner';
 import './Logout.css';
 
 const API_BASE =
@@ -24,7 +23,7 @@ async function logoutRequest(refresh: string | null): Promise<void> {
 }
 
 type LogoutProps = {
-  /** Visual variant — matches the sidebar vs. bottom nav shapes. */
+  /** Optional icon size/visual variant, matches sidebar + bottom-nav shapes */
   variant?: 'sidebar' | 'bottom';
 };
 
@@ -43,14 +42,12 @@ function Logout({ variant = 'sidebar' }: LogoutProps) {
     },
   });
 
-  const busy = logoutMutation.isPending;
-
   const handleLogout = () => {
-    if (busy) return;
+    if (logoutMutation.isPending) return;
     logoutMutation.mutate();
   };
 
-  const logoutIcon = (
+  const icon = (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
       strokeLinejoin="round" aria-hidden="true">
@@ -60,48 +57,30 @@ function Logout({ variant = 'sidebar' }: LogoutProps) {
     </svg>
   );
 
-  // ── Mobile bottom nav variant ────────────────────────
   if (variant === 'bottom') {
     return (
       <button
         type="button"
-        className={'ua-bottom-link' + (busy ? ' is-busy' : '')}
+        className="ua-bottom-link"
         onClick={handleLogout}
-        aria-label={busy ? 'Logging out' : 'Log out'}
-        aria-busy={busy}
-        disabled={busy}
+        aria-label="Log out"
+        disabled={logoutMutation.isPending}
       >
-        {busy ? (
-          <span className="ua-logout-spinner">
-            <Spinner size={20} />
-          </span>
-        ) : (
-          logoutIcon
-        )}
+        {icon}
       </button>
     );
   }
 
-  // ── Sidebar variant ──────────────────────────────────
   return (
     <button
       type="button"
-      className={'ua-sidebar-link' + (busy ? ' is-busy' : '')}
+      className="ua-sidebar-link"
       onClick={handleLogout}
-      aria-busy={busy}
-      disabled={busy}
+      disabled={logoutMutation.isPending}
     >
-      <span className="ua-sidebar-icon">
-        {busy ? (
-          <span className="ua-logout-spinner">
-            <Spinner size={20} />
-          </span>
-        ) : (
-          logoutIcon
-        )}
-      </span>
+      <span className="ua-sidebar-icon">{icon}</span>
       <span className="ua-sidebar-label">
-        {busy ? 'Logging out…' : 'Log out'}
+        {logoutMutation.isPending ? 'Logging out…' : 'Log out'}
       </span>
     </button>
   );

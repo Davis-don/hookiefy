@@ -1,7 +1,15 @@
 /* ─────────────────────────────────────────────────────────
-   YOUPATA — REGISTER (minimal blue gradient, step-based)
-   Includes "Sign up with Google" + divider + email form.
+   YOUPATA — REGISTER
+   All rules are scoped to .yp-register-* so nothing leaks out.
+   No global selectors, no universal resets.
    ───────────────────────────────────────────────────────── */
+
+.yp-register-page,
+.yp-register-page *,
+.yp-register-page *::before,
+.yp-register-page *::after {
+  box-sizing: border-box;
+}
 
 .yp-register-page {
   min-height: 100vh;
@@ -16,17 +24,19 @@
     radial-gradient(circle at 15% 20%, #5B9BE0 0%, transparent 55%),
     radial-gradient(circle at 90% 90%, #123F7A 0%, transparent 55%),
     linear-gradient(135deg, #4A8ED6 0%, #1E5AA8 55%, #0F3B7A 100%);
+  overflow-x: hidden;
 }
 
 .yp-register-card {
   width: 100%;
   max-width: 460px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* ── Avatar circle ─────────────────────────────────────── */
+/* ── Avatar ───────────────────────────────────────────── */
 .yp-register-avatar {
   width: 100px;
   height: 100px;
@@ -38,9 +48,10 @@
   justify-content: center;
   margin-bottom: 22px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
 }
 
-/* ── Title ─────────────────────────────────────────────── */
+/* ── Title ────────────────────────────────────────────── */
 .yp-register-title {
   font-size: 1.65rem;
   font-weight: 300;
@@ -50,9 +61,10 @@
   margin: 0 0 18px;
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  word-break: break-word;
 }
 
-/* ── Step dots ─────────────────────────────────────────── */
+/* ── Step dots ────────────────────────────────────────── */
 .yp-register-steps {
   display: flex;
   align-items: center;
@@ -78,46 +90,47 @@
   background: rgba(255, 255, 255, 0.75);
 }
 
-/* ── Google sign-up button ─────────────────────────────── */
-.yp-register-google {
+/* ─────────────────────────────────────────────────────────
+   GOOGLE SIGN-UP
+   Google renders an iframe at a fixed width. Do NOT force it
+   to 100% — Google hides its own logo below ~200px. Let it
+   sit at natural size, center it, and scale down only via
+   transform on very small screens.
+   ───────────────────────────────────────────────────────── */
+
+.yp-register-google-wrap {
   width: 100%;
-  display: inline-flex;
-  align-items: center;
+  display: flex;
   justify-content: center;
-  gap: 12px;
-  padding: 13px 20px;
-  margin-bottom: 16px;
+  align-items: center;
+  margin: 0 0 16px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.yp-register-google-wrap > div {
+  display: flex !important;
+  justify-content: center !important;
+  max-width: 100%;
+}
+
+.yp-register-google-wrap iframe {
+  display: block !important;
+  max-width: 100% !important;
+  border: none !important;
+}
+
+.yp-register-google-loading {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
   border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 2px;
-  background: #FFFFFF;
-  color: #1F2937;
-  font-family: inherit;
-  font-size: 0.98rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.12);
 }
-
-.yp-register-google:hover,
-.yp-register-google:focus-visible {
-  background: #F5F7FB;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
-  outline: none;
-}
-
-.yp-register-google:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.yp-register-google svg { flex-shrink: 0; display: block; }
-.yp-register-google span { line-height: 1; }
 
 /* ── Divider ──────────────────────────────────────────── */
 .yp-register-divider {
@@ -144,6 +157,7 @@
 /* ── Form ─────────────────────────────────────────────── */
 .yp-register-form {
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -156,6 +170,7 @@
   padding: 6px 4px 10px;
   border-bottom: 1.5px solid rgba(255, 255, 255, 0.85);
   transition: border-color 0.2s ease;
+  min-width: 0;
 }
 
 .yp-register-field:focus-within {
@@ -171,10 +186,11 @@
   opacity: 0.95;
 }
 
-/* Transparent inputs — no white box, no browser outline */
 .yp-register-field input,
 .yp-register-field .yp-register-select {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   background: transparent !important;
   border: none !important;
   outline: none !important;
@@ -188,6 +204,7 @@
   padding: 10px 0;
   letter-spacing: 0.3px;
   caret-color: #FFFFFF;
+  text-overflow: ellipsis;
 }
 
 .yp-register-field input:focus,
@@ -203,14 +220,13 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Native select option colours */
 .yp-register-select { cursor: pointer; }
 .yp-register-select option {
   color: #0F172A;
   background: #FFFFFF;
 }
 
-/* ── Error message ─────────────────────────────────────── */
+/* ── Error ───────────────────────────────────────────── */
 .yp-register-error {
   margin: -6px 0 0;
   padding: 10px 14px;
@@ -219,14 +235,16 @@
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #FFFFFF;
+  word-break: break-word;
 }
 
-/* ── Buttons row ───────────────────────────────────────── */
+/* ── Buttons row ──────────────────────────────────────── */
 .yp-register-actions {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-top: 12px;
+  min-width: 0;
 }
 
 .yp-register-back {
@@ -253,6 +271,7 @@
 
 .yp-register-submit {
   flex: 1;
+  min-width: 0;
   padding: 18px 24px;
   border: none;
   border-radius: 2px;
@@ -266,6 +285,9 @@
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .yp-register-submit:hover,
@@ -278,7 +300,7 @@
 
 .yp-register-submit:active { transform: translateY(0); }
 
-/* ── Alt links ─────────────────────────────────────────── */
+/* ── Alt links ───────────────────────────────────────── */
 .yp-register-alt {
   text-align: center;
   font-size: 0.98rem;
@@ -308,16 +330,18 @@
   text-decoration: underline;
 }
 
-/* ── Responsive ────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
 
-@media (max-width: 520px) {
-  .yp-register-page { padding: 2.5rem 18px; }
-
-  .yp-register-avatar {
-    width: 88px;
-    height: 88px;
-    margin-bottom: 18px;
+@media (max-width: 640px) {
+  .yp-register-page {
+    padding: 2.5rem 16px;
+    align-items: flex-start;
   }
+  .yp-register-card { max-width: 100%; }
+
+  .yp-register-avatar { width: 90px; height: 90px; margin-bottom: 18px; }
   .yp-register-avatar svg { width: 44px; height: 44px; }
 
   .yp-register-title {
@@ -329,16 +353,11 @@
   .yp-register-steps { gap: 8px; margin-bottom: 22px; }
   .yp-register-step-dot { width: 9px; height: 9px; }
 
-  .yp-register-google {
-    padding: 12px 16px;
-    font-size: 0.92rem;
-    gap: 10px;
-  }
-
   .yp-register-divider { gap: 10px; margin-bottom: 18px; }
   .yp-register-divider-text { font-size: 0.78rem; }
 
   .yp-register-form { gap: 18px; }
+  .yp-register-field { gap: 12px; padding: 4px 2px 8px; }
   .yp-register-field input,
   .yp-register-field .yp-register-select { font-size: 1rem; }
 
@@ -357,42 +376,107 @@
   .yp-register-terms { font-size: 0.78rem; }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 480px) {
+  .yp-register-page { padding: 2rem 14px; }
+
+  .yp-register-avatar { width: 80px; height: 80px; margin-bottom: 16px; }
+  .yp-register-avatar svg { width: 40px; height: 40px; }
+
   .yp-register-title {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     letter-spacing: 4px;
+    margin-bottom: 14px;
   }
+
+  .yp-register-steps { gap: 7px; margin-bottom: 18px; }
+  .yp-register-divider { margin-bottom: 16px; }
+
+  .yp-register-form { gap: 16px; }
+  .yp-register-field { gap: 10px; padding: 4px 0 8px; }
+  .yp-register-icon svg { width: 18px; height: 18px; }
+  .yp-register-field input,
+  .yp-register-field .yp-register-select { font-size: 0.98rem; }
+
+  .yp-register-actions { gap: 10px; }
+  .yp-register-back {
+    padding: 13px 14px;
+    font-size: 0.82rem;
+    letter-spacing: 1.2px;
+  }
+  .yp-register-submit {
+    padding: 15px 16px;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+  }
+
+  .yp-register-alt { font-size: 0.9rem; }
+  .yp-register-terms { font-size: 0.74rem; }
+}
+
+@media (max-width: 380px) {
+  .yp-register-page { padding: 1.75rem 12px; }
+
+  .yp-register-avatar { width: 72px; height: 72px; margin-bottom: 14px; }
+  .yp-register-avatar svg { width: 36px; height: 36px; }
+
+  .yp-register-title {
+    font-size: 1.08rem;
+    letter-spacing: 3px;
+  }
+
+  .yp-register-steps { margin-bottom: 16px; }
+  .yp-register-divider { gap: 8px; margin-bottom: 14px; }
+  .yp-register-divider-text { font-size: 0.72rem; }
+
+  .yp-register-google-wrap iframe {
+    transform: scale(0.92);
+    transform-origin: center center;
+  }
+
   .yp-register-actions { gap: 8px; }
   .yp-register-back {
     padding: 12px 12px;
-    font-size: 0.8rem;
-    letter-spacing: 1.2px;
+    font-size: 0.78rem;
+    letter-spacing: 1px;
   }
-  .yp-register-google { font-size: 0.86rem; padding: 11px 14px; }
-}
-.yp-register-google-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-  min-height: 44px;
+  .yp-register-submit {
+    padding: 14px 14px;
+    letter-spacing: 1.5px;
+    font-size: 0.85rem;
+  }
+
+  .yp-register-alt { font-size: 0.86rem; }
+  .yp-register-terms { font-size: 0.72rem; }
 }
 
-.yp-register-google-wrap > div {
-  width: 100% !important;
-}
+@media (max-width: 320px) {
+  .yp-register-page { padding: 1.5rem 10px; }
 
-.yp-register-google-wrap iframe {
-  width: 100% !important;
-}
+  .yp-register-title { font-size: 1rem; letter-spacing: 2px; }
 
-.yp-register-google-loading {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  .yp-register-google-wrap iframe {
+    transform: scale(0.86);
+    transform-origin: center center;
+  }
+
+  .yp-register-submit {
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+    padding: 13px 10px;
+  }
+  .yp-register-back {
+    padding: 11px 10px;
+    font-size: 0.74rem;
+  }
+
+  .yp-register-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .yp-register-back,
+  .yp-register-submit {
+    width: 100%;
+    flex: initial;
+  }
 }

@@ -113,7 +113,7 @@ function Login() {
               useOneTap={false}
               theme="outline"
               size="large"
-              width="380"
+              width="300"
               text="signin_with"
               shape="rectangular"
             />

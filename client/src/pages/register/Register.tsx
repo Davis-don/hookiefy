@@ -55,7 +55,7 @@ function Register() {
     },
   });
 
-  // Google signup (same backend endpoint — it creates or links the account)
+  // Google signup — same backend endpoint creates or links the account
   const googleMutation = useMutation({
     mutationFn: (idToken: string) => googleAuth(idToken),
     onSuccess: (res) => {
@@ -162,7 +162,7 @@ function Register() {
               useOneTap={false}
               theme="outline"
               size="large"
-              width="380"
+              width="300"
               text="signup_with"
               shape="rectangular"
             />
@@ -176,6 +176,7 @@ function Register() {
         </div>
 
         <form className="yp-register-form" onSubmit={handleSubmit} noValidate>
+
           {step === 1 && (
             <>
               <div className="yp-register-field">
