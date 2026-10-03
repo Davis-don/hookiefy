@@ -59,12 +59,14 @@ const BillingIcon = () => (
 );
 
 function Useraccount() {
+  // Home stays the default active tab.
   const [active, setActive] = useState<TabKey>('home');
 
+  // Home → Stories → Business (center, primary) → Billing
   const navItems: NavItem[] = [
-    { key: 'business', label: 'Business', icon: <BusinessIcon /> },
+    { key: 'home',     label: 'Home',     icon: <HomeIcon /> },
     { key: 'stories',  label: 'Stories',  icon: <StoriesIcon /> },
-    { key: 'home',     label: 'Home',     icon: <HomeIcon />, primary: true },
+    { key: 'business', label: 'Business', icon: <BusinessIcon />, primary: true },
     { key: 'billing',  label: 'Billing',  icon: <BillingIcon /> },
   ];
 
