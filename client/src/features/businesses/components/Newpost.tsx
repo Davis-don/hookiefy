@@ -1,13 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
 import { useToast } from '../../../components/toast/ToastContext';
 import { Spinner } from '../../../components/spinner/Spinner';
+import { createPost, type PostPayload } from '../api/postsApi';
 import './newpost.css';
-
-const API_BASE =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 type NewpostProps = {
   businessId: number;
@@ -15,72 +13,36 @@ type NewpostProps = {
   onCreated?: () => void;
 };
 
-type PostType = 'update' | 'offer' | 'announcement' | 'event';
-
 type FormState = {
-  postType: PostType;
   title: string;
   body: string;
-  isPinned: boolean;
+  imageFile: File | null;
 };
 
 const initialState: FormState = {
-  postType: 'update',
   title: '',
   body: '',
-  isPinned: false,
+  imageFile: null,
 };
 
-async function createPost(
-  token: string | null,
-  businessId: number,
-  payload: FormState
-): Promise<{ message?: string }> {
-  if (!token) throw new Error('Not authenticated.');
-
-  const res = await fetch(`${API_BASE}/businesses/${businessId}/posts/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      post_type: payload.postType,
-      title: payload.title,
-      body: payload.body,
-      is_pinned: payload.isPinned,
-    }),
-  });
-
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
-  if (!res.ok) {
-    let message = 'Could not publish this post.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-      else {
-        const firstKey = Object.keys(data)[0];
-        if (firstKey && Array.isArray(data[firstKey])) {
-          message = `${firstKey}: ${data[firstKey][0]}`;
-        }
-      }
-    }
-    throw new Error(message);
-  }
-
-  return (data ?? { message: 'Published.' }) as { message?: string };
-}
-
-function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
+function Newpost({
+  businessId,
+  businessName,
+  onCreated,
+}: NewpostProps) {
   const toast = useToast();
   const access = useAuthStore((s) => s.access);
   const queryClient = useQueryClient();
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [form, setForm] = useState<FormState>(initialState);
   const [error, setError] = useState<string>('');
+
+  const previewUrl = useMemo(() => {
+    if (!form.imageFile) return null;
+    return URL.createObjectURL(form.imageFile);
+  }, [form.imageFile]);
 
   const update = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -88,13 +50,16 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
   };
 
   const mutation = useMutation({
-    mutationFn: (payload: FormState) =>
+    mutationFn: (payload: PostPayload) =>
       createPost(access, businessId, payload),
 
     onSuccess: (res) => {
       toast.success(res.message || 'Post published.');
-      queryClient.invalidateQueries({ queryKey: ['business-posts', businessId] });
+      queryClient.invalidateQueries({
+        queryKey: ['business-posts', businessId],
+      });
       setForm(initialState);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       onCreated?.();
     },
 
@@ -102,6 +67,31 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
       toast.error(err?.message || 'Could not publish this post.');
     },
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type)) {
+      setError('Please choose a JPG, PNG, WEBP or GIF image.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError('Image must be under 8 MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, imageFile: file }));
+    setError('');
+  };
+
+  const clearImage = () => {
+    setForm((prev) => ({ ...prev, imageFile: null }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -111,23 +101,16 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
     if (!form.body.trim()) return setError('Please write something.');
     if (form.body.trim().length < 10)
       return setError('Your post is a bit short — say a little more.');
+    if (!form.imageFile) return setError('Please attach an image.');
 
     mutation.mutate({
-      postType: form.postType,
       title: form.title.trim(),
       body: form.body.trim(),
-      isPinned: form.isPinned,
+      imageFile: form.imageFile,
     });
   };
 
   const busy = mutation.isPending;
-
-  const postTypes: { key: PostType; label: string; icon: string }[] = [
-    { key: 'update',       label: 'Update',       icon: '📝' },
-    { key: 'offer',        label: 'Offer',        icon: '🏷️' },
-    { key: 'announcement', label: 'Announcement', icon: '📣' },
-    { key: 'event',        label: 'Event',        icon: '📅' },
-  ];
 
   return (
     <div className="np-shell">
@@ -135,35 +118,13 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
       <div className="np-header">
         <h2 className="np-title">Add a post</h2>
         <p className="np-sub">
-          Share an update, offer, or announcement with the people who follow{' '}
+          Share an update with the people who follow{' '}
           {businessName || 'this business'}.
         </p>
       </div>
 
       {/* ── Form ───────────────────────────────────── */}
       <form className="np-form" onSubmit={handleSubmit} noValidate>
-        {/* Post type tiles */}
-        <div className="np-field">
-          <label className="np-label">What kind of post is this?</label>
-          <div className="np-type-grid">
-            {postTypes.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                className={
-                  'np-type-tile' +
-                  (form.postType === t.key ? ' is-selected' : '')
-                }
-                onClick={() => update('postType', t.key)}
-                disabled={busy}
-              >
-                <span className="np-type-icon">{t.icon}</span>
-                <span className="np-type-label">{t.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Title */}
         <div className="np-field">
           <label className="np-label" htmlFor="np-title">Title</label>
@@ -174,10 +135,10 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
             placeholder="e.g. Weekend promo — 20% off all services"
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
-            maxLength={120}
+            maxLength={200}
             disabled={busy}
           />
-          <span className="np-counter">{form.title.length} / 120</span>
+          <span className="np-counter">{form.title.length} / 200</span>
         </div>
 
         {/* Body */}
@@ -196,25 +157,67 @@ function Newpost({ businessId, businessName, onCreated }: NewpostProps) {
           <span className="np-counter">{form.body.length} / 1000</span>
         </div>
 
-        {/* Pin toggle */}
-        <label className="np-check">
-          <input
-            type="checkbox"
-            checked={form.isPinned}
-            onChange={(e) => update('isPinned', e.target.checked)}
-            disabled={busy}
-          />
-          <span className="np-check-box" aria-hidden="true">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="3.4" strokeLinecap="round"
-              strokeLinejoin="round">
-              <polyline points="4 12 10 18 20 6" />
-            </svg>
-          </span>
-          <span className="np-check-text">
-            Pin this post to the top of the business page
-          </span>
-        </label>
+        {/* Image upload — required */}
+        <div className="np-field">
+          <label className="np-label" htmlFor="np-image">
+            Image <span className="np-required">*</span>
+          </label>
+
+          {!form.imageFile ? (
+            <div className="np-upload">
+              <input
+                id="np-image"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleImageChange}
+                disabled={busy}
+                className="np-upload-input"
+              />
+              <span className="np-upload-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                  strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+              </span>
+              <span className="np-upload-text">
+                Click to choose an image
+              </span>
+              <span className="np-upload-sub">
+                JPG, PNG, WEBP or GIF · up to 8 MB
+              </span>
+            </div>
+          ) : (
+            <div className="np-preview">
+              {previewUrl && (
+                <img
+                  src={previewUrl}
+                  alt="Selected"
+                  className="np-preview-img"
+                />
+              )}
+              <div className="np-preview-meta">
+                <span className="np-preview-name">
+                  {form.imageFile.name}
+                </span>
+                <span className="np-preview-size">
+                  {(form.imageFile.size / 1024).toFixed(0)} KB
+                </span>
+                <button
+                  type="button"
+                  className="np-preview-remove"
+                  onClick={clearImage}
+                  disabled={busy}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {error && <p className="np-error">{error}</p>}
 
