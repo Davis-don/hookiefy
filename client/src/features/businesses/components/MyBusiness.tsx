@@ -1,64 +1,74 @@
 import { useState } from 'react';
 import Allbusinesses from './Allbusinesses';
 import AddBusiness from './AddBusiness';
+import { useProfileStatus } from '../../../features/accounts/hooks/useProfileStatus';
+import Confirmprofilecomplete from '../../accounts/User/components/Confirmprofilecomplete';
 import './mybusiness.css';
 
 type View = 'list' | 'add';
 
-function MyBusiness() {
+type MyBusinessProps = {
+  /** Called when the user clicks "Complete now" on the profile banner. */
+  onGoToProfile?: () => void;
+};
+
+function MyBusiness({ onGoToProfile }: MyBusinessProps) {
   const [view, setView] = useState<View>('list');
 
+  const goToAdd = () => setView('add');
+  const goToList = () => setView('list');
+
+  const { data: status, isLoading } = useProfileStatus();
+
+  // Required field(s) missing → hard block.
+  const requiredMissing =
+    !isLoading &&
+    status !== undefined &&
+    status.is_complete === false;
+
+  // ── Hard block: only the confirm banner is visible ──────
+  if (requiredMissing) {
+    return (
+      <div className="mb-shell mb-shell-locked">
+        <Confirmprofilecomplete
+          missingLabels={status.missing_labels}
+          completionPercent={status.completion_percent}
+          onComplete={() => onGoToProfile?.()}
+        />
+      </div>
+    );
+  }
+
+  // ── Normal view: list + FAB, or the add form ────────────
   return (
     <div className="mb-shell">
-      {/* ── Segmented switcher ──────────────────────── */}
-      <div className="mb-switch" role="tablist" aria-label="Business view">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'list'}
-          className={'mb-switch-btn' + (view === 'list' ? ' is-active' : '')}
-          onClick={() => setView('list')}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7" rx="1.6" />
-            <rect x="14" y="3" width="7" height="7" rx="1.6" />
-            <rect x="3" y="14" width="7" height="7" rx="1.6" />
-            <rect x="14" y="14" width="7" height="7" rx="1.6" />
-          </svg>
-          <span>All Businesses</span>
-        </button>
+      <div className="mb-content">
+        {view === 'list' && <Allbusinesses onAdd={goToAdd} />}
 
+        {view === 'add' && (
+          <AddBusiness
+            onCancel={goToList}
+            onCreated={goToList}
+          />
+        )}
+      </div>
+
+      {view === 'list' && (
         <button
           type="button"
-          role="tab"
-          aria-selected={view === 'add'}
-          className={'mb-switch-btn' + (view === 'add' ? ' is-active' : '')}
-          onClick={() => setView('add')}
+          className="mb-fab"
+          onClick={goToAdd}
+          aria-label="Add a new business"
+          title="Add business"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
             strokeLinejoin="round" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span>Add</span>
         </button>
-      </div>
-
-      {/* ── Content ─────────────────────────────────── */}
-      <div className="mb-content">
-        {view === 'list' && (
-          <Allbusinesses onAdd={() => setView('add')} />
-        )}
-        {view === 'add' && (
-          <AddBusiness
-            onCancel={() => setView('list')}
-            onCreated={() => setView('list')}
-          />
-        )}
-      </div>
+      )}
     </div>
   );
 }

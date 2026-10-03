@@ -3,19 +3,21 @@ import { useState } from 'react';
 import UserHeader from '../components/UserHeader';
 import HomeTab from '../components/Home';
 import StoriesTab from '../components/StoriesTab';
-import AddTab from '../components/Add';
+import MyBusiness from '../../../businesses/components/MyBusiness';
 import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
 import Logout from '../components/Logout';
 
 import './useraccount.css';
 
-type TabKey = 'home' | 'stories' | 'add' | 'profile' | 'billing';
+type TabKey = 'home' | 'stories' | 'business' | 'profile' | 'billing';
 
 type NavItem = {
   key: TabKey;
   label: string;
   icon: React.ReactNode;
+  /** Renders as the floating gradient pill in the mobile bottom nav. */
+  primary?: boolean;
 };
 
 const HomeIcon = () => (
@@ -34,11 +36,16 @@ const StoriesIcon = () => (
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
+const BusinessIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l1.5-5h15L21 9" />
+    <path d="M4 9v11h16V9" />
+    <path d="M9 20v-6h6v6" />
+    <path d="M3 9c0 1.5 1.2 2.7 2.7 2.7S8.4 10.5 8.4 9" />
+    <path d="M8.4 9c0 1.5 1.2 2.7 2.7 2.7S13.8 10.5 13.8 9" />
+    <path d="M13.8 9c0 1.5 1.2 2.7 2.7 2.7S19.2 10.5 19.2 9" />
+    <path d="M19.2 9c0 1.5 1.2 2.7 2.7 2.7" />
   </svg>
 );
 
@@ -55,22 +62,22 @@ function Useraccount() {
   const [active, setActive] = useState<TabKey>('home');
 
   const navItems: NavItem[] = [
-    { key: 'home',    label: 'Home',    icon: <HomeIcon /> },
-    { key: 'stories', label: 'Stories', icon: <StoriesIcon /> },
-    { key: 'add',     label: 'Add',     icon: <PlusIcon /> },
-    { key: 'billing', label: 'Billing', icon: <BillingIcon /> },
+    { key: 'business', label: 'Business', icon: <BusinessIcon /> },
+    { key: 'stories',  label: 'Stories',  icon: <StoriesIcon /> },
+    { key: 'home',     label: 'Home',     icon: <HomeIcon />, primary: true },
+    { key: 'billing',  label: 'Billing',  icon: <BillingIcon /> },
   ];
 
   const goToProfile = () => setActive('profile');
 
   const renderTab = () => {
     switch (active) {
-      case 'home':    return <HomeTab />;
-      case 'stories': return <StoriesTab />;
-      case 'add':     return <AddTab onGoToProfile={goToProfile} />;
-      case 'profile': return <ProfileTab />;
-      case 'billing': return <BillingTab />;
-      default:        return <HomeTab />;
+      case 'home':     return <HomeTab />;
+      case 'stories':  return <StoriesTab />;
+      case 'business': return <MyBusiness onGoToProfile={goToProfile} />;
+      case 'profile':  return <ProfileTab />;
+      case 'billing':  return <BillingTab />;
+      default:         return <HomeTab />;
     }
   };
 
@@ -114,7 +121,9 @@ function Useraccount() {
             type="button"
             onClick={() => setActive(item.key)}
             className={
-              'ua-bottom-link' + (active === item.key ? ' is-active' : '')
+              'ua-bottom-link' +
+              (active === item.key ? ' is-active' : '') +
+              (item.primary ? ' is-primary' : '')
             }
             aria-label={item.label}
           >

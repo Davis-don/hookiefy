@@ -1,82 +1,23 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — MY BUSINESS SHELL
-   Segmented switcher with icon + label per button.
+   Flat layout + floating Add button + profile gate.
    All classes prefixed .mb-*.
    ───────────────────────────────────────────────────────── */
 
 .mb-shell {
+  position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
+  padding: 18px 14px 0;
 }
 
-/* ── Segmented switcher ───────────────────────────────── */
-.mb-switch {
-  display: inline-flex;
-  align-items: stretch;
-  align-self: flex-start;
-  gap: 4px;
-  padding: 4px;
-  margin: 0 0 22px;
-  background: #F1F5F9;
-  border-radius: 12px;
-  max-width: 100%;
-}
-
-.mb-switch-btn {
-  display: inline-flex;
+/* Locked shell — only the confirm banner is shown */
+.mb-shell-locked {
+  padding: 18px 14px;
+  min-height: 60vh;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  color: #64748B;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  font-size: 0.94rem;
-  font-weight: 700;
-  letter-spacing: 0.1px;
-  cursor: pointer;
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    box-shadow 0.22s ease,
-    transform 0.22s ease;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-}
-
-.mb-switch-btn:hover {
-  color: #0F172A;
-}
-
-.mb-switch-btn:active {
-  transform: scale(0.97);
-}
-
-.mb-switch-btn.is-active {
-  background: #FFFFFF;
-  color: #2563EB;
-  box-shadow:
-    0 4px 12px -6px rgba(15, 23, 42, 0.22),
-    0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-/* Icon colour follows the text automatically thanks to currentColor */
-.mb-switch-btn svg {
-  flex-shrink: 0;
-  transition: transform 0.22s ease;
-}
-
-/* Small motion on the + icon when its button is active */
-.mb-switch-btn.is-active svg line:nth-child(1),
-.mb-switch-btn.is-active svg line:nth-child(2) {
-  transform-origin: center;
-}
-
-.mb-switch-btn:hover svg {
-  transform: scale(1.05);
 }
 
 /* ── Content ─────────────────────────────────────────── */
@@ -86,39 +27,93 @@
 }
 
 /* ─────────────────────────────────────────────────────────
+   Floating action button — Add business
+   ───────────────────────────────────────────────────────── */
+.mb-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  z-index: 60;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+
+  box-shadow:
+    0 16px 32px -10px rgba(37, 99, 235, 0.75),
+    0 6px 16px -6px rgba(16, 185, 129, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mb-fab:hover,
+.mb-fab:focus-visible {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    0 22px 40px -12px rgba(37, 99, 235, 0.9),
+    0 10px 22px -8px rgba(16, 185, 129, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  outline: none;
+}
+
+.mb-fab:active { transform: translateY(0) scale(0.98); }
+
+.mb-fab svg {
+  display: block;
+  transition: transform 0.24s ease;
+}
+
+.mb-fab:hover svg { transform: rotate(90deg); }
+
+/* ─────────────────────────────────────────────────────────
    RESPONSIVE
    ───────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .mb-switch {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    margin-bottom: 18px;
-  }
+  .mb-shell { padding: 16px 12px 0; }
+  .mb-shell-locked { padding: 16px 12px; }
 
-  .mb-switch-btn {
-    padding: 10px 10px;
-    font-size: 0.92rem;
-    gap: 6px;
+  .mb-fab {
+    right: 18px;
+    bottom: 92px;
+    width: 54px;
+    height: 54px;
   }
 }
 
 @media (max-width: 480px) {
-  .mb-switch-btn {
-    padding: 10px 8px;
-    font-size: 0.88rem;
-  }
+  .mb-shell { padding: 14px 10px 0; }
+  .mb-shell-locked { padding: 14px 10px; }
 
-  .mb-switch-btn svg { width: 16px; height: 16px; }
+  .mb-fab {
+    right: 16px;
+    bottom: 88px;
+    width: 52px;
+    height: 52px;
+  }
+  .mb-fab svg { width: 22px; height: 22px; }
 }
 
 @media (max-width: 380px) {
-  .mb-switch-btn {
-    font-size: 0.84rem;
-    gap: 5px;
-    padding: 9px 6px;
-  }
+  .mb-shell { padding: 12px 8px 0; }
+  .mb-shell-locked { padding: 12px 8px; }
 
-  .mb-switch-btn svg { width: 15px; height: 15px; }
+  .mb-fab {
+    right: 14px;
+    bottom: 84px;
+    width: 48px;
+    height: 48px;
+  }
+  .mb-fab svg { width: 20px; height: 20px; }
 }

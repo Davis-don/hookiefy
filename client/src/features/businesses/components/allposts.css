@@ -1,0 +1,155 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — ALL POSTS
+   All classes prefixed .alp-.
+   ───────────────────────────────────────────────────────── */
+
+.alp-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  border-radius: 14px;
+  background: #F8FAFC;
+  border: 1.5px dashed #E2E8F0;
+  color: #475569;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.alp-state-error {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #B91C1C;
+}
+
+.alp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  border-radius: 16px;
+  background: #F8FAFC;
+  border: 1.5px dashed #E2E8F0;
+  text-align: center;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.alp-empty-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.alp-empty-sub {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #64748B;
+  max-width: 420px;
+  margin: 0;
+}
+
+/* ── List ────────────────────────────────────────────── */
+.alp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.alp-item {
+  padding: 18px 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  min-width: 0;
+}
+
+.alp-item:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 12px 26px -20px rgba(15, 23, 42, 0.4);
+}
+
+.alp-item.is-pinned {
+  border-color: #FDE68A;
+  background: #FFFBEB;
+}
+
+.alp-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.alp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.alp-badge-icon { font-size: 0.85rem; }
+
+.alp-badge-update       { background: #EFF6FF; color: #1D4ED8; }
+.alp-badge-offer        { background: #FFF7ED; color: #C2410C; }
+.alp-badge-announcement { background: #FEF3C7; color: #92400E; }
+.alp-badge-event        { background: #ECFDF5; color: #047857; }
+
+.alp-pinned {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #92400E;
+}
+
+.alp-item-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px;
+  letter-spacing: -0.2px;
+  word-break: break-word;
+}
+
+.alp-item-body {
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: #475569;
+  margin: 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.alp-item-meta {
+  margin-top: 12px;
+  font-size: 0.82rem;
+  color: #94A3B8;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .alp-item { padding: 16px; border-radius: 12px; }
+  .alp-item-title { font-size: 1rem; }
+  .alp-item-body { font-size: 0.92rem; }
+}
+
+@media (max-width: 380px) {
+  .alp-item { padding: 14px; }
+  .alp-item-title { font-size: 0.96rem; }
+}
