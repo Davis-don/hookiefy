@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
-   YOUPATA — POSTS SHELL
-   Two tabs: Posts · Products
+   YOUPATA — POSTS / PRODUCTS SHELL
+   Top bar with back button · Posts / Products tabs
    All classes prefixed .ap-.
    ───────────────────────────────────────────────────────── */
 
@@ -23,40 +23,69 @@
 .ap-topbar-left {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
+/* ── Back button ─────────────────────────────────────── */
+.ap-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.15s ease,
+    box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.ap-back-btn svg {
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.ap-back-btn:hover,
+.ap-back-btn:focus-visible {
+  border-color: #2563EB;
+  color: #2563EB;
+  background: #F8FAFF;
+  transform: translateX(-2px);
+  box-shadow: 0 8px 18px -10px rgba(37, 99, 235, 0.4);
+  outline: none;
+}
+
+.ap-back-btn:hover svg,
+.ap-back-btn:focus-visible svg {
+  transform: translateX(-2px);
+}
+
+.ap-back-btn:active {
+  transform: translateX(0);
+  box-shadow: none;
+}
+
+/* ── Crumb text ──────────────────────────────────────── */
 .ap-topbar-crumb {
-  font-size: 0.94rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #64748B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.ap-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid #E2E8F0;
-  background: #FFFFFF;
-  color: #334155;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease,
-              border-color 0.18s ease, transform 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.ap-icon-btn:hover {
-  border-color: #2563EB;
-  color: #2563EB;
-  background: #F8FAFF;
-  transform: translateY(-1px);
+  min-width: 0;
 }
 
 /* ── Segmented switcher ─────────────────────────────── */
@@ -123,6 +152,17 @@
 @media (max-width: 640px) {
   .ap-shell { gap: 16px; }
 
+  .ap-topbar-left { gap: 12px; }
+
+  .ap-back-btn {
+    padding: 7px 12px 7px 8px;
+    font-size: 0.86rem;
+    gap: 5px;
+  }
+  .ap-back-btn svg { width: 16px; height: 16px; }
+
+  .ap-topbar-crumb { font-size: 0.9rem; }
+
   .ap-switch {
     width: 100%;
     display: grid;
@@ -137,6 +177,17 @@
 }
 
 @media (max-width: 380px) {
+  /* On tiny screens, keep just the icon */
+  .ap-back-btn span { display: none; }
+  .ap-back-btn {
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+  }
+
+  .ap-topbar-crumb { font-size: 0.86rem; }
+
   .ap-switch-btn {
     font-size: 0.86rem;
     gap: 5px;
