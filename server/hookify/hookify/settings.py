@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "account",
+    "businesses",
     "userprofile",
     "services",
     "stories",

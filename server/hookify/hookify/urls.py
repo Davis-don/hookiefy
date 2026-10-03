@@ -7,7 +7,6 @@ from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 
-
 urlpatterns = [
     # ============================================================
     # DJANGO ADMIN
@@ -28,11 +27,25 @@ urlpatterns = [
         include("account.urls"),
     ),
 
-    # Subscription payment apis
+
+    # ============================================================
+    # BUSINESSES
+    # ============================================================
+
     path(
-    "subscription_payments/",
-    include("subscription_payment.urls"),
-),
+        "businesses/",
+        include("businesses.urls"),
+    ),
+
+
+    # ============================================================
+    # SUBSCRIPTION PAYMENTS
+    # ============================================================
+
+    path(
+        "subscription_payments/",
+        include("subscription_payment.urls"),
+    ),
 
 
     # ============================================================
@@ -204,5 +217,14 @@ urlpatterns = [
         "engagement/",
         include("engagement.urls"),
     ),
-    path("subscription/", include("subscription.urls"))
+
+
+    # ============================================================
+    # SUBSCRIPTION
+    # ============================================================
+
+    path(
+        "subscription/",
+        include("subscription.urls"),
+    ),
 ]
