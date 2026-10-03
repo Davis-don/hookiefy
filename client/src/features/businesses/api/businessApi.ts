@@ -83,3 +83,102 @@ export async function fetchBusiness(
 
   return data as Business;
 }
+// Append to src/features/businesses/api/businessApi.ts
+
+export type UpdateBusinessPayload = {
+  businessName: string;
+  businessCategory: BusinessCategory;
+  businessType: string;
+  description: string;
+  county: string;
+  cityTown: string;
+  region: string;
+  status?: BusinessStatus;
+};
+
+export async function updateBusiness(
+  token: string | null,
+  businessId: number,
+  payload: UpdateBusinessPayload
+): Promise<{ message: string; business: Business }> {
+  if (!token) throw new Error('Not authenticated.');
+
+  const res = await fetch(`${API_BASE}/businesses/${businessId}/update/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      business_name: payload.businessName,
+      business_category: payload.businessCategory,
+      business_type: payload.businessType,
+      description: payload.description,
+      county: payload.county,
+      city_town: payload.cityTown,
+      region: payload.region,
+      ...(payload.status ? { status: payload.status } : {}),
+    }),
+  });
+
+  const text = await res.text();
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+  if (!res.ok) {
+    let message = 'Could not update this business.';
+    if (data && typeof data === 'object') {
+      if (typeof data.message === 'string') message = data.message;
+      else if (typeof data.detail === 'string') message = data.detail;
+      else {
+        const firstKey = Object.keys(data)[0];
+        if (firstKey) {
+          const val = data[firstKey];
+          const first = Array.isArray(val) ? val[0] : String(val);
+          const labels: Record<string, string> = {
+            business_name: 'Business name',
+            business_category: 'Category',
+            business_type: 'Business type',
+            description: 'Description',
+            county: 'County',
+            city_town: 'City / town',
+            region: 'Region',
+            status: 'Status',
+          };
+          message = `${labels[firstKey] || firstKey}: ${first}`;
+        }
+      }
+    }
+    throw new Error(message);
+  }
+
+  return data as { message: string; business: Business };
+}
+// Append to src/features/businesses/api/businessApi.ts
+
+export async function deleteBusiness(
+  token: string | null,
+  businessId: number
+): Promise<{ message: string }> {
+  if (!token) throw new Error('Not authenticated.');
+
+  const res = await fetch(`${API_BASE}/businesses/${businessId}/delete/`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const text = await res.text();
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+  if (!res.ok) {
+    let message = 'Could not delete this business.';
+    if (data && typeof data === 'object') {
+      if (typeof data.message === 'string') message = data.message;
+      else if (typeof data.detail === 'string') message = data.detail;
+    }
+    throw new Error(message);
+  }
+
+  return (data ?? { message: 'Business deleted.' }) as { message: string };
+}

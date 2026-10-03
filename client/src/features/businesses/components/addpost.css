@@ -1,0 +1,332 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — ADD POST
+   All classes prefixed .ap-.
+   ───────────────────────────────────────────────────────── */
+
+.ap-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.ap-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #EEF2F7;
+}
+
+.ap-topbar-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ap-topbar-crumb {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ap-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease,
+              border-color 0.18s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ap-icon-btn:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+  background: #F8FAFF;
+  transform: translateY(-1px);
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.ap-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ap-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.ap-sub {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #64748B;
+  margin: 0;
+  max-width: 560px;
+}
+
+/* ── Form ────────────────────────────────────────────── */
+.ap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.ap-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.ap-input {
+  width: 100%;
+  padding: 13px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ap-input::placeholder { color: #94A3B8; }
+.ap-input:hover { border-color: #CBD5E1; }
+.ap-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+.ap-input:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.ap-textarea {
+  resize: vertical;
+  min-height: 140px;
+  line-height: 1.6;
+}
+
+.ap-counter {
+  align-self: flex-end;
+  font-size: 0.78rem;
+  color: #94A3B8;
+  margin-top: -2px;
+}
+
+/* ── Post type tiles ────────────────────────────────── */
+.ap-type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ap-type-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 8px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.18s ease, background 0.18s ease,
+              transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ap-type-tile:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #CBD5E1;
+  background: #FFFFFF;
+}
+
+.ap-type-tile.is-selected {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 12px 24px -14px rgba(37, 99, 235, 0.55);
+}
+
+.ap-type-tile:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ap-type-icon { font-size: 1.3rem; line-height: 1; }
+
+.ap-type-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: center;
+}
+
+/* ── Checkbox row ───────────────────────────────────── */
+.ap-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.ap-check input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ap-check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: transparent;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease,
+              color 0.18s ease;
+}
+
+.ap-check input[type='checkbox']:checked + .ap-check-box {
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  border-color: transparent;
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px -4px rgba(37, 99, 235, 0.6);
+}
+
+.ap-check-text {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* ── Error ───────────────────────────────────────────── */
+.ap-error {
+  margin: -4px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+/* ── Actions ────────────────────────────────────────── */
+.ap-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid #EEF2F7;
+  padding-top: 18px;
+}
+
+.ap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+              background 0.18s ease, color 0.18s ease,
+              border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ap-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.ap-btn-ghost {
+  background: transparent;
+  border: 1.5px solid #E2E8F0;
+  color: #0F172A;
+}
+.ap-btn-ghost:hover:not(:disabled) {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+}
+
+.ap-btn-primary {
+  border: none;
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  box-shadow: 0 12px 26px -12px rgba(37, 99, 235, 0.7);
+}
+.ap-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
+}
+.ap-btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .ap-shell { gap: 18px; }
+  .ap-topbar { padding-bottom: 12px; }
+  .ap-topbar-crumb { font-size: 0.88rem; }
+  .ap-title { font-size: 1.35rem; }
+  .ap-sub { font-size: 0.92rem; }
+
+  .ap-type-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ap-input { padding: 12px 13px; font-size: 0.96rem; }
+  .ap-textarea { min-height: 120px; }
+
+  .ap-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .ap-btn { width: 100%; text-align: center; }
+}
+
+@media (max-width: 380px) {
+  .ap-title { font-size: 1.2rem; }
+  .ap-type-tile { padding: 12px 6px; }
+  .ap-type-label { font-size: 0.76rem; }
+}
