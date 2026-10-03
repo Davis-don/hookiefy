@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — MY BUSINESS SHELL
-   Flat layout + floating Add button + profile gate.
-   All classes prefixed .mb-*.
+   Page header + content area + locked state.
+   All classes prefixed .mb-.
    ───────────────────────────────────────────────────────── */
 
 .mb-shell {
@@ -9,15 +9,89 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 18px 14px 0;
+  gap: 22px;
+  padding: 24px 18px 40px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* Locked shell — only the confirm banner is shown */
-.mb-shell-locked {
-  padding: 18px 14px;
-  min-height: 60vh;
+/* ── Page header ─────────────────────────────────────── */
+.mb-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #EEF2F7;
+}
+
+.mb-page-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mb-page-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.mb-page-sub {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #64748B;
+  margin: 2px 0 0;
+  max-width: 520px;
+}
+
+/* ── Add Business button ─────────────────────────────── */
+.mb-add-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.15px;
+  cursor: pointer;
+  box-shadow:
+    0 12px 24px -10px rgba(37, 99, 235, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.mb-add-btn:hover,
+.mb-add-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 30px -10px rgba(37, 99, 235, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  outline: none;
+}
+
+.mb-add-btn:active {
+  transform: translateY(0);
+}
+
+.mb-add-btn svg {
+  display: block;
+  transition: transform 0.22s ease;
+}
+
+.mb-add-btn:hover svg {
+  transform: rotate(90deg);
 }
 
 /* ── Content ─────────────────────────────────────────── */
@@ -26,94 +100,56 @@
   min-width: 0;
 }
 
-/* ─────────────────────────────────────────────────────────
-   Floating action button — Add business
-   ───────────────────────────────────────────────────────── */
-.mb-fab {
-  position: fixed;
-  right: 24px;
-  bottom: 96px;
-  z-index: 60;
-
-  display: inline-flex;
+/* ── Locked state — profile incomplete ───────────────── */
+.mb-shell-locked {
   align-items: center;
   justify-content: center;
-
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-
-  background: linear-gradient(135deg, #2563EB, #10B981);
-  color: #FFFFFF;
-
-  box-shadow:
-    0 16px 32px -10px rgba(37, 99, 235, 0.75),
-    0 6px 16px -6px rgba(16, 185, 129, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-
-  transition: transform 0.18s ease, box-shadow 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  min-height: 70vh;
+  padding: 24px 18px;
+  gap: 0;
 }
 
-.mb-fab:hover,
-.mb-fab:focus-visible {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow:
-    0 22px 40px -12px rgba(37, 99, 235, 0.9),
-    0 10px 22px -8px rgba(16, 185, 129, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  outline: none;
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 900px) {
+  .mb-page-title { font-size: 1.6rem; }
+  .mb-shell { padding: 22px 16px 36px; gap: 20px; }
 }
-
-.mb-fab:active { transform: translateY(0) scale(0.98); }
-
-.mb-fab svg {
-  display: block;
-  transition: transform 0.24s ease;
-}
-
-.mb-fab:hover svg { transform: rotate(90deg); }
-
-/* ─────────────────────────────────────────────────────────
-   RESPONSIVE
-   ───────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .mb-shell { padding: 16px 12px 0; }
-  .mb-shell-locked { padding: 16px 12px; }
+  .mb-shell { padding: 20px 14px 32px; gap: 18px; }
 
-  .mb-fab {
-    right: 18px;
-    bottom: 92px;
-    width: 54px;
-    height: 54px;
+  .mb-page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding-bottom: 14px;
+  }
+
+  .mb-page-title { font-size: 1.45rem; letter-spacing: -0.4px; }
+  .mb-page-sub   { font-size: 0.94rem; }
+
+  .mb-add-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .mb-shell { padding: 14px 10px 0; }
-  .mb-shell-locked { padding: 14px 10px; }
+  .mb-shell { padding: 18px 12px 28px; }
 
-  .mb-fab {
-    right: 16px;
-    bottom: 88px;
-    width: 52px;
-    height: 52px;
+  .mb-page-title { font-size: 1.3rem; }
+  .mb-page-sub   { font-size: 0.9rem; }
+
+  .mb-add-btn {
+    font-size: 0.94rem;
+    padding: 11px 18px;
   }
-  .mb-fab svg { width: 22px; height: 22px; }
 }
 
 @media (max-width: 380px) {
-  .mb-shell { padding: 12px 8px 0; }
-  .mb-shell-locked { padding: 12px 8px; }
+  .mb-shell { padding: 16px 10px 24px; gap: 16px; }
 
-  .mb-fab {
-    right: 14px;
-    bottom: 84px;
-    width: 48px;
-    height: 48px;
-  }
-  .mb-fab svg { width: 20px; height: 20px; }
+  .mb-page-title { font-size: 1.2rem; }
+  .mb-page-sub   { font-size: 0.86rem; }
 }

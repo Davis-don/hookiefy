@@ -26,7 +26,7 @@ function MyBusiness({ onGoToProfile }: MyBusinessProps) {
     status !== undefined &&
     status.is_complete === false;
 
-  // ── Hard block: only the confirm banner is visible ──────
+  // ── Hard block: profile must be complete ────────────────
   if (requiredMissing) {
     return (
       <div className="mb-shell mb-shell-locked">
@@ -39,9 +39,20 @@ function MyBusiness({ onGoToProfile }: MyBusinessProps) {
     );
   }
 
-  // ── Normal view: list or add form ───────────────────────
+  // ── Normal shell ────────────────────────────────────────
   return (
     <div className="mb-shell">
+      {/* Intro header — text only, no button */}
+      {view === 'list' && (
+        <header className="mb-page-head">
+          <h1 className="mb-page-title">Manage your businesses</h1>
+          <p className="mb-page-sub">
+            Everything customers can see about the businesses you own.
+          </p>
+        </header>
+      )}
+
+      {/* Content */}
       <div className="mb-content">
         {view === 'list' && <Allbusinesses onAdd={goToAdd} />}
 
