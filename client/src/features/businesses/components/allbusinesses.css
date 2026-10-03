@@ -1,8 +1,25 @@
 /* ─────────────────────────────────────────────────────────
-   YOUPATA — ALL BUSINESSES (table view)
+   YOUPATA — ALL BUSINESSES
+   Heading · table · hover-manage chevron
    All classes prefixed .ab-.
-   Soft palette, white card, subtle inner lines.
    ───────────────────────────────────────────────────────── */
+
+.ab-shell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.ab-heading {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 0;
+}
 
 /* ── States ──────────────────────────────────────────── */
 .ab-state {
@@ -15,7 +32,6 @@
   border: 1.5px dashed #E2E8F0;
   color: #475569;
   font-size: 0.98rem;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 .ab-state-error {
@@ -35,7 +51,6 @@
   background: #FFFFFF;
   border: 1.5px dashed #E2E8F0;
   text-align: center;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 .ab-empty-title {
@@ -74,24 +89,16 @@
   box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
 }
 
-/* ─────────────────────────────────────────────────────────
-   Table shell — white card, coloured border, soft shadow
-   ───────────────────────────────────────────────────────── */
+/* ── Table shell ─────────────────────────────────────── */
 .ab-table-scroll {
   width: 100%;
   overflow-x: auto;
   background: #FFFFFF;
-
-  /* Coloured outer border instead of plain grey */
-  border: 1.5px solid #E0E7FF;             /* soft indigo */
+  border: 1.5px solid #E0E7FF;
   border-radius: 16px;
-
-  /* Soft shadow lifts it off the page */
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 8px 24px -16px rgba(37, 99, 235, 0.25);
-
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #C7D2FE transparent;
@@ -111,17 +118,22 @@
 /* ── Table ───────────────────────────────────────────── */
 .ab-table {
   width: 100%;
-  min-width: 640px;
+  min-width: 720px;                /* gives every column enough room */
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.95rem;
   table-layout: fixed;
 }
 
-.ab-col-name   { width: 30%; min-width: 180px; }
-.ab-col-cat    { width: 16%; min-width: 120px; }
-.ab-col-type   { width: 32%; min-width: 200px; }
-.ab-col-status { width: 22%; min-width: 140px; }
+/* ── Column widths ───────────────────────────────────── */
+/* Sum of min-widths = 720px. Status column is now wide
+   enough that the "Active / Paused / Suspended" pill never
+   gets clipped. */
+.ab-col-name   { width: 30%; min-width: 200px; }
+.ab-col-cat    { width: 15%; min-width: 120px; }
+.ab-col-type   { width: 25%; min-width: 170px; }
+.ab-col-status { width: 20%; min-width: 150px; }
+.ab-col-go     { width: 80px; min-width: 80px; }
 
 /* ── Header ──────────────────────────────────────────── */
 .ab-table thead th {
@@ -131,21 +143,13 @@
   font-weight: 800;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: #4338CA;                          /* indigo text */
-  background: #EEF2FF;                     /* soft indigo wash */
+  color: #4338CA;
+  background: #EEF2FF;
   border-bottom: 1px solid #E0E7FF;
   white-space: nowrap;
 }
 
-/* Coloured underline accent beneath the header row */
-.ab-table thead {
-  position: relative;
-}
-
-.ab-table thead tr::after {
-  content: '';
-  display: block;
-}
+.ab-table thead th.ab-col-go { padding: 15px 20px 15px 0; }
 
 .ab-table thead th:first-child { border-top-left-radius: 14.5px; }
 .ab-table thead th:last-child  { border-top-right-radius: 14.5px; }
@@ -157,8 +161,8 @@
 }
 
 .ab-row:hover {
-  background: #F8FAFF;                     /* very faint blue tint */
-  box-shadow: inset 3px 0 0 #2563EB;       /* left accent bar on hover */
+  background: #F8FAFF;
+  box-shadow: inset 3px 0 0 #2563EB;
 }
 
 .ab-row:focus-visible {
@@ -170,17 +174,22 @@
 .ab-row:last-child .ab-cell { border-bottom: none; }
 
 /* ── Cells ───────────────────────────────────────────── */
+/* overflow visible on the status cell so the pill is never
+   clipped. All other cells keep the ellipsis treatment. */
 .ab-cell {
   padding: 18px 20px;
-  border-bottom: 1px solid #EEF2F7;        /* very soft line */
+  border-bottom: 1px solid #EEF2F7;
   color: #334155;
   vertical-align: middle;
-  overflow: hidden;
-  text-overflow: ellipsis;
   background: #FFFFFF;
 }
 
-.ab-row:hover .ab-cell { background: #F8FAFF; }
+.ab-cell-name,
+.ab-cell-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .ab-cell-name {
   font-weight: 700;
@@ -188,8 +197,61 @@
   font-size: 1rem;
 }
 
-.ab-cell-type {
-  color: #475569;
+.ab-cell-type { color: #475569; }
+
+/* Status cell — no overflow clipping, keep pill fully visible */
+.ab-cell.ab-cell-status {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+/* Chevron / Manage cell */
+.ab-cell-go {
+  padding: 18px 20px 18px 0;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ab-row:hover .ab-cell { background: #F8FAFF; }
+
+/* ── Chevron / Manage content ────────────────────────── */
+.ab-go-hint {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2563EB;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+}
+
+.ab-go-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #EEF2FF;
+  color: #4338CA;
+  transition: background 0.18s ease, color 0.18s ease,
+              transform 0.18s ease;
+}
+
+.ab-row:hover .ab-go-hint,
+.ab-row:focus-visible .ab-go-hint {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ab-row:hover .ab-go-arrow,
+.ab-row:focus-visible .ab-go-arrow {
+  background: linear-gradient(120deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  transform: translateX(2px);
 }
 
 /* ── Category pill ───────────────────────────────────── */
@@ -224,9 +286,9 @@
   white-space: nowrap;
   background: #F1F5F9;
   color: #475569;
+  flex-shrink: 0;
 }
 
-/* Dot indicator inside the badge */
 .ab-status::before {
   content: '';
   display: inline-block;
@@ -242,23 +304,19 @@
   color: #047857;
   box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
 }
-
 .ab-status-paused {
   background: #FFF7ED;
   color: #C2410C;
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
 }
-
 .ab-status-draft {
   background: #F1F5F9;
   color: #64748B;
 }
-
 .ab-status-closed {
   background: #F3F4F6;
   color: #6B7280;
 }
-
 .ab-status-suspended {
   background: #FEF2F2;
   color: #B91C1C;
@@ -270,13 +328,19 @@
    ───────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .ab-table { font-size: 0.9rem; }
+  .ab-heading { font-size: 1.55rem; }
+  .ab-table { font-size: 0.9rem; min-width: 700px; }
   .ab-table thead th { padding: 14px 16px; }
+  .ab-table thead th.ab-col-go { padding: 14px 16px 14px 0; }
   .ab-cell { padding: 16px 16px; }
+  .ab-cell-go { padding: 16px 16px 16px 0; }
   .ab-cell-name { font-size: 0.96rem; }
 }
 
 @media (max-width: 640px) {
+  .ab-shell { gap: 18px; }
+  .ab-heading { font-size: 1.4rem; letter-spacing: -0.4px; }
+
   .ab-table-scroll {
     border-radius: 14px;
     box-shadow:
@@ -284,9 +348,11 @@
       0 6px 20px -14px rgba(37, 99, 235, 0.22);
   }
 
+  /* The table scrolls sideways — keep the min-width so
+     Status + chevron stay visible when the user scrolls. */
   .ab-table {
     font-size: 0.88rem;
-    min-width: 600px;
+    min-width: 680px;
   }
 
   .ab-table thead th {
@@ -294,26 +360,41 @@
     font-size: 0.7rem;
     letter-spacing: 1px;
   }
+  .ab-table thead th.ab-col-go { padding: 13px 14px 13px 0; }
 
   .ab-cell { padding: 14px 14px; }
+  .ab-cell-go { padding: 14px 14px 14px 0; }
   .ab-cell-name { font-size: 0.94rem; }
+
   .ab-pill,
   .ab-status { font-size: 0.68rem; padding: 3px 10px; }
+
+  /* Hide the word "Manage" on phones, keep the arrow */
+  .ab-go-hint { display: none; }
 }
 
 @media (max-width: 480px) {
+  .ab-heading { font-size: 1.25rem; }
+
   .ab-empty { padding: 36px 18px; }
   .ab-empty-title { font-size: 1rem; }
   .ab-empty-sub { font-size: 0.9rem; }
 
-  .ab-table { font-size: 0.84rem; min-width: 560px; }
+  .ab-table { font-size: 0.84rem; min-width: 660px; }
   .ab-table thead th { padding: 12px 12px; font-size: 0.68rem; }
+  .ab-table thead th.ab-col-go { padding: 12px 12px 12px 0; }
   .ab-cell { padding: 13px 12px; }
+  .ab-cell-go { padding: 13px 12px 13px 0; }
   .ab-cell-name { font-size: 0.9rem; }
+
+  .ab-go-arrow { width: 28px; height: 28px; }
 }
 
 @media (max-width: 380px) {
-  .ab-table { font-size: 0.82rem; min-width: 520px; }
+  .ab-heading { font-size: 1.15rem; }
+  .ab-table { font-size: 0.82rem; min-width: 640px; }
   .ab-table thead th { padding: 11px 10px; }
+  .ab-table thead th.ab-col-go { padding: 11px 10px 11px 0; }
   .ab-cell { padding: 12px 10px; }
+  .ab-cell-go { padding: 12px 10px 12px 0; }
 }
