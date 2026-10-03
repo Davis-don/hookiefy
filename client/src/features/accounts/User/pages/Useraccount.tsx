@@ -54,8 +54,6 @@ const BillingIcon = () => (
 function Useraccount() {
   const [active, setActive] = useState<TabKey>('home');
 
-  // Note: 'profile' is not in the nav anymore — it's reachable
-  // by clicking the avatar in the header.
   const navItems: NavItem[] = [
     { key: 'home',    label: 'Home',    icon: <HomeIcon /> },
     { key: 'stories', label: 'Stories', icon: <StoriesIcon /> },
@@ -63,11 +61,13 @@ function Useraccount() {
     { key: 'billing', label: 'Billing', icon: <BillingIcon /> },
   ];
 
+  const goToProfile = () => setActive('profile');
+
   const renderTab = () => {
     switch (active) {
       case 'home':    return <HomeTab />;
       case 'stories': return <StoriesTab />;
-      case 'add':     return <AddTab />;
+      case 'add':     return <AddTab onGoToProfile={goToProfile} />;
       case 'profile': return <ProfileTab />;
       case 'billing': return <BillingTab />;
       default:        return <HomeTab />;
@@ -98,13 +98,12 @@ function Useraccount() {
             </button>
           ))}
 
-          {/* Log out, pinned at the bottom of the sidebar nav */}
           <Logout variant="sidebar" />
         </nav>
       </aside>
 
       <div className="ua-main">
-        <UserHeader onOpenProfile={() => setActive('profile')} />
+        <UserHeader onOpenProfile={goToProfile} />
         <div className="ua-content">{renderTab()}</div>
       </div>
 
@@ -123,7 +122,6 @@ function Useraccount() {
           </button>
         ))}
 
-        {/* Logout as the last icon in the mobile bottom bar */}
         <Logout variant="bottom" />
       </nav>
     </div>

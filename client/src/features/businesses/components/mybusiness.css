@@ -1,0 +1,124 @@
+/* ─────────────────────────────────────────────────────────
+   YOUPATA — MY BUSINESS SHELL
+   Segmented switcher with icon + label per button.
+   All classes prefixed .mb-*.
+   ───────────────────────────────────────────────────────── */
+
+.mb-shell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Segmented switcher ───────────────────────────────── */
+.mb-switch {
+  display: inline-flex;
+  align-items: stretch;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 22px;
+  background: #F1F5F9;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.mb-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748B;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.mb-switch-btn:hover {
+  color: #0F172A;
+}
+
+.mb-switch-btn:active {
+  transform: scale(0.97);
+}
+
+.mb-switch-btn.is-active {
+  background: #FFFFFF;
+  color: #2563EB;
+  box-shadow:
+    0 4px 12px -6px rgba(15, 23, 42, 0.22),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Icon colour follows the text automatically thanks to currentColor */
+.mb-switch-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+/* Small motion on the + icon when its button is active */
+.mb-switch-btn.is-active svg line:nth-child(1),
+.mb-switch-btn.is-active svg line:nth-child(2) {
+  transform-origin: center;
+}
+
+.mb-switch-btn:hover svg {
+  transform: scale(1.05);
+}
+
+/* ── Content ─────────────────────────────────────────── */
+.mb-content {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .mb-switch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 18px;
+  }
+
+  .mb-switch-btn {
+    padding: 10px 10px;
+    font-size: 0.92rem;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mb-switch-btn {
+    padding: 10px 8px;
+    font-size: 0.88rem;
+  }
+
+  .mb-switch-btn svg { width: 16px; height: 16px; }
+}
+
+@media (max-width: 380px) {
+  .mb-switch-btn {
+    font-size: 0.84rem;
+    gap: 5px;
+    padding: 9px 6px;
+  }
+
+  .mb-switch-btn svg { width: 15px; height: 15px; }
+}

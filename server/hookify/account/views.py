@@ -16,6 +16,10 @@ from .account_views.profile_views import (
     update_password,
 )
 
+from .account_views.profile_status_views import (
+    profile_status,
+)
+
 from .account_views.utility_views import (
     health_check,
 )

@@ -57,6 +57,13 @@ urlpatterns = [
         name="upload_profile_image",
     ),
 
+    # Profile completeness
+    path(
+        "profile/status/",
+        views.profile_status,
+        name="profile_status",
+    ),
+
     # Password
     path(
         "password/",
