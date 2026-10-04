@@ -1,3 +1,5 @@
+// src/pages/accounts/User/Useraccount.tsx
+
 import { useState } from 'react';
 
 import UserHeader from '../components/UserHeader';
@@ -75,7 +77,7 @@ function Useraccount() {
   const renderTab = () => {
     switch (active) {
       case 'home':     return <HomeTab />;
-      case 'stories':  return <StoriesTab />;
+      case 'stories':  return <StoriesTab onGoToProfile={goToProfile} />;   // ← FIX
       case 'business': return <MyBusiness onGoToProfile={goToProfile} />;
       case 'profile':  return <ProfileTab />;
       case 'billing':  return <BillingTab />;

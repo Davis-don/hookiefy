@@ -1,13 +1,47 @@
+// src/pages/stories/components/MyStories.tsx
+
 import { useState } from 'react';
 import MineStories from './Minestories';
 import AddStory from './AddStory';
+import { useProfileStatus } from '../../../features/accounts/hooks/useProfileStatus';
+import Confirmprofilecomplete from '../../accounts/User/components/Confirmprofilecomplete';
 import './mystories.css';
 
 type View = 'list' | 'add';
 
-function MyStories() {
+type MyStoriesProps = {
+  /** Called when the user clicks "Complete now" on the profile banner. */
+  onGoToProfile?: () => void;
+};
+
+function MyStories({ onGoToProfile }: MyStoriesProps) {
   const [view, setView] = useState<View>('list');
 
+  const goToAdd = () => setView('add');
+  const goToList = () => setView('list');
+
+  const { data: status, isLoading } = useProfileStatus();
+
+  // Required field(s) missing → hard block.
+  const requiredMissing =
+    !isLoading &&
+    status !== undefined &&
+    status.is_complete === false;
+
+  // ── Hard block: profile must be complete ────────────────
+  if (requiredMissing) {
+    return (
+      <div className="ms-shell ms-shell-locked">
+        <Confirmprofilecomplete
+          missingLabels={status.missing_labels}
+          completionPercent={status.completion_percent}
+          onComplete={() => onGoToProfile?.()}
+        />
+      </div>
+    );
+  }
+
+  // ── Normal shell ────────────────────────────────────────
   return (
     <div className="ms-shell">
       {/* ── Segmented switcher ──────────────────────── */}
@@ -48,12 +82,12 @@ function MyStories() {
       {/* ── Content ─────────────────────────────────── */}
       <div className="ms-content">
         {view === 'list' && (
-          <MineStories onAdd={() => setView('add')} />
+          <MineStories onAdd={goToAdd} />
         )}
         {view === 'add' && (
           <AddStory
-            onCancel={() => setView('list')}
-            onCreated={() => setView('list')}
+            onCancel={goToList}
+            onCreated={goToList}
           />
         )}
       </div>

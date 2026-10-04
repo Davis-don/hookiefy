@@ -110,3 +110,26 @@
 
   .ms-switch-btn svg { width: 15px; height: 15px; }
 }
+
+/* Add to src/pages/stories/components/mystories.css */
+
+/* ============================================================
+   LOCKED STATE — profile incomplete
+   ============================================================ */
+
+.ms-shell-locked {
+  /* Remove any tab-specific padding so the banner fills cleanly */
+  padding-top: 0;
+}
+
+.ms-shell-locked .Confirmprofilecomplete,
+.ms-shell-locked > *:first-child {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .ms-shell-locked {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

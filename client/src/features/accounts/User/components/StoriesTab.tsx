@@ -1,4 +1,4 @@
-// src/components/StoriesTab.jsx
+// src/pages/accounts/User/components/StoriesTab.tsx
 
 import { useState } from "react";
 import "./storiestab.css";
@@ -11,13 +11,18 @@ const TABS = [
   { key: "mine", label: "My Stories" },
 ];
 
-function StoriesTab() {
+type StoriesTabProps = {
+  /** Called when the profile banner's CTA is clicked inside MyStories. */
+  onGoToProfile?: () => void;
+};
+
+function StoriesTab({ onGoToProfile }: StoriesTabProps) {
   const [activeTab, setActiveTab] = useState("all");
 
   const renderActivePanel = () => {
     switch (activeTab) {
       case "mine":
-        return <MyStories />;
+        return <MyStories onGoToProfile={onGoToProfile} />;
       case "all":
       default:
         return <OtherStories />;
@@ -26,7 +31,6 @@ function StoriesTab() {
 
   return (
     <div className="stories-tab">
-      {/* ---------- Switcher ---------- */}
       <div className="stories-tab__switcher" role="tablist">
         {TABS.map((tab) => (
           <button
@@ -44,7 +48,6 @@ function StoriesTab() {
         ))}
       </div>
 
-      {/* ---------- Active Panel ---------- */}
       <div className="stories-tab__content">{renderActivePanel()}</div>
     </div>
   );
