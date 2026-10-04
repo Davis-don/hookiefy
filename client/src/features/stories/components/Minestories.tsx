@@ -15,7 +15,7 @@ type AllStoriesProps = {
   onAdd?: () => void;
 };
 
-function AllStories({ onAdd }: AllStoriesProps) {
+function MineStories({ onAdd }: AllStoriesProps) {
   const access = useAuthStore((s) => s.access);
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -231,4 +231,4 @@ function AllStories({ onAdd }: AllStoriesProps) {
   );
 }
 
-export default AllStories;
+export default MineStories;

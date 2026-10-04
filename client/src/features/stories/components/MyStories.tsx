@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import AllStories from './AllStories';
+import MineStories from './Minestories';
 import AddStory from './AddStory';
 import './mystories.css';
 
@@ -25,7 +25,7 @@ function MyStories() {
             <circle cx="12" cy="12" r="9" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-          <span>All Stories</span>
+          <span>My Stories</span>
         </button>
 
         <button
@@ -41,14 +41,14 @@ function MyStories() {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span>Add</span>
+          <span>Create Story</span>
         </button>
       </div>
 
       {/* ── Content ─────────────────────────────────── */}
       <div className="ms-content">
         {view === 'list' && (
-          <AllStories onAdd={() => setView('add')} />
+          <MineStories onAdd={() => setView('add')} />
         )}
         {view === 'add' && (
           <AddStory

@@ -1,13 +1,13 @@
 // src/components/StoriesTab.jsx
 
-import  { useState } from "react";
+import { useState } from "react";
 import "./storiestab.css";
 
-import AllStories from "../../../stories/components/AllStories";
+import OtherStories from "../../../stories/components/OtherStories";
 import MyStories from "../../../stories/components/MyStories";
 
 const TABS = [
-  { key: "all", label: "Other Stories" },
+  { key: "all",  label: "Other Stories" },
   { key: "mine", label: "My Stories" },
 ];
 
@@ -20,7 +20,7 @@ function StoriesTab() {
         return <MyStories />;
       case "all":
       default:
-        return <AllStories />;
+        return <OtherStories />;
     }
   };
 
