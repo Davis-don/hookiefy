@@ -6,6 +6,7 @@ from .models import Story
 @admin.register(Story)
 class StoryAdmin(admin.ModelAdmin):
 
+    # ── List view ─────────────────────────────────────────
     list_display = (
         "title",
         "user",
@@ -14,11 +15,15 @@ class StoryAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
+    list_display_links = ("title",)
+
+    # ── Filters ───────────────────────────────────────────
     list_filter = (
         "category",
         "created_at",
     )
 
+    # ── Search ────────────────────────────────────────────
     search_fields = (
         "title",
         "content",
@@ -27,11 +32,37 @@ class StoryAdmin(admin.ModelAdmin):
         "user__last_name",
     )
 
+    # ── Read-only ─────────────────────────────────────────
     readonly_fields = (
         "created_at",
         "updated_at",
     )
 
-    ordering = (
-        "-created_at",
+    # ── Ordering ──────────────────────────────────────────
+    ordering = ("-created_at",)
+
+    # ── Performance ───────────────────────────────────────
+    list_select_related = ("user",)
+    raw_id_fields = ("user",)
+    list_per_page = 25
+
+    # ── Detail page layout ────────────────────────────────
+    fieldsets = (
+        ("Author", {
+            "fields": ("user",),
+        }),
+        ("Story", {
+            "fields": (
+                "title",
+                "content",
+                "category",
+            ),
+        }),
+        ("Timestamps", {
+            "fields": (
+                "created_at",
+                "updated_at",
+            ),
+            "classes": ("collapse",),
+        }),
     )

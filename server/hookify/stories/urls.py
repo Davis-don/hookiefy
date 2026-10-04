@@ -1,55 +1,72 @@
 # stories/urls.py
+
 from django.urls import path
+from . import views
 
-from .views import (
-    stories_list_create,
-    story_detail,
-    story_feed,
-)
-
+app_name = "stories"
 
 urlpatterns = [
-    # ────────────────────────────────────────────────────────
-    # STATIC routes first (must come before <int:pk>)
-    # ────────────────────────────────────────────────────────
+    # ============================================================
+    # USER STORIES
+    # ============================================================
 
-    # POST /stories/create/   → create a story (multipart, image required)
+    # List stories authored by the authenticated user
+    # GET /stories/mine/
     path(
-        "create/",
-        stories_list_create,
-        name="story-create",
+        "mine/",
+        views.list_my_stories,
+        name="list-my-stories",
     ),
 
-    # GET /stories/feed/      → paginated, category-filtered feed
-    path(
-        "feed/",
-        story_feed,
-        name="story-feed",
-    ),
-
-    # ────────────────────────────────────────────────────────
-    # LIST + CREATE
-    # ────────────────────────────────────────────────────────
-
-    # GET  /stories/          → list (public)
-    # POST /stories/          → create (multipart, image required)
+    # Public feed — all stories
+    # GET /stories/
     path(
         "",
-        stories_list_create,
-        name="stories-list-create",
+        views.list_all_stories,
+        name="list-all-stories",
     ),
 
-    # ────────────────────────────────────────────────────────
-    # DETAIL (dynamic — must come last)
-    # ────────────────────────────────────────────────────────
-
-    # GET    /stories/<pk>/   → public read
-    # PUT    /stories/<pk>/   → full update (owner / superadmin)
-    # PATCH  /stories/<pk>/   → partial update (owner / superadmin)
-    # DELETE /stories/<pk>/   → delete (owner / superadmin)
+    # Create a new story
+    # POST /stories/create/
     path(
-        "<int:pk>/",
-        story_detail,
-        name="story-detail",
+        "create/",
+        views.create_story,
+        name="create-story",
+    ),
+
+    # Retrieve a single story (author only)
+    # GET /stories/<story_id>/
+    path(
+        "<int:story_id>/",
+        views.retrieve_story,
+        name="retrieve-story",
+    ),
+
+    # Update a story (author only)
+    # PATCH/PUT /stories/<story_id>/update/
+    path(
+        "<int:story_id>/update/",
+        views.update_story,
+        name="update-story",
+    ),
+
+    # Delete a story (author only)
+    # DELETE /stories/<story_id>/delete/
+    path(
+        "<int:story_id>/delete/",
+        views.delete_story,
+        name="delete-story",
+    ),
+
+    # ============================================================
+    # ADMIN
+    # ============================================================
+
+    # Superadmin list — every story
+    # GET /stories/admin/all/
+    path(
+        "admin/all/",
+        views.admin_list_stories,
+        name="admin-list-stories",
     ),
 ]

@@ -1,0 +1,479 @@
+/* src/components/richtexteditor.css */
+
+/* ============================================================
+   TOKENS
+   ============================================================ */
+
+.rte {
+  --rte-border:         #e5e7eb;
+  --rte-border-strong:  #d1d5db;
+  --rte-bg:             #ffffff;
+  --rte-bar-bg:         #f9fafb;
+  --rte-text:           #111827;
+  --rte-muted:          #6b7280;
+  --rte-hover:          #f3f4f6;
+  --rte-active-bg:      #111827;
+  --rte-active-fg:      #ffffff;
+  --rte-radius:         12px;
+  --rte-radius-sm:      10px;
+
+  /* tap target */
+  --rte-tap:            44px;
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rte-border);
+  border-radius: var(--rte-radius);
+  background: var(--rte-bg);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rte:focus-within {
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+}
+
+.rte.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ============================================================
+   TOP BAR (compact, sticky)
+   ============================================================ */
+
+.rte-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 6px;
+  background: var(--rte-bar-bg);
+  border-bottom: 1px solid var(--rte-border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.rte-bar-spacer {
+  flex: 1;
+}
+
+/* Icon buttons — 44×44 for thumbs */
+.rte-iconbtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: var(--rte-tap);
+  height: var(--rte-tap);
+  border-radius: var(--rte-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rte-iconbtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rte-iconbtn:hover {
+  background: var(--rte-hover);
+}
+
+.rte-iconbtn:active {
+  background: #e5e7eb;
+  transform: scale(0.96);
+}
+
+.rte-iconbtn.is-active {
+  background: var(--rte-active-bg);
+  color: var(--rte-active-fg);
+}
+
+.rte-iconbtn.is-active:hover {
+  background: #1f2937;
+}
+
+/* The "Aa" — special accent */
+.rte-iconbtn--accent {
+  background: #111827;
+  color: #ffffff;
+}
+
+.rte-iconbtn--accent:hover {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+/* ============================================================
+   EDITOR CONTENT
+   ============================================================ */
+
+.rte-content {
+  flex: 1;
+  background: #ffffff;
+}
+
+.rte-content .ProseMirror {
+  /* 16px minimum prevents iOS auto-zoom on focus */
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--rte-text);
+  padding: 14px 16px;
+  min-height: 240px;
+  max-height: 55vh;
+  overflow-y: auto;
+  outline: none;
+  word-wrap: break-word;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.rte-content .ProseMirror p {
+  margin: 0 0 0.6rem;
+}
+.rte-content .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+/* Placeholder */
+.rte-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Headings */
+.rte-content .ProseMirror h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.6rem 0 0.4rem;
+  line-height: 1.3;
+}
+.rte-content .ProseMirror h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.35rem;
+  line-height: 1.35;
+}
+.rte-content .ProseMirror h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.3rem;
+}
+
+/* Lists */
+.rte-content .ProseMirror ul,
+.rte-content .ProseMirror ol {
+  padding-left: 1.35rem;
+  margin: 0.4rem 0 0.6rem;
+}
+.rte-content .ProseMirror li {
+  margin: 0.15rem 0;
+}
+.rte-content .ProseMirror li > p {
+  margin: 0;
+}
+
+/* Blockquote */
+.rte-content .ProseMirror blockquote {
+  border-left: 3px solid var(--rte-border-strong);
+  padding: 0.15rem 0 0.15rem 0.8rem;
+  margin: 0.6rem 0;
+  color: #4b5563;
+  font-style: italic;
+}
+
+/* Inline code */
+.rte-content .ProseMirror code {
+  background: #f3f4f6;
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Code block */
+.rte-content .ProseMirror pre {
+  background: #111827;
+  color: #f9fafb;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0.6rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+.rte-content .ProseMirror pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Links */
+.rte-content .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
+/* Selection */
+.rte-content .ProseMirror ::selection {
+  background: #c7d2fe;
+}
+
+/* ============================================================
+   COUNTER (only shows near limit)
+   ============================================================ */
+
+.rte-counter {
+  padding: 6px 14px;
+  text-align: right;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: var(--rte-bar-bg);
+  border-top: 1px solid var(--rte-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.rte-counter.is-over {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* ============================================================
+   BOTTOM SHEET
+   ============================================================ */
+
+.rte-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: rte-fade 0.18s ease;
+}
+
+@keyframes rte-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.rte-sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  display: flex;
+  flex-direction: column;
+  animation: rte-slide-up 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+
+@keyframes rte-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* iOS-style grab handle */
+.rte-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 4px;
+  margin: 8px auto 4px;
+  flex-shrink: 0;
+}
+
+.rte-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 18px 10px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.rte-sheet-header > span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rte-sheet-close {
+  appearance: none;
+  border: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.rte-sheet-close svg {
+  width: 20px;
+  height: 20px;
+}
+.rte-sheet-close:hover {
+  background: #e5e7eb;
+}
+.rte-sheet-close:active {
+  transform: scale(0.94);
+}
+
+/* Body scrolls if content is tall */
+.rte-sheet-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 18px 22px;
+}
+
+.rte-sheet-label {
+  margin: 10px 0 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.rte-sheet-label:first-child {
+  margin-top: 0;
+}
+
+/* Grid of buttons */
+.rte-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.rte-sheet-btn {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 4px;
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #374151;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.06s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rte-sheet-btn:hover {
+  background: #f9fafb;
+}
+
+.rte-sheet-btn:active {
+  transform: scale(0.96);
+}
+
+.rte-sheet-btn.is-active {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.rte-sheet-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.rte-sheet-btn-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.rte-sheet-txt {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.rte-sheet-txt--h1 {
+  font-size: 1.15rem;
+}
+.rte-sheet-txt--h2 {
+  font-size: 1rem;
+}
+
+.rte-sheet-btn-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* ============================================================
+   RESPONSIVE TIGHTENING
+   ============================================================ */
+
+@media (min-width: 640px) {
+  .rte-sheet {
+    border-radius: 20px;
+    margin-bottom: 24px;
+    max-height: 80vh;
+  }
+
+  .rte-sheet-backdrop {
+    align-items: center;
+  }
+
+  .rte-sheet-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Very small phones (iPhone SE etc.) */
+@media (max-width: 360px) {
+  .rte-bar {
+    padding: 4px;
+  }
+  .rte-iconbtn {
+    width: 40px;
+    height: 40px;
+  }
+  .rte-iconbtn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .rte-content .ProseMirror {
+    padding: 12px;
+    min-height: 200px;
+  }
+  .rte-sheet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

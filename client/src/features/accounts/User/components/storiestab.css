@@ -1,0 +1,125 @@
+/* src/components/storiestab.css */
+
+/* ============================================================
+   ROOT
+   ============================================================ */
+
+.stories-tab {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  font-family: inherit;
+}
+
+/* ============================================================
+   SWITCHER
+   ============================================================ */
+
+.stories-tab__switcher {
+  position: relative;
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+/* Each tab button */
+.stories-tab__btn {
+  position: relative;
+  padding: 0.75rem 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;                       /* muted by default */
+  transition: color 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.stories-tab__btn:hover {
+  color: #111827;
+}
+
+/* Active tab text */
+.stories-tab__btn.is-active {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Animated underline */
+.stories-tab__underline {
+  position: absolute;
+  left: 0;
+  bottom: -1px;                          /* sit on top of the border */
+  height: 2px;
+  width: 100%;
+  background: #111827;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stories-tab__btn.is-active .stories-tab__underline {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   CONTENT / PANEL
+   ============================================================ */
+
+.stories-tab__content {
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stories-panel {
+  min-height: 220px;
+  padding: 1.25rem 0;
+}
+
+.stories-panel__empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 3rem 1rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.stories-panel__empty h3 {
+  margin: 0 0 0.5rem;
+  color: #111827;
+  font-size: 1.15rem;
+}
+
+.stories-panel__empty p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .stories-tab__switcher {
+    gap: 1.25rem;
+  }
+
+  .stories-tab__btn {
+    font-size: 0.95rem;
+  }
+}
