@@ -14,6 +14,7 @@ from .account_views.profile_views import (
     upload_profile_image,
     update_user,
     update_password,
+    current_user,               # ← NEW
 )
 
 from .account_views.profile_status_views import (

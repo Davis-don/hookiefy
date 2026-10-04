@@ -1,3 +1,5 @@
+# account/serializers.py
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -10,12 +12,17 @@ User = get_user_model()
 
 
 # ============================================================
-# USER SERIALIZER
+# USER SERIALIZER — READ
 # ============================================================
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer for returning user information through the API.
+    Read-only serializer for returning user information through the API.
+
+    Used for:
+      - login / register responses
+      - GET /account/me/
+      - the "user" object returned by /account/profile/
     """
 
     full_name = serializers.ReadOnlyField()
@@ -26,35 +33,34 @@ class UserSerializer(serializers.ModelSerializer):
         model = Accounts
 
         fields = (
+            # identity
             "id",
             "email",
             "first_name",
             "last_name",
             "full_name",
+
+            # profile
             "gender",
             "phone_number",
             "profile_image_url",
+            "profile_image_public_id",
+
+            # account meta
             "role",
             "auth_provider",
-            "has_profile_image",
             "is_google_user",
+            "has_profile_image",
+            "is_active",
             "date_joined",
+            "last_login",
         )
 
-        read_only_fields = (
-            "id",
-            "full_name",
-            "profile_image_url",
-            "role",
-            "auth_provider",
-            "has_profile_image",
-            "is_google_user",
-            "date_joined",
-        )
+        read_only_fields = fields
 
 
 # ============================================================
-# CREATE USER SERIALIZER
+# CREATE USER
 # ============================================================
 
 class CreateNewUserSerializer(serializers.ModelSerializer):
@@ -96,10 +102,6 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
         )
 
     def validate_email(self, value):
-        """
-        Ensure email is unique.
-        """
-
         value = value.strip().lower()
 
         if Accounts.objects.filter(
@@ -112,36 +114,21 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        """
-        Validate password confirmation and password rules.
-        """
-
         password = attrs.get("password")
         password2 = attrs.pop("password2", None)
 
         if password != password2:
             raise serializers.ValidationError(
-                {
-                    "password2": "Passwords do not match."
-                }
+                {"password2": "Passwords do not match."}
             )
 
-        # Validate password against Django's password validators.
-        validate_password(
-            password,
-            user=None,
-        )
+        validate_password(password, user=None)
 
         return attrs
 
     def create(self, validated_data):
-        """
-        Create the account using AccountsManager.create_user().
-        """
-
         password = validated_data.pop("password")
 
-        # Server-controlled defaults.
         validated_data["role"] = "user"
         validated_data["auth_provider"] = "local"
 
@@ -154,14 +141,27 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# UPDATE USER SERIALIZER
+# UPDATE — GENERAL ACCOUNT DETAILS
+# (everything except: role, image, password, auth_provider)
 # ============================================================
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     """
-    Serializer used to update the authenticated user's profile.
+    Update the authenticated user's general details.
 
-    Role and authentication provider cannot be changed here.
+    Editable fields:
+        - email
+        - first_name
+        - last_name
+        - gender
+        - phone_number
+
+    NOT editable here:
+        - role
+        - profile_image_url / profile_image_public_id
+        - password
+        - auth_provider
+        - is_active
     """
 
     class Meta:
@@ -177,8 +177,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         """
-        Ensure the new email is not already being used
-        by another account.
+        Ensure the new email is not already used by another account.
         """
 
         value = value.strip().lower()
@@ -196,14 +195,51 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate_first_name(self, value):
+        value = (value or "").strip()
+        if len(value) > 80:
+            raise serializers.ValidationError(
+                "First name cannot exceed 80 characters."
+            )
+        return value
+
+    def validate_last_name(self, value):
+        value = (value or "").strip()
+        if len(value) > 80:
+            raise serializers.ValidationError(
+                "Last name cannot exceed 80 characters."
+            )
+        return value
+
+    def validate_phone_number(self, value):
+        """
+        Basic sanity check — max length is enforced by the field.
+        """
+
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        # Let blank / None through
+        if value == "":
+            return None
+
+        return value
+
 
 # ============================================================
-# UPDATE PASSWORD SERIALIZER
+# UPDATE PASSWORD
 # ============================================================
 
 class UpdatePasswordSerializer(serializers.Serializer):
     """
-    Serializer used to change the authenticated user's password.
+    Change the authenticated user's password.
+
+    Requires:
+        - old_password
+        - new_password
+        - new_password2
     """
 
     old_password = serializers.CharField(
@@ -223,10 +259,6 @@ class UpdatePasswordSerializer(serializers.Serializer):
     )
 
     def validate_old_password(self, value):
-        """
-        Verify that the current password is correct.
-        """
-
         request = self.context.get("request")
 
         if not request or not request.user.is_authenticated:
@@ -242,17 +274,22 @@ class UpdatePasswordSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        """
-        Validate the new password.
-        """
-
         new_password = attrs.get("new_password")
         new_password2 = attrs.get("new_password2")
 
         if new_password != new_password2:
             raise serializers.ValidationError(
+                {"new_password2": "Passwords do not match."}
+            )
+
+        # Prevent reusing the same password
+        if new_password == attrs.get("old_password"):
+            raise serializers.ValidationError(
                 {
-                    "new_password2": "Passwords do not match."
+                    "new_password": (
+                        "New password must be different "
+                        "from the current one."
+                    )
                 }
             )
 
@@ -264,18 +301,11 @@ class UpdatePasswordSerializer(serializers.Serializer):
         return attrs
 
     def save(self, **kwargs):
-        """
-        Set the new password.
-        """
-
         user = self.context["request"].user
 
         user.set_password(
             self.validated_data["new_password"]
         )
-
-        user.save(
-            update_fields=["password"]
-        )
+        user.save(update_fields=["password"])
 
         return user

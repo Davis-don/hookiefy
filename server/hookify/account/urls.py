@@ -1,17 +1,23 @@
+# account/urls.py
+
 from django.urls import path
 
 from . import views
 
 
 urlpatterns = [
-    # Health
+    # ========================================================
+    # HEALTH
+    # ========================================================
     path(
         "health/",
         views.health_check,
         name="health_check",
     ),
 
-    # Authentication
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
     path(
         "register/",
         views.create_user,
@@ -33,19 +39,36 @@ urlpatterns = [
         name="auth_check",
     ),
 
-    # Google authentication
+    # ========================================================
+    # GOOGLE AUTHENTICATION
+    # ========================================================
     path(
         "google/",
         views.google_auth,
         name="google_auth",
     ),
 
-    # Profile
+    # ========================================================
+    # PROFILE — READ
+    # ========================================================
+    path(
+        "me/",
+        views.current_user,
+        name="current_user",
+    ),
+
+    # ========================================================
+    # PROFILE — UPDATE (general details)
+    # ========================================================
     path(
         "profile/",
         views.update_user,
         name="update_user",
     ),
+
+    # ========================================================
+    # PROFILE IMAGE
+    # ========================================================
     path(
         "profile/image/",
         views.profile_image_url,
@@ -57,14 +80,18 @@ urlpatterns = [
         name="upload_profile_image",
     ),
 
-    # Profile completeness
+    # ========================================================
+    # PROFILE COMPLETENESS
+    # ========================================================
     path(
         "profile/status/",
         views.profile_status,
         name="profile_status",
     ),
 
-    # Password
+    # ========================================================
+    # PASSWORD — UPDATE
+    # ========================================================
     path(
         "password/",
         views.update_password,

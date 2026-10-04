@@ -9,8 +9,6 @@ class Posts(models.Model):
 
     # --------------------------------------------------------
     # BUSINESS (many-to-one)
-    # A business can have many posts;
-    # a post belongs to exactly one business.
     # --------------------------------------------------------
 
     business = models.ForeignKey(
@@ -53,6 +51,15 @@ class Posts(models.Model):
         blank=False,
         null=False,
         help_text="Cloudinary public ID — used for deletion / updates.",
+    )
+
+    # --------------------------------------------------------
+    # VIEWS
+    # --------------------------------------------------------
+
+    views = models.PositiveIntegerField(
+        default=0,
+        help_text="Total number of times this post was opened.",
     )
 
     # --------------------------------------------------------

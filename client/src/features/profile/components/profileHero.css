@@ -1,0 +1,252 @@
+/* src/pages/accounts/profile/components/profileHero.css */
+
+/* ============================================================
+   HERO — flush to the container, no curves, no gaps
+   ============================================================ */
+
+.pf-hero {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  border: 0;
+  border-radius: 0;
+}
+
+/* ============================================================
+   COVER — edge to edge, square
+   ============================================================ */
+
+.pf-hero-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 600px;
+  overflow: hidden;
+  border-radius: 0;                    /* no curves */
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.pf-hero-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.05);
+  display: block;
+  border-radius: 0;
+}
+
+/* Neutral light fallback with hint */
+.pf-hero-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 25%, #eaeaea 0%, #f7f7f7 55%, #ffffff 100%),
+    linear-gradient(135deg, #f4f4f4 0%, #ffffff 100%);
+}
+
+.pf-hero-cover-hint {
+  color: #9a9a9a;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── + Upload button — bottom-left ──────────────────── */
+
+.pf-hero-cover-add {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: #0a0a0a;
+  border: 0;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.15s ease,
+    transform 0.08s ease,
+    box-shadow 0.15s ease;
+  z-index: 3;
+}
+
+.pf-hero-cover-add:hover:not(:disabled) {
+  background: #f7f7f7;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.26),
+    0 3px 8px rgba(0, 0, 0, 0.14);
+}
+
+.pf-hero-cover-add:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.pf-hero-cover-add:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Hidden file input */
+.pf-hero-file {
+  display: none;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .pf-hero-cover {
+    aspect-ratio: 1 / 1;
+    max-height: 420px;
+  }
+
+  .pf-hero-cover-add {
+    left: 14px;
+    bottom: 14px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .pf-hero-cover-hint {
+    font-size: 0.9rem;
+  }
+}
+/* ============================================================
+   UPLOADING OVERLAY — covers the whole image
+   ============================================================ */
+
+.pf-hero-cover-uploading {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: #ffffff;
+  animation: pf-fade-in 0.15s ease;
+}
+
+@keyframes pf-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ============================================================
+   STAGED PREVIEW — Cancel + Upload actions
+   ============================================================ */
+
+.pf-hero-cover-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+
+  padding: 14px 16px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.35) 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+
+  animation: pf-slide-up 0.2s ease;
+}
+
+@keyframes pf-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.pf-hero-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+
+  padding: 0.6rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 0.15s ease,
+    transform 0.06s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.pf-hero-action:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.pf-hero-action:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Ghost — cancel */
+.pf-hero-action-ghost {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.pf-hero-action-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Primary — upload */
+.pf-hero-action-primary {
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.pf-hero-action-primary:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+
+/* Mobile tweak */
+@media (max-width: 480px) {
+  .pf-hero-cover-actions {
+    padding: 12px 14px;
+  }
+
+  .pf-hero-action {
+    padding: 0.55rem 1rem;
+    font-size: 0.86rem;
+  }
+}

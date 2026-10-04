@@ -9,8 +9,6 @@ class Products(models.Model):
 
     # --------------------------------------------------------
     # BUSINESS (many-to-one)
-    # A business can have many products;
-    # a product belongs to exactly one business.
     # --------------------------------------------------------
 
     business = models.ForeignKey(
@@ -68,9 +66,16 @@ class Products(models.Model):
     )
 
     # --------------------------------------------------------
+    # VIEWS
+    # --------------------------------------------------------
+
+    views = models.PositiveIntegerField(
+        default=0,
+        help_text="Total number of times this product was opened.",
+    )
+
+    # --------------------------------------------------------
     # PRODUCT PROPERTIES — all optional
-    # The owner can fill any subset of these, or none at all.
-    # Examples: "Size: XL", "Colour: Blue", "Material: Cotton"
     # --------------------------------------------------------
 
     property1 = models.CharField(
