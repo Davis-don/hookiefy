@@ -1,4 +1,4 @@
-/* src/components/storiestab.css */
+/* src/pages/accounts/User/components/storiestab.css */
 
 /* ============================================================
    ROOT
@@ -8,62 +8,120 @@
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 0 1rem 1.5rem;
   font-family: inherit;
 }
 
 /* ============================================================
-   SWITCHER
+   SWITCHER — sticky, shrinks on scroll
    ============================================================ */
 
 .stories-tab__switcher {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
   display: flex;
+  align-items: center;
   gap: 2rem;
+
+  padding: 1rem 0 0.85rem;
+  margin: 0 -1rem 1.5rem;         /* bleed to card edges */
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1.5rem;
+
+  transition:
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
-/* Each tab button */
+/* Compact state — 32px+ of scroll */
+.stories-tab__switcher.is-compact {
+  padding-top: 0.55rem;
+  padding-bottom: 0.5rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* ── Tab button ─────────────────────────────────────── */
+
 .stories-tab__btn {
   position: relative;
-  padding: 0.75rem 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.15rem;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6b7280;                       /* muted by default */
-  transition: color 0.2s ease;
-  letter-spacing: 0.01em;
+  font: inherit;
+  color: #6b7280;
+  letter-spacing: 0.005em;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 0.18s ease,
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stories-tab__btn:hover {
   color: #111827;
 }
 
-/* Active tab text */
 .stories-tab__btn.is-active {
   color: #111827;
-  font-weight: 600;
 }
 
-/* Animated underline */
+/* Label */
+.stories-tab__label {
+  font-size: 1rem;
+  font-weight: 500;
+  transition:
+    font-size 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    font-weight 0.18s ease;
+}
+
+.stories-tab__btn.is-active .stories-tab__label {
+  font-weight: 700;
+}
+
+/* Compact label sizing */
+.stories-tab__switcher.is-compact .stories-tab__btn {
+  padding: 0.35rem 0.15rem;
+}
+
+.stories-tab__switcher.is-compact .stories-tab__label {
+  font-size: 0.94rem;
+}
+
+/* ── Underline (animated) ───────────────────────────── */
+
 .stories-tab__underline {
   position: absolute;
   left: 0;
-  bottom: -1px;                          /* sit on top of the border */
+  right: 0;
+  bottom: -1px;
   height: 2px;
-  width: 100%;
-  background: #111827;
   border-radius: 2px;
+  background: #111827;
   transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stories-tab__btn.is-active .stories-tab__underline {
   transform: scaleX(1);
+}
+
+/* Compact underline slightly thinner */
+.stories-tab__switcher.is-compact .stories-tab__underline {
+  height: 1.5px;
 }
 
 /* ============================================================
@@ -71,13 +129,14 @@
    ============================================================ */
 
 .stories-tab__content {
-  animation: fadeIn 0.25s ease;
+  animation: stories-fade-in 0.28s ease;
+  padding-top: 0.25rem;
 }
 
-@keyframes fadeIn {
+@keyframes stories-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -85,41 +144,50 @@
   }
 }
 
-.stories-panel {
-  min-height: 220px;
-  padding: 1.25rem 0;
-}
-
-.stories-panel__empty {
-  text-align: center;
-  color: #6b7280;
-  padding: 3rem 1rem;
-  border: 1px dashed #e5e7eb;
-  border-radius: 12px;
-  background: #fafafa;
-}
-
-.stories-panel__empty h3 {
-  margin: 0 0 0.5rem;
-  color: #111827;
-  font-size: 1.15rem;
-}
-
-.stories-panel__empty p {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 
-@media (max-width: 480px) {
-  .stories-tab__switcher {
-    gap: 1.25rem;
+@media (max-width: 640px) {
+  .stories-tab {
+    padding: 0 0.85rem 1.25rem;
   }
 
-  .stories-tab__btn {
-    font-size: 0.95rem;
+  .stories-tab__switcher {
+    gap: 1.5rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+    margin-left: -0.85rem;
+    margin-right: -0.85rem;
+  }
+
+  .stories-tab__label {
+    font-size: 0.98rem;
+  }
+
+  .stories-tab__switcher.is-compact .stories-tab__label {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .stories-tab__switcher {
+    gap: 1.1rem;
+  }
+
+  .stories-tab__label {
+    font-size: 0.94rem;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .stories-tab__switcher,
+  .stories-tab__btn,
+  .stories-tab__label,
+  .stories-tab__underline,
+  .stories-tab__content {
+    transition: none !important;
+    animation: none !important;
   }
 }
