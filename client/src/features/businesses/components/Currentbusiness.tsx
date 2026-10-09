@@ -1,6 +1,4 @@
-// src/features/businesses/pages/Currentbusiness.tsx
-
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
@@ -12,48 +10,11 @@ import EditBusiness from './EditBusiness';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import './currentbusiness.css';
 
-// ============================================================
-// TYPES
-// ============================================================
-
 type CurrentbusinessProps = {
   businessId: number;
   onBack?: () => void;
   onDeleted?: () => void;
 };
-
-// ============================================================
-// SCROLL PARENT HELPER
-// ============================================================
-
-/**
- * Find the nearest scrollable ancestor of `el` (or `window`).
- * Lets the sticky topbar react to whichever container actually
- * scrolls — window, main, or a wrapper div.
- */
-function findScrollParent(el: HTMLElement | null): HTMLElement | Window {
-  let node = el?.parentElement ?? null;
-
-  while (node) {
-    const style = window.getComputedStyle(node);
-    const overflowY = style.overflowY;
-    const canScroll =
-      overflowY === 'auto' ||
-      overflowY === 'scroll' ||
-      overflowY === 'overlay';
-
-    if (canScroll && node.scrollHeight > node.clientHeight) {
-      return node;
-    }
-    node = node.parentElement;
-  }
-
-  return window;
-}
-
-// ============================================================
-// COMPONENT
-// ============================================================
 
 function Currentbusiness({
   businessId,
@@ -67,9 +28,6 @@ function Currentbusiness({
   const [addingPost, setAddingPost] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [compact, setCompact] = useState(false);
-
-  const topbarRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data: business,
@@ -92,51 +50,12 @@ function Currentbusiness({
       onDeleted?.();
       onBack?.();
     },
-    onError: (err: unknown) => {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Could not delete this business.';
-      toast.error(message);
+    onError: (err: any) => {
+      toast.error(err?.message || 'Could not delete this business.');
       setConfirmDeleteOpen(false);
     },
   });
 
-  // ── Compact-on-scroll ────────────────────────────────
-  useEffect(() => {
-    const bar = topbarRef.current;
-    if (!bar) return;
-
-    const scrollTarget = findScrollParent(bar);
-
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-
-      requestAnimationFrame(() => {
-        const y =
-          scrollTarget instanceof Window
-            ? scrollTarget.scrollY
-            : scrollTarget.scrollTop;
-
-        setCompact(y > 32);
-        ticking = false;
-      });
-    };
-
-    const target: HTMLElement | Window =
-      scrollTarget instanceof Window ? window : scrollTarget;
-
-    target.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    return () => {
-      target.removeEventListener('scroll', onScroll);
-    };
-  }, []);
-
-  // ── Loading ──────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="cb-state">
@@ -145,7 +64,6 @@ function Currentbusiness({
     );
   }
 
-  // ── Error ────────────────────────────────────────────
   if (isError || !business) {
     return (
       <div className="cb-state cb-state-error">
@@ -154,7 +72,7 @@ function Currentbusiness({
     );
   }
 
-  // ── Edit takes over ──────────────────────────────────
+  // ── Edit view takes over ──────────────────────────────
   if (editing) {
     return (
       <EditBusiness
@@ -165,7 +83,7 @@ function Currentbusiness({
     );
   }
 
-  // ── Add-post takes over ──────────────────────────────
+  // ── Add-post view takes over ──────────────────────────
   if (addingPost) {
     return (
       <Addpost
@@ -179,11 +97,8 @@ function Currentbusiness({
 
   return (
     <div className="cb-shell">
-      {/* ── Sticky top bar (compacts on scroll) ────── */}
-      <div
-        ref={topbarRef}
-        className={'cb-topbar' + (compact ? ' is-compact' : '')}
-      >
+      {/* ── Top bar ────────────────────────────────── */}
+      <div className="cb-topbar">
         <div className="cb-topbar-left">
           {onBack && (
             <button
@@ -193,17 +108,9 @@ function Currentbusiness({
               aria-label="Back to list"
               title="Back to list"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+                strokeLinejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -221,17 +128,9 @@ function Currentbusiness({
             aria-label="Write a new post for this business"
             title="New post"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               <line x1="12" y1="8" x2="12" y2="14" />
               <line x1="9" y1="11" x2="15" y2="11" />
@@ -246,17 +145,9 @@ function Currentbusiness({
             aria-label="Edit business"
             title="Edit"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
               <path d="M12 20h9" />
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
             </svg>
@@ -270,17 +161,9 @@ function Currentbusiness({
             aria-label="Delete business"
             title="Delete"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
               <path d="M10 11v6" />
@@ -291,71 +174,62 @@ function Currentbusiness({
         </div>
       </div>
 
-      {/* ── Everything below scrolls normally ──────── */}
-      <div className="cb-body">
-        {/* Header */}
-        <div className="cb-header">
-          <h2 className="cb-title">
-            {business.business_name || 'Untitled business'}
-          </h2>
+      {/* ── Header ─────────────────────────────────── */}
+      <div className="cb-header">
+        <h2 className="cb-title">
+          {business.business_name || 'Untitled business'}
+        </h2>
 
-          <div className="cb-tags">
-            <span className={`cb-tag cb-tag-${business.business_category}`}>
-              {business.business_category_display}
-            </span>
-            <span
-              className={`cb-tag cb-tag-status is-${String(
-                business.status || ''
-              )
-                .toLowerCase()
-                .trim()}`}
-            >
-              {business.status_display || business.status || 'Unknown'}
-            </span>
-          </div>
-        </div>
-
-        {/* Details grid */}
-        <div className="cb-grid">
-          <div className="cb-field">
-            <span className="cb-label">Business type</span>
-            <span className="cb-value">{business.business_type || '—'}</span>
-          </div>
-
-          <div className="cb-field">
-            <span className="cb-label">County</span>
-            <span className="cb-value">{business.county || '—'}</span>
-          </div>
-
-          <div className="cb-field">
-            <span className="cb-label">City / Town</span>
-            <span className="cb-value">{business.city_town || '—'}</span>
-          </div>
-
-          <div className="cb-field">
-            <span className="cb-label">Region / Area</span>
-            <span className="cb-value">{business.region || '—'}</span>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="cb-field cb-field-full">
-          <span className="cb-label">Description</span>
-          <p className="cb-description">
-            {business.description || 'No description provided.'}
-          </p>
-        </div>
-
-        {/* Meta */}
-        <div className="cb-meta">
-          <span>
-            Created {new Date(business.created_at).toLocaleDateString()}
+        <div className="cb-tags">
+          <span className={`cb-tag cb-tag-${business.business_category}`}>
+            {business.business_category_display}
           </span>
-          <span>·</span>
-          <span>
-            Updated {new Date(business.updated_at).toLocaleDateString()}
+          <span
+            className={`cb-tag cb-tag-status is-${String(business.status || '')
+              .toLowerCase()
+              .trim()}`}
+          >
+            {business.status_display || business.status || 'Unknown'}
           </span>
         </div>
+      </div>
+
+      {/* ── Details grid ───────────────────────────── */}
+      <div className="cb-grid">
+        <div className="cb-field">
+          <span className="cb-label">Business type</span>
+          <span className="cb-value">{business.business_type || '—'}</span>
+        </div>
+
+        <div className="cb-field">
+          <span className="cb-label">County</span>
+          <span className="cb-value">{business.county || '—'}</span>
+        </div>
+
+        <div className="cb-field">
+          <span className="cb-label">City / Town</span>
+          <span className="cb-value">{business.city_town || '—'}</span>
+        </div>
+
+        <div className="cb-field">
+          <span className="cb-label">Region / Area</span>
+          <span className="cb-value">{business.region || '—'}</span>
+        </div>
+      </div>
+
+      {/* ── Description ────────────────────────────── */}
+      <div className="cb-field cb-field-full">
+        <span className="cb-label">Description</span>
+        <p className="cb-description">
+          {business.description || 'No description provided.'}
+        </p>
+      </div>
+
+      {/* ── Meta ───────────────────────────────────── */}
+      <div className="cb-meta">
+        <span>Created {new Date(business.created_at).toLocaleDateString()}</span>
+        <span>·</span>
+        <span>Updated {new Date(business.updated_at).toLocaleDateString()}</span>
       </div>
 
       {/* ── Delete confirmation ─────────────────────── */}

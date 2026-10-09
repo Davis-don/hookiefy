@@ -1,23 +1,66 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — POSTS / PRODUCTS SHELL
-   Top bar with back button · Posts / Products tabs
+   Sticky header (topbar + switcher) that compacts on scroll.
    All classes prefixed .ap-.
    ───────────────────────────────────────────────────────── */
 
 .ap-shell {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;                               /* spacing handled by .ap-sticky */
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* ── Top bar ─────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   STICKY HEADER — topbar + switcher
+   ───────────────────────────────────────────────────────── */
+
+.ap-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 12px 0 12px;
+  margin: 0 -4px 22px;
+  padding-left: 4px;
+  padding-right: 4px;
+
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+
+  border-bottom: 1px solid #EEF2F7;
+
+  transition:
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    gap 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-bottom 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+/* Compact state — kicked in after ~32px of scroll */
+.ap-sticky.is-compact {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 10px rgba(15, 23, 42, 0.05);
+}
+
+/* ── Top bar (back + crumb) ──────────────────────────── */
 .ap-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #EEF2F7;
+  gap: 12px;
+  transition: padding 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ap-topbar-left {
@@ -47,7 +90,8 @@
     color 0.18s ease,
     background 0.18s ease,
     transform 0.15s ease,
-    box-shadow 0.18s ease;
+    box-shadow 0.18s ease,
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
 }
@@ -77,6 +121,12 @@
   box-shadow: none;
 }
 
+/* Slightly tighter back button in compact state */
+.ap-sticky.is-compact .ap-back-btn {
+  padding: 6px 12px 6px 8px;
+  font-size: 0.86rem;
+}
+
 /* ── Crumb text ──────────────────────────────────────── */
 .ap-topbar-crumb {
   font-size: 0.96rem;
@@ -86,9 +136,24 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  transition: font-size 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Segmented switcher ─────────────────────────────── */
+.ap-sticky.is-compact .ap-topbar-crumb {
+  font-size: 0.9rem;
+}
+
+.ap-crumb-section { color: #0F172A; }
+
+.ap-crumb-sep {
+  margin: 0 6px;
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+.ap-crumb-business { color: #64748B; }
+
+/* ── Segmented switcher ──────────────────────────────── */
 .ap-switch {
   display: inline-flex;
   align-items: stretch;
@@ -98,6 +163,11 @@
   background: #F1F5F9;
   border-radius: 12px;
   max-width: 100%;
+  transition: padding 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ap-sticky.is-compact .ap-switch {
+  padding: 3px;
 }
 
 .ap-switch-btn {
@@ -119,9 +189,16 @@
     background 0.22s ease,
     color 0.22s ease,
     box-shadow 0.22s ease,
-    transform 0.22s ease;
+    transform 0.22s ease,
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+}
+
+.ap-sticky.is-compact .ap-switch-btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
 }
 
 .ap-switch-btn:hover { color: #0F172A; }
@@ -146,11 +223,28 @@
 .ap-content {
   width: 100%;
   min-width: 0;
+  animation: ap-fade-in 0.28s ease;
+}
+
+@keyframes ap-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 640px) {
-  .ap-shell { gap: 16px; }
+  .ap-sticky {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .ap-sticky.is-compact {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
 
   .ap-topbar-left { gap: 12px; }
 
@@ -161,7 +255,13 @@
   }
   .ap-back-btn svg { width: 16px; height: 16px; }
 
+  .ap-sticky.is-compact .ap-back-btn {
+    padding: 6px 10px 6px 7px;
+    font-size: 0.82rem;
+  }
+
   .ap-topbar-crumb { font-size: 0.9rem; }
+  .ap-sticky.is-compact .ap-topbar-crumb { font-size: 0.84rem; }
 
   .ap-switch {
     width: 100%;
@@ -174,6 +274,11 @@
     font-size: 0.92rem;
     gap: 6px;
   }
+
+  .ap-sticky.is-compact .ap-switch-btn {
+    padding: 8px 8px;
+    font-size: 0.88rem;
+  }
 }
 
 @media (max-width: 380px) {
@@ -185,8 +290,14 @@
     height: 36px;
     justify-content: center;
   }
+  .ap-sticky.is-compact .ap-back-btn {
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+  }
 
   .ap-topbar-crumb { font-size: 0.86rem; }
+  .ap-sticky.is-compact .ap-topbar-crumb { font-size: 0.8rem; }
 
   .ap-switch-btn {
     font-size: 0.86rem;
@@ -194,5 +305,24 @@
     padding: 9px 6px;
   }
 
+  .ap-sticky.is-compact .ap-switch-btn {
+    font-size: 0.82rem;
+    padding: 8px 4px;
+  }
+
   .ap-switch-btn svg { width: 14px; height: 14px; }
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ap-sticky,
+  .ap-topbar,
+  .ap-back-btn,
+  .ap-topbar-crumb,
+  .ap-switch,
+  .ap-switch-btn,
+  .ap-content {
+    transition: none !important;
+    animation: none !important;
+  }
 }
