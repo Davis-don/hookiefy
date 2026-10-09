@@ -8,7 +8,6 @@ from rest_framework import status
 
 from account.controllers.cloudinary_utils import (
     delete_image_from_cloudinary,
-    bulk_delete_images_from_cloudinary,
 )
 
 from .models import Businesses
@@ -16,6 +15,7 @@ from .serializers import (
     BusinessSerializer,
     BusinessCreateSerializer,
     BusinessUpdateSerializer,
+    BusinessDetailSerializer,
 )
 
 
@@ -75,7 +75,6 @@ def _delete_business_images(business):
         products = []
 
     for product in products:
-        # Each product has a related ProductImage queryset
         try:
             images = list(product.images.all())
         except Exception:
@@ -209,7 +208,7 @@ def list_all_businesses(request):
 
 
 # ============================================================
-# RETRIEVE — GET /businesses/<id>/
+# RETRIEVE (owner only) — GET /businesses/<id>/
 # ============================================================
 
 @api_view(["GET"])
@@ -229,6 +228,55 @@ def retrieve_business(request, business_id):
 
     return Response(
         BusinessSerializer(business).data,
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# RETRIEVE DETAILS — GET /businesses/<id>/details/
+#
+# Authenticated. Returns the business plus ALL its posts and
+# ALL its products (with images + properties). NO owner/account
+# details are included.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def retrieve_business_details(request, business_id):
+    """
+    Full details of a single business:
+
+        - Business fields (name, category, type, location, status)
+        - Every post (title, body, image, views, timestamps)
+        - Every product (name, description, price, images,
+          properties, views, timestamps)
+        - Counts of posts and products
+
+    Deliberately excludes any owner / account information.
+    """
+
+    business = (
+        Businesses.objects
+        .filter(id=business_id)
+        .prefetch_related(
+            "posts",
+            "products",
+            "products__images",
+            "products__property_items",
+        )
+        .first()
+    )
+
+    if business is None:
+        return Response(
+            {"message": "Business not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    serializer = BusinessDetailSerializer(business)
+
+    return Response(
+        {"business": serializer.data},
         status=status.HTTP_200_OK,
     )
 
@@ -326,12 +374,6 @@ def update_business_status(request, business_id):
 
 # ============================================================
 # DELETE — DELETE /businesses/<id>/delete/
-#
-# Deletes:
-#   - every Cloudinary image for every Post
-#   - every Cloudinary image for every Product (via ProductImage)
-#   - the business row (cascades to Posts, Products, ProductImages,
-#     ProductProperties via Django's CASCADE)
 # ============================================================
 
 @api_view(["DELETE"])
@@ -349,15 +391,7 @@ def delete_business(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # 1. Delete all Cloudinary assets first. Do this while the
-    #    related posts/products/images still exist, because after
-    #    business.delete() the cascade removes them and we lose
-    #    their image_public_id values.
     cleanup = _delete_business_images(business)
-
-    # 2. Now delete the business row. Django's CASCADE removes
-    #    every related Post, Product, ProductImage and
-    #    ProductProperty row automatically.
     business.delete()
 
     return Response(

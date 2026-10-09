@@ -8,24 +8,31 @@ import './postcard.css';
 
 type PostCardProps = {
   item: FeedItem;
+  onOpenBusiness: (businessId: number) => void;
 };
 
-/** Show this many lines before clamping. */
 const CLAMP_LINES = 2;
 
-function PostCard({ item }: PostCardProps) {
+function PostCard({ item, onOpenBusiness }: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const body = item.body ?? '';
-  // Rough check: assume ~60 chars fit per line at the current font size.
   const isLong = body.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
+
+  const openBusiness = () => onOpenBusiness(item.business.id);
 
   return (
     <article className="post-card">
       {/* ── 1. Header: avatar + business name ───────── */}
       <header className="post-card__header">
-        <div className="post-card__avatar">
+        <button
+          type="button"
+          className="post-card__avatar"
+          onClick={openBusiness}
+          aria-label={`Open ${item.business.business_name}`}
+          title={item.business.business_name}
+        >
           {item.owner?.profile_image_url ? (
             <img
               src={item.owner.profile_image_url}
@@ -37,22 +44,31 @@ function PostCard({ item }: PostCardProps) {
               {(item.business.business_name || 'B').charAt(0).toUpperCase()}
             </span>
           )}
-        </div>
+        </button>
 
-        <span className="post-card__business">
+        <button
+          type="button"
+          className="post-card__business"
+          onClick={openBusiness}
+        >
           {item.business.business_name}
-        </span>
+        </button>
       </header>
 
       {/* ── 2. Cover image ──────────────────────────── */}
       {item.image_url && (
-        <div className="post-card__cover">
+        <button
+          type="button"
+          className="post-card__cover"
+          onClick={openBusiness}
+          aria-label={`Open ${item.business.business_name}`}
+        >
           <img
             src={item.image_url}
             alt={item.title ?? 'Post'}
             loading="lazy"
           />
-        </div>
+        </button>
       )}
 
       {/* ── 3. Actions: like + follow ───────────────── */}
@@ -61,11 +77,17 @@ function PostCard({ item }: PostCardProps) {
         <FollowButton businessId={item.business.id} />
       </div>
 
-      {/* ── 4. Body: title + clamped description ────── */}
+      {/* ── 4. Body ─────────────────────────────────── */}
       {(item.title || body) && (
         <div className="post-card__body">
           {item.title && (
-            <h4 className="post-card__title">{item.title}</h4>
+            <button
+              type="button"
+              className="post-card__title"
+              onClick={openBusiness}
+            >
+              {item.title}
+            </button>
           )}
 
           {body && (

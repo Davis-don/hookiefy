@@ -8,6 +8,7 @@ import './productcard.css';
 
 type ProductCardProps = {
   item: FeedItem;
+  onOpenBusiness: (businessId: number) => void;
 };
 
 const CLAMP_LINES = 2;
@@ -19,7 +20,7 @@ function formatPrice(price: string | null | undefined): string | null {
   return `KES ${n.toLocaleString()}`;
 }
 
-function ProductCard({ item }: ProductCardProps) {
+function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const priceLabel = formatPrice(item.price);
@@ -27,11 +28,19 @@ function ProductCard({ item }: ProductCardProps) {
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
+  const openBusiness = () => onOpenBusiness(item.business.id);
+
   return (
     <article className="product-card">
       {/* ── 1. Header: avatar + business name ───────── */}
       <header className="product-card__header">
-        <div className="product-card__avatar">
+        <button
+          type="button"
+          className="product-card__avatar"
+          onClick={openBusiness}
+          aria-label={`Open ${item.business.business_name}`}
+          title={item.business.business_name}
+        >
           {item.owner?.profile_image_url ? (
             <img
               src={item.owner.profile_image_url}
@@ -43,22 +52,31 @@ function ProductCard({ item }: ProductCardProps) {
               {(item.business.business_name || 'B').charAt(0).toUpperCase()}
             </span>
           )}
-        </div>
+        </button>
 
-        <span className="product-card__business">
+        <button
+          type="button"
+          className="product-card__business"
+          onClick={openBusiness}
+        >
           {item.business.business_name}
-        </span>
+        </button>
       </header>
 
       {/* ── 2. Cover image ──────────────────────────── */}
       {item.image_url && (
-        <div className="product-card__cover">
+        <button
+          type="button"
+          className="product-card__cover"
+          onClick={openBusiness}
+          aria-label={`Open ${item.business.business_name}`}
+        >
           <img
             src={item.image_url}
             alt={item.name ?? 'Product'}
             loading="lazy"
           />
-        </div>
+        </button>
       )}
 
       {/* ── 3. Actions: like + follow ───────────────── */}
@@ -67,10 +85,16 @@ function ProductCard({ item }: ProductCardProps) {
         <FollowButton businessId={item.business.id} />
       </div>
 
-      {/* ── 4. Body: name + price + clamped desc + props */}
+      {/* ── 4. Body ─────────────────────────────────── */}
       <div className="product-card__body">
         {item.name && (
-          <h4 className="product-card__name">{item.name}</h4>
+          <button
+            type="button"
+            className="product-card__name"
+            onClick={openBusiness}
+          >
+            {item.name}
+          </button>
         )}
 
         {priceLabel && (

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useBusinessFeed } from '../hooks/useBusinessFeed';
 import { useAuthStore } from '../../../../store/authStore';
 import { Spinner } from '../../../../components/spinner/Spinner';
+import BusinessDetails from '../../../businesses/components/BusinessDetails';
 import PostCard from './feed/PostCard';
 import ProductCard from './feed/ProductCard';
 import './home.css';
@@ -11,6 +12,7 @@ import './home.css';
 function Home() {
   const access = useAuthStore((s) => s.access);
   const [limit] = useState(20);
+  const [activeBusinessId, setActiveBusinessId] = useState<number | null>(null);
 
   const {
     data,
@@ -20,6 +22,16 @@ function Home() {
     refetch,
     isFetching,
   } = useBusinessFeed({ limit, kind: 'all' });
+
+  // ── Business details takes over the entire Home view ──
+  if (activeBusinessId !== null) {
+    return (
+      <BusinessDetails
+        businessId={activeBusinessId}
+        onBack={() => setActiveBusinessId(null)}
+      />
+    );
+  }
 
   if (!access) {
     return (
@@ -75,9 +87,15 @@ function Home() {
         {items.map((item) => (
           <li key={`${item.kind}-${item.id}`} className="home-list-item">
             {item.kind === 'post' ? (
-              <PostCard item={item} />
+              <PostCard
+                item={item}
+                onOpenBusiness={setActiveBusinessId}
+              />
             ) : (
-              <ProductCard item={item} />
+              <ProductCard
+                item={item}
+                onOpenBusiness={setActiveBusinessId}
+              />
             )}
           </li>
         ))}

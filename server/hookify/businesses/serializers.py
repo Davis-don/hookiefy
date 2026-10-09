@@ -1,4 +1,7 @@
+# businesses/serializers.py
+
 from rest_framework import serializers
+
 from .models import Businesses
 
 
@@ -199,3 +202,172 @@ class BusinessUpdateSerializer(serializers.ModelSerializer):
                 attrs.pop("status", None)
 
         return attrs
+
+
+# ============================================================
+# FULL DETAILS — business + all posts + all products
+# ============================================================
+# No owner / account details are exposed here.
+
+class BusinessPostDetailSerializer(serializers.ModelSerializer):
+    """
+    One post inside the business-details payload.
+    """
+
+    class Meta:
+        from posts.models import Posts
+        model = Posts
+        fields = (
+            "id",
+            "title",
+            "body",
+            "image_url",
+            "image_public_id",
+            "views",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = fields
+
+
+class BusinessProductImageSerializer(serializers.ModelSerializer):
+    """
+    One product image inside the business-details payload.
+    """
+
+    class Meta:
+        from products.models import ProductImage
+        model = ProductImage
+        fields = (
+            "id",
+            "image_url",
+            "image_public_id",
+            "is_primary",
+            "sort_order",
+            "created_at",
+        )
+        read_only_fields = fields
+
+
+class BusinessProductPropertySerializer(serializers.ModelSerializer):
+    """
+    One product property inside the business-details payload.
+    """
+
+    class Meta:
+        from products.models import ProductProperty
+        model = ProductProperty
+        fields = (
+            "id",
+            "name",
+            "value",
+            "sort_order",
+        )
+        read_only_fields = fields
+
+
+class BusinessProductDetailSerializer(serializers.ModelSerializer):
+    """
+    One product inside the business-details payload,
+    with its images and properties nested.
+    """
+
+    images = BusinessProductImageSerializer(many=True, read_only=True)
+    properties = BusinessProductPropertySerializer(
+        source="property_items",
+        many=True,
+        read_only=True,
+    )
+    primary_image = serializers.SerializerMethodField()
+
+    class Meta:
+        from products.models import Products
+        model = Products
+        fields = (
+            "id",
+            "name",
+            "description",
+            "price",
+            "views",
+            "images",
+            "primary_image",
+            "properties",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = fields
+
+    def get_primary_image(self, obj):
+        image = obj.primary_image
+        if image is None:
+            return None
+        return BusinessProductImageSerializer(image).data
+
+
+class BusinessDetailSerializer(serializers.ModelSerializer):
+    """
+    Full details of a business:
+
+        - Business fields
+        - Every post
+        - Every product (with images + properties)
+        - Counts
+
+    Deliberately excludes owner / account details.
+    """
+
+    business_category_display = serializers.CharField(
+        source="get_business_category_display",
+        read_only=True,
+    )
+    status_display = serializers.CharField(
+        source="get_status_display",
+        read_only=True,
+    )
+
+    posts = serializers.SerializerMethodField()
+    products = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
+    product_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Businesses
+        fields = (
+            "id",
+            "business_name",
+            "business_category",
+            "business_category_display",
+            "business_type",
+            "description",
+            "county",
+            "city_town",
+            "region",
+            "status",
+            "status_display",
+            "post_count",
+            "product_count",
+            "posts",
+            "products",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = fields
+
+    def get_posts(self, obj):
+        qs = obj.posts.all().order_by("-created_at")
+        return BusinessPostDetailSerializer(qs, many=True).data
+
+    def get_products(self, obj):
+        qs = (
+            obj.products
+            .all()
+            .order_by("-created_at")
+            .prefetch_related("images", "property_items")
+        )
+        return BusinessProductDetailSerializer(qs, many=True).data
+
+    def get_post_count(self, obj):
+        return obj.posts.count()
+
+    def get_product_count(self, obj):
+        return obj.products.count()
