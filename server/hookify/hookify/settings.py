@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     "userprofile",
     "services",
     "stories",
+    "feed_data",
     "engagement",
     "plans",
     "assignments",

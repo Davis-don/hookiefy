@@ -61,6 +61,22 @@ urlpatterns = [
 
 
     # ============================================================
+    # FEED
+    # Merged posts + products stream and business feed.
+    # Every URL here starts with /feed/
+    #   /feed/stories/
+    #   /feed/stories/mine/
+    #   /feed/businesses/
+    #   /feed/businesses/mine/
+    # ============================================================
+
+    path(
+        "feed/",
+        include("feed_data.urls"),
+    ),
+
+
+    # ============================================================
     # SUBSCRIPTION PAYMENTS
     # ============================================================
 

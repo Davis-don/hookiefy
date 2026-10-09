@@ -1,0 +1,87 @@
+/* ─────────────────────────────────────────────────────────
+   LikeButton — icon-only heart toggle
+   Class prefix: .like-button
+   ───────────────────────────────────────────────────────── */
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+  color: #0F172A;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+/* ── Icon ───────────────────────────────────────────── */
+.like-button svg {
+  display: block;
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    fill 0.18s ease,
+    stroke 0.18s ease;
+}
+
+/* ── Hover ──────────────────────────────────────────── */
+.like-button:hover {
+  color: #E11D48;
+}
+
+.like-button:hover svg {
+  transform: scale(1.08);
+}
+
+/* ── Active (pressed) ───────────────────────────────── */
+.like-button:active {
+  transform: scale(0.94);
+}
+
+.like-button:active svg {
+  transform: scale(0.9);
+}
+
+/* ── Focus ──────────────────────────────────────────── */
+.like-button:focus-visible {
+  outline: none;
+  color: #E11D48;
+}
+
+.like-button:focus-visible svg {
+  filter: drop-shadow(0 0 0 2px rgba(225, 29, 72, 0.35));
+  border-radius: 50%;
+}
+
+/* ── Liked state (add `is-liked` on the button) ─────── */
+.like-button.is-liked {
+  color: #E11D48;
+}
+
+.like-button.is-liked svg {
+  fill: #E11D48;
+  stroke: #E11D48;
+}
+
+/* ── Disabled ───────────────────────────────────────── */
+.like-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .like-button,
+  .like-button svg {
+    transition: none !important;
+  }
+}

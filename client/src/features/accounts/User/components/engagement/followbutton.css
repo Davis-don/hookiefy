@@ -1,0 +1,86 @@
+/* ─────────────────────────────────────────────────────────
+   FollowButton — icon-only follow / following toggle
+   Class prefix: .follow-button
+   ───────────────────────────────────────────────────────── */
+
+.follow-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+  color: #0F172A;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+/* ── Icon ───────────────────────────────────────────── */
+.follow-button svg {
+  display: block;
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    fill 0.18s ease,
+    stroke 0.18s ease;
+}
+
+/* ── Hover ──────────────────────────────────────────── */
+.follow-button:hover {
+  color: #2563EB;
+}
+
+.follow-button:hover svg {
+  transform: scale(1.08);
+}
+
+/* ── Active (pressed) ───────────────────────────────── */
+.follow-button:active {
+  transform: scale(0.94);
+}
+
+.follow-button:active svg {
+  transform: scale(0.9);
+}
+
+/* ── Focus ──────────────────────────────────────────── */
+.follow-button:focus-visible {
+  outline: none;
+  color: #2563EB;
+}
+
+.follow-button:focus-visible svg {
+  filter: drop-shadow(0 0 0 2px rgba(37, 99, 235, 0.35));
+  border-radius: 50%;
+}
+
+/* ── Following state (add `is-following` on the button) */
+.follow-button.is-following {
+  color: #10B981;
+}
+
+.follow-button.is-following svg {
+  stroke: #10B981;
+}
+
+/* ── Disabled ───────────────────────────────────────── */
+.follow-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .follow-button,
+  .follow-button svg {
+    transition: none !important;
+  }
+}
