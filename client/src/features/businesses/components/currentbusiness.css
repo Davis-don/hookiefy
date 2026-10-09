@@ -1,13 +1,13 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — CURRENT BUSINESS
-   Top bar with back · add · edit · delete icon buttons.
-   All classes prefixed .cb-.
+   Sticky top bar that compacts on scroll (like the Stories
+   tab switcher). All classes prefixed .cb-.
    ───────────────────────────────────────────────────────── */
 
 .cb-shell {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 0;                              /* topbar handles its own spacing */
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
@@ -30,14 +30,43 @@
   color: #B91C1C;
 }
 
-/* ── Top bar ─────────────────────────────────────────── */
+/* ── Sticky top bar — compacts on scroll ────────────── */
 .cb-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 14px;
+
+  padding: 12px 0 14px;
+  margin: 0 -4px 22px;                 /* bleed just past the card edges */
+  padding-left: 4px;
+  padding-right: 4px;
+
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+
   border-bottom: 1px solid #EEF2F7;
+
+  transition:
+    padding 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    margin-bottom 0.22s ease;
+}
+
+/* Compact state — kicked in after ~32px of scroll */
+.cb-topbar.is-compact {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 10px rgba(15, 23, 42, 0.05);
 }
 
 .cb-topbar-left {
@@ -77,6 +106,8 @@
   color: #0F172A;
   cursor: pointer;
   transition:
+    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.22s cubic-bezier(0.4, 0, 0.2, 1),
     background 0.18s ease,
     color 0.18s ease,
     border-color 0.18s ease,
@@ -91,6 +122,12 @@
 }
 
 .cb-icon-btn:active { transform: translateY(0); }
+
+/* Compact — slightly smaller buttons */
+.cb-topbar.is-compact .cb-icon-btn {
+  width: 36px;
+  height: 36px;
+}
 
 .cb-icon-btn-back { color: #334155; }
 .cb-icon-btn-back:hover {
@@ -126,6 +163,19 @@
   color: #991B1B;
 }
 
+/* ── Body (everything that scrolls under the topbar) ── */
+.cb-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: cb-fade-in 0.28s ease;
+}
+
+@keyframes cb-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Header ─────────────────────────────────────────── */
 .cb-header {
   display: flex;
@@ -141,6 +191,13 @@
   line-height: 1.2;
   margin: 0;
   word-break: break-word;
+  transition: font-size 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Compact title — the business name quietly shrinks to
+   match the tightened top bar without jumping layout. */
+.cb-topbar.is-compact + .cb-body .cb-title {
+  font-size: 1.4rem;
 }
 
 .cb-tags {
@@ -227,11 +284,25 @@
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 640px) {
-  .cb-shell { gap: 18px; }
-  .cb-topbar { padding-bottom: 12px; gap: 10px; }
+  .cb-topbar {
+    gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .cb-topbar.is-compact {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
   .cb-topbar-crumb { font-size: 0.88rem; }
   .cb-icon-btn { width: 38px; height: 38px; }
+  .cb-topbar.is-compact .cb-icon-btn { width: 34px; height: 34px; }
+
+  .cb-body { gap: 18px; }
   .cb-title { font-size: 1.3rem; }
+  .cb-topbar.is-compact + .cb-body .cb-title { font-size: 1.15rem; }
+
   .cb-grid { grid-template-columns: 1fr; gap: 12px; }
   .cb-field { padding: 14px; }
   .cb-value,
@@ -241,5 +312,19 @@
 @media (max-width: 380px) {
   .cb-topbar-crumb { display: none; }
   .cb-title { font-size: 1.15rem; }
+  .cb-topbar.is-compact + .cb-body .cb-title { font-size: 1.05rem; }
+
   .cb-icon-btn { width: 36px; height: 36px; }
+  .cb-topbar.is-compact .cb-icon-btn { width: 32px; height: 32px; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cb-topbar,
+  .cb-icon-btn,
+  .cb-title,
+  .cb-body {
+    transition: none !important;
+    animation: none !important;
+  }
 }
