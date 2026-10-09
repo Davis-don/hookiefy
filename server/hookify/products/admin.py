@@ -1,6 +1,32 @@
-from django.contrib import admin
-from .models import Products
+# ============================================================
+# admin.py
+# ============================================================
 
+from django.contrib import admin
+from .models import Products, ProductImage, ProductProperty
+
+
+# ============================================================
+# INLINES
+# ============================================================
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ("image_url", "image_public_id", "is_primary", "sort_order")
+    ordering = ("sort_order",)
+
+
+class ProductPropertyInline(admin.TabularInline):
+    model = ProductProperty
+    extra = 1
+    fields = ("name", "value", "sort_order")
+    ordering = ("sort_order",)
+
+
+# ============================================================
+# PRODUCTS ADMIN
+# ============================================================
 
 @admin.register(Products)
 class ProductsAdmin(admin.ModelAdmin):
@@ -10,7 +36,7 @@ class ProductsAdmin(admin.ModelAdmin):
         "name",
         "business",
         "price",
-        "has_image",
+        "has_images",
         "created_at",
     )
 
@@ -25,11 +51,8 @@ class ProductsAdmin(admin.ModelAdmin):
     search_fields = (
         "name",
         "description",
-        "property1",
-        "property2",
-        "property3",
-        "property4",
-        "property5",
+        "property_items__name",
+        "property_items__value",
         "business__business_name",
     )
 
@@ -39,6 +62,12 @@ class ProductsAdmin(admin.ModelAdmin):
     raw_id_fields = ("business",)
     readonly_fields = ("created_at", "updated_at")
     list_per_page = 25
+
+    # ── Inlines ───────────────────────────────────────────
+    inlines = (
+        ProductImageInline,
+        ProductPropertyInline,
+    )
 
     # ── Detail page layout ────────────────────────────────
     fieldsets = (
@@ -52,28 +81,12 @@ class ProductsAdmin(admin.ModelAdmin):
                 "price",
             ),
         }),
-        ("Image", {
-            "fields": (
-                "image_url",
-                "image_public_id",
-            ),
-        }),
-        ("Properties (all optional)", {
-            "fields": (
-                "property1",
-                "property2",
-                "property3",
-                "property4",
-                "property5",
-            ),
-            "classes": ("collapse",),
-        }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),
             "classes": ("collapse",),
         }),
     )
 
-    @admin.display(boolean=True, description="Image")
-    def has_image(self, obj):
-        return bool(obj.image_url)
+    @admin.display(boolean=True, description="Images")
+    def has_images(self, obj):
+        return obj.images.exists()

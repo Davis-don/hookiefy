@@ -1,22 +1,24 @@
-# controllers/cloudinary_utils.py
+# account/controllers/cloudinary_utils.py
+# ============================================================
+
+import os
+import time
 
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from cloudinary.utils import cloudinary_url
-import os
 from dotenv import load_dotenv
-import time
 
 # Load environment variables
 load_dotenv()
 
 # Configure Cloudinary
 cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.getenv('CLOUDINARY_API_KEY'),
-    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-    secure=True
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True,
 )
 
 
@@ -37,30 +39,30 @@ def upload_image_to_cloudinary(
 
     try:
         upload_options = {
-            'folder': folder,
-            'use_filename': True,
-            'unique_filename': True,
-            'overwrite': True,
-            'resource_type': 'image',
-            'allowed_formats': ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            "folder": folder,
+            "use_filename": True,
+            "unique_filename": True,
+            "overwrite": True,
+            "resource_type": "image",
+            "allowed_formats": ["jpg", "jpeg", "png", "gif", "webp"],
         }
 
         if public_id:
-            upload_options['public_id'] = public_id
+            upload_options["public_id"] = public_id
 
         result = cloudinary.uploader.upload(image_file, **upload_options)
 
         return {
-            'url': result.get('secure_url'),
-            'public_id': result.get('public_id'),
-            'format': result.get('format'),
-            'width': result.get('width'),
-            'height': result.get('height'),
-            'bytes': result.get('bytes'),
-            'created_at': result.get('created_at'),
-            'secure_url': result.get('secure_url'),
-            'version': result.get('version'),
-            'etag': result.get('etag'),
+            "url": result.get("secure_url"),
+            "public_id": result.get("public_id"),
+            "format": result.get("format"),
+            "width": result.get("width"),
+            "height": result.get("height"),
+            "bytes": result.get("bytes"),
+            "created_at": result.get("created_at"),
+            "secure_url": result.get("secure_url"),
+            "version": result.get("version"),
+            "etag": result.get("etag"),
         }
 
     except Exception as e:
@@ -80,19 +82,121 @@ def delete_image_from_cloudinary(public_id):
     try:
         result = cloudinary.uploader.destroy(public_id)
 
-        if result.get('result') == 'ok':
+        if result.get("result") == "ok":
             return {
-                'result': 'ok',
-                'public_id': public_id,
+                "result": "ok",
+                "public_id": public_id,
             }
 
-        raise Exception(
-            f"Failed to delete image: {result.get('result')}"
-        )
+        raise Exception(f"Failed to delete image: {result.get('result')}")
 
     except Exception as e:
         print(f"❌ Error deleting from Cloudinary: {str(e)}")
         raise Exception(f"Cloudinary delete failed: {str(e)}")
+
+
+# ============================================================
+# BULK IMAGES — UPLOAD
+# ============================================================
+
+def bulk_upload_images_to_cloudinary(
+    image_files,
+    folder="product_images",
+    public_id_prefix="img",
+    owner_id=None,
+):
+    """
+    Upload multiple images to Cloudinary in one shot.
+
+    Args:
+        image_files:      list of Django UploadedFile objects
+        folder:           Cloudinary folder
+        public_id_prefix: prefix for the generated public_id
+        owner_id:         optional id (business, product, etc.)
+                          included in the public_id
+
+    Returns:
+        {
+            "uploaded": [ {url, public_id, ...}, ... ],
+            "failed":   [ {name, error}, ... ],
+        }
+    """
+
+    uploaded = []
+    failed = []
+    timestamp = int(time.time())
+
+    for idx, image_file in enumerate(image_files or []):
+        try:
+            parts = [public_id_prefix]
+            if owner_id is not None:
+                parts.append(str(owner_id))
+            parts.append(str(timestamp))
+            parts.append(str(idx))
+            public_id = "_".join(parts)
+
+            result = upload_image_to_cloudinary(
+                image_file,
+                folder=folder,
+                public_id=public_id,
+            )
+            uploaded.append(result)
+
+        except Exception as e:
+            print(
+                f"❌ Failed to upload "
+                f"{getattr(image_file, 'name', '?')}: {e}"
+            )
+            failed.append({
+                "name": getattr(image_file, "name", "?"),
+                "error": str(e),
+            })
+
+    return {"uploaded": uploaded, "failed": failed}
+
+
+# ============================================================
+# BULK IMAGES — DELETE
+# ============================================================
+
+def bulk_delete_images_from_cloudinary(public_ids):
+    """
+    Delete multiple Cloudinary assets by public_id.
+
+    Args:
+        public_ids: list of public_id strings
+
+    Returns:
+        {
+            "deleted": [public_id, ...],
+            "failed":  [ {public_id, error}, ... ],
+        }
+    """
+
+    deleted = []
+    failed = []
+
+    for public_id in public_ids or []:
+        if not public_id:
+            continue
+
+        try:
+            result = delete_image_from_cloudinary(public_id)
+            if result.get("result") == "ok":
+                deleted.append(public_id)
+            else:
+                failed.append({
+                    "public_id": public_id,
+                    "error": "unexpected response",
+                })
+        except Exception as e:
+            print(f"❌ Failed to delete {public_id}: {e}")
+            failed.append({
+                "public_id": public_id,
+                "error": str(e),
+            })
+
+    return {"deleted": deleted, "failed": failed}
 
 
 # ============================================================
@@ -115,7 +219,7 @@ def delete_user_all_images(user):
             delete_result = delete_image_from_cloudinary(
                 user.profile_image_public_id
             )
-            if delete_result.get('result') == 'ok':
+            if delete_result.get("result") == "ok":
                 deleted = True
                 public_id_deleted = user.profile_image_public_id
                 print("✅ Profile image deleted successfully")
@@ -125,17 +229,21 @@ def delete_user_all_images(user):
             print("ℹ️ No profile image to delete")
 
         return {
-            'deleted': deleted,
-            'public_id_deleted': public_id_deleted,
-            'message': 'Profile image deleted' if deleted else 'No image to delete',
+            "deleted": deleted,
+            "public_id_deleted": public_id_deleted,
+            "message": (
+                "Profile image deleted"
+                if deleted
+                else "No image to delete"
+            ),
         }
 
     except Exception as e:
         print(f"❌ Error deleting user images: {str(e)}")
         return {
-            'deleted': False,
-            'public_id_deleted': None,
-            'message': f'Error deleting images: {str(e)}',
+            "deleted": False,
+            "public_id_deleted": None,
+            "message": f"Error deleting images: {str(e)}",
         }
 
 
@@ -163,7 +271,7 @@ def upload_or_replace_profile_image(
 
             try:
                 delete_result = delete_image_from_cloudinary(old_public_id)
-                if delete_result.get('result') == 'ok':
+                if delete_result.get("result") == "ok":
                     print(f"✅ Old image deleted successfully: {old_public_id}")
                     replaced = True
                 else:
@@ -179,17 +287,20 @@ def upload_or_replace_profile_image(
             public_id=public_id,
         )
 
-        print(f"✅ New image uploaded successfully: {upload_result['public_id']}")
+        print(
+            f"✅ New image uploaded successfully: "
+            f"{upload_result['public_id']}"
+        )
 
-        user.profile_image_url = upload_result['url']
-        user.profile_image_public_id = upload_result['public_id']
+        user.profile_image_url = upload_result["url"]
+        user.profile_image_public_id = upload_result["public_id"]
         user.save()
 
         return {
-            'url': upload_result['url'],
-            'public_id': upload_result['public_id'],
-            'replaced': replaced,
-            'old_public_id': old_public_id,
+            "url": upload_result["url"],
+            "public_id": upload_result["public_id"],
+            "replaced": replaced,
+            "old_public_id": old_public_id,
         }
 
     except Exception as e:
@@ -216,8 +327,8 @@ def bulk_upload_service_images(
 
     Returns:
         {
-            'uploaded': [ { url, public_id, ... }, ... ],
-            'failed':   [ { name, error }, ... ],
+            "uploaded": [ {url, public_id, ...}, ... ],
+            "failed":   [ {name, error}, ... ],
         }
 
     Each uploaded item gets a unique public_id of the form:
@@ -231,9 +342,7 @@ def bulk_upload_service_images(
 
     for idx, image_file in enumerate(image_files or []):
         try:
-            public_id = (
-                f"service_{service_id}_{timestamp}_{idx}"
-            )
+            public_id = f"service_{service_id}_{timestamp}_{idx}"
 
             result = upload_image_to_cloudinary(
                 image_file,
@@ -244,16 +353,16 @@ def bulk_upload_service_images(
             uploaded.append(result)
 
         except Exception as e:
-            print(f"❌ Failed to upload {getattr(image_file, 'name', '?')}: {e}")
+            print(
+                f"❌ Failed to upload "
+                f"{getattr(image_file, 'name', '?')}: {e}"
+            )
             failed.append({
-                'name': getattr(image_file, 'name', '?'),
-                'error': str(e),
+                "name": getattr(image_file, "name", "?"),
+                "error": str(e),
             })
 
-    return {
-        'uploaded': uploaded,
-        'failed': failed,
-    }
+    return {"uploaded": uploaded, "failed": failed}
 
 
 # ============================================================
@@ -269,35 +378,9 @@ def bulk_delete_service_images(public_ids):
 
     Returns:
         {
-            'deleted': [public_id, ...],
-            'failed':  [ { public_id, error }, ... ],
+            "deleted": [public_id, ...],
+            "failed":  [ {public_id, error}, ... ],
         }
     """
 
-    deleted = []
-    failed = []
-
-    for public_id in public_ids or []:
-        if not public_id:
-            continue
-
-        try:
-            result = delete_image_from_cloudinary(public_id)
-            if result.get('result') == 'ok':
-                deleted.append(public_id)
-            else:
-                failed.append({
-                    'public_id': public_id,
-                    'error': 'unexpected response',
-                })
-        except Exception as e:
-            print(f"❌ Failed to delete {public_id}: {e}")
-            failed.append({
-                'public_id': public_id,
-                'error': str(e),
-            })
-
-    return {
-        'deleted': deleted,
-        'failed': failed,
-    }
+    return bulk_delete_images_from_cloudinary(public_ids)

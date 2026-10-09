@@ -1,3 +1,5 @@
+// src/features/businesses/pages/Editproduct.tsx
+
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -8,8 +10,13 @@ import {
   fetchProduct,
   updateProduct,
   type ProductPayload,
+  type ProductProperty,
 } from '../api/productsApi';
 import './editproduct.css';
+
+// ============================================================
+// TYPES
+// ============================================================
 
 type EditproductProps = {
   productId: number;
@@ -21,10 +28,37 @@ type FormState = {
   name: string;
   description: string;
   price: string;
-  imageFile: File | null;
 };
 
-const MAX_PROPERTIES = 5;
+type EditableProperty = {
+  id: string;       // local React key only — never sent
+  name: string;
+  value: string;
+};
+
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGES = 20;
+
+// Unique key generator for property rows
+let propertyKeyCounter = 0;
+const nextPropertyKey = () => `prop-${++propertyKeyCounter}`;
+
+const makeEmptyProperty = (): EditableProperty => ({
+  id: nextPropertyKey(),
+  name: '',
+  value: '',
+});
+
+// ============================================================
+// COMPONENT
+// ============================================================
 
 function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
   const toast = useToast();
@@ -37,14 +71,21 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
     name: '',
     description: '',
     price: '',
-    imageFile: null,
   });
 
-  // Properties — start empty, fill once loaded
-  const [properties, setProperties] = useState<string[]>(['']);
+  // New images the user has picked but not yet uploaded
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [replaceImages, setReplaceImages] = useState(false);
+
+  // Unlimited properties
+  const [properties, setProperties] = useState<EditableProperty[]>([
+    makeEmptyProperty(),
+  ]);
+
   const [error, setError] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
 
+  // ── Load product ─────────────────────────────────────
   const {
     data: product,
     isLoading,
@@ -57,7 +98,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
     staleTime: 30_000,
   });
 
-  // Prefill once loaded
+  // ── Prefill once loaded ──────────────────────────────
   useEffect(() => {
     if (product && !hydrated) {
       setForm({
@@ -67,54 +108,85 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           product.price !== null && product.price !== undefined
             ? String(product.price)
             : '',
-        imageFile: null,
       });
 
-      // Rebuild the property list from the filled ones.
-      const existing = [
-        product.property1,
-        product.property2,
-        product.property3,
-        product.property4,
-        product.property5,
-      ]
-        .filter((p): p is string => typeof p === 'string' && p.trim() !== '');
+      const loaded = (product.properties ?? []).map((p) => ({
+        id: nextPropertyKey(),
+        name: p.name || '',
+        value: p.value || '',
+      }));
 
-      setProperties(existing.length > 0 ? existing : ['']);
+      setProperties(loaded.length > 0 ? loaded : [makeEmptyProperty()]);
       setHydrated(true);
     }
   }, [product, hydrated]);
 
-  const previewUrl = useMemo(() => {
-    if (form.imageFile) return URL.createObjectURL(form.imageFile);
-    return product?.image_url ?? null;
-  }, [form.imageFile, product?.image_url]);
+  // ── Previews for newly selected files ────────────────
+  const newImagePreviews = useMemo(
+    () => newImages.map((f) => URL.createObjectURL(f)),
+    [newImages]
+  );
 
+  // ── Field update ─────────────────────────────────────
   const update = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError('');
   };
 
-  // ── Property helpers ─────────────────────────────────
-  const addProperty = () => {
-    setProperties((prev) =>
-      prev.length >= MAX_PROPERTIES ? prev : [...prev, '']
-    );
+  // ── Image picker ─────────────────────────────────────
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length === 0) return;
+
+    const accepted: File[] = [];
+    let firstError = '';
+
+    for (const file of picked) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        if (!firstError) {
+          firstError = `"${file.name}" is not a JPG, PNG, WEBP or GIF.`;
+        }
+        continue;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        if (!firstError) firstError = `"${file.name}" is larger than 8 MB.`;
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    setNewImages((prev) => [...prev, ...accepted].slice(0, MAX_IMAGES));
+    e.target.value = '';
+    setError(firstError);
   };
 
-  const updateProperty = (index: number, value: string) => {
+  const removeNewImage = (index: number) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ── Properties ───────────────────────────────────────
+  const addProperty = () => {
+    setProperties((prev) => [...prev, makeEmptyProperty()]);
+  };
+
+  const updateProperty = (
+    index: number,
+    field: 'name' | 'value',
+    value: string
+  ) => {
     setProperties((prev) =>
-      prev.map((p, i) => (i === index ? value : p))
+      prev.map((p, i) => (i === index ? { ...p, [field]: value } : p))
     );
   };
 
   const removeProperty = (index: number) => {
     setProperties((prev) => {
       const next = prev.filter((_, i) => i !== index);
-      return next.length === 0 ? [''] : next;
+      return next.length === 0 ? [makeEmptyProperty()] : next;
     });
   };
 
+  // ── Mutation ─────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: (payload: ProductPayload) =>
       updateProduct(access, productId, payload),
@@ -126,36 +198,14 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
       onSaved();
     },
 
-    onError: (err: any) => {
-      toast.error(err?.message || 'Could not update this product.');
+    onError: (err: unknown) => {
+      const message =
+        err instanceof Error ? err.message : 'Could not update this product.';
+      toast.error(message);
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) return;
-
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) {
-      setError('Please choose a JPG, PNG, WEBP or GIF image.');
-      e.target.value = '';
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      setError('Image must be under 8 MB.');
-      e.target.value = '';
-      return;
-    }
-
-    setForm((prev) => ({ ...prev, imageFile: file }));
-    setError('');
-  };
-
-  const clearNewImage = () => {
-    setForm((prev) => ({ ...prev, imageFile: null }));
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
+  // ── Submit ───────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -171,22 +221,21 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
       parsedPrice = n;
     }
 
-    const cleaned = properties.map((p) => p.trim());
+    const cleanedProperties: ProductProperty[] = properties
+      .map((p) => ({ name: p.name.trim(), value: p.value.trim() }))
+      .filter((p) => p.name && p.value);
 
     mutation.mutate({
       name: form.name.trim(),
       description: form.description.trim(),
       price: parsedPrice,
-      property1: cleaned[0] || undefined,
-      property2: cleaned[1] || undefined,
-      property3: cleaned[2] || undefined,
-      property4: cleaned[3] || undefined,
-      property5: cleaned[4] || undefined,
-      imageFile: form.imageFile,
+      properties: cleanedProperties,
+      imageFiles: newImages,
+      replaceImages,
     });
   };
 
-  // ── States ────────────────────────────────────────────
+  // ── Loading / error states ───────────────────────────
   if (isLoading) {
     return (
       <div className="epr-state">
@@ -204,77 +253,120 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
   }
 
   const busy = mutation.isPending;
-  const canAddProperty = properties.length < MAX_PROPERTIES;
+  const existingImages = product.images ?? [];
+  const canAddMoreImages = newImages.length < MAX_IMAGES;
+
+  // ============================================================
+  // RENDER
+  // ============================================================
 
   return (
     <form className="epr-editor" onSubmit={handleSubmit} noValidate>
 
-      {/* ── 1. Image — first thing you see ───────────── */}
-      <div className="epr-editor-image">
-        {previewUrl ? (
-          <div className="epr-editor-image-frame">
-            <img
-              src={previewUrl}
-              alt="Product"
-              className="epr-editor-image-img"
-            />
-            <label
-              htmlFor="epr-image"
-              className="epr-editor-image-overlay"
-              aria-label="Replace image"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-              <span>Replace image</span>
-            </label>
+      {/* ── 1. Existing images ───────────────────────── */}
+      {existingImages.length > 0 && (
+        <div className="epr-editor-field">
+          <label className="epr-editor-label">
+            Current images ({existingImages.length})
+          </label>
+
+          <div className="epr-image-grid">
+            {existingImages.map((img) => (
+              <div className="epr-image-tile" key={img.id}>
+                <img
+                  src={img.image_url}
+                  alt="Product"
+                  className="epr-image-tile-img"
+                />
+                {img.is_primary && (
+                  <span className="epr-image-tile-badge">Cover</span>
+                )}
+              </div>
+            ))}
           </div>
-        ) : (
-          <label htmlFor="epr-image" className="epr-editor-image-empty">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="9" cy="9" r="2" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            <span>Choose an image</span>
+
+          <p className="epr-editor-help">
+            To remove an image, upload new ones with “Replace all images”
+            checked, or delete the product and re-add it.
+          </p>
+        </div>
+      )}
+
+      {/* ── 2. Add new images ─────────────────────────── */}
+      <div className="epr-editor-field">
+        <label className="epr-editor-label" htmlFor="epr-images">
+          Add more images
+        </label>
+
+        <div className="epr-image-grid">
+          {newImages.map((file, index) => (
+            <div className="epr-image-tile" key={`${file.name}-${index}`}>
+              <img
+                src={newImagePreviews[index]}
+                alt={`New ${index + 1}`}
+                className="epr-image-tile-img"
+              />
+              <button
+                type="button"
+                className="epr-image-tile-remove"
+                onClick={() => removeNewImage(index)}
+                disabled={busy}
+                aria-label={`Remove new image ${index + 1}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+
+          {canAddMoreImages && (
+            <label
+              htmlFor="epr-images"
+              className="epr-image-add"
+              title="Add more images"
+            >
+              <input
+                id="epr-images"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                onChange={handleImagesChange}
+                disabled={busy}
+                className="epr-file-hidden"
+              />
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Add</span>
+            </label>
+          )}
+        </div>
+
+        {newImages.length > 0 && (
+          <label className="epr-replace-toggle">
+            <input
+              type="checkbox"
+              checked={replaceImages}
+              onChange={(e) => setReplaceImages(e.target.checked)}
+              disabled={busy}
+            />
+            <span>Replace all existing images with these</span>
           </label>
         )}
-
-        {form.imageFile && (
-          <div className="epr-editor-image-note">
-            <span className="epr-editor-image-note-dot" aria-hidden="true" />
-            <span className="epr-editor-image-note-text">
-              New image ready — replaces the current one on save
-            </span>
-            <button
-              type="button"
-              className="epr-editor-image-undo"
-              onClick={clearNewImage}
-              disabled={busy}
-            >
-              Undo
-            </button>
-          </div>
-        )}
-
-        <input
-          id="epr-image"
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleImageChange}
-          disabled={busy}
-          className="epr-file-hidden"
-        />
       </div>
 
-      {/* ── 2. Name ──────────────────────────────────── */}
+      {/* ── 3. Name ──────────────────────────────────── */}
       <div className="epr-editor-field">
         <label className="epr-editor-label" htmlFor="epr-name">
           Product name
@@ -292,7 +384,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
         <span className="epr-editor-counter">{form.name.length} / 200</span>
       </div>
 
-      {/* ── 3. Description ───────────────────────────── */}
+      {/* ── 4. Description ───────────────────────────── */}
       <div className="epr-editor-field">
         <label className="epr-editor-label" htmlFor="epr-desc">
           Description
@@ -312,7 +404,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
         </span>
       </div>
 
-      {/* ── 4. Price ─────────────────────────────────── */}
+      {/* ── 5. Price ─────────────────────────────────── */}
       <div className="epr-editor-field">
         <label className="epr-editor-label" htmlFor="epr-price">
           Price (KES)
@@ -330,27 +422,32 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
         />
       </div>
 
-      {/* ── 5. Properties ────────────────────────────── */}
+      {/* ── 6. Properties — unlimited ────────────────── */}
       <div className="epr-editor-field">
-        <label className="epr-editor-label">
-          Properties
-        </label>
+        <label className="epr-editor-label">Properties</label>
         <p className="epr-editor-help">
-          Extra details like Size, Colour, Material. Up to {MAX_PROPERTIES}.
+          Extra details like Size, Colour, Material. Add as many as you need.
         </p>
 
         <div className="epr-props">
-          {properties.map((value, index) => (
-            <div className="epr-prop-row" key={index}>
-              <span className="epr-prop-index">{index + 1}</span>
-
+          {properties.map((prop, index) => (
+            <div className="epr-prop-row" key={prop.id}>
               <input
                 type="text"
-                className="epr-prop-input"
-                placeholder={`Property ${index + 1}`}
-                value={value}
-                onChange={(e) => updateProperty(index, e.target.value)}
+                className="epr-prop-name"
+                placeholder="Name (e.g. Size)"
+                value={prop.name}
+                onChange={(e) => updateProperty(index, 'name', e.target.value)}
                 maxLength={200}
+                disabled={busy}
+              />
+              <input
+                type="text"
+                className="epr-prop-value"
+                placeholder="Value (e.g. XL)"
+                value={prop.value}
+                onChange={(e) => updateProperty(index, 'value', e.target.value)}
+                maxLength={500}
                 disabled={busy}
               />
 
@@ -363,10 +460,17 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
                   aria-label={`Remove property ${index + 1}`}
                   title="Remove"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" strokeWidth="2.6"
-                    strokeLinecap="round" strokeLinejoin="round"
-                    aria-hidden="true">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
                 </button>
@@ -375,36 +479,44 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           ))}
         </div>
 
-        {canAddProperty && (
-          <button
-            type="button"
-            className="epr-prop-add"
-            onClick={addProperty}
-            disabled={busy}
+        <button
+          type="button"
+          className="epr-prop-add"
+          onClick={addProperty}
+          disabled={busy}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Add another property</span>
-          </button>
-        )}
-
-        {!canAddProperty && (
-          <p className="epr-editor-help">
-            Maximum of {MAX_PROPERTIES} properties reached.
-          </p>
-        )}
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Add another property</span>
+        </button>
       </div>
 
       {/* ── Error ────────────────────────────────────── */}
       {error && (
         <div className="epr-editor-error">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-            strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <circle cx="12" cy="12" r="9" />
             <line x1="12" y1="8" x2="12" y2="13" />
             <circle cx="12" cy="16.5" r="0.6" fill="currentColor" />

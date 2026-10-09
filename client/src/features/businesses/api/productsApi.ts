@@ -3,6 +3,26 @@
 const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// ============================================================
+// TYPES
+// ============================================================
+
+export type ProductImage = {
+  id: number;
+  image_url: string;
+  image_public_id: string;
+  is_primary: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export type ProductProperty = {
+  id?: number;
+  name: string;
+  value: string;
+  sort_order?: number;
+};
+
 export type Product = {
   id: number;
   business: number;
@@ -10,17 +30,14 @@ export type Product = {
   name: string;
   description: string;
   price: number | null;
-  image_url: string | null;
-  image_public_id: string | null;
-  has_image: boolean;
+  images: ProductImage[];
+  primary_image: ProductImage | null;
+  has_images: boolean;
+  image_urls: string[];
   has_price: boolean;
-  property1: string | null;
-  property2: string | null;
-  property3: string | null;
-  property4: string | null;
-  property5: string | null;
-  properties: string[];
+  properties: ProductProperty[];
   has_properties: boolean;
+  views: number;
   created_at: string;
   updated_at: string;
 };
@@ -29,12 +46,9 @@ export type ProductPayload = {
   name: string;
   description: string;
   price: number | null;
-  property1?: string;
-  property2?: string;
-  property3?: string;
-  property4?: string;
-  property5?: string;
-  imageFile?: File | null;
+  properties?: ProductProperty[];     // unlimited named properties
+  imageFiles?: File[];                // multiple images
+  replaceImages?: boolean;            // update only — wipe old images first
 };
 
 export type ProductListResponse = {
@@ -42,7 +56,33 @@ export type ProductListResponse = {
   results: Product[];
 };
 
-// ── List products for a business ────────────────────────
+// ============================================================
+// ERROR PARSER
+// ============================================================
+
+async function parseError(res: Response, fallback: string): Promise<string> {
+  const text = await res.text();
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+  if (data && typeof data === 'object') {
+    if (typeof data.message === 'string') return data.message;
+    if (typeof data.detail === 'string') return data.detail;
+
+    const firstKey = Object.keys(data)[0];
+    if (firstKey) {
+      const val = data[firstKey];
+      const first = Array.isArray(val) ? val[0] : String(val);
+      return `${firstKey}: ${first}`;
+    }
+  }
+  return fallback;
+}
+
+// ============================================================
+// LIST PRODUCTS FOR A BUSINESS
+// ============================================================
+
 export async function fetchProducts(
   token: string | null,
   businessId: number
@@ -54,24 +94,16 @@ export async function fetchProducts(
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) throw new Error(await parseError(res, 'Could not load products.'));
 
-  if (!res.ok) {
-    let message = 'Could not load products.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-    }
-    throw new Error(message);
-  }
-
-  const list = Array.isArray(data) ? data : data.results ?? [];
-  return list as Product[];
+  const data: ProductListResponse | Product[] = await res.json();
+  return Array.isArray(data) ? data : data.results ?? [];
 }
 
-// ── Fetch a single product ─────────────────────────────
+// ============================================================
+// FETCH A SINGLE PRODUCT
+// ============================================================
+
 export async function fetchProduct(
   token: string | null,
   productId: number
@@ -83,23 +115,17 @@ export async function fetchProduct(
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
   if (!res.ok) {
-    let message = 'Could not load that product.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-    }
-    throw new Error(message);
+    throw new Error(await parseError(res, 'Could not load that product.'));
   }
 
-  return data as Product;
+  return (await res.json()) as Product;
 }
 
-// ── Create a product ────────────────────────────────────
+// ============================================================
+// CREATE A PRODUCT
+// ============================================================
+
 export async function createProduct(
   token: string | null,
   businessId: number,
@@ -109,22 +135,27 @@ export async function createProduct(
 
   const formData = new FormData();
   formData.append('name', payload.name);
-  formData.append('description', payload.description);
+
+  if (payload.description) {
+    formData.append('description', payload.description);
+  }
 
   if (payload.price !== null && payload.price !== undefined) {
     formData.append('price', String(payload.price));
   }
 
-  // Optional property slots — only send the ones that are filled
-  if (payload.property1?.trim()) formData.append('property1', payload.property1.trim());
-  if (payload.property2?.trim()) formData.append('property2', payload.property2.trim());
-  if (payload.property3?.trim()) formData.append('property3', payload.property3.trim());
-  if (payload.property4?.trim()) formData.append('property4', payload.property4.trim());
-  if (payload.property5?.trim()) formData.append('property5', payload.property5.trim());
+  // Properties — parallel arrays, only send filled ones
+  (payload.properties ?? []).forEach((p) => {
+    if (p.name?.trim() && p.value?.trim()) {
+      formData.append('property_name', p.name.trim());
+      formData.append('property_value', p.value.trim());
+    }
+  });
 
-  if (payload.imageFile) {
-    formData.append('image', payload.imageFile);
-  }
+  // Multiple images
+  (payload.imageFiles ?? []).forEach((file) => {
+    formData.append('images', file);
+  });
 
   const res = await fetch(
     `${API_BASE}/products/business/${businessId}/create/`,
@@ -132,35 +163,23 @@ export async function createProduct(
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        // Do NOT set Content-Type — the browser sets it with the boundary
+        // Let the browser set Content-Type (multipart boundary)
       },
       body: formData,
     }
   );
 
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
   if (!res.ok) {
-    let message = 'Could not create the product.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-      else {
-        const firstKey = Object.keys(data)[0];
-        if (firstKey && Array.isArray(data[firstKey])) {
-          message = `${firstKey}: ${data[firstKey][0]}`;
-        }
-      }
-    }
-    throw new Error(message);
+    throw new Error(await parseError(res, 'Could not create the product.'));
   }
 
-  return data as { message: string; product: Product };
+  return (await res.json()) as { message: string; product: Product };
 }
 
-// ── Update a product ────────────────────────────────────
+// ============================================================
+// UPDATE A PRODUCT
+// ============================================================
+
 export async function updateProduct(
   token: string | null,
   productId: number,
@@ -170,20 +189,33 @@ export async function updateProduct(
 
   const formData = new FormData();
   formData.append('name', payload.name);
-  formData.append('description', payload.description);
+
+  if (payload.description !== undefined) {
+    formData.append('description', payload.description);
+  }
 
   if (payload.price !== null && payload.price !== undefined) {
     formData.append('price', String(payload.price));
   }
 
-  if (payload.property1?.trim()) formData.append('property1', payload.property1.trim());
-  if (payload.property2?.trim()) formData.append('property2', payload.property2.trim());
-  if (payload.property3?.trim()) formData.append('property3', payload.property3.trim());
-  if (payload.property4?.trim()) formData.append('property4', payload.property4.trim());
-  if (payload.property5?.trim()) formData.append('property5', payload.property5.trim());
+  // Properties — if provided, they replace ALL existing ones
+  if (payload.properties) {
+    payload.properties.forEach((p) => {
+      if (p.name?.trim() && p.value?.trim()) {
+        formData.append('property_name', p.name.trim());
+        formData.append('property_value', p.value.trim());
+      }
+    });
+  }
 
-  if (payload.imageFile) {
-    formData.append('image', payload.imageFile);
+  // Images — appended by default, or replace if replaceImages is true
+  if (payload.imageFiles && payload.imageFiles.length > 0) {
+    payload.imageFiles.forEach((file) => {
+      formData.append('images', file);
+    });
+    if (payload.replaceImages) {
+      formData.append('replace_images', 'true');
+    }
   }
 
   const res = await fetch(
@@ -195,23 +227,17 @@ export async function updateProduct(
     }
   );
 
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
   if (!res.ok) {
-    let message = 'Could not update the product.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-    }
-    throw new Error(message);
+    throw new Error(await parseError(res, 'Could not update the product.'));
   }
 
-  return data as { message: string; product: Product };
+  return (await res.json()) as { message: string; product: Product };
 }
 
-// ── Delete a product ────────────────────────────────────
+// ============================================================
+// DELETE A PRODUCT
+// ============================================================
+
 export async function deleteProduct(
   token: string | null,
   productId: number
@@ -226,18 +252,59 @@ export async function deleteProduct(
     }
   );
 
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
   if (!res.ok) {
-    let message = 'Could not delete this product.';
-    if (data && typeof data === 'object') {
-      if (typeof data.message === 'string') message = data.message;
-      else if (typeof data.detail === 'string') message = data.detail;
-    }
-    throw new Error(message);
+    throw new Error(await parseError(res, 'Could not delete this product.'));
   }
 
-  return (data ?? { message: 'Deleted.' }) as { message: string };
+  return (await res.json()) as { message: string };
+}
+
+// ============================================================
+// DELETE A SINGLE PRODUCT IMAGE
+// ============================================================
+
+export async function deleteProductImage(
+  token: string | null,
+  imageId: number
+): Promise<{ message: string }> {
+  if (!token) throw new Error('Not authenticated.');
+
+  const res = await fetch(
+    `${API_BASE}/products/images/${imageId}/delete/`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(await parseError(res, 'Could not delete the image.'));
+  }
+
+  return (await res.json()) as { message: string };
+}
+
+// ============================================================
+// SET PRIMARY PRODUCT IMAGE
+// ============================================================
+
+export async function setPrimaryProductImage(
+  token: string | null,
+  imageId: number
+): Promise<{ message: string; product: Product }> {
+  if (!token) throw new Error('Not authenticated.');
+
+  const res = await fetch(
+    `${API_BASE}/products/images/${imageId}/primary/`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(await parseError(res, 'Could not set the primary image.'));
+  }
+
+  return (await res.json()) as { message: string; product: Product };
 }

@@ -1,11 +1,21 @@
+// src/features/businesses/pages/Newproduct.tsx
+
 import { useState, useRef, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
 import { useToast } from '../../../components/toast/ToastContext';
 import { Spinner } from '../../../components/spinner/Spinner';
-import { createProduct, type ProductPayload } from '../api/productsApi';
+import {
+  createProduct,
+  type ProductPayload,
+  type ProductProperty,
+} from '../api/productsApi';
 import './newproduct.css';
+
+// ============================================================
+// TYPES
+// ============================================================
 
 type NewproductProps = {
   businessId: number;
@@ -18,18 +28,48 @@ type FormState = {
   name: string;
   description: string;
   price: string;
-  imageFile: File | null;
+};
+
+/** A single editable property row (name + value). */
+type EditableProperty = {
+  id: string;         // local React key only — never sent
+  name: string;
+  value: string;
 };
 
 const initialState: FormState = {
   name: '',
   description: '',
   price: '',
-  imageFile: null,
 };
 
-/** Maximum number of optional property slots. */
-const MAX_PROPERTIES = 5;
+/** Allowed image mime types. */
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
+/** Max size per image (8 MB). */
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+/** Soft cap so the grid doesn't get silly. Bump or remove freely. */
+const MAX_IMAGES = 20;
+
+// Unique key generator for property rows
+let propertyKeyCounter = 0;
+const nextPropertyKey = () => `prop-${++propertyKeyCounter}`;
+
+const makeEmptyProperty = (): EditableProperty => ({
+  id: nextPropertyKey(),
+  name: '',
+  value: '',
+});
+
+// ============================================================
+// COMPONENT
+// ============================================================
 
 function Newproduct({
   businessId,
@@ -46,40 +86,83 @@ function Newproduct({
   const [form, setForm] = useState<FormState>(initialState);
   const [error, setError] = useState<string>('');
 
-  // Properties start with ONE empty slot and grow as the user
-  // clicks the little plus beneath the last one.
-  const [properties, setProperties] = useState<string[]>(['']);
+  // ── Images: array of File objects ────────────────────
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
-  const previewUrl = useMemo(() => {
-    if (!form.imageFile) return null;
-    return URL.createObjectURL(form.imageFile);
-  }, [form.imageFile]);
+  // ── Properties: unlimited list of {name, value} ──────
+  const [properties, setProperties] = useState<EditableProperty[]>([
+    makeEmptyProperty(),
+  ]);
 
+  // Preview URLs derived from selected files
+  const previewUrls = useMemo(
+    () => imageFiles.map((f) => URL.createObjectURL(f)),
+    [imageFiles]
+  );
+
+  // ── Field updates ────────────────────────────────────
   const update = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError('');
   };
 
-  // ── Property helpers ─────────────────────────────────
-  const addProperty = () => {
-    setProperties((prev) =>
-      prev.length >= MAX_PROPERTIES ? prev : [...prev, '']
-    );
+  // ── Images ───────────────────────────────────────────
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length === 0) return;
+
+    const accepted: File[] = [];
+    let firstError = '';
+
+    for (const file of picked) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        if (!firstError) firstError = `"${file.name}" is not a JPG, PNG, WEBP or GIF.`;
+        continue;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        if (!firstError) firstError = `"${file.name}" is larger than 8 MB.`;
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    setImageFiles((prev) => {
+      const combined = [...prev, ...accepted];
+      return combined.slice(0, MAX_IMAGES);
+    });
+
+    // Allow re-selecting the same file later
+    e.target.value = '';
+    setError(firstError);
   };
 
-  const updateProperty = (index: number, value: string) => {
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ── Properties ───────────────────────────────────────
+  const addProperty = () => {
+    setProperties((prev) => [...prev, makeEmptyProperty()]);
+  };
+
+  const updateProperty = (
+    index: number,
+    field: 'name' | 'value',
+    value: string
+  ) => {
     setProperties((prev) =>
-      prev.map((p, i) => (i === index ? value : p))
+      prev.map((p, i) => (i === index ? { ...p, [field]: value } : p))
     );
   };
 
   const removeProperty = (index: number) => {
     setProperties((prev) => {
       const next = prev.filter((_, i) => i !== index);
-      return next.length === 0 ? [''] : next;
+      return next.length === 0 ? [makeEmptyProperty()] : next;
     });
   };
 
+  // ── Mutation ─────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: (payload: ProductPayload) =>
       createProduct(access, businessId, payload),
@@ -89,50 +172,34 @@ function Newproduct({
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId],
       });
+
+      // Reset
       setForm(initialState);
-      setProperties(['']);
+      setImageFiles([]);
+      setProperties([makeEmptyProperty()]);
       if (fileInputRef.current) fileInputRef.current.value = '';
+
       onCreated?.();
     },
 
-    onError: (err: any) => {
-      toast.error(err?.message || 'Could not create the product.');
+    onError: (err: unknown) => {
+      const message =
+        err instanceof Error ? err.message : 'Could not create the product.';
+      toast.error(message);
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) return;
-
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) {
-      setError('Please choose a JPG, PNG, WEBP or GIF image.');
-      e.target.value = '';
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      setError('Image must be under 8 MB.');
-      e.target.value = '';
-      return;
-    }
-
-    setForm((prev) => ({ ...prev, imageFile: file }));
-    setError('');
-  };
-
-  const clearImage = () => {
-    setForm((prev) => ({ ...prev, imageFile: null }));
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
+  // ── Submit ───────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     if (!form.name.trim()) return setError('Please add a product name.');
-    if (!form.imageFile) return setError('Please attach an image.');
+    if (imageFiles.length === 0) {
+      return setError('Please attach at least one image.');
+    }
 
-    // Parse price: allow empty, but reject NaN
+    // Parse price: allow empty, reject NaN / negative
     let parsedPrice: number | null = null;
     if (form.price.trim()) {
       const n = Number(form.price);
@@ -142,24 +209,26 @@ function Newproduct({
       parsedPrice = n;
     }
 
-    // Trim properties, drop empties
-    const cleanedProperties = properties.map((p) => p.trim());
+    // Keep only properties that have both name and value filled
+    const cleanedProperties: ProductProperty[] = properties
+      .map((p) => ({ name: p.name.trim(), value: p.value.trim() }))
+      .filter((p) => p.name && p.value);
 
     mutation.mutate({
       name: form.name.trim(),
       description: form.description.trim(),
       price: parsedPrice,
-      property1: cleanedProperties[0] || undefined,
-      property2: cleanedProperties[1] || undefined,
-      property3: cleanedProperties[2] || undefined,
-      property4: cleanedProperties[3] || undefined,
-      property5: cleanedProperties[4] || undefined,
-      imageFile: form.imageFile,
+      properties: cleanedProperties,
+      imageFiles,
     });
   };
 
   const busy = mutation.isPending;
-  const canAddProperty = properties.length < MAX_PROPERTIES;
+  const canAddMoreImages = imageFiles.length < MAX_IMAGES;
+
+  // ============================================================
+  // RENDER
+  // ============================================================
 
   return (
     <div className="npr-shell">
@@ -174,9 +243,17 @@ function Newproduct({
             title="Back"
             disabled={busy}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
@@ -187,8 +264,7 @@ function Newproduct({
       <div className="npr-header">
         <h2 className="npr-title">Add a product</h2>
         <p className="npr-sub">
-          List a product for{' '}
-          {businessName || 'this business'}.
+          List a product for {businessName || 'this business'}.
         </p>
       </div>
 
@@ -196,7 +272,9 @@ function Newproduct({
       <form className="npr-form" onSubmit={handleSubmit} noValidate>
         {/* Name */}
         <div className="npr-field">
-          <label className="npr-label" htmlFor="npr-name">Product name</label>
+          <label className="npr-label" htmlFor="npr-name">
+            Product name
+          </label>
           <input
             id="npr-name"
             type="text"
@@ -225,7 +303,9 @@ function Newproduct({
             maxLength={1000}
             disabled={busy}
           />
-          <span className="npr-counter">{form.description.length} / 1000</span>
+          <span className="npr-counter">
+            {form.description.length} / 1000
+          </span>
         </div>
 
         {/* Price */}
@@ -246,28 +326,39 @@ function Newproduct({
           />
         </div>
 
-        {/* Properties — unfoldable list */}
+        {/* Properties — unlimited */}
         <div className="npr-field">
           <label className="npr-label">
             Properties <span className="npr-hint">(optional)</span>
           </label>
           <p className="npr-help">
-            Add extra details like Size, Colour, Material. Up to{' '}
-            {MAX_PROPERTIES}.
+            Add extra details like Size, Colour, Material. Add as many as
+            you need.
           </p>
 
           <div className="npr-props">
-            {properties.map((value, index) => (
-              <div className="npr-prop-row" key={index}>
-                <span className="npr-prop-index">{index + 1}</span>
-
+            {properties.map((prop, index) => (
+              <div className="npr-prop-row" key={prop.id}>
                 <input
                   type="text"
-                  className="npr-input npr-prop-input"
-                  placeholder={`Property ${index + 1}`}
-                  value={value}
-                  onChange={(e) => updateProperty(index, e.target.value)}
+                  className="npr-input npr-prop-name"
+                  placeholder="Name (e.g. Size)"
+                  value={prop.name}
+                  onChange={(e) =>
+                    updateProperty(index, 'name', e.target.value)
+                  }
                   maxLength={200}
+                  disabled={busy}
+                />
+                <input
+                  type="text"
+                  className="npr-input npr-prop-value"
+                  placeholder="Value (e.g. XL)"
+                  value={prop.value}
+                  onChange={(e) =>
+                    updateProperty(index, 'value', e.target.value)
+                  }
+                  maxLength={500}
                   disabled={busy}
                 />
 
@@ -280,10 +371,17 @@ function Newproduct({
                     aria-label={`Remove property ${index + 1}`}
                     title="Remove"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" strokeWidth="2.4"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      aria-hidden="true">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                   </button>
@@ -292,89 +390,127 @@ function Newproduct({
             ))}
           </div>
 
-          {/* The little plus that adds one more field */}
-          {canAddProperty && (
-            <button
-              type="button"
-              className="npr-prop-add"
-              onClick={addProperty}
-              disabled={busy}
+          <button
+            type="button"
+            className="npr-prop-add"
+            onClick={addProperty}
+            disabled={busy}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
-                strokeLinejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              <span>Add another property</span>
-            </button>
-          )}
-
-          {!canAddProperty && (
-            <p className="npr-help">
-              Maximum of {MAX_PROPERTIES} properties reached.
-            </p>
-          )}
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Add another property</span>
+          </button>
         </div>
 
-        {/* Image upload — required */}
+        {/* Images — multiple, required */}
         <div className="npr-field">
-          <label className="npr-label" htmlFor="npr-image">
-            Image <span className="npr-required">*</span>
+          <label className="npr-label" htmlFor="npr-images">
+            Images <span className="npr-required">*</span>
           </label>
 
-          {!form.imageFile ? (
+          {imageFiles.length === 0 ? (
             <div className="npr-upload">
               <input
-                id="npr-image"
+                id="npr-images"
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={handleImageChange}
+                multiple
+                onChange={handleImagesChange}
                 disabled={busy}
                 className="npr-upload-input"
               />
               <span className="npr-upload-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                  strokeLinejoin="round">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <circle cx="9" cy="9" r="2" />
                   <path d="M21 15l-5-5L5 21" />
                 </svg>
               </span>
               <span className="npr-upload-text">
-                Click to choose an image
+                Click to choose one or more images
               </span>
               <span className="npr-upload-sub">
-                JPG, PNG, WEBP or GIF · up to 8 MB
+                JPG, PNG, WEBP or GIF · up to 8 MB each · max {MAX_IMAGES}
               </span>
             </div>
           ) : (
-            <div className="npr-preview">
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt="Selected"
-                  className="npr-preview-img"
-                />
-              )}
-              <div className="npr-preview-meta">
-                <span className="npr-preview-name">
-                  {form.imageFile.name}
-                </span>
-                <span className="npr-preview-size">
-                  {(form.imageFile.size / 1024).toFixed(0)} KB
-                </span>
-                <button
-                  type="button"
-                  className="npr-preview-remove"
-                  onClick={clearImage}
-                  disabled={busy}
+            <div className="npr-preview-grid">
+              {imageFiles.map((file, index) => (
+                <div className="npr-preview" key={`${file.name}-${index}`}>
+                  <img
+                    src={previewUrls[index]}
+                    alt={`Selected ${index + 1}`}
+                    className="npr-preview-img"
+                  />
+                  {index === 0 && (
+                    <span className="npr-preview-badge">Cover</span>
+                  )}
+                  <button
+                    type="button"
+                    className="npr-preview-remove"
+                    onClick={() => removeImage(index)}
+                    disabled={busy}
+                    aria-label={`Remove image ${index + 1}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+
+              {canAddMoreImages && (
+                <label
+                  className="npr-preview-add"
+                  htmlFor="npr-images-add"
+                  title="Add more images"
                 >
-                  Remove
-                </button>
-              </div>
+                  <input
+                    id="npr-images-add"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                    onChange={handleImagesChange}
+                    disabled={busy}
+                    className="npr-upload-input"
+                  />
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Add more</span>
+                </label>
+              )}
             </div>
           )}
         </div>
@@ -398,9 +534,7 @@ function Newproduct({
             className="npr-btn npr-btn-primary"
             disabled={busy}
           >
-            {busy
-              ? <Spinner size={18} label="Saving…" />
-              : 'Save product'}
+            {busy ? <Spinner size={18} label="Saving…" /> : 'Save product'}
           </button>
         </div>
       </form>

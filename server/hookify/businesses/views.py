@@ -1,3 +1,6 @@
+# businesses/views.py
+# ============================================================
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,6 +8,7 @@ from rest_framework import status
 
 from account.controllers.cloudinary_utils import (
     delete_image_from_cloudinary,
+    bulk_delete_images_from_cloudinary,
 )
 
 from .models import Businesses
@@ -29,52 +33,65 @@ def _is_superadmin(user):
 def _delete_business_images(business):
     """
     Delete every Cloudinary asset associated with a business:
-    all its posts' images and all its products' images.
 
-    Called BEFORE the business row is deleted, because once the
-    row is gone the related posts/products are cascaded away and
-    we'd lose their Cloudinary public_ids.
+      - Every post's `image_public_id`
+      - Every product's every ProductImage `image_public_id`
 
-    Failures are logged but never raise — the business still gets
+    Must be called BEFORE `business.delete()`, because Django's
+    CASCADE will remove the related Post / Product / ProductImage
+    rows and we'd lose their Cloudinary public_ids.
+
+    Failures are logged but never raised — the business still gets
     deleted even if Cloudinary is unreachable.
+
+    Returns:
+        {"deleted": int, "failed": int}
     """
 
     deleted = 0
     failed = 0
 
-    # ── Posts ─────────────────────────────────────────────
+    # ── Posts (one image each) ────────────────────────────
     try:
-        posts = business.posts.all()
+        posts = list(business.posts.all())
     except Exception:
         posts = []
 
     for post in posts:
-        if post.image_public_id:
-            try:
-                delete_image_from_cloudinary(post.image_public_id)
-                deleted += 1
-            except Exception as e:
-                print(
-                    f"⚠️ Could not delete post image "
-                    f"{post.image_public_id}: {e}"
-                )
-                failed += 1
+        public_id = getattr(post, "image_public_id", None)
+        if not public_id:
+            continue
+        try:
+            delete_image_from_cloudinary(public_id)
+            deleted += 1
+        except Exception as e:
+            print(f"⚠️ Could not delete post image {public_id}: {e}")
+            failed += 1
 
-    # ── Products ──────────────────────────────────────────
+    # ── Products (many images each) ───────────────────────
     try:
-        products = business.products.all()
+        products = list(business.products.all())
     except Exception:
         products = []
 
     for product in products:
-        if product.image_public_id:
+        # Each product has a related ProductImage queryset
+        try:
+            images = list(product.images.all())
+        except Exception:
+            images = []
+
+        for image in images:
+            public_id = getattr(image, "image_public_id", None)
+            if not public_id:
+                continue
             try:
-                delete_image_from_cloudinary(product.image_public_id)
+                delete_image_from_cloudinary(public_id)
                 deleted += 1
             except Exception as e:
                 print(
                     f"⚠️ Could not delete product image "
-                    f"{product.image_public_id}: {e}"
+                    f"{public_id}: {e}"
                 )
                 failed += 1
 
@@ -153,7 +170,7 @@ def list_my_businesses(request):
 @permission_classes([IsAuthenticated])
 def list_all_businesses(request):
     """
-    Public marketplace listing. By default, only ACTIVE businesses
+    Public marketplace listing. By default only ACTIVE businesses
     are returned. Pass ?status=all to see every status.
 
     Optional query params:
@@ -309,8 +326,12 @@ def update_business_status(request, business_id):
 
 # ============================================================
 # DELETE — DELETE /businesses/<id>/delete/
-# Deletes the business, all its posts, all its products,
-# and every Cloudinary asset attached to them.
+#
+# Deletes:
+#   - every Cloudinary image for every Post
+#   - every Cloudinary image for every Product (via ProductImage)
+#   - the business row (cascades to Posts, Products, ProductImages,
+#     ProductProperties via Django's CASCADE)
 # ============================================================
 
 @api_view(["DELETE"])
@@ -329,13 +350,14 @@ def delete_business(request, business_id):
         )
 
     # 1. Delete all Cloudinary assets first. Do this while the
-    #    related posts/products still exist, because after
+    #    related posts/products/images still exist, because after
     #    business.delete() the cascade removes them and we lose
     #    their image_public_id values.
     cleanup = _delete_business_images(business)
 
     # 2. Now delete the business row. Django's CASCADE removes
-    #    every related Post and Product row automatically.
+    #    every related Post, Product, ProductImage and
+    #    ProductProperty row automatically.
     business.delete()
 
     return Response(

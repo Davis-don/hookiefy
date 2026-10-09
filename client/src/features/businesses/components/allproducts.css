@@ -1,346 +1,337 @@
 /* ─────────────────────────────────────────────────────────
-   YOUPATA — ALL PRODUCTS
-   Flat full-bleed list · Instagram-style imagery
-   Mirrors the Allposts layout.
+   YOUPATA — ALL PRODUCTS (list)
    All classes prefixed .apd-.
    ───────────────────────────────────────────────────────── */
 
 .apd-shell {
   position: relative;
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  padding-bottom: 90px; /* room for the floating + button */
 }
 
-/* ── States ──────────────────────────────────────────── */
+/* ── Loading / error states ─────────────────────────── */
 .apd-state {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 20px;
-  color: #475569;
-  font-size: 0.98rem;
+  gap: 10px;
+  padding: 40px 16px;
+  color: #64748B;
+  font-size: 0.96rem;
 }
 
-.apd-state-error { color: #B91C1C; }
+.apd-state-error {
+  color: #B91C1C;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  margin: 12px 0;
+}
 
+/* ── Empty state ────────────────────────────────────── */
 .apd-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 48px 24px;
+  gap: 10px;
+  padding: 44px 20px;
+  background: #FFFFFF;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 16px;
   text-align: center;
 }
 
 .apd-empty-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0F172A;
   margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0F172A;
 }
 
 .apd-empty-sub {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #64748B;
-  max-width: 420px;
   margin: 0;
+  font-size: 0.92rem;
+  color: #64748B;
+  max-width: 320px;
+  line-height: 1.5;
 }
 
 .apd-empty-btn {
-  margin-top: 10px;
-  padding: 12px 22px;
-  border: none;
+  margin-top: 8px;
+  padding: 11px 20px;
   border-radius: 999px;
+  border: none;
   background: linear-gradient(120deg, #2563EB, #10B981);
   color: #FFFFFF;
   font-family: inherit;
-  font-size: 0.96rem;
+  font-size: 0.94rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 12px 26px -12px rgba(37, 99, 235, 0.7);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 12px 24px -12px rgba(37, 99, 235, 0.7);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .apd-empty-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
+  box-shadow: 0 16px 30px -12px rgba(37, 99, 235, 0.9);
 }
 
-/* ── List ────────────────────────────────────────────── */
+/* ── List ───────────────────────────────────────────── */
 .apd-list {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  width: 100%;
+  gap: 16px;
 }
 
-/* ── Card — flat, no outline, no radius ──────────────── */
+/* ── Card ───────────────────────────────────────────── */
 .apd-item {
-  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 0 22px;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid #EEF2F7;
-  border-radius: 0;
-  min-width: 0;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.apd-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.apd-item:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 10px 26px -20px rgba(15, 23, 42, 0.35);
 }
 
 .apd-item.is-editing {
-  border-bottom-color: #C7D2FE;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
-/* ── Header: date + actions ──────────────────────────── */
+/* ── Card header: date + icon buttons ───────────────── */
 .apd-item-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .apd-item-when {
-  font-size: 0.82rem;
-  color: #94A3B8;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  color: #94A3B8;
+  letter-spacing: 0.01em;
 }
 
 .apd-item-actions {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-.apd-item:hover .apd-item-actions {
-  opacity: 1;
+  gap: 6px;
 }
 
 .apd-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: #64748B;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.apd-icon-btn:hover { background: #F1F5F9; }
-
-.apd-icon-btn-edit:hover {
-  color: #2563EB;
-  background: #EEF2FF;
+.apd-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
-.apd-icon-btn-danger:hover {
+.apd-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.apd-icon-btn-edit:hover:not(:disabled) {
+  border-color: #2563EB;
+  color: #2563EB;
+  background: #F8FAFF;
+}
+
+.apd-icon-btn-danger:hover:not(:disabled) {
+  border-color: #EF4444;
   color: #B91C1C;
   background: #FEF2F2;
 }
 
-/* ── Title ───────────────────────────────────────────── */
-.apd-item-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  letter-spacing: -0.3px;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
-/* ── Image — tall, Instagram-style cover ─────────────── */
+/* ── Cover image — fixed ratio, uniform every card ──── */
 .apd-item-image {
+  position: relative;
   width: 100%;
-  border-radius: 14px;
+  aspect-ratio: 16 / 10;      /* same frame on every card */
+  border-radius: 12px;
   overflow: hidden;
   background: #F1F5F9;
-  aspect-ratio: 4 / 5;
-  max-height: 640px;
 }
 
 .apd-item-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover;           /* crop to fill — no distortion */
   display: block;
 }
 
-/* ── Description — below the image ───────────────────── */
-.apd-item-text {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #334155;
+/* ── Title ──────────────────────────────────────────── */
+.apd-item-title {
   margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.35;
+  letter-spacing: -0.2px;
   word-break: break-word;
-  white-space: pre-wrap;
 }
 
-/* ── Properties — small chips ────────────────────────── */
+/* ── Description ────────────────────────────────────── */
+.apd-item-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;       /* clamp to 3 lines, uniform height */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Property chips ─────────────────────────────────── */
 .apd-item-props {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .apd-item-prop {
-  display: inline-block;
-  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: #F1F5F9;
-  color: #475569;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
   border: 1px solid #E2E8F0;
+  font-size: 0.78rem;
+  max-width: 100%;
 }
 
-/* ── Footer: price ───────────────────────────────────── */
+.apd-item-prop-name {
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.apd-item-prop-name::after {
+  content: ':';
+  margin-left: 1px;
+  color: #94A3B8;
+}
+
+.apd-item-prop-value {
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Footer: price ──────────────────────────────────── */
 .apd-item-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 4px;
+  justify-content: flex-start;
+  padding-top: 10px;
+  border-top: 1px solid #F1F5F9;
+  margin-top: 2px;
 }
 
 .apd-item-price {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #0F172A;
   letter-spacing: -0.2px;
 }
 
 .apd-item-price-muted {
-  color: #94A3B8;
-  font-size: 0.94rem;
   font-weight: 600;
+  color: #94A3B8;
+  font-size: 0.9rem;
 }
 
-/* ── Floating Add button ─────────────────────────────── */
+/* ── Floating "+" button ────────────────────────────── */
 .apd-fab {
   position: fixed;
-  right: 24px;
-  bottom: 96px;
-  z-index: 60;
-
+  right: 22px;
+  bottom: 26px;
+  z-index: 30;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   border: none;
-  cursor: pointer;
-
-  background: linear-gradient(135deg, #2563EB, #10B981);
+  background: linear-gradient(120deg, #2563EB, #10B981);
   color: #FFFFFF;
-
-  box-shadow:
-    0 16px 32px -10px rgba(37, 99, 235, 0.75),
-    0 6px 16px -6px rgba(16, 185, 129, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-
-  transition: transform 0.18s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 18px 34px -14px rgba(37, 99, 235, 0.85);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.apd-fab:hover,
-.apd-fab:focus-visible {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow:
-    0 22px 40px -12px rgba(37, 99, 235, 0.9),
-    0 10px 22px -8px rgba(16, 185, 129, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  outline: none;
+.apd-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 22px 40px -14px rgba(37, 99, 235, 1);
 }
 
-.apd-fab:active { transform: translateY(0) scale(0.98); }
-
-.apd-fab svg {
-  display: block;
-  transition: transform 0.24s ease;
+.apd-fab:active {
+  transform: translateY(0) scale(0.98);
 }
-
-.apd-fab:hover svg { transform: rotate(90deg); }
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 640px) {
-  .apd-list { gap: 22px; }
-  .apd-item { padding-bottom: 18px; gap: 10px; }
+  .apd-shell { gap: 14px; }
 
-  .apd-item-title { font-size: 1.08rem; }
-  .apd-item-text  { font-size: 0.96rem; }
+  .apd-item {
+    padding: 14px;
+    gap: 10px;
+    border-radius: 14px;
+  }
 
   .apd-item-image {
-    max-height: 480px;
-    border-radius: 12px;
+    aspect-ratio: 4 / 3;       /* slightly taller on narrow screens */
   }
 
-  /* Show the actions always on touch devices */
-  .apd-item-actions { opacity: 1; }
+  .apd-item-title { font-size: 1rem; }
+  .apd-item-text  { font-size: 0.88rem; }
+
+  .apd-icon-btn { width: 32px; height: 32px; }
 
   .apd-fab {
-    right: 18px;
-    bottom: 92px;
     width: 54px;
     height: 54px;
-  }
-}
-
-@media (max-width: 480px) {
-  .apd-item-title { font-size: 1.02rem; }
-  .apd-item-text  { font-size: 0.94rem; }
-  .apd-item-image { max-height: 420px; }
-  .apd-item-price { font-size: 1rem; }
-
-  .apd-fab {
     right: 16px;
-    bottom: 88px;
-    width: 52px;
-    height: 52px;
+    bottom: 20px;
   }
-  .apd-fab svg { width: 22px; height: 22px; }
 }
 
 @media (max-width: 380px) {
-  .apd-item-title { font-size: 0.98rem; }
-  .apd-item-image { max-height: 380px; }
-  .apd-item-price { font-size: 0.96rem; }
-  .apd-item-prop  { font-size: 0.78rem; padding: 4px 10px; }
-
-  .apd-fab {
-    right: 14px;
-    bottom: 84px;
-    width: 48px;
-    height: 48px;
-  }
-  .apd-fab svg { width: 20px; height: 20px; }
+  .apd-item-title { font-size: 0.96rem; }
+  .apd-item-prop  { font-size: 0.74rem; }
 }
