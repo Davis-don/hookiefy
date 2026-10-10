@@ -64,9 +64,6 @@ function PaymentCallback() {
 
     (async () => {
       try {
-        // Ask the backend to sync this row from PesaPal.
-        // This makes the flow reliable even when the IPN
-        // hasn't landed yet.
         const syncResult = await syncPayment(merchantReference);
         if (cancelled) return;
 
@@ -130,7 +127,6 @@ function PaymentCallback() {
           }
         }
 
-        // Timeout waiting for the gateway.
         if (!cancelled) setPhase('pending');
       } catch (err: any) {
         if (cancelled) return;
@@ -212,10 +208,7 @@ function PaymentCallback() {
             )}
 
             <div className="paycb-actions">
-              <Link to="/useraccount" className="paycb-btn paycb-btn--primary">
-                Back to dashboard
-              </Link>
-              <Link to="/" className="paycb-btn paycb-btn--ghost">
+              <Link to="/" className="paycb-btn paycb-btn--primary">
                 Back to home
               </Link>
             </div>
@@ -249,10 +242,7 @@ function PaymentCallback() {
             )}
 
             <div className="paycb-actions">
-              <Link to="/useraccount" className="paycb-btn paycb-btn--primary">
-                Check my billing
-              </Link>
-              <Link to="/" className="paycb-btn paycb-btn--ghost">
+              <Link to="/" className="paycb-btn paycb-btn--primary">
                 Back to home
               </Link>
             </div>
@@ -286,10 +276,7 @@ function PaymentCallback() {
             )}
 
             <div className="paycb-actions">
-              <Link to="/useraccount" className="paycb-btn paycb-btn--primary">
-                Try again from Billing
-              </Link>
-              <Link to="/" className="paycb-btn paycb-btn--ghost">
+              <Link to="/" className="paycb-btn paycb-btn--primary">
                 Back to home
               </Link>
             </div>
@@ -315,10 +302,7 @@ function PaymentCallback() {
             </p>
 
             <div className="paycb-actions">
-              <Link to="/useraccount" className="paycb-btn paycb-btn--primary">
-                Open Billing
-              </Link>
-              <Link to="/" className="paycb-btn paycb-btn--ghost">
+              <Link to="/" className="paycb-btn paycb-btn--primary">
                 Back to home
               </Link>
             </div>
@@ -328,7 +312,9 @@ function PaymentCallback() {
         {/* Footer note */}
         <p className="paycb-foot">
           Need help? Email{' '}
-          <a href="mailto:support@youpata.co.ke">support@youpata.co.ke</a>
+          <a href="mailto:davismugoikou@gmail.com">
+            davismugoikou@gmail.com
+          </a>
         </p>
       </div>
     </div>
