@@ -44,6 +44,65 @@ def _own_post_or_404(user, post_id):
     )
 
 
+def _get_effective_plan(user):
+    """
+    Resolve the user's plan.
+
+    Priority:
+        1. Plan from the active subscription.
+        2. The system's default plan.
+        3. None.
+    """
+    try:
+        return user.effective_plan
+    except Exception:
+        return None
+
+
+def _check_post_limit(user, business):
+    """
+    Return (allowed, used, limit, message).
+
+    - `allowed` is True when the user may create another post.
+    - `limit` is None when unlimited.
+    - `message` is a friendly explanation when not allowed.
+    """
+
+    plan = _get_effective_plan(user)
+
+    if plan is None:
+        return (
+            False,
+            0,
+            None,
+            (
+                "Your account has no active subscription plan. "
+                "Please contact support to start publishing posts."
+            ),
+        )
+
+    used = Posts.objects.filter(business=business).count()
+    limit = plan.posts_limit  # None = unlimited
+
+    if limit is None:
+        return (True, used, None, "")
+
+    if used >= limit:
+        if limit == 1:
+            message = (
+                "You've reached the limit of your current plan — "
+                "1 post per business. Upgrade to publish more."
+            )
+        else:
+            message = (
+                f"You've reached the limit of your current plan — "
+                f"{limit} posts per business. Upgrade to publish more."
+            )
+        return (False, used, limit, message)
+
+    return (True, used, limit, "")
+
+
 # ============================================================
 # LIST POSTS OF A BUSINESS
 # GET /posts/business/<business_id>/
@@ -85,6 +144,8 @@ def list_posts(request, business_id):
 # CREATE POST
 # POST /posts/business/<business_id>/create/
 # Multipart: title, body, image (file, REQUIRED)
+#
+# Enforces the plan's `posts_limit` before accepting the post.
 # ============================================================
 
 @api_view(["POST"])
@@ -98,8 +159,12 @@ def create_post(request, business_id):
         - body   (form field)
         - image  (file, REQUIRED)
 
-    The image is uploaded to Cloudinary and its URL + public_id
-    are stored on the post.
+    Before creating:
+        - the owner's plan is resolved
+        - the count of existing posts on this business is compared
+          against the plan's `posts_limit`
+
+    If the limit is reached, the request is refused with 403.
     """
 
     business = _own_business_or_404(request.user, business_id)
@@ -107,6 +172,22 @@ def create_post(request, business_id):
         return Response(
             {"message": "Business not found."},
             status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # ── Plan limit check ─────────────────────────────────
+    allowed, used, limit, message = _check_post_limit(
+        request.user, business
+    )
+
+    if not allowed:
+        return Response(
+            {
+                "message": message,
+                "code": "post_limit_reached",
+                "used": used,
+                "limit": limit,
+            },
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     # ── Validate text fields ─────────────────────────────
@@ -146,17 +227,24 @@ def create_post(request, business_id):
         image_public_id=upload_result["public_id"],
     )
 
+    # Usage numbers for the frontend
+    used_after = used + 1
+
     return Response(
         {
             "message": "Post created successfully.",
             "post": PostSerializer(post).data,
+            "usage": {
+                "used": used_after,
+                "limit": limit,  # None = unlimited
+            },
         },
         status=status.HTTP_201_CREATED,
     )
 
 
 # ============================================================
-# RETRIEVE POST  — PUBLIC
+# RETRIEVE POST — PUBLIC
 # GET /posts/<post_id>/
 # ============================================================
 
@@ -180,10 +268,6 @@ def retrieve_post(request, post_id):
 # UPDATE POST
 # PATCH /posts/<post_id>/update/
 # Multipart: any of title, body, image (file)
-#
-# - If `image` is provided, the old Cloudinary asset is
-#   deleted first, then the new one is uploaded and stored.
-# - If no image is provided, the existing one is kept.
 # ============================================================
 
 @api_view(["PATCH", "PUT"])
@@ -198,7 +282,6 @@ def update_post(request, post_id):
 
     partial = request.method == "PATCH"
 
-    # ── Validate text fields ─────────────────────────────
     serializer = PostUpdateSerializer(
         post,
         data=request.data,
@@ -213,17 +296,15 @@ def update_post(request, post_id):
 
     validated = dict(serializer.validated_data)
 
-    # ── If a new image file was uploaded, swap it in ─────
+    # Swap the image if a new one was provided
     image_file = request.FILES.get("image")
     if image_file:
-        # Delete the old image first (if any)
         if post.image_public_id:
             try:
                 delete_image_from_cloudinary(post.image_public_id)
             except Exception as e:
                 print(f"⚠️ Could not delete old post image: {e}")
 
-        # Upload the new one
         try:
             upload_result = upload_image_to_cloudinary(
                 image_file,
@@ -237,7 +318,6 @@ def update_post(request, post_id):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    # ── Apply the remaining fields ───────────────────────
     for field, value in validated.items():
         setattr(post, field, value)
 
@@ -255,7 +335,6 @@ def update_post(request, post_id):
 # ============================================================
 # DELETE POST
 # DELETE /posts/<post_id>/delete/
-# Deletes the Cloudinary image first, then the DB row.
 # ============================================================
 
 @api_view(["DELETE"])
@@ -268,18 +347,80 @@ def delete_post(request, post_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Delete the Cloudinary asset first
     if post.image_public_id:
         try:
             delete_image_from_cloudinary(post.image_public_id)
         except Exception as e:
             print(f"⚠️ Could not delete Cloudinary image: {e}")
-            # We don't return an error — the DB row is still removed
-            # so the user isn't stuck with a broken post.
 
     post.delete()
 
     return Response(
         {"message": "Post deleted successfully."},
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# USAGE — GET /posts/business/<business_id>/usage/
+#
+# How many posts this business has vs. the plan's limit.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def post_usage(request, business_id):
+    """
+    Returns the business's post usage against the owner's plan.
+
+    Response:
+        {
+            "plan": "Starter",
+            "business_id": 4,
+            "used": 3,
+            "limit": 10,          # null = unlimited
+            "remaining": 7,       # null = unlimited
+            "is_unlimited": false
+        }
+    """
+
+    business = _own_business_or_404(request.user, business_id)
+    if business is None:
+        return Response(
+            {"message": "Business not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    plan = _get_effective_plan(request.user)
+    used = Posts.objects.filter(business=business).count()
+
+    if plan is None:
+        return Response(
+            {
+                "plan": None,
+                "business_id": business.id,
+                "used": used,
+                "limit": 0,
+                "remaining": 0,
+                "is_unlimited": False,
+                "has_plan": False,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    limit = plan.posts_limit
+    is_unlimited = limit is None
+    remaining = None if is_unlimited else max(0, limit - used)
+
+    return Response(
+        {
+            "plan": plan.plan_name,
+            "business_id": business.id,
+            "used": used,
+            "limit": limit,
+            "remaining": remaining,
+            "is_unlimited": is_unlimited,
+            "has_plan": True,
+        },
         status=status.HTTP_200_OK,
     )
