@@ -47,14 +47,15 @@ def create_user(request):
 
     Superadmins cannot be created through this endpoint.
 
-    On success, the user is subscribed to the system default plan.
-    Registration is refused with 503 when no plan exists.
+    Registration requires a plan marked as the default.
+
+    Refusals:
+        - 503 if no plans exist at all.
+        - 503 if plans exist but none is marked as default.
     """
 
-    # ── 1. Resolve default plan BEFORE creating the user ──────
-    default_plan = Plan.get_default()
-
-    if default_plan is None:
+    # ── 1. Does the system have any plans at all? ─────────────
+    if not Plan.objects.exists():
         return Response(
             {
                 "message": (
@@ -65,7 +66,22 @@ def create_user(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
-    # ── 2. Sanitise the payload ───────────────────────────────
+    # ── 2. Is there a plan explicitly marked as default? ─────
+    default_plan = Plan.objects.filter(is_default=True).first()
+
+    if default_plan is None:
+        return Response(
+            {
+                "message": (
+                    "Registration is temporarily unavailable. "
+                    "No default plan has been set. "
+                    "Please contact the administrator."
+                )
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    # ── 3. Sanitise the payload ───────────────────────────────
     data = request.data.copy()
 
     data["role"] = "user"
@@ -75,7 +91,7 @@ def create_user(request):
     data.pop("profile_image_public_id", None)
     data.pop("google_id", None)
 
-    # ── 3. Validate ───────────────────────────────────────────
+    # ── 4. Validate ───────────────────────────────────────────
     serializer = CreateNewUserSerializer(data=data)
 
     if not serializer.is_valid():
@@ -84,7 +100,7 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 4. Create the user + attach subscription atomically ───
+    # ── 5. Create the user + attach subscription atomically ───
     try:
         with transaction.atomic():
             user = serializer.save()
@@ -99,7 +115,7 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 5. Issue tokens + respond ─────────────────────────────
+    # ── 6. Issue tokens + respond ─────────────────────────────
     tokens = generate_tokens(user)
 
     return Response(
