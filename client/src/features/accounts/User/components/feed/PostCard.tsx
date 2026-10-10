@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { FeedItem } from '../../api/feedApi';
-import LikeButton from '../engagement/LikeButton';
-import FollowButton from '../engagement/FollowButton';
+import LikeButton from '../../../../engagement/components/LikeButton';
+import FollowButton from '../../../../engagement/components/FollowButton';
 import './postcard.css';
 
 type PostCardProps = {
@@ -74,7 +74,7 @@ function PostCard({ item, onOpenBusiness }: PostCardProps) {
       {/* ── 3. Actions: like + follow ───────────────── */}
       <div className="post-card__actions">
         <LikeButton targetKind="post" targetId={item.id} />
-        <FollowButton businessId={item.business.id} />
+        <FollowButton targetKind="post" targetId={item.id} />
       </div>
 
       {/* ── 4. Body ─────────────────────────────────── */}

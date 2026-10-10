@@ -1,5 +1,6 @@
-from django.contrib import admin
+# stories/admin.py
 
+from django.contrib import admin
 from .models import Story
 
 
@@ -11,6 +12,8 @@ class StoryAdmin(admin.ModelAdmin):
         "title",
         "user",
         "category",
+        "likes_count",
+        "follows_count",
         "created_at",
         "updated_at",
     )
@@ -36,6 +39,8 @@ class StoryAdmin(admin.ModelAdmin):
     readonly_fields = (
         "created_at",
         "updated_at",
+        "likes_count",
+        "follows_count",
     )
 
     # ── Ordering ──────────────────────────────────────────
@@ -57,6 +62,10 @@ class StoryAdmin(admin.ModelAdmin):
                 "content",
                 "category",
             ),
+        }),
+        ("Engagement", {
+            "fields": ("likes_count", "follows_count"),
+            "classes": ("collapse",),
         }),
         ("Timestamps", {
             "fields": (

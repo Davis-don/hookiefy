@@ -1,0 +1,321 @@
+/* ─────────────────────────────────────────────────────────
+   FollowButton — animated follow toggle with sparkle burst
+   Class prefix: .follow-button
+   ───────────────────────────────────────────────────────── */
+
+.follow-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 40px;
+  padding: 0 12px 0 10px;
+
+  border: none;
+  background: transparent;
+  color: #0F172A;
+
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  /* Pointer cursor — will not be overridden by parents */
+  cursor: pointer;
+  pointer-events: auto;
+
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+/* ── Cursor guarantee ───────────────────────────────────
+   Higher specificity so no global `button { cursor: default }`
+   or nested link can override the pointer. */
+button.follow-button:not(:disabled),
+button.follow-button:not(:disabled):hover,
+button.follow-button:not(:disabled):focus,
+button.follow-button:not(:disabled):active {
+  cursor: pointer;
+}
+
+/* ── Icon stack ──────────────────────────────────────── */
+.follow-button__icons {
+  position: relative;
+  display: block;
+
+  width: 26px;
+  height: 26px;
+
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.follow-button__icon {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  transition:
+    opacity 0.22s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.22s ease;
+}
+
+/* Default state */
+.follow-button__icon--follow {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.follow-button__icon--following {
+  opacity: 0;
+  transform: scale(0.6) rotate(-30deg);
+}
+
+/* ── Hover ───────────────────────────────────────────── */
+.follow-button:not(:disabled):hover {
+  color: #2563EB;
+}
+
+.follow-button:not(:disabled):hover .follow-button__icon--follow {
+  transform: scale(1.14);
+}
+
+/* ── Press ───────────────────────────────────────────── */
+.follow-button:not(:disabled):active .follow-button__icons {
+  transform: scale(0.86);
+}
+
+/* ── Focus ring ──────────────────────────────────────── */
+.follow-button:focus-visible {
+  outline: none;
+  color: #2563EB;
+}
+
+.follow-button:focus-visible .follow-button__icons {
+  filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.55));
+}
+
+/* ─────────────────────────────────────────────────────
+   FOLLOWING STATE
+   ───────────────────────────────────────────────────── */
+
+.follow-button.is-following {
+  color: #10B981;
+}
+
+.follow-button.is-following .follow-button__icon--follow {
+  opacity: 0;
+  transform: scale(0.5) rotate(45deg);
+}
+
+.follow-button.is-following .follow-button__icon--following {
+  opacity: 1;
+  transform: scale(1.15) rotate(0deg);
+  animation: check-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─────────────────────────────────────────────────────
+   SPARKLE BURST
+   ───────────────────────────────────────────────────── */
+
+.follow-button__burst {
+  position: absolute;
+
+  top: 50%;
+  left: 22px;
+
+  width: 0;
+  height: 0;
+
+  pointer-events: none;
+  z-index: 5;
+  isolation: isolate;
+}
+
+.follow-button__sparkle {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 16px;
+  height: 16px;
+
+  color: var(--colour, #2563EB);
+
+  opacity: 0;
+
+  transform:
+    translate(-50%, -50%)
+    scale(0)
+    rotate(0deg);
+
+  animation:
+    sparkle-float var(--duration, 1000ms)
+    cubic-bezier(0.16, 0.84, 0.44, 1)
+    forwards;
+
+  animation-delay: var(--delay, 0ms);
+
+  will-change: transform, opacity;
+}
+
+.follow-button__sparkle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─────────────────────────────────────────────────────
+   DIRECTION SLOTS — 32 positions
+   ───────────────────────────────────────────────────── */
+
+/* First burst (14) */
+.follow-button__sparkle--0  { --tx:   0px; --ty: -72px; --rot: -15deg; }
+.follow-button__sparkle--1  { --tx: -30px; --ty: -60px; --rot:  20deg; }
+.follow-button__sparkle--2  { --tx:  30px; --ty: -60px; --rot: -20deg; }
+.follow-button__sparkle--3  { --tx: -56px; --ty: -38px; --rot:  35deg; }
+.follow-button__sparkle--4  { --tx:  56px; --ty: -38px; --rot: -35deg; }
+.follow-button__sparkle--5  { --tx: -48px; --ty:  10px; --rot:  50deg; }
+.follow-button__sparkle--6  { --tx:  48px; --ty:  10px; --rot: -50deg; }
+.follow-button__sparkle--7  { --tx: -22px; --ty: -86px; --rot: -10deg; }
+.follow-button__sparkle--8  { --tx:  22px; --ty: -86px; --rot:  10deg; }
+.follow-button__sparkle--9  { --tx:   0px; --ty: -100px; --rot:  0deg; }
+.follow-button__sparkle--10 { --tx: -72px; --ty: -12px; --rot:  60deg; }
+.follow-button__sparkle--11 { --tx:  72px; --ty: -12px; --rot: -60deg; }
+.follow-button__sparkle--12 { --tx: -36px; --ty: -48px; --rot:  24deg; }
+.follow-button__sparkle--13 { --tx:  36px; --ty: -48px; --rot: -24deg; }
+
+/* Second burst (18) — wider, higher */
+.follow-button__sparkle--14 { --tx: -12px; --ty: -80px; --rot:  -8deg; }
+.follow-button__sparkle--15 { --tx:  12px; --ty: -80px; --rot:   8deg; }
+.follow-button__sparkle--16 { --tx: -44px; --ty: -72px; --rot:  28deg; }
+.follow-button__sparkle--17 { --tx:  44px; --ty: -72px; --rot: -28deg; }
+.follow-button__sparkle--18 { --tx: -82px; --ty: -32px; --rot:  65deg; }
+.follow-button__sparkle--19 { --tx:  82px; --ty: -32px; --rot: -65deg; }
+.follow-button__sparkle--20 { --tx: -64px; --ty: -64px; --rot:  42deg; }
+.follow-button__sparkle--21 { --tx:  64px; --ty: -64px; --rot: -42deg; }
+.follow-button__sparkle--22 { --tx: -90px; --ty:   6px; --rot:  72deg; }
+.follow-button__sparkle--23 { --tx:  90px; --ty:   6px; --rot: -72deg; }
+.follow-button__sparkle--24 { --tx: -34px; --ty: -100px; --rot: -14deg; }
+.follow-button__sparkle--25 { --tx:  34px; --ty: -100px; --rot:  14deg; }
+.follow-button__sparkle--26 { --tx:   0px; --ty: -116px; --rot:   0deg; }
+.follow-button__sparkle--27 { --tx: -58px; --ty: -22px; --rot:  52deg; }
+.follow-button__sparkle--28 { --tx:  58px; --ty: -22px; --rot: -52deg; }
+.follow-button__sparkle--29 { --tx: -24px; --ty: -64px; --rot:  14deg; }
+.follow-button__sparkle--30 { --tx:  24px; --ty: -64px; --rot: -14deg; }
+.follow-button__sparkle--31 { --tx:   0px; --ty: -132px; --rot:   0deg; }
+
+/* ─────────────────────────────────────────────────────
+   KEYFRAMES
+   ───────────────────────────────────────────────────── */
+
+@keyframes sparkle-float {
+  0% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(0, 0)
+      scale(0)
+      rotate(0deg);
+  }
+
+  15% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      translate(
+        calc(var(--tx) * 0.18),
+        calc(var(--ty) * 0.18)
+      )
+      scale(calc(var(--scale, 1) * 0.9))
+      rotate(calc(var(--rot, 0deg) * 0.4));
+  }
+
+  60% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      translate(
+        calc(var(--tx) * 0.78),
+        calc(var(--ty) * 0.78)
+      )
+      scale(var(--scale, 1))
+      rotate(var(--rot, 0deg));
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(var(--tx), var(--ty))
+      scale(calc(var(--scale, 1) * 0.45))
+      rotate(calc(var(--rot, 0deg) * 1.5));
+  }
+}
+
+@keyframes check-pop {
+  0%   { transform: scale(0.6) rotate(-30deg); }
+  45%  { transform: scale(1.35) rotate(8deg); }
+  75%  { transform: scale(0.94) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ─────────────────────────────────────────────────────
+   COUNT
+   ───────────────────────────────────────────────────── */
+
+.follow-button__count {
+  min-width: 14px;
+  text-align: left;
+  line-height: 1;
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.18s ease;
+}
+
+.follow-button.is-bursting .follow-button__count {
+  animation: count-bump 0.5s ease-out;
+  color: #10B981;
+}
+
+@keyframes count-bump {
+  0%   { transform: translateY(0)    scale(1); }
+  35%  { transform: translateY(-5px) scale(1.3); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+/* ── Disabled ────────────────────────────────────────── */
+.follow-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────
+   REDUCED MOTION
+   ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-button,
+  .follow-button__icon,
+  .follow-button__icons,
+  .follow-button__count {
+    transition: none !important;
+  }
+
+  .follow-button.is-following .follow-button__icon--following {
+    animation: none;
+  }
+
+  .follow-button__sparkle {
+    display: none;
+  }
+
+  .follow-button.is-bursting .follow-button__count {
+    animation: count-bump 0.35s ease-out;
+  }
+}

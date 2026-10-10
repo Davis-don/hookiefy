@@ -1,6 +1,4 @@
-# ============================================================
-# models.py
-# ============================================================
+# products/models.py
 
 from django.db import models
 
@@ -26,18 +24,13 @@ class Products(models.Model):
     # NAME
     # --------------------------------------------------------
 
-    name = models.CharField(
-        max_length=200,
-    )
+    name = models.CharField(max_length=200)
 
     # --------------------------------------------------------
     # DESCRIPTION
     # --------------------------------------------------------
 
-    description = models.TextField(
-        default="",
-        blank=True,
-    )
+    description = models.TextField(default="", blank=True)
 
     # --------------------------------------------------------
     # PRICE (optional)
@@ -61,16 +54,25 @@ class Products(models.Model):
     )
 
     # --------------------------------------------------------
+    # ENGAGEMENT COUNTERS
+    # --------------------------------------------------------
+
+    likes_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached total number of likes.",
+    )
+
+    follows_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached total number of follows.",
+    )
+
+    # --------------------------------------------------------
     # TIMESTAMPS
     # --------------------------------------------------------
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # --------------------------------------------------------
     # META
@@ -103,10 +105,6 @@ class Products(models.Model):
 
     @property
     def properties(self):
-        """
-        Return the filled-in properties as a list of dicts
-        (name + value), skipping any that are blank.
-        """
         return [
             {"name": p.name, "value": p.value}
             for p in self.property_items.all()
@@ -117,13 +115,8 @@ class Products(models.Model):
     def has_properties(self):
         return self.property_items.exists()
 
-    # --------------------------------------------------------
-    # IMAGE HELPERS
-    # --------------------------------------------------------
-
     @property
     def primary_image(self):
-        """Return the primary image (or the first image if none is primary)."""
         return self.images.filter(is_primary=True).first() or self.images.first()
 
     @property
@@ -132,7 +125,6 @@ class Products(models.Model):
 
     @property
     def image_urls(self):
-        """Return a list of all image URLs for this product."""
         return list(self.images.values_list("image_url", flat=True))
 
 
@@ -193,9 +185,7 @@ class ProductImage(models.Model):
     # TIMESTAMPS
     # --------------------------------------------------------
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     # --------------------------------------------------------
     # META
@@ -221,7 +211,8 @@ class ProductImage(models.Model):
     # --------------------------------------------------------
 
     def __str__(self):
-        return f"Image for {self.product.name} ({'primary' if self.is_primary else 'secondary'})"
+        label = "primary" if self.is_primary else "secondary"
+        return f"Image for {self.product.name} ({label})"
 
     # --------------------------------------------------------
     # SAVE — ensure only one primary image per product
@@ -229,7 +220,6 @@ class ProductImage(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_primary:
-            # Unset any other primary image for this product
             ProductImage.objects.filter(
                 product=self.product, is_primary=True
             ).exclude(pk=self.pk).update(is_primary=False)
@@ -280,9 +270,7 @@ class ProductProperty(models.Model):
     # TIMESTAMPS
     # --------------------------------------------------------
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     # --------------------------------------------------------
     # META

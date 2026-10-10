@@ -1,3 +1,5 @@
+# posts/admin.py
+
 from django.contrib import admin
 from .models import Posts
 
@@ -9,6 +11,8 @@ class PostsAdmin(admin.ModelAdmin):
         "title",
         "business",
         "has_image",
+        "likes_count",
+        "follows_count",
         "created_at",
     )
 
@@ -20,14 +24,19 @@ class PostsAdmin(admin.ModelAdmin):
 
     search_fields = (
         "title",
-        "body",                        # ← renamed from description
+        "body",
         "business__business_name",
     )
 
     ordering = ("-created_at",)
     list_select_related = ("business",)
     raw_id_fields = ("business",)
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "likes_count",
+        "follows_count",
+    )
     list_per_page = 25
 
     fieldsets = (
@@ -37,7 +46,7 @@ class PostsAdmin(admin.ModelAdmin):
         ("Content", {
             "fields": (
                 "title",
-                "body",                # ← renamed from description
+                "body",
             ),
         }),
         ("Image", {
@@ -45,6 +54,10 @@ class PostsAdmin(admin.ModelAdmin):
                 "image_url",
                 "image_public_id",
             ),
+        }),
+        ("Engagement", {
+            "fields": ("likes_count", "follows_count"),
+            "classes": ("collapse",),
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),

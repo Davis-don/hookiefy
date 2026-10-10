@@ -1,0 +1,308 @@
+/* ─────────────────────────────────────────────────────────
+   LikeButton — animated heart toggle with coloured burst
+   Class prefix: .like-button
+   ───────────────────────────────────────────────────────── */
+
+.like-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 40px;
+  padding: 0 12px 0 10px;
+
+  border: none;
+  background: transparent;
+  color: #0F172A;
+
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+/* ── Main heart ─────────────────────────────────────── */
+.like-button__heart {
+  display: block;
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    fill 0.2s ease,
+    stroke 0.2s ease;
+}
+
+/* ── Hover / press / focus ──────────────────────────── */
+.like-button:hover {
+  color: #E11D48;
+}
+
+.like-button:hover .like-button__heart {
+  transform: scale(1.12);
+}
+
+.like-button:active .like-button__heart {
+  transform: scale(0.86);
+}
+
+.like-button:focus-visible {
+  outline: none;
+  color: #E11D48;
+}
+
+.like-button:focus-visible .like-button__heart {
+  filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.55));
+}
+
+/* ─────────────────────────────────────────────────────
+   LIKED STATE — the main heart fills in
+   ───────────────────────────────────────────────────── */
+
+.like-button.is-liked {
+  color: #E11D48;
+}
+
+.like-button.is-liked .like-button__heart {
+  fill: #E11D48;
+  stroke: #E11D48;
+  animation: heart-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─────────────────────────────────────────────────────
+   BURST LAYER — where the coloured hearts fly from
+   ───────────────────────────────────────────────────── */
+
+.like-button__burst {
+  position: absolute;
+
+  /* Anchor on the centre of the heart itself, not the whole button */
+  top: 50%;
+  left: 22px;
+
+  width: 0;
+  height: 0;
+
+  pointer-events: none;
+
+  /* Keep the burst above nearby text but below any modal */
+  z-index: 5;
+
+  /* Never clip the hearts, even if a parent has overflow:hidden */
+  isolation: isolate;
+}
+
+/* ── Each flying heart ──────────────────────────────── */
+.like-button__particle {
+  position: absolute;
+
+  /* Centre on the burst anchor */
+  top: 0;
+  left: 0;
+
+  width: 18px;
+  height: 18px;
+
+  color: var(--colour, #E11D48);
+
+  opacity: 0;
+
+  transform:
+    translate(-50%, -50%)
+    scale(0);
+
+  animation:
+    heart-float var(--duration, 950ms)
+    cubic-bezier(0.16, 0.84, 0.44, 1)
+    forwards;
+
+  animation-delay: var(--delay, 0ms);
+
+  will-change: transform, opacity;
+}
+
+.like-button__particle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Strong burst (the second, success one) ─────────── */
+/* Adds a slightly bigger travel radius and a longer life
+   so the two bursts are visibly different, reinforcing
+   the "server confirmed" moment. */
+
+.like-button__particle--strong {
+  --duration: 1250ms;
+}
+
+/* ─────────────────────────────────────────────────────
+   DIRECTION SLOTS — 32 positions in a spreading cloud
+   ─────────────────────────────────────────────────────
+   The component emits two bursts per tap:
+     • First burst:  14 particles → slots 0–13
+     • Second burst: 18 particles → slots 14–31
+   Each slot sets its own outward vector and target
+   rotation. They're arranged so the cloud fans upward
+   and outward, not in a rigid circle.
+   ───────────────────────────────────────────────────── */
+
+/* ── First burst (14 particles) ─────────────────────── */
+.like-button__particle--0  { --tx:   0px; --ty: -68px; --rot: -12deg; }
+.like-button__particle--1  { --tx: -28px; --ty: -58px; --rot:  18deg; }
+.like-button__particle--2  { --tx:  28px; --ty: -58px; --rot: -20deg; }
+.like-button__particle--3  { --tx: -52px; --ty: -36px; --rot:  30deg; }
+.like-button__particle--4  { --tx:  52px; --ty: -36px; --rot: -30deg; }
+.like-button__particle--5  { --tx: -44px; --ty:  10px; --rot:  45deg; }
+.like-button__particle--6  { --tx:  44px; --ty:  10px; --rot: -45deg; }
+.like-button__particle--7  { --tx: -20px; --ty: -82px; --rot: -10deg; }
+.like-button__particle--8  { --tx:  20px; --ty: -82px; --rot:  10deg; }
+.like-button__particle--9  { --tx:   0px; --ty: -96px; --rot:   0deg; }
+.like-button__particle--10 { --tx: -68px; --ty: -10px; --rot:  55deg; }
+.like-button__particle--11 { --tx:  68px; --ty: -10px; --rot: -55deg; }
+.like-button__particle--12 { --tx: -34px; --ty: -44px; --rot:  22deg; }
+.like-button__particle--13 { --tx:  34px; --ty: -44px; --rot: -22deg; }
+
+/* ── Second burst (18 particles) — wider, higher ────── */
+.like-button__particle--14 { --tx: -12px; --ty: -78px; --rot:  -8deg; }
+.like-button__particle--15 { --tx:  12px; --ty: -78px; --rot:   8deg; }
+.like-button__particle--16 { --tx: -40px; --ty: -68px; --rot:  26deg; }
+.like-button__particle--17 { --tx:  40px; --ty: -68px; --rot: -26deg; }
+.like-button__particle--18 { --tx: -76px; --ty: -30px; --rot:  62deg; }
+.like-button__particle--19 { --tx:  76px; --ty: -30px; --rot: -62deg; }
+.like-button__particle--20 { --tx: -60px; --ty: -60px; --rot:  40deg; }
+.like-button__particle--21 { --tx:  60px; --ty: -60px; --rot: -40deg; }
+.like-button__particle--22 { --tx: -84px; --ty:   6px; --rot:  70deg; }
+.like-button__particle--23 { --tx:  84px; --ty:   6px; --rot: -70deg; }
+.like-button__particle--24 { --tx: -32px; --ty: -96px; --rot: -14deg; }
+.like-button__particle--25 { --tx:  32px; --ty: -96px; --rot:  14deg; }
+.like-button__particle--26 { --tx:   0px; --ty: -112px; --rot:   0deg; }
+.like-button__particle--27 { --tx: -54px; --ty: -20px; --rot:  48deg; }
+.like-button__particle--28 { --tx:  54px; --ty: -20px; --rot: -48deg; }
+.like-button__particle--29 { --tx: -22px; --ty: -60px; --rot:  12deg; }
+.like-button__particle--30 { --tx:  22px; --ty: -60px; --rot: -12deg; }
+.like-button__particle--31 { --tx:   0px; --ty: -128px; --rot:   0deg; }
+
+/* ─────────────────────────────────────────────────────
+   KEYFRAMES — floating heart
+   Hearts rise, spread, rotate gently, then fade.
+   ───────────────────────────────────────────────────── */
+
+@keyframes heart-float {
+  0% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(0, 0)
+      scale(0)
+      rotate(0deg);
+  }
+
+  15% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      translate(
+        calc(var(--tx) * 0.18),
+        calc(var(--ty) * 0.18)
+      )
+      scale(calc(var(--scale, 1) * 0.9))
+      rotate(calc(var(--rot, 0deg) * 0.4));
+  }
+
+  60% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      translate(
+        calc(var(--tx) * 0.78),
+        calc(var(--ty) * 0.78)
+      )
+      scale(var(--scale, 1))
+      rotate(var(--rot, 0deg));
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(var(--tx), var(--ty))
+      scale(calc(var(--scale, 1) * 0.5))
+      rotate(calc(var(--rot, 0deg) * 1.4));
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   MAIN HEART POP — squash, overshoot, settle
+   ───────────────────────────────────────────────────── */
+
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(0.78); }
+  55%  { transform: scale(1.32); }
+  80%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* ─────────────────────────────────────────────────────
+   COUNT — bump when a burst fires
+   ───────────────────────────────────────────────────── */
+
+.like-button__count {
+  min-width: 14px;
+  text-align: left;
+  line-height: 1;
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.18s ease;
+}
+
+.like-button.is-bursting .like-button__count {
+  animation: count-bump 0.5s ease-out;
+  color: #E11D48;
+}
+
+@keyframes count-bump {
+  0%   { transform: translateY(0)    scale(1); }
+  35%  { transform: translateY(-5px) scale(1.3); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+/* ── Disabled ───────────────────────────────────────── */
+.like-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────
+   REDUCED MOTION — no fireworks, but the count still
+   acknowledges the tap so the interaction feels alive.
+   ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .like-button,
+  .like-button__heart,
+  .like-button__count {
+    transition: none !important;
+  }
+
+  .like-button.is-liked .like-button__heart {
+    animation: none;
+  }
+
+  /* Hide the flying hearts entirely */
+  .like-button__particle {
+    display: none;
+  }
+
+  /* But keep a soft count bump so the user still
+     gets feedback that the number changed. */
+  .like-button.is-bursting .like-button__count {
+    animation: count-bump 0.35s ease-out;
+  }
+}

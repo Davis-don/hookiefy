@@ -1,13 +1,8 @@
 from django.db import models
-
 from account.models import Accounts
 
 
 class Story(models.Model):
-
-    # ============================================================
-    # STORY CATEGORIES
-    # ============================================================
 
     CATEGORY_CHOICES = (
         ("journey",     "Journeys"),
@@ -18,63 +13,36 @@ class Story(models.Model):
         ("inspiration", "Inspiration"),
     )
 
-    # ============================================================
-    # AUTHOR — one user, many stories
-    # ============================================================
-
     user = models.ForeignKey(
         Accounts,
         on_delete=models.CASCADE,
         related_name="stories",
     )
 
-    # ============================================================
-    # TITLE
-    # ============================================================
-
-    title = models.CharField(
-        max_length=200,
-    )
-
-    # ============================================================
-    # STORY CONTENT
-    # ============================================================
-
+    title = models.CharField(max_length=200)
     content = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+
+    views = models.PositiveIntegerField(default=0)
 
     # ============================================================
-    # CATEGORY
+    # ENGAGEMENT COUNTERS  (denormalised for fast reads)
     # ============================================================
 
-    category = models.CharField(
-        max_length=20,
-        choices=CATEGORY_CHOICES,
-    )
-
-    # ============================================================
-    # VIEWS
-    # ============================================================
-
-    views = models.PositiveIntegerField(
+    likes_count = models.PositiveIntegerField(
         default=0,
-        help_text="Total number of times this story was opened.",
+        help_text="Cached total number of likes.",
     )
 
-    # ============================================================
-    # TIMESTAMPS
-    # ============================================================
-
-    created_at = models.DateTimeField(
-        auto_now_add=True,
+    follows_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached total number of follows.",
     )
 
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    # ------------------------------------------------------------
 
-    # ============================================================
-    # META
-    # ============================================================
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -86,20 +54,11 @@ class Story(models.Model):
             models.Index(fields=("created_at",)),
         )
 
-    # ============================================================
-    # STRING REPRESENTATION
-    # ============================================================
-
     def __str__(self):
         return self.title
 
-    # ============================================================
-    # HELPERS
-    # ============================================================
-
     @property
     def summary(self):
-        """First 140 characters of the content, trimmed to a word boundary."""
         text = self.content.strip().replace("\n", " ")
         if len(text) <= 140:
             return text

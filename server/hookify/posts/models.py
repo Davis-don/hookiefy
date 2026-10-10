@@ -1,3 +1,5 @@
+# posts/models.py
+
 from django.db import models
 
 
@@ -22,21 +24,16 @@ class Posts(models.Model):
     # TITLE
     # --------------------------------------------------------
 
-    title = models.CharField(
-        max_length=200,
-    )
+    title = models.CharField(max_length=200)
 
     # --------------------------------------------------------
     # BODY
     # --------------------------------------------------------
 
-    body = models.TextField(
-        default="",
-        blank=True,
-    )
+    body = models.TextField(default="", blank=True)
 
     # --------------------------------------------------------
-    # IMAGE — Cloudinary URL + public ID  (required)
+    # IMAGE — Cloudinary URL + public ID (required)
     # --------------------------------------------------------
 
     image_url = models.URLField(
@@ -63,16 +60,25 @@ class Posts(models.Model):
     )
 
     # --------------------------------------------------------
+    # ENGAGEMENT COUNTERS (denormalised for fast reads)
+    # --------------------------------------------------------
+
+    likes_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached total number of likes.",
+    )
+
+    follows_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached total number of follows.",
+    )
+
+    # --------------------------------------------------------
     # TIMESTAMPS
     # --------------------------------------------------------
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # --------------------------------------------------------
     # META

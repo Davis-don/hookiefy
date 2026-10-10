@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { FeedItem } from '../../api/feedApi';
-import LikeButton from '../engagement/LikeButton';
-import FollowButton from '../engagement/FollowButton';
+import LikeButton from '../../../../engagement/components/LikeButton';
+import FollowButton from '../../../../engagement/components/FollowButton';
 import './productcard.css';
 
 type ProductCardProps = {
@@ -82,7 +82,7 @@ function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
       {/* ── 3. Actions: like + follow ───────────────── */}
       <div className="product-card__actions">
         <LikeButton targetKind="product" targetId={item.id} />
-        <FollowButton businessId={item.business.id} />
+        <FollowButton targetKind="product" targetId={item.id} />
       </div>
 
       {/* ── 4. Body ─────────────────────────────────── */}

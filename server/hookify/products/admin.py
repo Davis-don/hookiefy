@@ -1,6 +1,4 @@
-# ============================================================
-# admin.py
-# ============================================================
+# products/admin.py
 
 from django.contrib import admin
 from .models import Products, ProductImage, ProductProperty
@@ -37,6 +35,8 @@ class ProductsAdmin(admin.ModelAdmin):
         "business",
         "price",
         "has_images",
+        "likes_count",
+        "follows_count",
         "created_at",
     )
 
@@ -60,7 +60,7 @@ class ProductsAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_select_related = ("business",)
     raw_id_fields = ("business",)
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at", "likes_count", "follows_count")
     list_per_page = 25
 
     # ── Inlines ───────────────────────────────────────────
@@ -80,6 +80,10 @@ class ProductsAdmin(admin.ModelAdmin):
                 "description",
                 "price",
             ),
+        }),
+        ("Engagement", {
+            "fields": ("likes_count", "follows_count"),
+            "classes": ("collapse",),
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),
