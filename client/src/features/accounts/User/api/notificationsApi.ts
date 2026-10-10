@@ -184,6 +184,29 @@ export async function markNotificationRead(
 }
 
 /* ============================================================
+   MARK ONE AS UNREAD
+   ============================================================ */
+
+export async function markNotificationUnread(
+  id: string,
+): Promise<Notification> {
+  const res = await fetch(
+    `${API_BASE}/notifications/${id}/unread/`,
+    { method: 'POST', headers: authHeaders() },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Failed to mark notification as unread.'),
+    );
+  }
+
+  return (data as { notification: Notification }).notification;
+}
+
+/* ============================================================
    MARK ALL AS READ
    ============================================================ */
 
@@ -205,7 +228,7 @@ export async function markAllNotificationsRead(): Promise<number> {
 }
 
 /* ============================================================
-   DELETE
+   DELETE ONE
    ============================================================ */
 
 export async function deleteNotification(
@@ -222,4 +245,25 @@ export async function deleteNotification(
       extractError(data, 'Failed to delete notification.'),
     );
   }
+}
+
+/* ============================================================
+   CLEAR ALL
+   ============================================================ */
+
+export async function clearAllNotifications(): Promise<number> {
+  const res = await fetch(
+    `${API_BASE}/notifications/clear-all/`,
+    { method: 'DELETE', headers: authHeaders() },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Failed to clear notifications.'),
+    );
+  }
+
+  return (data as { deleted: number }).deleted ?? 0;
 }

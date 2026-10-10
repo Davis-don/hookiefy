@@ -291,3 +291,26 @@ def delete_notification(request, notification_id):
         {"message": "Notification deleted."},
         status=status.HTTP_200_OK,
     )
+# notifications/views.py — add this view
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def clear_all_notifications(request):
+    """
+    Delete every notification belonging to the calling user.
+
+    Response:
+        { "message": "...", "deleted": N }
+    """
+
+    qs = Notification.objects.filter(recipient=request.user)
+    deleted = qs.count()
+    qs.delete()
+
+    return Response(
+        {
+            "message": f"{deleted} notification(s) deleted.",
+            "deleted": deleted,
+        },
+        status=status.HTTP_200_OK,
+    )

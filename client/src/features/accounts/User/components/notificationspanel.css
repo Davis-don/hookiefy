@@ -454,3 +454,594 @@
     animation: none !important;
   }
 }
+/* ============================================================
+   DETAIL VIEW
+   ============================================================ */
+
+/* Header layout for the detail view — three columns:
+   back button, title (centered), close button. */
+.np-head--detail {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+}
+
+.np-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  border: none;
+  background: #F8FAFC;
+  color: #64748B;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.np-back:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.np-title--detail {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 0.2px;
+}
+
+/* ── Detail content ─────────────────────────────────── */
+.np-detail {
+  padding: 22px 20px 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.np-detail-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.np-detail-sev {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.np-detail-sev--info {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.np-detail-sev--success {
+  background: #ECFDF5;
+  color: #047857;
+}
+.np-detail-sev--warning {
+  background: #FFFBEB;
+  color: #B45309;
+}
+.np-detail-sev--error {
+  background: #FEF2F2;
+  color: #B91C1C;
+}
+
+.np-detail-cat {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 0.3px;
+}
+
+.np-detail-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.np-detail-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.np-detail-actor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.np-detail-actor-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.np-detail-actor-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+
+  background: #EEF2FF;
+  color: #1D4ED8;
+
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.np-detail-actor-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.np-detail-date {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94A3B8;
+}
+
+/* ── Metadata block ─────────────────────────────────── */
+.np-detail-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 14px;
+
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+}
+
+.np-detail-metadata-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.np-detail-metadata-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.np-detail-metadata-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  font-size: 0.86rem;
+}
+
+.np-detail-metadata-key {
+  color: #64748B;
+  font-weight: 600;
+}
+
+.np-detail-metadata-value {
+  color: #0F172A;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-all;
+  max-width: 60%;
+}
+
+/* ── Action footer ──────────────────────────────────── */
+.np-foot--detail {
+  padding: 12px 16px;
+}
+
+.np-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.np-detail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  padding: 11px 16px;
+
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, filter 0.15s ease;
+}
+
+.np-detail-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary — gradient brand */
+.np-detail-btn--primary {
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  box-shadow:
+    0 10px 22px -12px rgba(37, 99, 235, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.np-detail-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+/* Ghost — subtle neutral */
+.np-detail-btn--ghost {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #334155;
+}
+
+.np-detail-btn--ghost:hover:not(:disabled) {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+/* Danger — red-tinted */
+.np-detail-btn--danger {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #B91C1C;
+}
+
+.np-detail-btn--danger:hover:not(:disabled) {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+}
+
+/* ── Responsive tweaks ──────────────────────────────── */
+@media (max-width: 640px) {
+  .np-detail {
+    padding: 18px 16px 10px;
+  }
+
+  .np-detail-title {
+    font-size: 1.15rem;
+  }
+
+  .np-detail-text {
+    font-size: 0.96rem;
+  }
+}
+
+/* ============================================================
+   SPLIT FOOTER — Mark all read · Clear all
+   ============================================================ */
+
+.np-foot--split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.np-foot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease;
+}
+
+.np-foot-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Read-all — blue-tinted */
+.np-foot-btn--read {
+  background: #EEF2FF;
+  color: #1D4ED8;
+  border-color: #C7D2FE;
+}
+
+.np-foot-btn--read:hover:not(:disabled) {
+  background: #E0E7FF;
+  border-color: #A5B4FC;
+}
+
+/* Clear-all — red-tinted */
+.np-foot-btn--clear {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-color: #FECACA;
+}
+
+.np-foot-btn--clear:hover:not(:disabled) {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+}
+
+/* ============================================================
+   ACTION SHEET — bottom slide-up inside the panel
+   ============================================================ */
+
+/* A soft dim over the list, but only inside the panel. */
+.np-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  animation: np-fade-in 0.16s ease-out;
+}
+
+/* The sheet itself anchors to the bottom of the panel. */
+.np-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 6;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 8px 14px 16px;
+
+  background: #FFFFFF;
+
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+
+  box-shadow:
+    0 -14px 32px -14px rgba(15, 23, 42, 0.35),
+    0 -4px 12px -6px rgba(15, 23, 42, 0.1);
+
+  animation: np-sheet-up 0.24s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes np-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.np-sheet-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: #CBD5E1;
+  margin: 4px auto 0;
+}
+
+/* ── Preview card ───────────────────────────────────── */
+.np-sheet-preview {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 10px 12px 10px 16px;
+
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+}
+
+/* Coloured left accent by severity — matches the row */
+.np-sheet-preview.severity-info    { border-left: 3px solid #2563EB; }
+.np-sheet-preview.severity-success { border-left: 3px solid #10B981; }
+.np-sheet-preview.severity-warning { border-left: 3px solid #F59E0B; }
+.np-sheet-preview.severity-error   { border-left: 3px solid #EF4444; }
+
+.np-sheet-preview-cat {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.np-sheet-preview-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.np-sheet-preview-text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #475569;
+
+  /* Clamp to 2 lines in the preview only */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* ── Action buttons ─────────────────────────────────── */
+.np-sheet-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.np-sheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  padding: 12px 14px;
+
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  text-align: left;
+  color: #0F172A;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.np-sheet-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.np-sheet-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+
+  flex-shrink: 0;
+}
+
+/* Neutral — mark read / unread */
+.np-sheet-btn--neutral:hover:not(:disabled) {
+  background: #F1F5F9;
+}
+
+.np-sheet-btn--neutral .np-sheet-icon {
+  background: #EEF2FF;
+  color: #1D4ED8;
+}
+
+/* Danger — delete */
+.np-sheet-btn--danger {
+  color: #B91C1C;
+}
+
+.np-sheet-btn--danger:hover:not(:disabled) {
+  background: #FEF2F2;
+}
+
+.np-sheet-btn--danger .np-sheet-icon {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+/* ── Cancel ─────────────────────────────────────────── */
+.np-sheet-cancel {
+  width: 100%;
+  padding: 12px 14px;
+
+  border-radius: 10px;
+  border: none;
+
+  background: #F1F5F9;
+  color: #334155;
+
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease;
+}
+
+.np-sheet-cancel:hover {
+  background: #E2E8F0;
+}
+
+/* ── Row that is currently sheeted ──────────────────── */
+.np-item.is-sheeted {
+  background: #F1F5F9;
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .np-sheet,
+  .np-sheet-backdrop {
+    animation: none !important;
+  }
+}

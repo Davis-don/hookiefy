@@ -46,4 +46,9 @@ urlpatterns = [
         views.delete_notification,
         name="delete-notification",
     ),
+    path(
+    "clear-all/",
+    views.clear_all_notifications,
+    name="clear-all-notifications",
+),
 ]
