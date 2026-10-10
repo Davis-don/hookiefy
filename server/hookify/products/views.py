@@ -45,6 +45,109 @@ def _own_product_or_404(user, product_id):
     )
 
 
+def _get_effective_plan(user):
+    """
+    Resolve the user's plan.
+
+    Priority:
+        1. Plan from the active subscription.
+        2. The system's default plan.
+        3. None.
+    """
+    try:
+        return user.effective_plan
+    except Exception:
+        return None
+
+
+def _check_product_limit(user, business):
+    """
+    Return (allowed, used, limit, message).
+    """
+
+    plan = _get_effective_plan(user)
+
+    if plan is None:
+        return (
+            False,
+            0,
+            None,
+            (
+                "Your account has no active subscription plan. "
+                "Please contact support to start publishing products."
+            ),
+        )
+
+    used = Products.objects.filter(business=business).count()
+    limit = plan.products_limit  # None = unlimited
+
+    if limit is None:
+        return (True, used, None, "")
+
+    if used >= limit:
+        if limit == 1:
+            message = (
+                "You've reached the limit of your current plan — "
+                "1 product per business. Upgrade to add more."
+            )
+        else:
+            message = (
+                f"You've reached the limit of your current plan — "
+                f"{limit} products per business. Upgrade to add more."
+            )
+        return (False, used, limit, message)
+
+    return (True, used, limit, "")
+
+
+def _check_image_count_limit(user, business, incoming_count, existing_count=0):
+    """
+    Return (allowed, total_after, limit, message).
+
+    `incoming_count` is how many images the request wants to add.
+    `existing_count` is how many already exist on the product
+    (zero for create, non-zero for update).
+
+    If `plan.images_per_product` is None → unlimited.
+    """
+
+    plan = _get_effective_plan(user)
+
+    if plan is None:
+        return (
+            False,
+            existing_count + incoming_count,
+            None,
+            (
+                "Your account has no active subscription plan. "
+                "Please contact support."
+            ),
+        )
+
+    limit = plan.images_per_product  # None = unlimited
+    total_after = existing_count + incoming_count
+
+    if limit is None:
+        return (True, total_after, None, "")
+
+    if total_after > limit:
+        if limit == 1:
+            message = (
+                "You've reached the limit of your current plan — "
+                "1 image per product. Upgrade to add more images."
+            )
+        else:
+            message = (
+                f"You've reached the limit of your current plan — "
+                f"{limit} images per product. "
+                f"This request would give the product "
+                f"{total_after} images. Upgrade to add more."
+            )
+        return (False, total_after, limit, message)
+
+    return (True, total_after, limit, "")
+
+
 def _extract_properties_from_request(request):
     """
     Pull properties from the request.
@@ -52,12 +155,9 @@ def _extract_properties_from_request(request):
     Supports two shapes:
       1. JSON / form: `properties` as a list of {name, value} dicts.
       2. Multipart:    `property_name[]` + `property_value[]` arrays.
-
-    Returns a list of {"name": ..., "value": ...} dicts.
     """
     properties = []
 
-    # 1. Structured list (JSON body or nested form data)
     raw = request.data.get("properties")
     if isinstance(raw, list):
         for item in raw:
@@ -69,7 +169,6 @@ def _extract_properties_from_request(request):
         if properties:
             return properties
 
-    # 2. Parallel arrays (multipart form data)
     names = request.data.getlist("property_name") if hasattr(request.data, "getlist") else []
     values = request.data.getlist("property_value") if hasattr(request.data, "getlist") else []
 
@@ -83,17 +182,12 @@ def _extract_properties_from_request(request):
 
 
 def _extract_images_from_request(request):
-    """
-    Pull all uploaded image files from the request.
-    Returns a list of UploadedFile objects.
-    """
+    """Pull all uploaded image files from the request."""
     files = []
 
-    # Multiple files under "images" (preferred)
     if hasattr(request.FILES, "getlist"):
         files = request.FILES.getlist("images")
         if not files:
-            # Backwards-compatible single "image" key
             single = request.FILES.get("image")
             if single:
                 files = [single]
@@ -116,9 +210,7 @@ def _save_properties(product, properties_data):
 def _save_images(product, image_files, replace=False):
     """
     Upload image files to Cloudinary and attach them to the product.
-
-    If `replace` is True, existing images are deleted (from Cloudinary
-    and the DB) first. Otherwise the new images are appended.
+    If `replace` is True, existing images are deleted first.
     """
     if replace:
         for img in product.images.all():
@@ -142,7 +234,6 @@ def _save_images(product, image_files, replace=False):
         except Exception as e:
             raise RuntimeError(f"Image upload failed: {str(e)}")
 
-        # First image becomes primary if none exists yet
         is_primary = (not has_primary) and (index == 0)
 
         created.append(
@@ -166,11 +257,6 @@ def _save_images(product, image_files, replace=False):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_products(request, business_id):
-    """
-    List every product belonging to a business owned by the
-    authenticated user. Newest first.
-    """
-
     business = _own_business_or_404(request.user, business_id)
     if business is None:
         return Response(
@@ -200,15 +286,9 @@ def list_products(request, business_id):
 # CREATE PRODUCT
 # POST /products/business/<business_id>/create/
 #
-# Multipart fields:
-#   - name             (required)
-#   - description      (optional)
-#   - price            (optional)
-#   - property_name[]  (optional, parallel array)
-#   - property_value[] (optional, parallel array)
-#   - images           (one or more files, REQUIRED)
-#
-# Also supports JSON body with `properties: [{name, value}, ...]`.
+# Enforces:
+#   - plan.products_limit (total products per business)
+#   - plan.images_per_product (images on this product)
 # ============================================================
 
 @api_view(["POST"])
@@ -221,6 +301,22 @@ def create_product(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Products limit ───────────────────────────────────
+    allowed, used, limit, message = _check_product_limit(
+        request.user, business
+    )
+
+    if not allowed:
+        return Response(
+            {
+                "message": message,
+                "code": "product_limit_reached",
+                "used": used,
+                "limit": limit,
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     # ── Validate text fields ─────────────────────────────
     serializer = ProductCreateSerializer(data=request.data)
     if not serializer.is_valid():
@@ -229,12 +325,31 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── At least one image is required ───────────────────
+    # ── At least one image required ──────────────────────
     image_files = _extract_images_from_request(request)
     if not image_files:
         return Response(
             {"message": "At least one image is required."},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # ── Images-per-product limit ─────────────────────────
+    allowed, total_after, img_limit, message = _check_image_count_limit(
+        request.user,
+        business,
+        incoming_count=len(image_files),
+        existing_count=0,
+    )
+
+    if not allowed:
+        return Response(
+            {
+                "message": message,
+                "code": "images_per_product_limit_reached",
+                "incoming": len(image_files),
+                "limit": img_limit,
+            },
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     # ── Create the product ───────────────────────────────
@@ -245,40 +360,43 @@ def create_product(request, business_id):
         price=serializer.validated_data.get("price"),
     )
 
-    # ── Properties ───────────────────────────────────────
     properties_data = _extract_properties_from_request(request)
     if properties_data:
         _save_properties(product, properties_data)
 
-    # ── Images (upload to Cloudinary) ────────────────────
     try:
         _save_images(product, image_files, replace=False)
     except RuntimeError as e:
-        # Roll back the product if the upload fails
         product.delete()
         return Response(
             {"message": str(e)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Refresh to include the new relations
     product.refresh_from_db()
 
     return Response(
         {
             "message": "Product created successfully.",
             "product": ProductSerializer(product).data,
+            "usage": {
+                "products": {
+                    "used": used + 1,
+                    "limit": limit,  # None = unlimited
+                },
+                "images": {
+                    "used": len(image_files),
+                    "limit": img_limit,  # None = unlimited
+                },
+            },
         },
         status=status.HTTP_201_CREATED,
     )
 
 
 # ============================================================
-# RETRIEVE PRODUCT  — PUBLIC
+# RETRIEVE PRODUCT — PUBLIC
 # GET /products/<product_id>/
-#
-# Returns the full nested shape: business, owner, images,
-# properties, and engagement counters.
 # ============================================================
 
 @api_view(["GET"])
@@ -298,13 +416,7 @@ def retrieve_product(request, product_id):
 # UPDATE PRODUCT
 # PATCH /products/<product_id>/update/
 #
-# - Text fields: name, description, price
-# - Properties:  pass `properties` (list) or
-#                `property_name[]` + `property_value[]`
-#                → replaces ALL existing properties
-# - Images:      pass `images` (one or more files) with
-#                `replace_images=true` to replace all existing
-#                images, otherwise new images are appended.
+# Enforces images-per-product limit when adding images.
 # ============================================================
 
 @api_view(["PATCH", "PUT"])
@@ -319,7 +431,6 @@ def update_product(request, product_id):
 
     partial = request.method == "PATCH"
 
-    # ── Validate text fields ─────────────────────────────
     serializer = ProductUpdateSerializer(
         product,
         data=request.data,
@@ -332,27 +443,51 @@ def update_product(request, product_id):
         )
 
     validated = dict(serializer.validated_data)
-    # Properties are handled separately below
     validated.pop("properties", None)
+
+    # ── Images-per-product check ─────────────────────────
+    image_files = _extract_images_from_request(request)
+    replace_images = str(
+        request.data.get("replace_images", "")
+    ).lower() in ("1", "true", "yes")
+
+    if image_files:
+        existing_count = 0 if replace_images else product.images.count()
+
+        allowed, total_after, img_limit, message = _check_image_count_limit(
+            request.user,
+            product.business,
+            incoming_count=len(image_files),
+            existing_count=existing_count,
+        )
+
+        if not allowed:
+            return Response(
+                {
+                    "message": message,
+                    "code": "images_per_product_limit_reached",
+                    "incoming": len(image_files),
+                    "existing": existing_count,
+                    "would_be_total": total_after,
+                    "limit": img_limit,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
     # ── Apply text fields ────────────────────────────────
     for field, value in validated.items():
         setattr(product, field, value)
     product.save()
 
-    # ── Properties (replace all if provided) ─────────────
+    # ── Properties ───────────────────────────────────────
     properties_data = _extract_properties_from_request(request)
     if properties_data:
         _save_properties(product, properties_data)
 
     # ── Images ───────────────────────────────────────────
-    image_files = _extract_images_from_request(request)
     if image_files:
-        replace = str(request.data.get("replace_images", "")).lower() in (
-            "1", "true", "yes",
-        )
         try:
-            _save_images(product, image_files, replace=replace)
+            _save_images(product, image_files, replace=replace_images)
         except RuntimeError as e:
             return Response(
                 {"message": str(e)},
@@ -373,7 +508,6 @@ def update_product(request, product_id):
 # ============================================================
 # DELETE PRODUCT
 # DELETE /products/<product_id>/delete/
-# Deletes all Cloudinary images first, then the DB row.
 # ============================================================
 
 @api_view(["DELETE"])
@@ -386,15 +520,12 @@ def delete_product(request, product_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Delete every Cloudinary asset first
     for img in product.images.all():
         if img.image_public_id:
             try:
                 delete_image_from_cloudinary(img.image_public_id)
             except Exception as e:
                 print(f"⚠️ Could not delete Cloudinary image: {e}")
-                # We continue — the DB row is still removed so the
-                # user isn't stuck with a broken product.
 
     product.delete()
 
@@ -435,7 +566,6 @@ def delete_product_image(request, image_id):
 
     image.delete()
 
-    # If we removed the primary image, promote another one
     if was_primary:
         next_image = product.images.order_by("sort_order", "created_at").first()
         if next_image:
@@ -468,7 +598,6 @@ def set_primary_image(request, image_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Unset any existing primary for this product
     ProductImage.objects.filter(
         product=image.product, is_primary=True
     ).exclude(pk=image.pk).update(is_primary=False)
@@ -480,6 +609,72 @@ def set_primary_image(request, image_id):
         {
             "message": "Primary image updated.",
             "product": ProductSerializer(image.product).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# USAGE — GET /products/business/<business_id>/usage/
+#
+# How many products this business has, and what the plan allows.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def product_usage(request, business_id):
+    """
+    Response:
+        {
+            "plan": "Starter",
+            "business_id": 4,
+            "used": 12,
+            "limit": 50,            # null = unlimited
+            "remaining": 38,        # null = unlimited
+            "is_unlimited": false,
+            "images_per_product_limit": 6   # null = unlimited
+        }
+    """
+
+    business = _own_business_or_404(request.user, business_id)
+    if business is None:
+        return Response(
+            {"message": "Business not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    plan = _get_effective_plan(request.user)
+    used = Products.objects.filter(business=business).count()
+
+    if plan is None:
+        return Response(
+            {
+                "plan": None,
+                "business_id": business.id,
+                "used": used,
+                "limit": 0,
+                "remaining": 0,
+                "is_unlimited": False,
+                "has_plan": False,
+                "images_per_product_limit": 0,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    limit = plan.products_limit
+    is_unlimited = limit is None
+    remaining = None if is_unlimited else max(0, limit - used)
+
+    return Response(
+        {
+            "plan": plan.plan_name,
+            "business_id": business.id,
+            "used": used,
+            "limit": limit,
+            "remaining": remaining,
+            "is_unlimited": is_unlimited,
+            "has_plan": True,
+            "images_per_product_limit": plan.images_per_product,
         },
         status=status.HTTP_200_OK,
     )
