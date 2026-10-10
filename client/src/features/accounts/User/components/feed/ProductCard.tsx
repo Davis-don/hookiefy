@@ -9,6 +9,7 @@ import './productcard.css';
 type ProductCardProps = {
   item: FeedItem;
   onOpenBusiness: (businessId: number) => void;
+  onOpenProduct: (productId: number) => void;
 };
 
 const CLAMP_LINES = 2;
@@ -20,7 +21,11 @@ function formatPrice(price: string | null | undefined): string | null {
   return `KES ${n.toLocaleString()}`;
 }
 
-function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
+function ProductCard({
+  item,
+  onOpenBusiness,
+  onOpenProduct,
+}: ProductCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const priceLabel = formatPrice(item.price);
@@ -28,11 +33,16 @@ function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
+  // Header elements — open the business
   const openBusiness = () => onOpenBusiness(item.business.id);
+
+  // Everything else — open the product
+  const openProduct = () => onOpenProduct(item.id);
 
   return (
     <article className="product-card">
-      {/* ── 1. Header: avatar + business name ───────── */}
+      {/* ── 1. Header: avatar + business name ─────────
+              Both go to the business, not the product. */}
       <header className="product-card__header">
         <button
           type="button"
@@ -63,13 +73,13 @@ function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
         </button>
       </header>
 
-      {/* ── 2. Cover image ──────────────────────────── */}
+      {/* ── 2. Cover image — opens the PRODUCT ─────── */}
       {item.image_url && (
         <button
           type="button"
           className="product-card__cover"
-          onClick={openBusiness}
-          aria-label={`Open ${item.business.business_name}`}
+          onClick={openProduct}
+          aria-label={item.name ? `Open ${item.name}` : 'Open product'}
         >
           <img
             src={item.image_url}
@@ -79,31 +89,50 @@ function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
         </button>
       )}
 
-      {/* ── 3. Actions: like + follow ───────────────── */}
+      {/* ── 3. Actions: like + follow ─────────────────
+              Separate buttons — never navigate. */}
       <div className="product-card__actions">
         <LikeButton targetKind="product" targetId={item.id} />
         <FollowButton targetKind="product" targetId={item.id} />
       </div>
 
-      {/* ── 4. Body ─────────────────────────────────── */}
+      {/* ── 4. Body — everything here opens the PRODUCT ── */}
       <div className="product-card__body">
         {item.name && (
           <button
             type="button"
             className="product-card__name"
-            onClick={openBusiness}
+            onClick={openProduct}
           >
             {item.name}
           </button>
         )}
 
         {priceLabel && (
-          <span className="product-card__price">{priceLabel}</span>
+          <span
+            className="product-card__price"
+            onClick={openProduct}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') openProduct();
+            }}
+          >
+            {priceLabel}
+          </span>
         )}
 
         {description && (
           <>
-            <p className={`product-card__desc${clampClass}`}>
+            <p
+              className={`product-card__desc${clampClass}`}
+              onClick={openProduct}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') openProduct();
+              }}
+            >
               {description}
             </p>
 
@@ -111,7 +140,11 @@ function ProductCard({ item, onOpenBusiness }: ProductCardProps) {
               <button
                 type="button"
                 className="product-card__toggle"
-                onClick={() => setExpanded((v) => !v)}
+                onClick={(e) => {
+                  // Stop the click from bubbling into the description
+                  e.stopPropagation();
+                  setExpanded((v) => !v);
+                }}
               >
                 {expanded ? 'Show less' : 'Read more'}
               </button>

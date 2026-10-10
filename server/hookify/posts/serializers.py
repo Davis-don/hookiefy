@@ -1,3 +1,5 @@
+# posts/serializers.py
+
 from rest_framework import serializers
 from .models import Posts
 
@@ -9,6 +11,12 @@ from .models import Posts
 class PostSerializer(serializers.ModelSerializer):
     """
     Read serializer — used for every response.
+
+    Includes:
+        - business info (flat: name, category, type)
+        - nested owner (from the business)
+        - engagement counters (views, likes, follows)
+        - has_image helper
     """
 
     business_name = serializers.CharField(
@@ -16,21 +24,50 @@ class PostSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    business_category = serializers.CharField(
+        source="business.business_category",
+        read_only=True,
+    )
+
+    business_type = serializers.CharField(
+        source="business.business_type",
+        read_only=True,
+    )
+
+    # Nested owner, resolved from business.owner
+    owner = serializers.SerializerMethodField()
+
     class Meta:
         model = Posts
         fields = (
             "id",
             "business",
             "business_name",
+            "business_category",
+            "business_type",
+            "owner",
             "title",
             "body",
             "image_url",
             "image_public_id",
             "has_image",
+            "views",
+            "likes_count",
+            "follows_count",
             "created_at",
             "updated_at",
         )
         read_only_fields = fields
+
+    def get_owner(self, obj):
+        owner = obj.business.owner if obj.business_id else None
+        if not owner:
+            return None
+        return {
+            "id": owner.id,
+            "full_name": owner.full_name,
+            "profile_image_url": owner.profile_image_url,
+        }
 
 
 # ============================================================

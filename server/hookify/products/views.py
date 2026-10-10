@@ -1,9 +1,9 @@
-# ============================================================
-# views.py
-# ============================================================
+# products/views.py
+
+from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -181,6 +181,7 @@ def list_products(request, business_id):
     qs = (
         Products.objects
         .filter(business=business)
+        .select_related("business", "business__owner")
         .prefetch_related("images", "property_items")
         .order_by("-created_at")
     )
@@ -273,19 +274,22 @@ def create_product(request, business_id):
 
 
 # ============================================================
-# RETRIEVE PRODUCT
+# RETRIEVE PRODUCT  — PUBLIC
 # GET /products/<product_id>/
+#
+# Returns the full nested shape: business, owner, images,
+# properties, and engagement counters.
 # ============================================================
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def retrieve_product(request, product_id):
-    product = _own_product_or_404(request.user, product_id)
-    if product is None:
-        return Response(
-            {"message": "Product not found."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+    product = get_object_or_404(
+        Products.objects
+        .select_related("business", "business__owner")
+        .prefetch_related("images", "property_items"),
+        pk=product_id,
+    )
 
     return Response(ProductSerializer(product).data, status=status.HTTP_200_OK)
 

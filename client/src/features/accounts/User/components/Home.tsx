@@ -7,12 +7,20 @@ import { Spinner } from '../../../../components/spinner/Spinner';
 import BusinessDetails from '../../../businesses/components/BusinessDetails';
 import PostCard from './feed/PostCard';
 import ProductCard from './feed/ProductCard';
+import PostDetail from './feed/PostDetail';
+import ProductDetail from './feed/ProductDetail';
 import './home.css';
+
+type OpenView =
+  | { kind: 'business'; id: number }
+  | { kind: 'post'; id: number }
+  | { kind: 'product'; id: number }
+  | null;
 
 function Home() {
   const access = useAuthStore((s) => s.access);
   const [limit] = useState(20);
-  const [activeBusinessId, setActiveBusinessId] = useState<number | null>(null);
+  const [openView, setOpenView] = useState<OpenView>(null);
 
   const {
     data,
@@ -23,12 +31,38 @@ function Home() {
     isFetching,
   } = useBusinessFeed({ limit, kind: 'all' });
 
-  // ── Business details takes over the entire Home view ──
-  if (activeBusinessId !== null) {
+  /* ── Business details — takes over the whole view ────── */
+  if (openView?.kind === 'business') {
     return (
       <BusinessDetails
-        businessId={activeBusinessId}
-        onBack={() => setActiveBusinessId(null)}
+        businessId={openView.id}
+        onBack={() => setOpenView(null)}
+      />
+    );
+  }
+
+  /* ── Post detail ─────────────────────────────────────── */
+  if (openView?.kind === 'post') {
+    return (
+      <PostDetail
+        postId={openView.id}
+        onBack={() => setOpenView(null)}
+        onOpenBusiness={(businessId) =>
+          setOpenView({ kind: 'business', id: businessId })
+        }
+      />
+    );
+  }
+
+  /* ── Product detail ──────────────────────────────────── */
+  if (openView?.kind === 'product') {
+    return (
+      <ProductDetail
+        productId={openView.id}
+        onBack={() => setOpenView(null)}
+        onOpenBusiness={(businessId) =>
+          setOpenView({ kind: 'business', id: businessId })
+        }
       />
     );
   }
@@ -89,12 +123,22 @@ function Home() {
             {item.kind === 'post' ? (
               <PostCard
                 item={item}
-                onOpenBusiness={setActiveBusinessId}
+                onOpenBusiness={(businessId) =>
+                  setOpenView({ kind: 'business', id: businessId })
+                }
+                onOpenPost={(postId) =>
+                  setOpenView({ kind: 'post', id: postId })
+                }
               />
             ) : (
               <ProductCard
                 item={item}
-                onOpenBusiness={setActiveBusinessId}
+                onOpenBusiness={(businessId) =>
+                  setOpenView({ kind: 'business', id: businessId })
+                }
+                onOpenProduct={(productId) =>
+                  setOpenView({ kind: 'product', id: productId })
+                }
               />
             )}
           </li>

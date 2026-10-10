@@ -46,6 +46,15 @@ function BusinessDetails({ businessId, onBack }: BusinessDetailsProps) {
 
   const business = data?.business;
 
+  /* ── Guard: if the owner has neither email nor phone, hide
+        the whole Contact section so we don't render an empty
+        card. ─────────────────────────────────────────── */
+  const hasContact =
+    !!business &&
+    (!!business.owner_email ||
+      !!business.owner_phone_number ||
+      !!business.owner_full_name);
+
   return (
     <div className="business-details">
       {/* ── Top bar with back ──────────────────────── */}
@@ -159,6 +168,110 @@ function BusinessDetails({ businessId, onBack }: BusinessDetailsProps) {
               </span>
             </div>
           </div>
+
+          {/* ── Contact ──────────────────────────────── */}
+          {hasContact && (
+            <section className="bd-section">
+              <h2 className="bd-section__title">Contact</h2>
+
+              <ul className="bd-contact">
+                {/* Owner name */}
+                {business.owner_full_name && (
+                  <li className="bd-contact__item">
+                    <span
+                      className="bd-contact__icon"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
+                      </svg>
+                    </span>
+                    <div className="bd-contact__body">
+                      <span className="bd-contact__label">Owner</span>
+                      <span className="bd-contact__value">
+                        {business.owner_full_name}
+                      </span>
+                    </div>
+                  </li>
+                )}
+
+                {/* Email */}
+                {business.owner_email && (
+                  <li className="bd-contact__item">
+                    <span
+                      className="bd-contact__icon"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2.5" y="4.5" width="19" height="15" rx="1.5" />
+                        <path d="M3 5l9 7 9-7" />
+                      </svg>
+                    </span>
+                    <div className="bd-contact__body">
+                      <span className="bd-contact__label">Email</span>
+                      <a
+                        className="bd-contact__value bd-contact__link"
+                        href={`mailto:${business.owner_email}`}
+                      >
+                        {business.owner_email}
+                      </a>
+                    </div>
+                  </li>
+                )}
+
+                {/* Phone */}
+                {business.owner_phone_number && (
+                  <li className="bd-contact__item">
+                    <span
+                      className="bd-contact__icon"
+                      aria-hidden="true"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </span>
+                    <div className="bd-contact__body">
+                      <span className="bd-contact__label">Phone</span>
+                      <a
+                        className="bd-contact__value bd-contact__link"
+                        href={`tel:${business.owner_phone_number}`}
+                      >
+                        {business.owner_phone_number}
+                      </a>
+                    </div>
+                  </li>
+                )}
+              </ul>
+            </section>
+          )}
 
           {/* Products */}
           {business.products.length > 0 && (

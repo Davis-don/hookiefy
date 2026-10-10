@@ -143,6 +143,7 @@ def list_my_businesses(request):
     qs = (
         Businesses.objects
         .filter(owner=request.user)
+        .select_related("owner")
         .order_by("-created_at")
     )
 
@@ -179,7 +180,12 @@ def list_all_businesses(request):
         ?status=active|paused|draft|closed|suspended|all
     """
 
-    qs = Businesses.objects.all().order_by("-created_at")
+    qs = (
+        Businesses.objects
+        .all()
+        .select_related("owner")
+        .order_by("-created_at")
+    )
 
     status_filter = request.query_params.get("status", "active")
     if status_filter and status_filter != "all":
@@ -216,6 +222,7 @@ def list_all_businesses(request):
 def retrieve_business(request, business_id):
     business = (
         Businesses.objects
+        .select_related("owner")
         .filter(id=business_id, owner=request.user)
         .first()
     )
@@ -235,9 +242,8 @@ def retrieve_business(request, business_id):
 # ============================================================
 # RETRIEVE DETAILS — GET /businesses/<id>/details/
 #
-# Authenticated. Returns the business plus ALL its posts and
-# ALL its products (with images + properties). NO owner/account
-# details are included.
+# Authenticated. Returns the business, owner contact info,
+# and ALL its posts + products (with images + properties).
 # ============================================================
 
 @api_view(["GET"])
@@ -247,17 +253,17 @@ def retrieve_business_details(request, business_id):
     Full details of a single business:
 
         - Business fields (name, category, type, location, status)
+        - Owner contact: full name, email, phone number
         - Every post (title, body, image, views, timestamps)
         - Every product (name, description, price, images,
           properties, views, timestamps)
         - Counts of posts and products
-
-    Deliberately excludes any owner / account information.
     """
 
     business = (
         Businesses.objects
         .filter(id=business_id)
+        .select_related("owner")
         .prefetch_related(
             "posts",
             "products",
@@ -334,6 +340,7 @@ def update_business(request, business_id):
 def update_business_status(request, business_id):
     """
     Change the status of any business. Superadmins only.
+
     Body: { "status": "active" | "paused" | "draft" | "closed" | "suspended" }
     """
 

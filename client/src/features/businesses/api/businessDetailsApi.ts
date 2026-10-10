@@ -60,6 +60,11 @@ export type BusinessFull = {
   status: string;
   status_display: string;
 
+  // ── Owner contact ────────────────────────────────────
+  owner_full_name: string;
+  owner_email: string;
+  owner_phone_number: string | null;
+
   post_count: number;
   product_count: number;
 

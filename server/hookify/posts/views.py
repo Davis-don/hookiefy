@@ -1,5 +1,9 @@
+# posts/views.py
+
+from django.shortcuts import get_object_or_404
+
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -60,7 +64,12 @@ def list_posts(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    qs = Posts.objects.filter(business=business).order_by("-created_at")
+    qs = (
+        Posts.objects
+        .filter(business=business)
+        .select_related("business", "business__owner")
+        .order_by("-created_at")
+    )
     serializer = PostSerializer(qs, many=True)
 
     return Response(
@@ -147,19 +156,22 @@ def create_post(request, business_id):
 
 
 # ============================================================
-# RETRIEVE POST
+# RETRIEVE POST  — PUBLIC
 # GET /posts/<post_id>/
 # ============================================================
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def retrieve_post(request, post_id):
-    post = _own_post_or_404(request.user, post_id)
-    if post is None:
-        return Response(
-            {"message": "Post not found."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+    """
+    Public retrieve — returns a single post by id,
+    regardless of who owns it.
+    """
+
+    post = get_object_or_404(
+        Posts.objects.select_related("business", "business__owner"),
+        pk=post_id,
+    )
 
     return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
 

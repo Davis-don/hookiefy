@@ -6,12 +6,14 @@ from .models import Businesses
 
 
 # ============================================================
-# READ
+# READ  —  list / retrieve / every response
 # ============================================================
 
 class BusinessSerializer(serializers.ModelSerializer):
     """
-    Read serializer — used for every response.
+    Standard read serializer — used for list + retrieve.
+
+    Includes owner contact: name, email, phone.
     """
 
     owner_email = serializers.EmailField(
@@ -22,6 +24,12 @@ class BusinessSerializer(serializers.ModelSerializer):
         source="owner.full_name",
         read_only=True,
     )
+    owner_phone_number = serializers.CharField(
+        source="owner.phone_number",
+        read_only=True,
+        allow_null=True,
+    )
+
     business_category_display = serializers.CharField(
         source="get_business_category_display",
         read_only=True,
@@ -35,9 +43,14 @@ class BusinessSerializer(serializers.ModelSerializer):
         model = Businesses
         fields = (
             "id",
+
+            # owner
             "owner",
-            "owner_email",
             "owner_full_name",
+            "owner_email",
+            "owner_phone_number",
+
+            # business
             "business_name",
             "business_category",
             "business_category_display",
@@ -48,6 +61,8 @@ class BusinessSerializer(serializers.ModelSerializer):
             "region",
             "status",
             "status_display",
+
+            # timestamps
             "created_at",
             "updated_at",
         )
@@ -205,9 +220,19 @@ class BusinessUpdateSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# FULL DETAILS — business + all posts + all products
+# FULL DETAILS  —  business + owner contact + posts + products
 # ============================================================
-# No owner / account details are exposed here.
+#
+# Used by: GET /businesses/<id>/details/
+#
+# Contains:
+#     - business fields
+#     - owner contact (name, email, phone)
+#     - every post
+#     - every product (with images + properties)
+#     - post / product counts
+#
+# ============================================================
 
 class BusinessPostDetailSerializer(serializers.ModelSerializer):
     """
@@ -273,11 +298,13 @@ class BusinessProductDetailSerializer(serializers.ModelSerializer):
     """
 
     images = BusinessProductImageSerializer(many=True, read_only=True)
+
     properties = BusinessProductPropertySerializer(
         source="property_items",
         many=True,
         read_only=True,
     )
+
     primary_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -309,11 +336,10 @@ class BusinessDetailSerializer(serializers.ModelSerializer):
     Full details of a business:
 
         - Business fields
+        - Owner contact: full name, email, phone number
         - Every post
         - Every product (with images + properties)
-        - Counts
-
-    Deliberately excludes owner / account details.
+        - Post / product counts
     """
 
     business_category_display = serializers.CharField(
@@ -325,6 +351,22 @@ class BusinessDetailSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    # ── Owner contact ─────────────────────────────────────
+    owner_full_name = serializers.CharField(
+        source="owner.full_name",
+        read_only=True,
+    )
+    owner_email = serializers.EmailField(
+        source="owner.email",
+        read_only=True,
+    )
+    owner_phone_number = serializers.CharField(
+        source="owner.phone_number",
+        read_only=True,
+        allow_null=True,
+    )
+
+    # ── Nested collections ────────────────────────────────
     posts = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
     post_count = serializers.SerializerMethodField()
@@ -334,6 +376,8 @@ class BusinessDetailSerializer(serializers.ModelSerializer):
         model = Businesses
         fields = (
             "id",
+
+            # business fields
             "business_name",
             "business_category",
             "business_category_display",
@@ -344,10 +388,21 @@ class BusinessDetailSerializer(serializers.ModelSerializer):
             "region",
             "status",
             "status_display",
+
+            # owner contact
+            "owner_full_name",
+            "owner_email",
+            "owner_phone_number",
+
+            # counts
             "post_count",
             "product_count",
+
+            # nested collections
             "posts",
             "products",
+
+            # timestamps
             "created_at",
             "updated_at",
         )

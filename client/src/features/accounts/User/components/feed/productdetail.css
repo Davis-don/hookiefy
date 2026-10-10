@@ -1,0 +1,482 @@
+/* productdetail.css */
+
+.product-detail {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.product-detail-back {
+  background: none;
+  border: none;
+  color: #2563EB;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.product-detail-back:hover {
+  text-decoration: underline;
+}
+
+.product-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.product-detail__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #F1F5F9;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+}
+
+.product-detail__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-detail__avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.product-detail__business {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0F172A;
+  cursor: pointer;
+}
+
+.product-detail__business:hover {
+  color: #2563EB;
+}
+
+/* ── Cover — now a button ────────────────────────────── */
+.product-detail__cover {
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.product-detail__cover--button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.product-detail__cover--button:hover {
+  transform: scale(1.005);
+  box-shadow: 0 12px 30px -20px rgba(15, 23, 42, 0.5);
+}
+
+.product-detail__cover--button:active {
+  transform: scale(0.995);
+}
+
+.product-detail__cover img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+}
+
+.product-detail__actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.product-detail__body {
+  margin: 12px 0 20px;
+}
+
+.product-detail__name {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #0F172A;
+}
+
+.product-detail__price {
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #10B981;
+  margin-bottom: 12px;
+}
+
+.product-detail__desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155;
+  white-space: pre-wrap;
+  margin: 8px 0;
+}
+
+.product-detail__props {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.product-detail__prop {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.product-detail__prop-name {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.product-detail__prop-value {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+/* ── Gallery — each item is a button ─────────────────── */
+.product-detail__gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.product-detail__gallery-item {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 8px;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.product-detail__gallery-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -16px rgba(15, 23, 42, 0.4);
+}
+
+.product-detail__gallery-item:active {
+  transform: translateY(0);
+}
+
+.product-detail__gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.product-detail__meta {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748B;
+  padding-top: 12px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.product-detail-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 16px;
+}
+
+.product-detail-state--error {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #B91C1C;
+}
+
+/* ============================================================
+   LIGHTBOX
+   ============================================================
+   Full-screen overlay. Solid dark background. The image
+   is centred and scaled to fit the viewport. Clicking the
+   backdrop closes; clicking the image itself is a no-op so
+   users can select text or zoom without accidentally exiting.
+   ============================================================ */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  padding: 24px;
+
+  cursor: zoom-out;
+
+  animation: lightbox-fade-in 0.2s ease-out;
+}
+
+@keyframes lightbox-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Stage ───────────────────────────────────────────── */
+.lightbox__stage {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: default;
+
+  animation: lightbox-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lightbox-scale-in {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.lightbox__image {
+  display: block;
+  max-width: 100%;
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+
+  border-radius: 8px;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
+
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ── Close button ────────────────────────────────────── */
+.lightbox__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
+
+.lightbox__close:active {
+  transform: scale(0.95);
+}
+
+/* ── Prev / next ─────────────────────────────────────── */
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox__nav:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox__nav:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.lightbox__nav--prev { left: 16px; }
+.lightbox__nav--next { right: 16px; }
+
+/* ── Counter ─────────────────────────────────────────── */
+.lightbox__counter {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  padding: 6px 14px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+
+  pointer-events: none;
+}
+
+/* ── Thumbnail strip ─────────────────────────────────── */
+.lightbox__thumbs {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  gap: 8px;
+
+  max-width: calc(100% - 48px);
+  padding: 8px;
+
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lightbox__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.lightbox__thumb {
+  flex: 0 0 auto;
+
+  width: 54px;
+  height: 54px;
+
+  border-radius: 8px;
+  border: 2px solid transparent;
+  overflow: hidden;
+
+  padding: 0;
+  background: none;
+  cursor: pointer;
+
+  transition: border-color 0.18s ease, transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lightbox__thumb:hover {
+  transform: scale(1.05);
+}
+
+.lightbox__thumb.is-active {
+  border-color: #FFFFFF;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lightbox {
+    padding: 12px;
+  }
+
+  .lightbox__image {
+    max-height: 78vh;
+    border-radius: 6px;
+  }
+
+  .lightbox__nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox__nav--prev { left: 8px; }
+  .lightbox__nav--next { right: 8px; }
+
+  .lightbox__close {
+    width: 38px;
+    height: 38px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .lightbox__thumbs {
+    bottom: 12px;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .lightbox__thumb {
+    width: 44px;
+    height: 44px;
+  }
+
+  .lightbox__counter {
+    top: 16px;
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+}

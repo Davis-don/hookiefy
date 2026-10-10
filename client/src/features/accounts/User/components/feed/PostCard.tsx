@@ -9,11 +9,12 @@ import './postcard.css';
 type PostCardProps = {
   item: FeedItem;
   onOpenBusiness: (businessId: number) => void;
+  onOpenPost: (postId: number) => void;
 };
 
 const CLAMP_LINES = 2;
 
-function PostCard({ item, onOpenBusiness }: PostCardProps) {
+function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const body = item.body ?? '';
@@ -21,10 +22,10 @@ function PostCard({ item, onOpenBusiness }: PostCardProps) {
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
   const openBusiness = () => onOpenBusiness(item.business.id);
+  const openPost = () => onOpenPost(item.id);
 
   return (
     <article className="post-card">
-      {/* ── 1. Header: avatar + business name ───────── */}
       <header className="post-card__header">
         <button
           type="button"
@@ -55,13 +56,12 @@ function PostCard({ item, onOpenBusiness }: PostCardProps) {
         </button>
       </header>
 
-      {/* ── 2. Cover image ──────────────────────────── */}
       {item.image_url && (
         <button
           type="button"
           className="post-card__cover"
-          onClick={openBusiness}
-          aria-label={`Open ${item.business.business_name}`}
+          onClick={openPost}
+          aria-label={item.title ? `Open ${item.title}` : 'Open post'}
         >
           <img
             src={item.image_url}
@@ -71,20 +71,18 @@ function PostCard({ item, onOpenBusiness }: PostCardProps) {
         </button>
       )}
 
-      {/* ── 3. Actions: like + follow ───────────────── */}
       <div className="post-card__actions">
         <LikeButton targetKind="post" targetId={item.id} />
         <FollowButton targetKind="post" targetId={item.id} />
       </div>
 
-      {/* ── 4. Body ─────────────────────────────────── */}
       {(item.title || body) && (
         <div className="post-card__body">
           {item.title && (
             <button
               type="button"
               className="post-card__title"
-              onClick={openBusiness}
+              onClick={openPost}
             >
               {item.title}
             </button>
@@ -92,13 +90,26 @@ function PostCard({ item, onOpenBusiness }: PostCardProps) {
 
           {body && (
             <>
-              <p className={`post-card__text${clampClass}`}>{body}</p>
+              <p
+                className={`post-card__text${clampClass}`}
+                onClick={openPost}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') openPost();
+                }}
+              >
+                {body}
+              </p>
 
               {isLong && (
                 <button
                   type="button"
                   className="post-card__toggle"
-                  onClick={() => setExpanded((v) => !v)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpanded((v) => !v);
+                  }}
                 >
                   {expanded ? 'Show less' : 'Read more'}
                 </button>

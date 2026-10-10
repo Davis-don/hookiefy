@@ -1,5 +1,4 @@
 # products/serializers.py
-# ============================================================
 
 from rest_framework import serializers
 
@@ -41,8 +40,12 @@ class ProductPropertySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """
-    Read serializer — returns the full product shape,
-    including nested images and properties.
+    Read serializer — returns the full product shape:
+        - business info (flat: name, category, type)
+        - nested owner (from the business)
+        - images + primary_image
+        - properties
+        - engagement counters (views, likes, follows)
     """
 
     business_name = serializers.CharField(
@@ -50,18 +53,28 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    # Explicitly nest the many-images relation.
+    business_category = serializers.CharField(
+        source="business.business_category",
+        read_only=True,
+    )
+
+    business_type = serializers.CharField(
+        source="business.business_type",
+        read_only=True,
+    )
+
+    # Nested owner, resolved from business.owner
+    owner = serializers.SerializerMethodField()
+
+    # Nested images
     images = ProductImageSerializer(many=True, read_only=True)
 
-    # `primary_image` is a @property on the model that returns a
-    # single ProductImage (or None). Use SerializerMethodField so
-    # DRF runs it through the nested serializer instead of trying
-    # to JSON-encode the model instance directly.
+    # The model @property returns a ProductImage (or None).
+    # Wrap it so DRF uses the nested serializer instead of
+    # trying to JSON-encode the model instance.
     primary_image = serializers.SerializerMethodField()
 
-    # Same story for properties — the model exposes a list of
-    # dicts via @property `properties`, but we want the full
-    # property items so we serialize the related manager directly.
+    # Nested properties (via the `property_items` related_name)
     properties = ProductPropertySerializer(
         source="property_items",
         many=True,
@@ -74,6 +87,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "id",
             "business",
             "business_name",
+            "business_category",
+            "business_type",
+            "owner",
             "name",
             "description",
             "price",
@@ -85,10 +101,22 @@ class ProductSerializer(serializers.ModelSerializer):
             "properties",
             "has_properties",
             "views",
+            "likes_count",
+            "follows_count",
             "created_at",
             "updated_at",
         )
         read_only_fields = fields
+
+    def get_owner(self, obj):
+        owner = obj.business.owner if obj.business_id else None
+        if not owner:
+            return None
+        return {
+            "id": owner.id,
+            "full_name": owner.full_name,
+            "profile_image_url": owner.profile_image_url,
+        }
 
     def get_primary_image(self, obj):
         image = obj.primary_image
