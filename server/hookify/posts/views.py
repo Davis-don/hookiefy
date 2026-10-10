@@ -13,6 +13,8 @@ from account.controllers.cloudinary_utils import (
     delete_image_from_cloudinary,
 )
 
+from subscription.guards import requires_active_subscription
+
 from .models import Posts
 from .serializers import (
     PostSerializer,
@@ -26,7 +28,6 @@ from .serializers import (
 # ============================================================
 
 def _own_business_or_404(user, business_id):
-    """Return the business if the user owns it, else None."""
     return (
         Businesses.objects
         .filter(id=business_id, owner=user)
@@ -35,7 +36,6 @@ def _own_business_or_404(user, business_id):
 
 
 def _own_post_or_404(user, post_id):
-    """Return the post if the user owns its business, else None."""
     return (
         Posts.objects
         .filter(id=post_id, business__owner=user)
@@ -45,14 +45,6 @@ def _own_post_or_404(user, post_id):
 
 
 def _get_effective_plan(user):
-    """
-    Resolve the user's plan.
-
-    Priority:
-        1. Plan from the active subscription.
-        2. The system's default plan.
-        3. None.
-    """
     try:
         return user.effective_plan
     except Exception:
@@ -60,14 +52,6 @@ def _get_effective_plan(user):
 
 
 def _check_post_limit(user, business):
-    """
-    Return (allowed, used, limit, message).
-
-    - `allowed` is True when the user may create another post.
-    - `limit` is None when unlimited.
-    - `message` is a friendly explanation when not allowed.
-    """
-
     plan = _get_effective_plan(user)
 
     if plan is None:
@@ -82,7 +66,7 @@ def _check_post_limit(user, business):
         )
 
     used = Posts.objects.filter(business=business).count()
-    limit = plan.posts_limit  # None = unlimited
+    limit = plan.posts_limit
 
     if limit is None:
         return (True, used, None, "")
@@ -111,11 +95,6 @@ def _check_post_limit(user, business):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_posts(request, business_id):
-    """
-    List every post belonging to a business owned by the
-    authenticated user. Newest first.
-    """
-
     business = _own_business_or_404(request.user, business_id)
     if business is None:
         return Response(
@@ -143,30 +122,12 @@ def list_posts(request, business_id):
 # ============================================================
 # CREATE POST
 # POST /posts/business/<business_id>/create/
-# Multipart: title, body, image (file, REQUIRED)
-#
-# Enforces the plan's `posts_limit` before accepting the post.
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def create_post(request, business_id):
-    """
-    Create a post on a business.
-
-    The client sends:
-        - title  (form field)
-        - body   (form field)
-        - image  (file, REQUIRED)
-
-    Before creating:
-        - the owner's plan is resolved
-        - the count of existing posts on this business is compared
-          against the plan's `posts_limit`
-
-    If the limit is reached, the request is refused with 403.
-    """
-
     business = _own_business_or_404(request.user, business_id)
     if business is None:
         return Response(
@@ -174,7 +135,6 @@ def create_post(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # ── Plan limit check ─────────────────────────────────
     allowed, used, limit, message = _check_post_limit(
         request.user, business
     )
@@ -190,7 +150,6 @@ def create_post(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ── Validate text fields ─────────────────────────────
     serializer = PostCreateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
@@ -198,7 +157,6 @@ def create_post(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Image is required ────────────────────────────────
     image_file = request.FILES.get("image")
     if not image_file:
         return Response(
@@ -206,7 +164,6 @@ def create_post(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Upload to Cloudinary ─────────────────────────────
     try:
         upload_result = upload_image_to_cloudinary(
             image_file,
@@ -218,7 +175,6 @@ def create_post(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Create the post ──────────────────────────────────
     post = Posts.objects.create(
         business=business,
         title=serializer.validated_data["title"],
@@ -227,7 +183,6 @@ def create_post(request, business_id):
         image_public_id=upload_result["public_id"],
     )
 
-    # Usage numbers for the frontend
     used_after = used + 1
 
     return Response(
@@ -236,7 +191,7 @@ def create_post(request, business_id):
             "post": PostSerializer(post).data,
             "usage": {
                 "used": used_after,
-                "limit": limit,  # None = unlimited
+                "limit": limit,
             },
         },
         status=status.HTTP_201_CREATED,
@@ -251,11 +206,6 @@ def create_post(request, business_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def retrieve_post(request, post_id):
-    """
-    Public retrieve — returns a single post by id,
-    regardless of who owns it.
-    """
-
     post = get_object_or_404(
         Posts.objects.select_related("business", "business__owner"),
         pk=post_id,
@@ -267,11 +217,11 @@ def retrieve_post(request, post_id):
 # ============================================================
 # UPDATE POST
 # PATCH /posts/<post_id>/update/
-# Multipart: any of title, body, image (file)
 # ============================================================
 
 @api_view(["PATCH", "PUT"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def update_post(request, post_id):
     post = _own_post_or_404(request.user, post_id)
     if post is None:
@@ -296,7 +246,6 @@ def update_post(request, post_id):
 
     validated = dict(serializer.validated_data)
 
-    # Swap the image if a new one was provided
     image_file = request.FILES.get("image")
     if image_file:
         if post.image_public_id:
@@ -339,6 +288,7 @@ def update_post(request, post_id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def delete_post(request, post_id):
     post = _own_post_or_404(request.user, post_id)
     if post is None:
@@ -363,27 +313,11 @@ def delete_post(request, post_id):
 
 # ============================================================
 # USAGE — GET /posts/business/<business_id>/usage/
-#
-# How many posts this business has vs. the plan's limit.
 # ============================================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def post_usage(request, business_id):
-    """
-    Returns the business's post usage against the owner's plan.
-
-    Response:
-        {
-            "plan": "Starter",
-            "business_id": 4,
-            "used": 3,
-            "limit": 10,          # null = unlimited
-            "remaining": 7,       # null = unlimited
-            "is_unlimited": false
-        }
-    """
-
     business = _own_business_or_404(request.user, business_id)
     if business is None:
         return Response(

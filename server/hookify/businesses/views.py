@@ -12,6 +12,8 @@ from account.controllers.cloudinary_utils import (
     delete_image_from_cloudinary,
 )
 
+from subscription.guards import requires_active_subscription
+
 from .models import Businesses
 from .serializers import (
     BusinessSerializer,
@@ -33,17 +35,6 @@ def _is_superadmin(user):
 
 
 def _get_effective_plan(user):
-    """
-    Resolve the user's current plan.
-
-    Priority:
-        1. Plan from their active subscription.
-        2. The system's default plan.
-        3. None.
-
-    Uses `user.effective_plan` from account models so the logic
-    lives in one place.
-    """
     try:
         return user.effective_plan
     except Exception:
@@ -51,14 +42,6 @@ def _get_effective_plan(user):
 
 
 def _check_business_limit(user):
-    """
-    Return (allowed, current_count, limit, message).
-
-    - `allowed` is True when the user may create another business.
-    - `limit` is None when unlimited.
-    - `message` is a friendly explanation when not allowed.
-    """
-
     plan = _get_effective_plan(user)
 
     if plan is None:
@@ -74,7 +57,7 @@ def _check_business_limit(user):
         )
 
     current = Businesses.objects.filter(owner=user).count()
-    limit = plan.businesses_limit  # None = unlimited
+    limit = plan.businesses_limit
 
     if limit is None:
         return (True, current, None, "")
@@ -96,19 +79,9 @@ def _check_business_limit(user):
 
 
 def _delete_business_images(business):
-    """
-    Delete every Cloudinary asset associated with a business:
-      - Every post's `image_public_id`
-      - Every product's every ProductImage `image_public_id`
-
-    Must be called BEFORE `business.delete()`.
-    Returns {"deleted": int, "failed": int}.
-    """
-
     deleted = 0
     failed = 0
 
-    # ── Posts ─────────────────────────────────────────────
     try:
         posts = list(business.posts.all())
     except Exception:
@@ -125,7 +98,6 @@ def _delete_business_images(business):
             print(f"⚠️ Could not delete post image {public_id}: {e}")
             failed += 1
 
-    # ── Products ──────────────────────────────────────────
     try:
         products = list(business.products.all())
     except Exception:
@@ -156,27 +128,12 @@ def _delete_business_images(business):
 
 # ============================================================
 # CREATE — POST /businesses/create/
-#
-# Enforces the user's plan businesses_limit.
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def create_business(request):
-    """
-    Create a business owned by the authenticated user.
-
-    Before creating, the user's plan is resolved (from their
-    active subscription, or the default plan) and the number
-    of existing businesses is compared against the plan's
-    `businesses_limit`.
-
-    - If the plan limit is NULL → unlimited, always allowed.
-    - If the user already has >= limit businesses → 403 with
-      a friendly upgrade message.
-    - If no plan can be resolved → 403 with a support message.
-    """
-
     allowed, current, limit, message = _check_business_limit(request.user)
 
     if not allowed:
@@ -202,9 +159,6 @@ def create_business(request):
         )
 
     business = serializer.save()
-
-    # Optional: also return how many the user has used so the
-    # frontend can show "2 of 3 businesses used".
     used = current + 1
 
     return Response(
@@ -213,7 +167,7 @@ def create_business(request):
             "business": BusinessSerializer(business).data,
             "usage": {
                 "used": used,
-                "limit": limit,  # None = unlimited
+                "limit": limit,
             },
         },
         status=status.HTTP_201_CREATED,
@@ -227,13 +181,6 @@ def create_business(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_my_businesses(request):
-    """
-    List every business owned by the authenticated user.
-
-    Optional query params:
-        ?status=active|paused|draft|closed|suspended
-    """
-
     qs = (
         Businesses.objects
         .filter(owner=request.user)
@@ -263,11 +210,6 @@ def list_my_businesses(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_all_businesses(request):
-    """
-    Public marketplace listing. By default only ACTIVE businesses
-    are returned. Pass ?status=all to see every status.
-    """
-
     qs = (
         Businesses.objects
         .all()
@@ -334,14 +276,6 @@ def retrieve_business(request, business_id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def retrieve_business_details(request, business_id):
-    """
-    Full details of a single business:
-        - Business fields
-        - Owner contact: name, email, phone
-        - All posts, all products
-        - Counts
-    """
-
     business = (
         Businesses.objects
         .filter(id=business_id)
@@ -375,6 +309,7 @@ def retrieve_business_details(request, business_id):
 
 @api_view(["PATCH", "PUT"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def update_business(request, business_id):
     business = (
         Businesses.objects
@@ -419,12 +354,8 @@ def update_business(request, business_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def update_business_status(request, business_id):
-    """
-    Change the status of any business. Superadmins only.
-    Body: { "status": "active" | "paused" | "draft" | "closed" | "suspended" }
-    """
-
     if not _is_superadmin(request.user):
         return Response(
             {"message": "You don't have permission to change status."},
@@ -466,6 +397,7 @@ def update_business_status(request, business_id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
+@requires_active_subscription
 def delete_business(request, business_id):
     business = (
         Businesses.objects
@@ -494,25 +426,11 @@ def delete_business(request, business_id):
 
 # ============================================================
 # USAGE — GET /businesses/usage/
-# Tells the frontend where the user stands against their plan.
 # ============================================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def business_usage(request):
-    """
-    Returns the user's business usage against their plan.
-
-    Response:
-        {
-            "plan": "Starter",
-            "used": 2,
-            "limit": 3,          # null = unlimited
-            "remaining": 1,      # null = unlimited
-            "is_unlimited": false
-        }
-    """
-
     plan = _get_effective_plan(request.user)
     used = Businesses.objects.filter(owner=request.user).count()
 
