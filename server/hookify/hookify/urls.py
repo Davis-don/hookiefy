@@ -202,4 +202,9 @@ urlpatterns = [
         "subscription/",
         include("subscription.urls"),
     ),
+    
+    path(
+    "notifications/",
+    include("notifications.urls"),
+),
 ]

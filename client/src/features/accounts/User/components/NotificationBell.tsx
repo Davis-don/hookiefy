@@ -1,4 +1,10 @@
-import { useState } from 'react';
+// src/pages/accounts/User/components/NotificationBell.tsx
+
+import { useQuery } from '@tanstack/react-query';
+
+import { useAuthStore } from '../../../../store/authStore';
+import { fetchUnreadCount } from '../api/notificationsApi';
+
 import './NotificationBell.css';
 
 type NotificationBellProps = {
@@ -6,8 +12,17 @@ type NotificationBellProps = {
 };
 
 function NotificationBell({ onClick }: NotificationBellProps) {
-  // TODO: replace with a real count from your notifications API
-  const [count] = useState<number>(0);
+  const access = useAuthStore((s) => s.access);
+
+  const { data: count = 0 } = useQuery({
+    queryKey: ['notifications', 'unread-count', access],
+    queryFn: fetchUnreadCount,
+    enabled: !!access,
+    staleTime: 30_000,
+    refetchInterval: 45_000,     // poll every 45 seconds
+    refetchOnWindowFocus: true,
+  });
+
   const hasUnread = count > 0;
 
   return (
@@ -38,7 +53,7 @@ function NotificationBell({ onClick }: NotificationBellProps) {
 
       {hasUnread && (
         <span className="ua-bell-badge" aria-hidden="true">
-          {count > 9 ? '9+' : count}
+          {count > 99 ? '99+' : count}
         </span>
       )}
     </button>
