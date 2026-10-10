@@ -134,7 +134,7 @@ function BillingTab() {
             </p>
             <p className="billing-footer-sub">
               Reach out at{' '}
-              <a href="mailto:support@youpata.co.ke">
+              <a href="mailto:davismugoikou@gmail.com">
                 davismugoikou@gmail.com
               </a>{' '}
               and we'll sort it out.
