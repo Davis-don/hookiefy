@@ -3,6 +3,8 @@
 import logging
 import uuid
 
+from django.conf import settings
+from django.shortcuts import redirect
 from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
@@ -16,20 +18,7 @@ from .serializers import (
     InitiatePaymentSerializer,
     SubscriptionPaymentSerializer,
 )
-
-# ─────────────────────────────────────────────────────────────
-# EDIT THE NEXT LINE to match the actual function name inside
-# subscription_payment/controllers/submit_order_request.py.
-#
-# Run this to find out:
-#     grep -n "^def " subscription_payment/controllers/submit_order_request.py
-#
-# If it prints `def submit_the_order(order_data):` then the
-# line below should read:
-#     from .controllers.submit_order_request import submit_the_order
-# ─────────────────────────────────────────────────────────────
 from .controllers.submit_order_request import submit_the_order
-
 from .controllers.services import (
     get_active_pesapal_config,
     record_pending_payment,
@@ -255,112 +244,9 @@ def payment_status(request, merchant_reference):
 
 
 # ============================================================
-# CALLBACK
-# GET /subscription_payments/payment-success/
+# SYNC
+# POST /subscription_payments/<merchant_reference>/sync/
 # ============================================================
-
-@api_view(["GET"])
-@permission_classes([])
-def payment_success_callback(request):
-    """
-    PesaPal redirects the customer's browser here after payment.
-    """
-
-    from .controllers.services import sync_payment_from_pesapal
-
-    merchant_reference = request.query_params.get(
-        "OrderMerchantReference"
-    )
-    order_tracking_id = request.query_params.get("OrderTrackingId")
-
-    logger.info(
-        "Payment callback received | ref=%s | tracking=%s",
-        merchant_reference,
-        order_tracking_id,
-    )
-
-    if not merchant_reference:
-        return Response(
-            {
-                "message": (
-                    "Callback missing merchant reference. "
-                    "If you were redirected here, please check "
-                    "your billing page."
-                )
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    try:
-        data = sync_payment_from_pesapal(merchant_reference)
-    except Exception as e:
-        logger.exception(
-            "Failed to sync payment on callback ref=%s",
-            merchant_reference,
-        )
-        return Response(
-            {
-                "message": (
-                    "We received the callback but could not "
-                    "confirm the payment. Please check your "
-                    "billing page in a moment."
-                ),
-                "detail": str(e),
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    return Response(
-        {
-            "message": "Payment processed.",
-            "is_completed": data.get("is_completed", False),
-            "merchant_reference": merchant_reference,
-            "order_tracking_id": order_tracking_id,
-        },
-        status=status.HTTP_200_OK,
-    )
-
-
-# ============================================================
-# IPN
-# POST /subscription_payments/ipn/
-# ============================================================
-
-@api_view(["POST"])
-@permission_classes([])
-def payment_ipn(request):
-    """
-    Server-to-server notification from PesaPal.
-    """
-
-    from .controllers.services import sync_payment_from_pesapal
-
-    payload = request.data if hasattr(request, "data") else {}
-
-    merchant_reference = (
-        payload.get("OrderMerchantReference")
-        or payload.get("orderMerchantReference")
-        or payload.get("merchant_reference")
-    )
-
-    logger.info(
-        "IPN received | ref=%s | payload=%s",
-        merchant_reference,
-        dict(payload),
-    )
-
-    if not merchant_reference:
-        return Response({"received": True}, status=status.HTTP_200_OK)
-
-    try:
-        sync_payment_from_pesapal(merchant_reference)
-    except Exception:
-        logger.exception(
-            "IPN failed to sync ref=%s", merchant_reference
-        )
-
-    return Response({"received": True}, status=status.HTTP_200_OK)
-# subscription_payment/views.py — add this view
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -400,8 +286,6 @@ def sync_payment(request, merchant_reference):
             "Sync failed on user request ref=%s",
             merchant_reference,
         )
-        # Return the current local row anyway — the frontend
-        # can still show "pending" and let the user refresh.
         payment.refresh_from_db()
         return Response(
             {
@@ -421,3 +305,120 @@ def sync_payment(request, merchant_reference):
         },
         status=status.HTTP_200_OK,
     )
+
+
+# ============================================================
+# CALLBACK
+# GET /subscription_payments/payment-success/
+#
+# PesaPal redirects the customer's BROWSER here after payment.
+#
+# This view:
+#   1. Syncs the payment against PesaPal (so the row is
+#      immediately up to date even if the IPN hasn't landed).
+#   2. Redirects the browser to the FRONTEND callback page,
+#      which shows the result UI.
+#
+# The user never sees raw JSON.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([])
+def payment_success_callback(request):
+    """
+    PesaPal browser redirect target.
+
+    Syncs the payment, then 302-redirects to the frontend
+    /payment/callback page. The frontend can re-sync and
+    render the correct result screen (success / pending /
+    failed).
+    """
+
+    from .controllers.services import sync_payment_from_pesapal
+
+    merchant_reference = request.query_params.get(
+        "OrderMerchantReference"
+    )
+    order_tracking_id = request.query_params.get("OrderTrackingId")
+
+    logger.info(
+        "Payment callback received | ref=%s | tracking=%s",
+        merchant_reference,
+        order_tracking_id,
+    )
+
+    # ── Best-effort sync. Never block the redirect on it. ──
+    if merchant_reference:
+        try:
+            sync_payment_from_pesapal(merchant_reference)
+        except Exception:
+            logger.exception(
+                "Failed to sync payment on callback ref=%s",
+                merchant_reference,
+            )
+
+    # ── Build the frontend redirect URL ────────────────────
+    frontend = settings.FRONTEND_URL.rstrip("/")
+
+    query_parts = []
+    if merchant_reference:
+        query_parts.append(
+            f"OrderMerchantReference={merchant_reference}"
+        )
+    if order_tracking_id:
+        query_parts.append(
+            f"OrderTrackingId={order_tracking_id}"
+        )
+
+    query_string = "&".join(query_parts)
+    target = f"{frontend}/payment/callback"
+    if query_string:
+        target = f"{target}?{query_string}"
+
+    logger.info("Redirecting browser to %s", target)
+
+    return redirect(target)
+
+
+# ============================================================
+# IPN
+# POST /subscription_payments/ipn/
+#
+# Server-to-server notification from PesaPal. Must return
+# 200 (even on error) so PesaPal doesn't keep retrying.
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([])
+def payment_ipn(request):
+    """
+    Server-to-server notification from PesaPal.
+    """
+
+    from .controllers.services import sync_payment_from_pesapal
+
+    payload = request.data if hasattr(request, "data") else {}
+
+    merchant_reference = (
+        payload.get("OrderMerchantReference")
+        or payload.get("orderMerchantReference")
+        or payload.get("merchant_reference")
+    )
+
+    logger.info(
+        "IPN received | ref=%s | payload=%s",
+        merchant_reference,
+        dict(payload),
+    )
+
+    if not merchant_reference:
+        return Response({"received": True}, status=status.HTTP_200_OK)
+
+    try:
+        sync_payment_from_pesapal(merchant_reference)
+    except Exception:
+        logger.exception(
+            "IPN failed to sync ref=%s", merchant_reference
+        )
+
+    return Response({"received": True}, status=status.HTTP_200_OK)
