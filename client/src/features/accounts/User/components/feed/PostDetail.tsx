@@ -1,38 +1,21 @@
-// src/pages/feed/ProductDetail.tsx
+// src/pages/feed/PostDetail.tsx
 
-import { useCallback, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Spinner } from '../../../../../components/spinner/Spinner';
 import LikeButton from '../../../../engagement/components/LikeButton';
 import FollowButton from '../../../../engagement/components/FollowButton';
 import { useAuthStore } from '../../../../../store/authStore';
-import './productdetail.css';
+import './postdetail.css';
 
 const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-/* ── Types ───────────────────────────────────────────── */
+/* ── Types — flat, matching PostSerializer ───────────── */
 
-export type ProductImage = {
-  id: number;
-  image_url: string;
-  image_public_id: string;
-  is_primary: boolean;
-  sort_order: number;
-  created_at: string;
-};
-
-export type ProductProperty = {
-  id: number;
-  name: string;
-  value: string;
-  sort_order: number;
-};
-
-export type ProductDetailData = {
+export type PostDetailData = {
   id: number;
 
-  business: number;
+  business: number;              // FK id
   business_name: string;
   business_category?: string;
   business_type?: string;
@@ -43,13 +26,11 @@ export type ProductDetailData = {
     profile_image_url: string | null;
   } | null;
 
-  name: string;
-  description: string;
-  price: string | null;
-
-  images: ProductImage[];
-  primary_image: ProductImage | null;
-  properties: ProductProperty[];
+  title: string | null;
+  body: string;
+  image_url: string | null;
+  image_public_id: string | null;
+  has_image: boolean;
 
   views: number;
   likes_count: number;
@@ -59,295 +40,81 @@ export type ProductDetailData = {
   updated_at: string;
 };
 
-async function fetchProduct(id: number): Promise<ProductDetailData> {
+async function fetchPost(id: number): Promise<PostDetailData> {
   const access = useAuthStore.getState().access;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   if (access) headers.Authorization = `Bearer ${access}`;
 
-  const res = await fetch(`${API_BASE}/products/${id}/`, { headers });
+  const res = await fetch(`${API_BASE}/posts/${id}/`, { headers });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
     throw new Error(
-      (data && (data.detail || data.message)) || 'Failed to load product.',
+      (data && (data.detail || data.message)) || 'Failed to load post.',
     );
   }
-  return data as ProductDetailData;
+  return data as PostDetailData;
 }
 
-function formatPrice(price: string | null | undefined): string | null {
-  if (price === null || price === undefined || price === '') return null;
-  const n = Number(price);
-  if (Number.isNaN(n)) return null;
-  return `KES ${n.toLocaleString()}`;
-}
-
-/* ============================================================
-   LIGHTBOX
-   ============================================================ */
-
-type LightboxProps = {
-  images: ProductImage[];
-  index: number;
-  open: boolean;
-  onClose: () => void;
-  onNavigate: (nextIndex: number) => void;
-  alt: string;
-};
-
-function Lightbox({
-  images,
-  index,
-  open,
-  onClose,
-  onNavigate,
-  alt,
-}: LightboxProps) {
-  const total = images.length;
-  const hasMultiple = total > 1;
-
-  const goPrev = useCallback(() => {
-    if (!hasMultiple) return;
-    onNavigate((index - 1 + total) % total);
-  }, [hasMultiple, index, total, onNavigate]);
-
-  const goNext = useCallback(() => {
-    if (!hasMultiple) return;
-    onNavigate((index + 1) % total);
-  }, [hasMultiple, index, total, onNavigate]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      else if (e.key === 'ArrowLeft') goPrev();
-      else if (e.key === 'ArrowRight') goNext();
-    };
-
-    window.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open, onClose, goPrev, goNext]);
-
-  if (!open || total === 0) return null;
-
-  const current = images[index];
-
-  return (
-    <div
-      className="lightbox"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Image viewer"
-      onClick={onClose}
-    >
-      <button
-        type="button"
-        className="lightbox__close"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        aria-label="Close"
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-          strokeLinejoin="round" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-
-      <div
-        className="lightbox__stage"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          className="lightbox__image"
-          src={current.image_url}
-          alt={alt}
-          draggable={false}
-        />
-      </div>
-
-      {hasMultiple && (
-        <>
-          <button
-            type="button"
-            className="lightbox__nav lightbox__nav--prev"
-            onClick={(e) => {
-              e.stopPropagation();
-              goPrev();
-            }}
-            aria-label="Previous image"
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            className="lightbox__nav lightbox__nav--next"
-            onClick={(e) => {
-              e.stopPropagation();
-              goNext();
-            }}
-            aria-label="Next image"
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </>
-      )}
-
-      {hasMultiple && (
-        <div className="lightbox__counter">
-          {index + 1} / {total}
-        </div>
-      )}
-
-      {hasMultiple && (
-        <div
-          className="lightbox__thumbs"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {images.map((img, i) => (
-            <button
-              key={img.id}
-              type="button"
-              className={`lightbox__thumb ${
-                i === index ? 'is-active' : ''
-              }`}
-              onClick={() => onNavigate(i)}
-              aria-label={`Show image ${i + 1}`}
-            >
-              <img src={img.image_url} alt="" loading="lazy" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ============================================================
-   PRODUCT DETAIL PAGE
-   ============================================================ */
-
-type ProductDetailProps = {
-  productId: number;
+type PostDetailProps = {
+  postId: number;
   onBack: () => void;
   onOpenBusiness: (businessId: number) => void;
 };
 
-function ProductDetailPage({
-  productId,
+function PostDetailPage({
+  postId,
   onBack,
   onOpenBusiness,
-}: ProductDetailProps) {
-  const { data, isLoading, isError, error } = useQuery<
-    ProductDetailData,
-    Error
-  >({
-    queryKey: ['product', productId],
-    queryFn: () => fetchProduct(productId),
-    enabled: Number.isFinite(productId) && productId > 0,
+}: PostDetailProps) {
+  const { data, isLoading, isError, error } = useQuery<PostDetailData, Error>({
+    queryKey: ['post', postId],
+    queryFn: () => fetchPost(postId),
+    enabled: Number.isFinite(postId) && postId > 0,
     staleTime: 30_000,
   });
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    setLightboxIndex(null);
-  }, [productId]);
-
   if (isLoading) {
     return (
-      <div className="product-detail-state">
-        <Spinner size={22} color="#2563EB" label="Loading product…" />
+      <div className="post-detail-state">
+        <Spinner size={22} color="#2563EB" label="Loading post…" />
       </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="product-detail-state product-detail-state--error">
-        <p>{(error as Error)?.message || 'Could not load this product.'}</p>
-        <button
-          type="button"
-          className="product-detail-back"
-          onClick={onBack}
-        >
+      <div className="post-detail-state post-detail-state--error">
+        <p>{(error as Error)?.message || 'Could not load this post.'}</p>
+        <button type="button" className="post-detail-back" onClick={onBack}>
           ← Back
         </button>
       </div>
     );
   }
 
-  const priceLabel = formatPrice(data.price);
-
-  const galleryImages: ProductImage[] = [];
-  const seen = new Set<number>();
-
-  if (data.primary_image) {
-    galleryImages.push(data.primary_image);
-    seen.add(data.primary_image.id);
-  }
-
-  const orderedRest = [...data.images].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
-
-  for (const img of orderedRest) {
-    if (!seen.has(img.id)) {
-      galleryImages.push(img);
-      seen.add(img.id);
-    }
-  }
-
-  const primary = galleryImages[0] ?? null;
-
   const openBusiness = () => onOpenBusiness(data.business);
 
-  const openLightbox = (imageId: number) => {
-    const idx = galleryImages.findIndex((img) => img.id === imageId);
-    setLightboxIndex(idx >= 0 ? idx : 0);
-  };
-
   return (
-    <article className="product-detail">
-      {/* Back button sits outside the padded shell so it stays
-          aligned with the header/body even when the image is
-          edge-to-edge on small screens. */}
-      <div className="product-detail__shell">
+    <article className="post-detail">
+      {/* Shell #1 — back button + header (avatar / business name) */}
+      <div className="post-detail__shell">
         <button
           type="button"
-          className="product-detail-back"
+          className="post-detail-back"
           onClick={onBack}
           aria-label="Back to feed"
         >
           ← Back
         </button>
 
-        <header className="product-detail__header">
+        <header className="post-detail__header">
           <button
             type="button"
-            className="product-detail__avatar"
+            className="post-detail__avatar"
             onClick={openBusiness}
             aria-label={`Open ${data.business_name}`}
           >
@@ -357,7 +124,7 @@ function ProductDetailPage({
                 alt={data.business_name}
               />
             ) : (
-              <span className="product-detail__avatar-fallback">
+              <span className="post-detail__avatar-fallback">
                 {(data.business_name || 'B').charAt(0).toUpperCase()}
               </span>
             )}
@@ -365,7 +132,7 @@ function ProductDetailPage({
 
           <button
             type="button"
-            className="product-detail__business"
+            className="post-detail__business"
             onClick={openBusiness}
           >
             {data.business_name}
@@ -373,73 +140,28 @@ function ProductDetailPage({
         </header>
       </div>
 
-      {/* Cover — edge-to-edge on small phones. */}
-      {primary && (
-        <button
-          type="button"
-          className="product-detail__cover product-detail__cover--button"
-          onClick={() => openLightbox(primary.id)}
-          aria-label="Open image"
-        >
-          <img src={primary.image_url} alt={data.name} />
-        </button>
+      {/* Cover — edge-to-edge on small screens, inset card on desktop */}
+      {data.image_url && (
+        <div className="post-detail__cover">
+          <img src={data.image_url} alt={data.title ?? 'Post'} />
+        </div>
       )}
 
-      {/* Everything below the cover uses the padded shell again. */}
-      <div className="product-detail__shell">
-        <div className="product-detail__actions">
-          <LikeButton targetKind="product" targetId={data.id} />
-          <FollowButton targetKind="product" targetId={data.id} />
+      {/* Shell #2 — actions + body + meta */}
+      <div className="post-detail__shell">
+        <div className="post-detail__actions">
+          <LikeButton targetKind="post" targetId={data.id} />
+          <FollowButton targetKind="post" targetId={data.id} />
         </div>
 
-        <div className="product-detail__body">
-          <h1 className="product-detail__name">{data.name}</h1>
-
-          {priceLabel && (
-            <span className="product-detail__price">{priceLabel}</span>
+        <div className="post-detail__body">
+          {data.title && (
+            <h1 className="post-detail__title">{data.title}</h1>
           )}
-
-          {data.description && (
-            <p className="product-detail__desc">{data.description}</p>
-          )}
-
-          {data.properties.length > 0 && (
-            <ul className="product-detail__props">
-              {data.properties.map((p) => (
-                <li key={p.id} className="product-detail__prop">
-                  <span className="product-detail__prop-name">
-                    {p.name}
-                  </span>
-                  <span className="product-detail__prop-value">
-                    {p.value}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {galleryImages.length > 1 && (
-            <div className="product-detail__gallery">
-              {galleryImages.map((img) => (
-                <button
-                  key={img.id}
-                  type="button"
-                  className="product-detail__gallery-item"
-                  onClick={() => openLightbox(img.id)}
-                  aria-label="Open image"
-                >
-                  <img
-                    src={img.image_url}
-                    alt={data.name}
-                    loading="lazy"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          {data.body && <p className="post-detail__text">{data.body}</p>}
         </div>
 
-        <footer className="product-detail__meta">
+        <footer className="post-detail__meta">
           <span>{data.views} views</span>
           <span>·</span>
           <span>{data.likes_count} likes</span>
@@ -447,17 +169,8 @@ function ProductDetailPage({
           <span>{data.follows_count} follows</span>
         </footer>
       </div>
-
-      <Lightbox
-        images={galleryImages}
-        index={lightboxIndex ?? 0}
-        open={lightboxIndex !== null}
-        onClose={() => setLightboxIndex(null)}
-        onNavigate={(i) => setLightboxIndex(i)}
-        alt={data.name}
-      />
     </article>
   );
 }
 
-export default ProductDetailPage;
+export default PostDetailPage;

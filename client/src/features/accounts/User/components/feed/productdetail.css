@@ -10,7 +10,8 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 0;
-  /* Note: no padding here — the inner `.shell` handles it */
+  display: flex;
+  flex-direction: column;
 }
 
 .product-detail__shell {
@@ -235,7 +236,7 @@
 }
 
 /* ============================================================
-   LIGHTBOX — unchanged
+   LIGHTBOX
    ============================================================ */
 
 .lightbox {
@@ -406,25 +407,20 @@
   border-color: #FFFFFF;
 }
 
-/* ============================================================
-   RESPONSIVE — image full-bleed on small phones
-   ============================================================ */
+/* ─────────────────────────────────────────────────────
+   RESPONSIVE — cover full-bleed on small phones
+   ───────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  /* Kill the shell padding for the cover, then re-add it
-     for everything else by leaving the other sections inside
-     `.product-detail__shell`. */
-
   .product-detail {
     padding: 0;
+    max-width: 100%;
   }
 
   .product-detail__shell {
     padding: 12px;
   }
 
-  /* The cover goes full width, no margin, no radius, no
-     horizontal padding. */
   .product-detail__cover {
     margin: 0;
     border-radius: 0;
@@ -444,8 +440,6 @@
 
   .product-detail__cover img {
     max-height: none;
-    /* Let tall images show in full on mobile; adjust if you'd
-       rather cap them. */
   }
 
   .product-detail__header {
@@ -460,7 +454,7 @@
     font-size: 17px;
   }
 
-  /* Lightbox — unchanged behaviour, slightly tighter */
+  /* Lightbox — full-bleed on mobile */
   .lightbox {
     padding: 0;
   }
