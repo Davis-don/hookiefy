@@ -1,0 +1,236 @@
+/* paymentcallback.css */
+
+.paycb-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.paycb-card {
+  width: 100%;
+  max-width: 520px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+
+  padding: 40px 28px 28px;
+
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px -30px rgba(15, 23, 42, 0.3);
+
+  text-align: center;
+}
+
+/* ── Icon circle ─────────────────────────────────────── */
+.paycb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+
+  margin-bottom: 4px;
+}
+
+.paycb-icon--success {
+  background: #ECFDF5;
+  color: #047857;
+}
+
+.paycb-icon--pending {
+  background: #FFFBEB;
+  color: #B45309;
+}
+
+.paycb-icon--failed {
+  background: #FEF2F2;
+  color: #B91C1C;
+}
+
+.paycb-spinner {
+  display: inline-flex;
+  margin-bottom: 4px;
+}
+
+/* ── Text ────────────────────────────────────────────── */
+.paycb-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+
+.paycb-sub {
+  margin: 0;
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.55;
+  max-width: 380px;
+}
+
+/* ── Details table ───────────────────────────────────── */
+.paycb-details {
+  width: 100%;
+  margin: 8px 0 4px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+
+  text-align: left;
+}
+
+.paycb-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.94rem;
+}
+
+.paycb-details dt {
+  color: #64748B;
+  font-weight: 600;
+}
+
+.paycb-details dd {
+  margin: 0;
+  color: #0F172A;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-all;
+}
+
+.paycb-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86rem;
+}
+
+.paycb-ref-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.paycb-ref-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.paycb-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.paycb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 160px;
+  padding: 12px 22px;
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+
+  cursor: pointer;
+  border: 1.5px solid transparent;
+
+  transition: filter 0.15s ease, background 0.15s ease,
+              border-color 0.15s ease;
+}
+
+.paycb-btn--primary {
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  box-shadow:
+    0 10px 22px -12px rgba(37, 99, 235, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.paycb-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.paycb-btn--ghost {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #334155;
+}
+
+.paycb-btn--ghost:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+  color: #0F172A;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+.paycb-foot {
+  margin: 16px 0 0;
+  font-size: 0.88rem;
+  color: #94A3B8;
+}
+
+.paycb-foot a {
+  color: #2563EB;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.paycb-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .paycb-card {
+    padding: 32px 20px 24px;
+    border-radius: 16px;
+  }
+
+  .paycb-title {
+    font-size: 1.3rem;
+  }
+
+  .paycb-actions {
+    flex-direction: column;
+  }
+
+  .paycb-btn {
+    width: 100%;
+  }
+}

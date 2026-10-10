@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "my_engagements",
     "plans",
     "subscription",
+    "subscription_payment",
     "assignments",
     "userpreference",
     "administration",

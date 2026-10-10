@@ -1,4 +1,5 @@
 # subscription_payment/controllers/services.py
+
 import logging
 from datetime import timedelta
 
@@ -75,6 +76,7 @@ def record_pending_payment(
     payment = SubscriptionPayment.objects.create(
         subscription=subscription,
         plan=plan,
+        user=subscription.user if subscription else None,
         merchant_reference=merchant_reference,
         order_tracking_id=order_tracking_id,
         amount=amount,
@@ -91,8 +93,8 @@ def record_pending_payment(
         "subscription_id=%s | plan=%s | amount=%s",
         payment.merchant_reference,
         payment.order_tracking_id,
-        subscription.id,
-        plan.name if plan else "—",
+        subscription.id if subscription else None,
+        plan.plan_name if plan else "—",
         payment.amount,
     )
 
@@ -214,9 +216,9 @@ def activate_subscription(payment):
     On a completed payment:
       - apply the paid plan to the user's Subscription
       - refresh the billing window:
-          * renewal of SAME plan → stack
+          * renewal of SAME plan → stack 30 days
           * plan change / expired → reset from now
-      - persist changes
+      - mark the subscription as ACTIVE
     """
 
     sub = payment.subscription
@@ -239,12 +241,11 @@ def activate_subscription(payment):
 
     now = timezone.now()
     previous_plan_id = sub.plan_id
-    is_free = (purchased_plan.name or "").lower() == "free"
+    is_free = purchased_plan.is_free
 
     sub.plan = purchased_plan
 
     if not is_free:
-
         is_renewal = previous_plan_id == purchased_plan.id
 
         if is_renewal and sub.end_date and sub.end_date > now:
@@ -253,9 +254,15 @@ def activate_subscription(payment):
             sub.start_date = now
             sub.end_date = now + timedelta(days=30)
 
+    # A paid subscription should be marked active once payment
+    # succeeds — otherwise a row created in 'pending' during
+    # initiate/ stays pending forever.
+    sub.status = "active"
+
     sub.save(
         update_fields=[
             "plan",
+            "status",
             "start_date",
             "end_date",
             "updated_at",
@@ -267,7 +274,7 @@ def activate_subscription(payment):
         "plan=%s | start=%s | end=%s | renewal=%s",
         sub.id,
         sub.user.email,
-        purchased_plan.name,
+        purchased_plan.plan_name,
         sub.start_date,
         sub.end_date,
         previous_plan_id == purchased_plan.id,

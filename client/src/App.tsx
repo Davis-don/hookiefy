@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -14,6 +16,7 @@ import Login from './pages/login/Login';
 import Register from './pages/register/Register';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import PaymentCallback from './pages/PaymentCallback';
 
 import { ToastProvider } from './components/toast/ToastContext';
 import RequireAuth from './components/auth/RequireAuth';
@@ -36,12 +39,18 @@ function App() {
       <ScrollToTop />
       <ToastProvider>
         <Routes>
-          {/* Public-only routes — logged-in users get bounced to their dashboard */}
+          {/* ─────────────────────────────────────────────
+              Public-only routes — logged-in users get
+              bounced to their dashboard.
+              ───────────────────────────────────────────── */}
+
           <Route
             path="/"
             element={
               <RedirectIfAuthed>
-                <Mainlayout><Home /></Mainlayout>
+                <Mainlayout>
+                  <Home />
+                </Mainlayout>
               </RedirectIfAuthed>
             }
           />
@@ -62,11 +71,31 @@ function App() {
             }
           />
 
-          {/* Public for everyone, logged in or not */}
-          <Route path="/terms" element={<Mainlayout><Terms /></Mainlayout>} />
-          <Route path="/privacy" element={<Mainlayout><Privacy /></Mainlayout>} />
+          {/* ─────────────────────────────────────────────
+              Public for everyone, logged in or not.
+              ───────────────────────────────────────────── */}
 
-          {/* Protected routes */}
+          <Route
+            path="/terms"
+            element={
+              <Mainlayout>
+                <Terms />
+              </Mainlayout>
+            }
+          />
+          <Route
+            path="/privacy"
+            element={
+              <Mainlayout>
+                <Privacy />
+              </Mainlayout>
+            }
+          />
+
+          {/* ─────────────────────────────────────────────
+              Protected routes.
+              ───────────────────────────────────────────── */}
+
           <Route
             path="/superaccount"
             element={
@@ -75,11 +104,22 @@ function App() {
               </RequireAuth>
             }
           />
+
           <Route
             path="/useraccount"
             element={
               <RequireAuth>
                 <Useraccount />
+              </RequireAuth>
+            }
+          />
+
+          {/* PesaPal redirects the browser here after payment. */}
+          <Route
+            path="/payment/callback"
+            element={
+              <RequireAuth>
+                <PaymentCallback />
               </RequireAuth>
             }
           />

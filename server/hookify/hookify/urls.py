@@ -78,13 +78,17 @@ urlpatterns = [
 
     # ============================================================
     # SUBSCRIPTION PAYMENTS
+    #
+    #   POST /subscription_payments/initiate/
+    #   GET  /subscription_payments/<ref>/status/
+    #   GET  /subscription_payments/payment-success/
+    #   POST /subscription_payments/ipn/
     # ============================================================
 
-    # path(
-    #     "subscription_payments/",
-    #     include("subscription_payment.urls"),
-    # ),
-
+    path(
+        "subscription_payments/",
+        include("subscription_payment.urls"),
+    ),
 
 
     # ============================================================
@@ -95,10 +99,6 @@ urlpatterns = [
         "preference/",
         include("userpreference.urls"),
     ),
-
-
-
-  
 
 
     # ============================================================
@@ -120,7 +120,6 @@ urlpatterns = [
         "connection_fee/",
         include("administration.urls"),
     ),
-
 
 
     # ============================================================
@@ -153,8 +152,6 @@ urlpatterns = [
     ),
 
 
-   
-
     # ============================================================
     # SERVICES
     # ============================================================
@@ -185,7 +182,10 @@ urlpatterns = [
     ),
 
 
-  
+    # ============================================================
+    # PLANS
+    # Subscription plan catalogue.
+    # ============================================================
 
     path(
         "plans/",
