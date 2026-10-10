@@ -133,6 +133,35 @@ urlpatterns = [
 
 
     # ============================================================
+    # SYSTEM BALANCE APIs
+    #
+    #   GET    /system_balance/fetch/         → fetch current balance
+    #   POST   /system_balance/fetch/         → credit / debit by amount
+    #   PATCH  /system_balance/fetch/         → set exact balance value
+    #   GET    /system_balance/initialize/    → create singleton row (0.00 KES)
+    #   POST   /system_balance/initialize/    → create singleton row (0.00 KES)
+    # ============================================================
+
+    path(
+        "system_balance/",
+        include("system_balance.urls"),
+    ),
+
+
+    # ============================================================
+    # SYSTEM STATS APIs
+    #
+    #   GET /system_stats/users/       → total registered users
+    #   GET /system_stats/businesses/  → total businesses
+    # ============================================================
+
+    path(
+        "system_stats/",
+        include("system_stats.urls"),
+    ),
+
+
+    # ============================================================
     # WITHDRAWALS
     # ============================================================
 
@@ -202,9 +231,14 @@ urlpatterns = [
         "subscription/",
         include("subscription.urls"),
     ),
-    
+
+
+    # ============================================================
+    # NOTIFICATIONS
+    # ============================================================
+
     path(
-    "notifications/",
-    include("notifications.urls"),
-),
+        "notifications/",
+        include("notifications.urls"),
+    ),
 ]

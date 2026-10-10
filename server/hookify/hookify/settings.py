@@ -103,6 +103,8 @@ INSTALLED_APPS = [
     "subscription",
     "subscription_payment",
     "notifications",
+    "system_balance",
+    "system_stats", 
     "assignments",
     "userpreference",
     "administration",
