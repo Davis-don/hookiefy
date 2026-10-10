@@ -1,3 +1,9 @@
+# stories/views.py
+
+from datetime import datetime, timezone as dt_timezone
+
+from django.utils import timezone
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -32,9 +38,87 @@ def _is_superadmin(user):
     )
 
 
+def _get_effective_plan(user):
+    """
+    Resolve the user's plan.
+
+    Priority:
+        1. Plan from the active subscription.
+        2. The system's default plan.
+        3. None.
+    """
+    try:
+        return user.effective_plan
+    except Exception:
+        return None
+
+
+def _month_start(now=None):
+    """
+    Return the datetime of the first instant of the current month
+    in the project's timezone.
+    """
+    now = now or timezone.now()
+    local = timezone.localtime(now)
+    return local.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+
+
+def _stories_this_month(user):
+    """Count how many stories the user has created this month."""
+    return Story.objects.filter(
+        user=user,
+        created_at__gte=_month_start(),
+    ).count()
+
+
+def _check_story_limit(user):
+    """
+    Return (allowed, used, limit, message).
+
+    - `used` = stories created this month.
+    - `limit` = plan.stories_per_month (None = unlimited).
+    - `message` = a friendly explanation when not allowed.
+    """
+
+    plan = _get_effective_plan(user)
+
+    if plan is None:
+        return (
+            False,
+            0,
+            None,
+            (
+                "Your account has no active subscription plan. "
+                "Please contact support to start publishing stories."
+            ),
+        )
+
+    used = _stories_this_month(user)
+    limit = plan.stories_per_month  # None = unlimited
+
+    if limit is None:
+        return (True, used, None, "")
+
+    if used >= limit:
+        if limit == 1:
+            message = (
+                "You've reached the limit of your current plan — "
+                "1 story per month. Upgrade to publish more."
+            )
+        else:
+            message = (
+                f"You've reached the limit of your current plan — "
+                f"{limit} stories per month. Upgrade to publish more."
+            )
+        return (False, used, limit, message)
+
+    return (True, used, limit, "")
+
+
 # ============================================================
 # LIST MINE — GET /stories/mine/
-# Authenticated. Only the current user's stories.
 # ============================================================
 
 @api_view(["GET"])
@@ -71,7 +155,6 @@ def list_my_stories(request):
 
 # ============================================================
 # LIST ALL — GET /stories/
-# Authenticated. Everyone's stories (public feed).
 # ============================================================
 
 @api_view(["GET"])
@@ -112,7 +195,8 @@ def list_all_stories(request):
 
 # ============================================================
 # CREATE — POST /stories/create/
-# Authenticated. Author = request.user.
+#
+# Enforces plan.stories_per_month for the current calendar month.
 # ============================================================
 
 @api_view(["POST"])
@@ -120,8 +204,31 @@ def list_all_stories(request):
 def create_story(request):
     """
     Create a story. The authenticated user becomes the author.
+
+    Before creating:
+        - the user's plan is resolved
+        - the number of stories they created since the start of
+          the current month is compared to plan.stories_per_month
+
+    If the limit is reached, the request is refused with 403.
     """
 
+    # ── Plan limit check ─────────────────────────────────
+    allowed, used, limit, message = _check_story_limit(request.user)
+
+    if not allowed:
+        return Response(
+            {
+                "message": message,
+                "code": "story_limit_reached",
+                "used": used,
+                "limit": limit,
+                "period": "month",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── Validate + create ────────────────────────────────
     serializer = StoryCreateSerializer(data=request.data)
 
     if not serializer.is_valid():
@@ -139,6 +246,11 @@ def create_story(request):
         {
             "message": "Story created successfully.",
             "story": StorySerializer(story).data,
+            "usage": {
+                "used": used + 1,
+                "limit": limit,  # None = unlimited
+                "period": "month",
+            },
         },
         status=status.HTTP_201_CREATED,
     )
@@ -146,7 +258,6 @@ def create_story(request):
 
 # ============================================================
 # RETRIEVE — GET /stories/<story_id>/
-# Authenticated. Only the author.
 # ============================================================
 
 @api_view(["GET"])
@@ -168,7 +279,6 @@ def retrieve_story(request, story_id):
 
 # ============================================================
 # UPDATE — PATCH/PUT /stories/<story_id>/update/
-# Authenticated. Only the author.
 # ============================================================
 
 @api_view(["PATCH", "PUT"])
@@ -209,7 +319,6 @@ def update_story(request, story_id):
 
 # ============================================================
 # DELETE — DELETE /stories/<story_id>/delete/
-# Authenticated. Only the author.
 # ============================================================
 
 @api_view(["DELETE"])
@@ -233,7 +342,6 @@ def delete_story(request, story_id):
 
 # ============================================================
 # ADMIN LIST — GET /stories/admin/all/
-# Authenticated + superadmin only.
 # ============================================================
 
 @api_view(["GET"])
@@ -241,7 +349,6 @@ def delete_story(request, story_id):
 def admin_list_stories(request):
     """
     Superadmin view — every story from every user.
-    Same payload as list_all_stories but gated.
     """
 
     if not _is_superadmin(request.user):
@@ -270,6 +377,66 @@ def admin_list_stories(request):
         {
             "count": qs.count(),
             "results": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# USAGE — GET /stories/usage/
+#
+# The user's current-month story usage against their plan.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def story_usage(request):
+    """
+    Response:
+        {
+            "plan": "Starter",
+            "used": 3,
+            "limit": 20,          # null = unlimited
+            "remaining": 17,      # null = unlimited
+            "is_unlimited": false,
+            "period": "month",
+            "period_start": "2026-10-01T00:00:00+03:00"
+        }
+    """
+
+    plan = _get_effective_plan(request.user)
+    used = _stories_this_month(request.user)
+    month_start = _month_start()
+
+    if plan is None:
+        return Response(
+            {
+                "plan": None,
+                "used": used,
+                "limit": 0,
+                "remaining": 0,
+                "is_unlimited": False,
+                "has_plan": False,
+                "period": "month",
+                "period_start": month_start.isoformat(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    limit = plan.stories_per_month
+    is_unlimited = limit is None
+    remaining = None if is_unlimited else max(0, limit - used)
+
+    return Response(
+        {
+            "plan": plan.plan_name,
+            "used": used,
+            "limit": limit,
+            "remaining": remaining,
+            "is_unlimited": is_unlimited,
+            "has_plan": True,
+            "period": "month",
+            "period_start": month_start.isoformat(),
         },
         status=status.HTTP_200_OK,
     )
