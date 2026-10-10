@@ -1,8 +1,19 @@
 /* productdetail.css */
 
+/* ── Shell ─────────────────────────────────────────────
+   Every part of the page except the cover lives inside
+   `.product-detail__shell`, which owns the horizontal
+   padding. The cover can then break out on small phones.
+   ───────────────────────────────────────────────────── */
+
 .product-detail {
   max-width: 720px;
   margin: 0 auto;
+  padding: 0;
+  /* Note: no padding here — the inner `.shell` handles it */
+}
+
+.product-detail__shell {
   padding: 16px;
 }
 
@@ -68,16 +79,20 @@
   color: #2563EB;
 }
 
-/* ── Cover — now a button ────────────────────────────── */
+/* ── Cover — full-bleed on small phones ───────────────
+   Base styles: rounded, contained. The mobile media query
+   below pulls it edge-to-edge.
+   ───────────────────────────────────────────────────── */
+
 .product-detail__cover {
   border-radius: 12px;
   overflow: hidden;
-  margin: 12px 0;
+  margin: 12px 16px;
+  display: block;
 }
 
 .product-detail__cover--button {
-  display: block;
-  width: 100%;
+  width: calc(100% - 32px);
   padding: 0;
   border: none;
   background: none;
@@ -162,7 +177,6 @@
   font-weight: 600;
 }
 
-/* ── Gallery — each item is a button ─────────────────── */
 .product-detail__gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -179,9 +193,7 @@
   border-radius: 8px;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .product-detail__gallery-item:hover {
@@ -223,31 +235,21 @@
 }
 
 /* ============================================================
-   LIGHTBOX
-   ============================================================
-   Full-screen overlay. Solid dark background. The image
-   is centred and scaled to fit the viewport. Clicking the
-   backdrop closes; clicking the image itself is a no-op so
-   users can select text or zoom without accidentally exiting.
+   LIGHTBOX — unchanged
    ============================================================ */
 
 .lightbox {
   position: fixed;
   inset: 0;
   z-index: 1000;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-
   padding: 24px;
-
   cursor: zoom-out;
-
   animation: lightbox-fade-in 0.2s ease-out;
 }
 
@@ -256,18 +258,14 @@
   to   { opacity: 1; }
 }
 
-/* ── Stage ───────────────────────────────────────────── */
 .lightbox__stage {
   position: relative;
   max-width: 100%;
   max-height: 100%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: default;
-
   animation: lightbox-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -282,35 +280,26 @@
   max-height: 88vh;
   width: auto;
   height: auto;
-
   object-fit: contain;
-
   border-radius: 8px;
   box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
-
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* ── Close button ────────────────────────────────────── */
 .lightbox__close {
   position: absolute;
   top: 16px;
   right: 16px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   width: 42px;
   height: 42px;
-
   border-radius: 50%;
   border: none;
-
   background: rgba(255, 255, 255, 0.12);
   color: #FFFFFF;
-
   cursor: pointer;
   transition: background 0.18s ease, transform 0.18s ease;
   -webkit-tap-highlight-color: transparent;
@@ -325,25 +314,19 @@
   transform: scale(0.95);
 }
 
-/* ── Prev / next ─────────────────────────────────────── */
 .lightbox__nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   width: 46px;
   height: 46px;
-
   border-radius: 50%;
   border: none;
-
   background: rgba(255, 255, 255, 0.12);
   color: #FFFFFF;
-
   cursor: pointer;
   transition: background 0.18s ease, transform 0.18s ease;
   -webkit-tap-highlight-color: transparent;
@@ -360,42 +343,32 @@
 .lightbox__nav--prev { left: 16px; }
 .lightbox__nav--next { right: 16px; }
 
-/* ── Counter ─────────────────────────────────────────── */
 .lightbox__counter {
   position: absolute;
   top: 24px;
   left: 50%;
   transform: translateX(-50%);
-
   padding: 6px 14px;
   border-radius: 999px;
-
   background: rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
-
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.4px;
-
   pointer-events: none;
 }
 
-/* ── Thumbnail strip ─────────────────────────────────── */
 .lightbox__thumbs {
   position: absolute;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-
   display: flex;
   gap: 8px;
-
   max-width: calc(100% - 48px);
   padding: 8px;
-
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
-
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -406,18 +379,14 @@
 
 .lightbox__thumb {
   flex: 0 0 auto;
-
   width: 54px;
   height: 54px;
-
   border-radius: 8px;
   border: 2px solid transparent;
   overflow: hidden;
-
   padding: 0;
   background: none;
   cursor: pointer;
-
   transition: border-color 0.18s ease, transform 0.18s ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -437,15 +406,68 @@
   border-color: #FFFFFF;
 }
 
-/* ── Responsive ──────────────────────────────────────── */
+/* ============================================================
+   RESPONSIVE — image full-bleed on small phones
+   ============================================================ */
+
 @media (max-width: 640px) {
-  .lightbox {
+  /* Kill the shell padding for the cover, then re-add it
+     for everything else by leaving the other sections inside
+     `.product-detail__shell`. */
+
+  .product-detail {
+    padding: 0;
+  }
+
+  .product-detail__shell {
     padding: 12px;
   }
 
+  /* The cover goes full width, no margin, no radius, no
+     horizontal padding. */
+  .product-detail__cover {
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .product-detail__cover--button {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .product-detail__cover--button:hover,
+  .product-detail__cover--button:active {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .product-detail__cover img {
+    max-height: none;
+    /* Let tall images show in full on mobile; adjust if you'd
+       rather cap them. */
+  }
+
+  .product-detail__header {
+    margin: 12px 0;
+  }
+
+  .product-detail__name {
+    font-size: 20px;
+  }
+
+  .product-detail__price {
+    font-size: 17px;
+  }
+
+  /* Lightbox — unchanged behaviour, slightly tighter */
+  .lightbox {
+    padding: 0;
+  }
+
   .lightbox__image {
-    max-height: 78vh;
-    border-radius: 6px;
+    max-height: 100vh;
+    border-radius: 0;
   }
 
   .lightbox__nav {
