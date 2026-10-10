@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
 import { Spinner } from '../../../components/spinner/Spinner';
+import LikeButton from '../../engagement/components/LikeButton';
+import FollowButton from '../../engagement/components/FollowButton';
 import { listAllStories, type Story } from '../api/storiesApi';
 import './otherStories.css';
 
@@ -26,14 +28,13 @@ function OtherStories() {
     staleTime: 30_000,
   });
 
-  // Exclude the current user's own stories — this tab is "Other Stories"
+  /* Exclude the current user's own stories — this tab is "Other Stories" */
   const stories = useMemo<Story[]>(
     () => allStories.filter((s) => s.user !== currentUserId),
-    [allStories, currentUserId]
+    [allStories, currentUserId],
   );
 
   /* ── Loading ──────────────────────────────────────── */
-
   if (isLoading) {
     return (
       <div className="os-state">
@@ -42,6 +43,7 @@ function OtherStories() {
     );
   }
 
+  /* ── Error ────────────────────────────────────────── */
   if (isError) {
     return (
       <div className="os-state os-state-error">
@@ -51,14 +53,20 @@ function OtherStories() {
   }
 
   /* ── Empty ────────────────────────────────────────── */
-
   if (stories.length === 0) {
     return (
       <div className="os-empty">
         <div className="os-empty-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-            strokeLinejoin="round">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z" />
             <path d="M8 8h8" />
             <path d="M8 12h6" />
@@ -73,7 +81,6 @@ function OtherStories() {
   }
 
   /* ── Feed ────────────────────────────────────────── */
-
   return (
     <div className="os-feed">
       {stories.map((story, index) => {
@@ -87,20 +94,23 @@ function OtherStories() {
               {/* ── Meta: author · category · date ───── */}
               <div className="os-post-meta">
                 <span className="os-post-author">
-                  {story.author_full_name || story.author_email || 'Anonymous'}
+                  {story.author_full_name ||
+                    story.author_email ||
+                    'Anonymous'}
                 </span>
-                <span className="os-post-dot" aria-hidden="true">·</span>
+                <span className="os-post-dot" aria-hidden="true">
+                  ·
+                </span>
                 <span className="os-post-category">
                   {story.category_display}
                 </span>
-                <span className="os-post-dot" aria-hidden="true">·</span>
-                <time
-                  className="os-post-date"
-                  dateTime={story.created_at}
-                >
+                <span className="os-post-dot" aria-hidden="true">
+                  ·
+                </span>
+                <time className="os-post-date" dateTime={story.created_at}>
                   {new Date(story.created_at).toLocaleDateString(
                     undefined,
-                    { day: 'numeric', month: 'long', year: 'numeric' }
+                    { day: 'numeric', month: 'long', year: 'numeric' },
                   )}
                 </time>
               </div>
@@ -117,6 +127,12 @@ function OtherStories() {
                 dangerouslySetInnerHTML={{ __html: story.content_html }}
               />
 
+              {/* ── Actions: like + follow ─────────────── */}
+              <div className="os-post-actions">
+                <LikeButton targetKind="story" targetId={story.id} />
+                <FollowButton targetKind="story" targetId={story.id} />
+              </div>
+
               {/* ── Read more / less ───────────────────── */}
               <div className="os-post-footer">
                 <button
@@ -127,9 +143,15 @@ function OtherStories() {
                   }
                 >
                   {isExpanded ? 'Show less' : 'Continue reading'}
-                  <svg width="14" height="14" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" strokeWidth="2.4"
-                    strokeLinecap="round" strokeLinejoin="round"
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     aria-hidden="true"
                     style={{
                       transform: isExpanded
