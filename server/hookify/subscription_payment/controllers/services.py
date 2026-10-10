@@ -6,6 +6,9 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
+from notifications.models import Notification
+from notifications.services import notify
+
 from ..models import SubscriptionPayment
 from .get_transaction_status import get_transaction_status
 
@@ -98,7 +101,198 @@ def record_pending_payment(
         payment.amount,
     )
 
+    # ── Notify the user that the payment is in progress ──
+    _notify_payment_pending(payment)
+
     return payment
+
+
+# ============================================================
+# NOTIFICATION HELPERS
+# ============================================================
+#
+# All notification calls are wrapped so a failure here can
+# never break the payment flow itself. The payment state is
+# the source of truth; notifications are best-effort.
+# ============================================================
+
+def _payment_recipient(payment):
+    """
+    Figure out who should receive notifications for this
+    payment. Preference order:
+        1. The explicit `user` FK on the payment.
+        2. The owning user of the linked subscription.
+    Returns None when neither is available.
+    """
+    if payment.user_id:
+        return payment.user
+    if payment.subscription_id and payment.subscription.user_id:
+        return payment.subscription.user
+    return None
+
+
+def _notify_payment_pending(payment):
+    try:
+        recipient = _payment_recipient(payment)
+        if recipient is None:
+            logger.warning(
+                "No recipient for pending-payment notification "
+                "| ref=%s",
+                payment.merchant_reference,
+            )
+            return
+
+        plan_name = payment.plan.plan_name if payment.plan else "your plan"
+
+        notify(
+            recipient=recipient,
+            title="Payment in progress",
+            body=(
+                f"We've started processing your payment of "
+                f"{payment.currency} {payment.amount} for "
+                f"{plan_name}. You'll receive another notification "
+                f"the moment the gateway confirms it."
+            ),
+            category=Notification.CATEGORY_PAYMENT,
+            severity=Notification.SEVERITY_INFO,
+            action_label="View billing",
+            action_url="/useraccount/billing",
+            metadata={
+                "payment_id": str(payment.id),
+                "merchant_reference": payment.merchant_reference,
+                "plan_slug": payment.plan.slug if payment.plan else None,
+                "status": payment.status,
+                "amount": str(payment.amount),
+                "currency": payment.currency,
+            },
+            expires_in_days=7,
+        )
+    except Exception:
+        logger.exception(
+            "Failed to send pending-payment notification "
+            "| ref=%s",
+            payment.merchant_reference,
+        )
+
+
+def _notify_payment_completed(payment):
+    try:
+        recipient = _payment_recipient(payment)
+        if recipient is None:
+            return
+
+        plan_name = payment.plan.plan_name if payment.plan else "your plan"
+
+        # Read the subscription's end date so the notification
+        # can tell the user exactly when the new cycle runs out.
+        end_hint = ""
+        if (
+            payment.subscription_id
+            and payment.subscription.end_date
+        ):
+            end_hint = (
+                " Your plan is active until "
+                f"{payment.subscription.end_date.strftime('%d %b %Y')}."
+            )
+
+        notify(
+            recipient=recipient,
+            title="Payment received",
+            body=(
+                f"We've received your payment of "
+                f"{payment.currency} {payment.amount}. "
+                f"You're now subscribed to {plan_name}.{end_hint}"
+            ),
+            category=Notification.CATEGORY_PAYMENT,
+            severity=Notification.SEVERITY_SUCCESS,
+            action_label="View billing",
+            action_url="/useraccount/billing",
+            metadata={
+                "payment_id": str(payment.id),
+                "merchant_reference": payment.merchant_reference,
+                "confirmation_code": payment.confirmation_code,
+                "payment_method": payment.payment_method,
+                "plan_slug": payment.plan.slug if payment.plan else None,
+                "amount": str(payment.amount),
+                "currency": payment.currency,
+                "status": payment.status,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Failed to send payment-completed notification "
+            "| ref=%s",
+            payment.merchant_reference,
+        )
+
+
+def _notify_payment_failed(payment, terminal_status):
+    """
+    `terminal_status` is one of: failed, reversed, invalid,
+    cancelled.
+    """
+    try:
+        recipient = _payment_recipient(payment)
+        if recipient is None:
+            return
+
+        plan_name = payment.plan.plan_name if payment.plan else "your plan"
+
+        # Copy per status so the message reads naturally.
+        copy = {
+            "failed": (
+                "Your payment could not be completed. "
+                "You have not been charged."
+            ),
+            "reversed": (
+                "Your payment was reversed by the gateway. "
+                "The amount will be refunded to your account."
+            ),
+            "invalid": (
+                "The gateway flagged this payment as invalid. "
+                "Please try again with a different method."
+            ),
+            "cancelled": (
+                "Your payment was cancelled."
+            ),
+        }
+        body_lead = copy.get(
+            terminal_status,
+            "Your payment did not go through.",
+        )
+
+        # If the gateway gave a human-readable reason, append it.
+        if payment.error_message:
+            body_lead = f"{body_lead} Reason: {payment.error_message}"
+
+        notify(
+            recipient=recipient,
+            title="Payment did not complete",
+            body=(
+                f"{body_lead} "
+                f"You can retry the {plan_name} subscription from "
+                f"your billing page."
+            ),
+            category=Notification.CATEGORY_PAYMENT,
+            severity=Notification.SEVERITY_ERROR,
+            action_label="Try again",
+            action_url="/useraccount/billing",
+            metadata={
+                "payment_id": str(payment.id),
+                "merchant_reference": payment.merchant_reference,
+                "plan_slug": payment.plan.slug if payment.plan else None,
+                "amount": str(payment.amount),
+                "currency": payment.currency,
+                "status": payment.status,
+                "error": payment.error_message,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Failed to send payment-failed notification "
+            "| ref=%s",
+            payment.merchant_reference,
+        )
 
 
 # ============================================================
@@ -111,7 +305,10 @@ def sync_payment_from_pesapal(merchant_reference):
     and update the local SubscriptionPayment row.
 
     If PesaPal says the payment is completed, activate the
-    subscription too.
+    subscription too and send a success notification.
+
+    If PesaPal reports a terminal failure, send a failure
+    notification.
 
     Returns the PesaPal response dict.
     """
@@ -123,6 +320,7 @@ def sync_payment_from_pesapal(merchant_reference):
             "subscription__plan",
             "subscription__user",
             "plan",
+            "user",
         )
         .filter(merchant_reference=merchant_reference)
         .first()
@@ -150,6 +348,11 @@ def sync_payment_from_pesapal(merchant_reference):
         )
 
     data = get_transaction_status(payment.order_tracking_id)
+
+    # Track the transition so the notification fires only
+    # when we actually moved the row to a new state.
+    became_completed = False
+    became_failed_status = None
 
     with transaction.atomic():
 
@@ -180,6 +383,8 @@ def sync_payment_from_pesapal(merchant_reference):
 
             activate_subscription(payment)
 
+            became_completed = True
+
         # ----------------------------------------------------
         # FAILED / REVERSED / INVALID
         # ----------------------------------------------------
@@ -203,6 +408,16 @@ def sync_payment_from_pesapal(merchant_reference):
                         "updated_at",
                     ]
                 )
+                became_failed_status = new_status
+
+    # ── Notifications fire outside the transaction ────────
+    # We do this after commit so a notification-creation
+    # error can't roll back a real payment state change.
+    if became_completed:
+        _notify_payment_completed(payment)
+
+    elif became_failed_status:
+        _notify_payment_failed(payment, became_failed_status)
 
     return data
 

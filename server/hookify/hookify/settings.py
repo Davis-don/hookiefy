@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     "plans",
     "subscription",
     "subscription_payment",
+    "notifications",
     "assignments",
     "userpreference",
     "administration",
