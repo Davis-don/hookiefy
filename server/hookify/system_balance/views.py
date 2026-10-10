@@ -1,7 +1,7 @@
 # system_balance/views.py
 
-from decimal import Decimal, InvalidOperation
 import json
+from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -12,71 +12,70 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .models import SystemBalance
+from .services import ensure_system_balance_exists
 
 
 # ============================================================
 # AUTH HELPERS
 # ============================================================
 
-def _get_authenticated_user(request):
-    """
-    Return the authenticated user from the JWT in the
-    Authorization header, or None.
-    """
-    try:
-        auth = JWTAuthentication()
-        result = auth.authenticate(request)
-        if result is None:
-            return None
-        user, _ = result
-        return user
-    except (InvalidToken, TokenError):
-        return None
-
-
 def _require_superuser(request):
     """
     Return (user, None) if the request is from an authenticated
     superuser. Return (None, JsonResponse) otherwise.
     """
-    user = _get_authenticated_user(request)
+    try:
+        auth = JWTAuthentication()
+        result = auth.authenticate(request)
 
-    if user is None:
+        if result is None:
+            return None, JsonResponse(
+                {'success': False, 'error': 'Authentication required.'},
+                status=401,
+            )
+
+        user, _ = result
+
+        if not user.is_authenticated:
+            return None, JsonResponse(
+                {'success': False, 'error': 'Authentication required.'},
+                status=401,
+            )
+
+        if not (user.is_superuser or getattr(user, 'role', None) == 'superadmin'):
+            return None, JsonResponse(
+                {'success': False, 'error': 'Superuser access required.'},
+                status=403,
+            )
+
+        return user, None
+
+    except (InvalidToken, TokenError):
         return None, JsonResponse(
-            {'success': False, 'error': 'Authentication required.'},
+            {'success': False, 'error': 'Invalid or expired token.'},
+            status=401,
+        )
+    except Exception:
+        return None, JsonResponse(
+            {'success': False, 'error': 'Authentication failed.'},
             status=401,
         )
 
-    if not user.is_authenticated:
-        return None, JsonResponse(
-            {'success': False, 'error': 'Authentication required.'},
-            status=401,
-        )
 
-    # Accept either Django superuser flag OR the "superadmin" role
-    if not (user.is_superuser or getattr(user, 'role', None) == 'superadmin'):
-        return None, JsonResponse(
-            {'success': False, 'error': 'Superuser access required.'},
-            status=403,
-        )
-
-    return user, None
-
-
-def _serialize(balance_obj):
+def _serialize(obj):
     return {
-        'id': balance_obj.id,
-        'balance': str(balance_obj.balance),
-        'total_deposits': str(balance_obj.total_deposits),
-        'total_withdrawals': str(balance_obj.total_withdrawals),
-        'currency': balance_obj.currency,
-        'updated_at': balance_obj.updated_at.isoformat(),
-        'created_at': balance_obj.created_at.isoformat(),
+        'id': obj.id,
+        'balance': str(obj.balance),
+        'total_deposits': str(obj.total_deposits),
+        'total_withdrawals': str(obj.total_withdrawals),
+        'currency': obj.currency,
+        'updated_at': obj.updated_at.isoformat(),
+        'created_at': obj.created_at.isoformat(),
     }
 
 
 # ============================================================
-# MAIN BALANCE VIEW
+# FETCH / ADJUST
 # ============================================================
 
 @csrf_exempt
@@ -86,7 +85,7 @@ def system_balance_view(request):
     if err:
         return err
 
-    obj = SystemBalance.get_solo()
+    obj, _ = ensure_system_balance_exists()
 
     if request.method == 'GET':
         return JsonResponse({'success': True, 'data': _serialize(obj)})
@@ -99,7 +98,7 @@ def system_balance_view(request):
             status=400,
         )
 
-    # ── PATCH ─────────────────────────────────────────────
+    # ── PATCH: set exact value ────────────────────────────
     if request.method == 'PATCH':
         raw_value = payload.get('balance')
         if raw_value is None:
@@ -132,7 +131,7 @@ def system_balance_view(request):
             'data': _serialize(obj),
         })
 
-    # ── POST ──────────────────────────────────────────────
+    # ── POST: credit / debit ──────────────────────────────
     raw_amount = payload.get('amount')
     action = (payload.get('action') or 'credit').lower()
 
@@ -174,22 +173,24 @@ def system_balance_view(request):
 
     return JsonResponse({
         'success': True,
-        'message': f'Balance {"credited" if action == "credit" else "debited"} successfully.',
+        'message': (
+            f'Balance {"credited" if action == "credit" else "debited"} '
+            f'successfully.'
+        ),
         'data': _serialize(obj),
     })
 
 
 # ============================================================
-# INITIALIZE VIEW (superuser only)
+# INITIALIZE (superuser only)
 # ============================================================
 
 @csrf_exempt
 @require_http_methods(['GET', 'POST'])
 def initialize_system_balance_view(request):
     """
-    Superuser-only endpoint.
-    Creates the singleton SystemBalance row (0.00 KES) if missing,
-    or returns the existing row unchanged.
+    Superuser-only. Creates the singleton row if missing.
+    Idempotent — returns the existing row if it already exists.
     """
     user, err = _require_superuser(request)
     if err:
@@ -222,16 +223,10 @@ def initialize_system_balance_view(request):
             status=400,
         )
 
-    with transaction.atomic():
-        obj, created = SystemBalance.objects.get_or_create(
-            pk=1,
-            defaults={
-                'balance': starting_balance,
-                'total_deposits': starting_balance,
-                'total_withdrawals': Decimal('0.00'),
-                'currency': currency,
-            },
-        )
+    obj, created = ensure_system_balance_exists(
+        default_balance=starting_balance,
+        currency=currency,
+    )
 
     return JsonResponse({
         'success': True,
