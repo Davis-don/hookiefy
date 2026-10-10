@@ -1,0 +1,240 @@
+/* ─────────────────────────────────────────────────────────
+   SubscriptionGuard — expired-plan overlay
+   Class prefix: .subguard
+   ───────────────────────────────────────────────────────── */
+
+.subguard {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ── Content wrapper ─────────────────────────────────── */
+
+.subguard__content {
+  transition: filter 0.25s ease;
+}
+
+/* The content stays in the DOM so its layout doesn't
+   collapse. We blur it and disable pointer events so the
+   user can see shapes underneath but can't interact with
+   anything. */
+.subguard__content.is-blurred {
+  filter: blur(6px) saturate(0.75);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.55;
+}
+
+/* ── Overlay ─────────────────────────────────────────── */
+
+.subguard__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  /* A soft, semi-transparent wash over the blurred content.
+     Red at very low opacity gives a "warning" feel without
+     hiding what's underneath. */
+  background: linear-gradient(
+    180deg,
+    rgba(254, 242, 242, 0.35),
+    rgba(254, 226, 226, 0.55)
+  );
+
+  /* Backdrop blur on top of the content blur reinforces
+     the "can't touch this" feeling. */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  animation: subguard-fade-in 0.22s ease-out;
+}
+
+@keyframes subguard-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Card ────────────────────────────────────────────── */
+
+.subguard__card {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  max-width: 420px;
+
+  padding: 32px 28px 26px;
+
+  background: #FFFFFF;
+
+  border: 1px solid #FECACA;
+  border-radius: 18px;
+
+  box-shadow:
+    0 30px 70px -30px rgba(185, 28, 28, 0.45),
+    0 6px 18px -8px rgba(15, 23, 42, 0.15);
+
+  text-align: center;
+
+  animation: subguard-pop-in 0.28s
+    cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes subguard-pop-in {
+  from { transform: translateY(8px) scale(0.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Icon ────────────────────────────────────────────── */
+
+.subguard__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+
+  background: #FEF2F2;
+  color: #B91C1C;
+
+  margin-bottom: 4px;
+}
+
+/* ── Text ────────────────────────────────────────────── */
+
+.subguard__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #7F1D1D;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.subguard__sub {
+  margin: 0;
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.55;
+  max-width: 340px;
+}
+
+.subguard__meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #B91C1C;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ── Button ──────────────────────────────────────────── */
+
+.subguard__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 260px;
+
+  padding: 14px 24px;
+  margin-top: 8px;
+
+  border-radius: 12px;
+  border: none;
+
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  color: #FFFFFF;
+
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 12px 26px -12px rgba(220, 38, 38, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.subguard__cta:hover {
+  filter: brightness(1.08);
+}
+
+.subguard__cta:active {
+  transform: translateY(1px);
+}
+
+.subguard__cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(220, 38, 38, 0.25),
+    0 12px 26px -12px rgba(220, 38, 38, 0.75);
+}
+
+/* ── Hint ────────────────────────────────────────────── */
+
+.subguard__hint {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  color: #94A3B8;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .subguard__overlay {
+    padding: 16px;
+  }
+
+  .subguard__card {
+    padding: 26px 20px 22px;
+    border-radius: 16px;
+  }
+
+  .subguard__icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .subguard__title {
+    font-size: 1.15rem;
+  }
+
+  .subguard__sub {
+    font-size: 0.94rem;
+  }
+
+  .subguard__cta {
+    font-size: 0.96rem;
+    padding: 12px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subguard__overlay,
+  .subguard__card,
+  .subguard__content {
+    animation: none !important;
+    transition: none !important;
+  }
+}

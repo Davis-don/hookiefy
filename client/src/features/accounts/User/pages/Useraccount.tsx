@@ -9,6 +9,7 @@ import MyBusiness from '../../../businesses/components/MyBusiness';
 import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
 import Logout from '../components/Logout';
+import SubscriptionGuard from '../components/SubscriptionGuard';
 
 import './useraccount.css';
 
@@ -61,10 +62,8 @@ const BillingIcon = () => (
 );
 
 function Useraccount() {
-  // Home stays the default active tab.
   const [active, setActive] = useState<TabKey>('home');
 
-  // Home → Stories → Business (center, primary) → Billing
   const navItems: NavItem[] = [
     { key: 'home',     label: 'Home',     icon: <HomeIcon /> },
     { key: 'stories',  label: 'Stories',  icon: <StoriesIcon /> },
@@ -73,17 +72,31 @@ function Useraccount() {
   ];
 
   const goToProfile = () => setActive('profile');
+  const goToBilling = () => setActive('billing');
 
   const renderTab = () => {
     switch (active) {
       case 'home':     return <HomeTab />;
-      case 'stories':  return <StoriesTab onGoToProfile={goToProfile} />;   // ← FIX
+      case 'stories':  return <StoriesTab onGoToProfile={goToProfile} />;
       case 'business': return <MyBusiness onGoToProfile={goToProfile} />;
       case 'profile':  return <ProfileTab />;
       case 'billing':  return <BillingTab />;
       default:         return <HomeTab />;
     }
   };
+
+  /* ── The guard only wraps non-Billing tabs ───────────
+     When the user is on the Billing tab, we let them
+     through unconditionally so they can complete a
+     renewal. Everywhere else, the guard blurs the
+     content and shows the upgrade overlay. */
+  const content = active === 'billing'
+    ? renderTab()
+    : (
+      <SubscriptionGuard onUpgrade={goToBilling}>
+        {renderTab()}
+      </SubscriptionGuard>
+    );
 
   return (
     <div className="ua-shell">
@@ -101,7 +114,8 @@ function Useraccount() {
               type="button"
               onClick={() => setActive(item.key)}
               className={
-                'ua-sidebar-link' + (active === item.key ? ' is-active' : '')
+                'ua-sidebar-link' +
+                (active === item.key ? ' is-active' : '')
               }
             >
               <span className="ua-sidebar-icon">{item.icon}</span>
@@ -115,7 +129,7 @@ function Useraccount() {
 
       <div className="ua-main">
         <UserHeader onOpenProfile={goToProfile} />
-        <div className="ua-content">{renderTab()}</div>
+        <div className="ua-content">{content}</div>
       </div>
 
       <nav className="ua-bottom-nav">

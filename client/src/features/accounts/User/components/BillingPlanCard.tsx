@@ -14,6 +14,8 @@ type BillingPlanCardProps = {
   plan: Plan;
   isCurrent: boolean;
   isEffective: boolean;
+  /** True when the user's current subscription has expired. */
+  isExpired?: boolean;
   onChanged?: () => void;
 };
 
@@ -26,6 +28,7 @@ function BillingPlanCard({
   plan,
   isCurrent,
   isEffective,
+  isExpired = false,
 }: BillingPlanCardProps) {
   const user = useAuthStore((s) => s.user);
   const [modalOpen, setModalOpen] = useState(false);
@@ -33,19 +36,54 @@ function BillingPlanCard({
   const highlighted = isCurrent || isEffective;
 
   const handleClick = () => {
-    // Free plans are never selectable — the button isn't
-    // rendered for them at all (see the footer below).
     setModalOpen(true);
   };
 
-  /* ── Button label logic ───────────────────────────────
-     Three states:
-       - Current plan           → disabled label
-       - Free plan (not current)→ non-actionable label
-       - Paid plan (not current)→ opens modal
-     ─────────────────────────────────────────────────── */
+  /* ── Badge logic ────────────────────────────────────── */
+  const renderBadges = () => (
+    <div className="billing-plan-badges">
+      {isCurrent && !isExpired && (
+        <span className="billing-plan-badge is-current">
+          Current
+        </span>
+      )}
+      {isCurrent && isExpired && (
+        <span className="billing-plan-badge is-expired">
+          Expired
+        </span>
+      )}
+      {!isCurrent && isEffective && (
+        <span className="billing-plan-badge is-default">
+          Default
+        </span>
+      )}
+      {plan.is_free && (
+        <span className="billing-plan-badge is-free">Free</span>
+      )}
+    </div>
+  );
+
+  /* ── Footer button logic ────────────────────────────
+     Four states:
+       - Current + expired        → red "Expired" button
+       - Current + active         → disabled "Current plan"
+       - Free (not current)       → non-actionable label
+       - Paid (not current)       → opens modal
+     ────────────────────────────────────────────────── */
   const renderFooter = () => {
     if (isCurrent) {
+      if (isExpired) {
+        return (
+          <button
+            type="button"
+            className="billing-plan-btn is-expired"
+            onClick={handleClick}
+          >
+            Expired — Renew
+          </button>
+        );
+      }
+
       return (
         <button
           type="button"
@@ -80,27 +118,14 @@ function BillingPlanCard({
     <>
       <article
         className={
-          'billing-plan' + (highlighted ? ' is-current' : '')
+          'billing-plan' +
+          (highlighted ? ' is-current' : '') +
+          (isCurrent && isExpired ? ' is-expired' : '')
         }
       >
         <header className="billing-plan-head">
           <h4 className="billing-plan-name">{plan.plan_name}</h4>
-
-          <div className="billing-plan-badges">
-            {isCurrent && (
-              <span className="billing-plan-badge is-current">
-                Current
-              </span>
-            )}
-            {!isCurrent && isEffective && (
-              <span className="billing-plan-badge is-default">
-                Default
-              </span>
-            )}
-            {plan.is_free && (
-              <span className="billing-plan-badge is-free">Free</span>
-            )}
-          </div>
+          {renderBadges()}
         </header>
 
         <div className="billing-plan-price">

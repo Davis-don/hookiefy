@@ -500,3 +500,127 @@
 
   border: 1.5px dashed #CBD5E1;
 }
+
+/* ─────────────────────────────────────────────────────────
+   EXPIRED PLAN STATE
+   Applied when the user's current subscription has expired.
+   Class: .billing-plan.is-expired
+   ───────────────────────────────────────────────────────── */
+
+.billing-plan.is-expired {
+  border-color: #FCA5A5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  background: #FFFBFB;
+}
+
+.billing-plan.is-expired:hover {
+  border-color: #F87171;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+  transform: none;
+}
+
+/* Badge */
+.billing-plan-badge.is-expired {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+/* Expired button */
+.billing-plan-btn.is-expired {
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  color: #FFFFFF;
+  box-shadow:
+    0 10px 22px -12px rgba(220, 38, 38, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.billing-plan-btn.is-expired:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.billing-plan-btn.is-expired:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Muted text stays readable against the pink background */
+.billing-plan.is-expired .billing-plan-desc {
+  color: #7F1D1D;
+}
+
+.billing-plan.is-expired .billing-plan-price-value {
+  color: #7F1D1D;
+}
+
+.billing-plan.is-expired .billing-plan-price-cycle {
+  color: #B91C1C;
+}
+
+.billing-plan.is-expired .billing-plan-features li {
+  color: #7F1D1D;
+}
+
+.billing-plan.is-expired .billing-plan-features li::before {
+  color: #B91C1C;
+}
+
+/* Property chips also turn rose-tinted */
+.billing-plan.is-expired .billing-plan-prop {
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.billing-plan.is-expired .billing-plan-prop-name {
+  color: #B91C1C;
+}
+
+.billing-plan.is-expired .billing-plan-prop-value {
+  color: #7F1D1D;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CURRENT PLAN SUMMARY — expired state
+   Class: .billing-current.is-expired
+   ───────────────────────────────────────────────────────── */
+
+.billing-current.is-expired {
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.06),
+    rgba(220, 38, 38, 0.03)
+  );
+  border-color: #FCA5A5;
+}
+
+/* Red badge */
+.billing-current-status.is-expired {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+/* Card name and price shift to a deep red so the whole
+   summary reads as "warning" at a glance. */
+.billing-current.is-expired .billing-current-name {
+  color: #7F1D1D;
+}
+
+.billing-current.is-expired .billing-current-price-value {
+  color: #7F1D1D;
+}
+
+.billing-current.is-expired .billing-current-price-cycle {
+  color: #B91C1C;
+}
+
+/* Individual fact values that should pop red — status,
+   renews date, time left. */
+.billing-current-fact-value.is-expired {
+  color: #B91C1C;
+  font-weight: 800;
+}
+
+/* Fact tiles get a soft rose background so the "warning"
+   feels consistent across the whole card. */
+.billing-current.is-expired .billing-current-facts li {
+  background: #FEF2F2;
+  border-color: #FECACA;
+}

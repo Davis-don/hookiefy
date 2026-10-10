@@ -1,12 +1,8 @@
-from django.db import models
-
-# Create your models here.
 # subscription/models.py
 
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -56,9 +52,13 @@ class Subscription(models.Model):
     """
     A user's subscription to a plan.
 
-    - At most one active subscription per user.
-    - `start_date` and `end_date` are fully editable.
-    - `end_date = NULL` means "never expires".
+    Rules:
+        - At most one active subscription per user.
+        - `start_date` and `end_date` are fully editable.
+        - `end_date = NULL` means "never expires".
+        - On save, if the dates indicate the subscription has
+          ended (or the window is inverted), the `status` field
+          is automatically flipped to "expired".
     """
 
     STATUS_ACTIVE = "active"
@@ -75,7 +75,10 @@ class Subscription(models.Model):
         (STATUS_PENDING, "Pending"),
     )
 
-    # ── User + plan ──────────────────────────────────────
+    # --------------------------------------------------------
+    # USER + PLAN
+    # --------------------------------------------------------
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -88,14 +91,20 @@ class Subscription(models.Model):
         related_name="subscriptions",
     )
 
-    # ── Status ───────────────────────────────────────────
+    # --------------------------------------------------------
+    # STATUS
+    # --------------------------------------------------------
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_ACTIVE,
     )
 
-    # ── Dates (fully editable) ───────────────────────────
+    # --------------------------------------------------------
+    # DATES (fully editable)
+    # --------------------------------------------------------
+
     start_date = models.DateTimeField(
         default=timezone.now,
         blank=True,
@@ -108,7 +117,10 @@ class Subscription(models.Model):
         help_text="When it expires. Empty = never expires.",
     )
 
-    # ── Renewal / payment ────────────────────────────────
+    # --------------------------------------------------------
+    # RENEWAL / PAYMENT
+    # --------------------------------------------------------
+
     auto_renew = models.BooleanField(default=True)
 
     payment_reference = models.CharField(
@@ -119,12 +131,22 @@ class Subscription(models.Model):
 
     note = models.TextField(blank=True, default="")
 
-    # ── Timestamps ───────────────────────────────────────
+    # --------------------------------------------------------
+    # TIMESTAMPS
+    # --------------------------------------------------------
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # ── Manager ──────────────────────────────────────────
+    # --------------------------------------------------------
+    # MANAGER
+    # --------------------------------------------------------
+
     objects = SubscriptionQuerySet.as_manager()
+
+    # --------------------------------------------------------
+    # META
+    # --------------------------------------------------------
 
     class Meta:
         verbose_name = "Subscription"
@@ -150,29 +172,32 @@ class Subscription(models.Model):
             ),
         )
 
+    # --------------------------------------------------------
+    # STRING
+    # --------------------------------------------------------
+
     def __str__(self):
         return f"{self.user} · {self.plan.plan_name} ({self.status})"
 
-    # ── Validation ───────────────────────────────────────
-    def clean(self):
-        super().clean()
-        if (
-            self.start_date
-            and self.end_date
-            and self.end_date <= self.start_date
-        ):
-            raise ValidationError({
-                "end_date": (
-                    "End date must be after start date. "
-                    "Leave it empty for a never-expiring subscription."
-                )
-            })
+    # --------------------------------------------------------
+    # SAVE — auto-flip status + auto-cancel previous active
+    # --------------------------------------------------------
 
-    # ── Save: auto-cancel any other active row ───────────
     def save(self, *args, **kwargs):
         from django.db import transaction
 
+        # ── Auto-expire: if the dates say this row has ended,
+        #    store that in the status field so the DB stays in
+        #    sync with reality on every write.
+        if self.status in (self.STATUS_ACTIVE, self.STATUS_TRIALING):
+            if self.is_expired:
+                self.status = self.STATUS_EXPIRED
+
         with transaction.atomic():
+
+            # If we're writing an active row, cancel any other
+            # active row for the same user — the unique
+            # constraint requires at most one active at a time.
             if self.status == self.STATUS_ACTIVE and self.user_id:
                 Subscription.objects.filter(
                     user_id=self.user_id,
@@ -181,23 +206,46 @@ class Subscription(models.Model):
                     status=self.STATUS_CANCELLED,
                     updated_at=timezone.now(),
                 )
+
             super().save(*args, **kwargs)
 
-    # ── State helpers ────────────────────────────────────
+    # --------------------------------------------------------
+    # STATE HELPERS
+    # --------------------------------------------------------
+
     @property
     def is_expired(self):
-        if self.end_date is None:
-            return False
-        return self.end_date <= timezone.now()
+        """
+        True when either:
+            - `end_date` is set and lies in the past, or
+            - the window is inverted: `end_date <= start_date`.
+        """
+        now = timezone.now()
+
+        # Rule 1: explicit end date already passed.
+        if self.end_date is not None and self.end_date <= now:
+            return True
+
+        # Rule 2: the window is inverted.
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.end_date <= self.start_date
+        ):
+            return True
+
+        return False
 
     @property
     def is_current(self):
+        """True when status is active/trialing and not expired."""
         if self.status not in (self.STATUS_ACTIVE, self.STATUS_TRIALING):
             return False
         return not self.is_expired
 
     @property
     def is_expiring_soon(self):
+        """True when the end date is within the next 7 days."""
         if self.end_date is None:
             return False
         delta = self.end_date - timezone.now()
@@ -205,6 +253,12 @@ class Subscription(models.Model):
 
     @property
     def effective_status(self):
+        """
+        The status the UI should display.
+
+        If the row says 'active' but the dates say it ended,
+        this returns 'expired' without writing to the DB.
+        """
         if (
             self.status in (self.STATUS_ACTIVE, self.STATUS_TRIALING)
             and self.is_expired
@@ -212,7 +266,10 @@ class Subscription(models.Model):
             return self.STATUS_EXPIRED
         return self.status
 
-    # ── Time remaining ───────────────────────────────────
+    # --------------------------------------------------------
+    # TIME REMAINING
+    # --------------------------------------------------------
+
     @property
     def days_remaining(self):
         if self.end_date is None:

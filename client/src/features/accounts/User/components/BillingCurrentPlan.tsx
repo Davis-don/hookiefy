@@ -24,6 +24,14 @@ function BillingCurrentPlan({
 }: BillingCurrentPlanProps) {
   const plan = subscription?.plan ?? effectivePlan;
 
+  // The subscription may be expired even if `hasActive` is
+  // false. We use `effective_status === 'expired'` or the
+  // `is_expired` boolean — whichever the backend sent.
+  const isExpired =
+    !!subscription &&
+    (subscription.is_expired ||
+      subscription.effective_status === 'expired');
+
   if (!plan) {
     return (
       <section className="billing-current billing-current--empty">
@@ -37,8 +45,29 @@ function BillingCurrentPlan({
     );
   }
 
+  /* ── Badge label + variant ──────────────────────────
+     Expired  → red
+     Active   → green
+     Default  → blue
+     ────────────────────────────────────────────────── */
+  const statusLabel = isExpired
+    ? 'Expired'
+    : hasActive
+      ? 'Active'
+      : 'Default';
+
+  const statusClass = isExpired
+    ? 'is-expired'
+    : hasActive
+      ? 'is-active'
+      : 'is-fallback';
+
   return (
-    <section className="billing-current">
+    <section
+      className={
+        'billing-current' + (isExpired ? ' is-expired' : '')
+      }
+    >
       <header className="billing-current-head">
         <div>
           <span className="billing-current-label">
@@ -49,15 +78,8 @@ function BillingCurrentPlan({
           </h3>
         </div>
 
-        <span
-          className={
-            'billing-current-status ' +
-            (hasActive
-              ? 'is-active'
-              : 'is-fallback')
-          }
-        >
-          {hasActive ? 'Active' : 'Default'}
+        <span className={'billing-current-status ' + statusClass}>
+          {statusLabel}
         </span>
       </header>
 
@@ -81,7 +103,12 @@ function BillingCurrentPlan({
               <span className="billing-current-fact-label">
                 Status
               </span>
-              <span className="billing-current-fact-value">
+              <span
+                className={
+                  'billing-current-fact-value' +
+                  (isExpired ? ' is-expired' : '')
+                }
+              >
                 {subscription.effective_status}
               </span>
             </li>
@@ -97,7 +124,12 @@ function BillingCurrentPlan({
               <span className="billing-current-fact-label">
                 {subscription.end_date ? 'Renews' : 'Expires'}
               </span>
-              <span className="billing-current-fact-value">
+              <span
+                className={
+                  'billing-current-fact-value' +
+                  (isExpired ? ' is-expired' : '')
+                }
+              >
                 {subscription.end_date
                   ? formatDate(subscription.end_date)
                   : 'Never'}
@@ -107,7 +139,12 @@ function BillingCurrentPlan({
               <span className="billing-current-fact-label">
                 Time left
               </span>
-              <span className="billing-current-fact-value">
+              <span
+                className={
+                  'billing-current-fact-value' +
+                  (isExpired ? ' is-expired' : '')
+                }
+              >
                 {subscription.duration_display}
               </span>
             </li>

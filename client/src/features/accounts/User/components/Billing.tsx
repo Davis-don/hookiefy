@@ -114,6 +114,10 @@ function BillingTab() {
                     !current?.has_active_subscription &&
                     current?.effective_plan?.id === plan.id
                   }
+                  isExpired={
+                    current?.subscription?.plan?.id === plan.id &&
+                    !!current?.subscription?.is_expired
+                  }
                   onChanged={() => {
                     queryClient.invalidateQueries({
                       queryKey: ['current-subscription'],
