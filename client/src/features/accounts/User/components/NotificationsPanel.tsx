@@ -34,11 +34,6 @@ type View = 'list' | 'detail';
    CONSTANTS
    ============================================================ */
 
-/**
- * How long the user must hold on a row before the action
- * sheet opens. Tuned to feel intentional — shorter and it
- * fires during scroll; longer and it feels sluggish.
- */
 const LONG_PRESS_MS = 550;
 
 /* ============================================================
@@ -86,8 +81,11 @@ function NotificationsPanel({
   const [view, setView] = useState<View>('list');
   const [selected, setSelected] = useState<Notification | null>(null);
 
-  /* ── Action sheet state ────────────────────────────── */
+  /* ── Action sheet (long press) ─────────────────────── */
   const [sheetTarget, setSheetTarget] = useState<Notification | null>(null);
+
+  /* ── Clear-all confirmation modal ──────────────────── */
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   /* ── Long-press bookkeeping ────────────────────────── */
   const longPressTimer = useRef<number | null>(null);
@@ -100,18 +98,21 @@ function NotificationsPanel({
         setView('list');
         setSelected(null);
         setSheetTarget(null);
+        setConfirmClearOpen(false);
       }, 220);
       return () => window.clearTimeout(t);
     }
   }, [open]);
 
-  /* ── Keyboard: Escape closes sheet → detail → panel ── */
+  /* ── Escape closes topmost layer ───────────────────── */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
 
-      if (sheetTarget) {
+      if (confirmClearOpen) {
+        setConfirmClearOpen(false);
+      } else if (sheetTarget) {
         setSheetTarget(null);
       } else if (view === 'detail') {
         setView('list');
@@ -127,7 +128,7 @@ function NotificationsPanel({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, onClose, view, sheetTarget]);
+  }, [open, onClose, view, sheetTarget, confirmClearOpen]);
 
   /* ── Fetch ─────────────────────────────────────────── */
   const { data, isLoading, isError, error, refetch } = useQuery({
@@ -202,8 +203,12 @@ function NotificationsPanel({
       );
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setSheetTarget(null);
+      setConfirmClearOpen(false);
     },
-    onError: () => toast.error('Could not clear notifications.'),
+    onError: () => {
+      toast.error('Could not clear notifications.');
+      setConfirmClearOpen(false);
+    },
   });
 
   /* ── Long-press handlers ───────────────────────────── */
@@ -255,7 +260,7 @@ function NotificationsPanel({
 
   /* ── Open detail — ignore if the sheet is open ─────── */
   const openDetail = (n: Notification) => {
-    if (sheetTarget) return;
+    if (sheetTarget || confirmClearOpen) return;
     setSelected(n);
     setView('detail');
 
@@ -446,7 +451,6 @@ function NotificationsPanel({
                 )}
             </div>
 
-            {/* ── Footer — Mark all read · Clear all ─────── */}
             {notifications.length > 0 && (
               <footer className="np-foot np-foot--split">
                 <button
@@ -485,15 +489,7 @@ function NotificationsPanel({
                 <button
                   type="button"
                   className="np-foot-btn np-foot-btn--clear"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Delete all notifications? This cannot be undone.',
-                      )
-                    ) {
-                      clearAllMutation.mutate();
-                    }
-                  }}
+                  onClick={() => setConfirmClearOpen(true)}
                   disabled={clearAllMutation.isPending}
                   title="Delete every notification"
                 >
@@ -663,7 +659,6 @@ function NotificationsPanel({
               </div>
             </div>
 
-            {/* ── Detail footer — read/unread · delete ───── */}
             <footer className="np-foot np-foot--detail">
               <div className="np-detail-actions">
                 {selected.is_read ? (
@@ -845,6 +840,94 @@ function NotificationsPanel({
               >
                 Cancel
               </button>
+            </div>
+          </>
+        )}
+
+        {/* ============================================================
+            CLEAR-ALL CONFIRMATION MODAL
+            ============================================================ */}
+        {confirmClearOpen && (
+          <>
+            <div
+              className="np-confirm-backdrop"
+              onClick={() => {
+                if (!clearAllMutation.isPending) {
+                  setConfirmClearOpen(false);
+                }
+              }}
+              aria-hidden="true"
+            />
+
+            <div
+              className="np-confirm"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="Confirm clear all notifications"
+            >
+              <div className="np-confirm-icon" aria-hidden="true">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12" y2="17.01" />
+                </svg>
+              </div>
+
+              <h3 className="np-confirm-title">
+                Clear all notifications?
+              </h3>
+
+              <p className="np-confirm-text">
+                {notifications.length > 0 ? (
+                  <>
+                    This will permanently delete{' '}
+                    <strong>
+                      {notifications.length}{' '}
+                      {notifications.length === 1
+                        ? 'notification'
+                        : 'notifications'}
+                    </strong>
+                    . This action cannot be undone.
+                  </>
+                ) : (
+                  <>You have no notifications to clear.</>
+                )}
+              </p>
+
+              <div className="np-confirm-actions">
+                <button
+                  type="button"
+                  className="np-confirm-btn np-confirm-btn--ghost"
+                  onClick={() => setConfirmClearOpen(false)}
+                  disabled={clearAllMutation.isPending}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="np-confirm-btn np-confirm-btn--danger"
+                  onClick={() => clearAllMutation.mutate()}
+                  disabled={clearAllMutation.isPending}
+                >
+                  {clearAllMutation.isPending ? (
+                    <span className="np-confirm-btn-spinner">
+                      <Spinner size={14} label="Clearing…" />
+                    </span>
+                  ) : (
+                    'Clear all'
+                  )}
+                </button>
+              </div>
             </div>
           </>
         )}
