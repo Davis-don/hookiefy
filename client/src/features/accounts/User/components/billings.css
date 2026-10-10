@@ -475,3 +475,28 @@
     transform: none;
   }
 }
+/* ── Free plan: not selectable ───────────────────────── */
+
+.billing-plan-unavailable {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  padding: 12px 20px;
+
+  border-radius: 10px;
+
+  background: #F1F5F9;
+  color: #64748B;
+
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  text-align: center;
+  user-select: none;
+  cursor: default;
+
+  border: 1.5px dashed #CBD5E1;
+}

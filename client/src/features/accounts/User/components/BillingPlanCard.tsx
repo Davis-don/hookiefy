@@ -33,16 +33,47 @@ function BillingPlanCard({
   const highlighted = isCurrent || isEffective;
 
   const handleClick = () => {
-    if (plan.is_free) {
-      // Free plans skip the modal — they don't go through
-      // PesaPal. Wire this to a subscribe endpoint if you have
-      // one, otherwise show a message.
-      window.alert(
-        `${plan.plan_name} is free — no payment required.`,
-      );
-      return;
-    }
+    // Free plans are never selectable — the button isn't
+    // rendered for them at all (see the footer below).
     setModalOpen(true);
+  };
+
+  /* ── Button label logic ───────────────────────────────
+     Three states:
+       - Current plan           → disabled label
+       - Free plan (not current)→ non-actionable label
+       - Paid plan (not current)→ opens modal
+     ─────────────────────────────────────────────────── */
+  const renderFooter = () => {
+    if (isCurrent) {
+      return (
+        <button
+          type="button"
+          className="billing-plan-btn is-current"
+          disabled
+        >
+          Current plan
+        </button>
+      );
+    }
+
+    if (plan.is_free) {
+      return (
+        <span className="billing-plan-unavailable">
+          Included by default
+        </span>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className="billing-plan-btn"
+        onClick={handleClick}
+      >
+        Choose this plan
+      </button>
+    );
   };
 
   return (
@@ -119,23 +150,7 @@ function BillingPlanCard({
         )}
 
         <footer className="billing-plan-foot">
-          {isCurrent ? (
-            <button
-              type="button"
-              className="billing-plan-btn is-current"
-              disabled
-            >
-              Current plan
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="billing-plan-btn"
-              onClick={handleClick}
-            >
-              {plan.is_free ? 'Switch to this plan' : 'Choose this plan'}
-            </button>
-          )}
+          {renderFooter()}
         </footer>
       </article>
 
