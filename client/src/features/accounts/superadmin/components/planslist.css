@@ -1,0 +1,509 @@
+/* ─────────────────────────────────────────────────────────
+   PlansList — plan cards grid
+   Class prefix: .planlist (container) and .plancard (card)
+   Larger typography pass.
+   ───────────────────────────────────────────────────────── */
+
+.planlist-shell {
+  position: relative;
+  width: 100%;
+  padding-bottom: 120px;
+}
+
+/* ── States ──────────────────────────────────────────── */
+.planlist-state {
+  display: flex;
+  justify-content: center;
+  padding: 72px 20px;
+  color: #64748B;
+  font-size: 1.1rem;
+}
+
+.planlist-state-error {
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #B91C1C;
+}
+
+.planlist-retry-btn {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1.5px solid #FECACA;
+  background: #FFFFFF;
+  color: #B91C1C;
+  font-weight: 700;
+  font-size: 1.02rem;
+  cursor: pointer;
+}
+
+.planlist-retry-btn:hover:not(:disabled) {
+  background: #FEF2F2;
+}
+
+.planlist-retry-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Empty ───────────────────────────────────────────── */
+.planlist-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 72px 20px;
+  text-align: center;
+}
+
+.planlist-empty-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.planlist-empty-sub {
+  margin: 0;
+  font-size: 1.12rem;
+  color: #64748B;
+  max-width: 460px;
+  line-height: 1.65;
+}
+
+.planlist-empty-cta {
+  margin-top: 14px;
+  padding: 13px 28px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 1.12rem;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(37, 99, 235, 0.7);
+}
+
+.planlist-empty-cta:hover {
+  filter: brightness(1.05);
+}
+
+/* ── Toolbar ─────────────────────────────────────────── */
+.planlist-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.planlist-count {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #64748B;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.planlist-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #334155;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.planlist-refresh-btn:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.planlist-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.planlist-refresh-btn .is-spinning {
+  animation: planlist-spin 0.9s linear infinite;
+}
+
+@keyframes planlist-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Grid ────────────────────────────────────────────── */
+.planlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 22px;
+}
+
+/* ── Card ────────────────────────────────────────────── */
+.plancard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 26px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.plancard:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 12px 32px -22px rgba(15, 23, 42, 0.35);
+}
+
+.plancard.is-default {
+  border-color: #BFDBFE;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.plancard.is-inactive {
+  opacity: 0.7;
+}
+
+/* ── Head ────────────────────────────────────────────── */
+.plancard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plancard-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.plancard-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.plancard-slug {
+  font-size: 0.92rem;
+  color: #94A3B8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.plancard-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.plancard-badge {
+  display: inline-block;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.plancard-badge-default  { background: #EEF2FF; color: #1D4ED8; }
+.plancard-badge-active   { background: #ECFDF5; color: #047857; }
+.plancard-badge-inactive { background: #F1F5F9; color: #64748B; }
+
+/* ── Price ───────────────────────────────────────────── */
+.plancard-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.plancard-price {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
+
+.plancard-cycle {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* ── Description ─────────────────────────────────────── */
+.plancard-desc {
+  margin: 0;
+  font-size: 1.06rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.plancard-desc-empty {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* ── Sections ────────────────────────────────────────── */
+.plancard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.plancard-section-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+/* ── Limits ──────────────────────────────────────────── */
+.plancard-limits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.plancard-limits li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 1.02rem;
+}
+
+.plancard-limit-label {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.plancard-limit-value {
+  color: #0F172A;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ── Flags ───────────────────────────────────────────── */
+.plancard-flags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plancard-flags li {
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+.plancard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.plancard-created {
+  font-size: 0.92rem;
+  color: #94A3B8;
+}
+
+.plancard-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.plancard-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.plancard-action:hover:not(:disabled) {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.plancard-action:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.plancard-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plancard-action-star:hover:not(:disabled) {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #B45309;
+}
+
+.plancard-action-star.is-active {
+  background: #FEF3C7;
+  border-color: #FCD34D;
+  color: #B45309;
+}
+
+.plancard-action-edit:hover:not(:disabled) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  color: #1D4ED8;
+}
+
+.plancard-action-danger:hover:not(:disabled) {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #B91C1C;
+}
+
+/* ── FAB ─────────────────────────────────────────────── */
+.planlist-fab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 100;
+
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: none;
+
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 14px 30px -12px rgba(37, 99, 235, 0.75),
+    0 6px 12px -6px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+.planlist-fab:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow:
+    0 20px 40px -14px rgba(37, 99, 235, 0.9),
+    0 8px 16px -6px rgba(15, 23, 42, 0.3);
+}
+
+.planlist-fab:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.planlist-fab:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.3),
+    0 14px 30px -12px rgba(37, 99, 235, 0.75);
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .planlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+
+  .plancard {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .planlist-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plancard-name { font-size: 1.35rem; }
+  .plancard-price { font-size: 1.85rem; }
+  .plancard-desc  { font-size: 1rem; }
+  .plancard-limits li { font-size: 0.98rem; }
+
+  .planlist-fab {
+    width: 56px;
+    height: 56px;
+    right: 16px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planlist-refresh-btn,
+  .plancard-action,
+  .planlist-fab {
+    transition: none !important;
+  }
+
+  .planlist-refresh-btn .is-spinning {
+    animation: none;
+  }
+
+  .planlist-fab:hover,
+  .planlist-fab:active,
+  .plancard-action:active {
+    transform: none;
+  }
+}

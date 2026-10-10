@@ -1,0 +1,301 @@
+/* ─────────────────────────────────────────────────────────
+   SuperHeader — admin dashboard top bar
+   All classes prefixed .sh-
+   ───────────────────────────────────────────────────────── */
+
+.sh-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 14px 32px;
+
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+/* ── Right cluster — pinned to the far right ────────── */
+.sh-header-right {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Brand ───────────────────────────────────────────── */
+.sh-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  font-family: 'Pacifico', cursive;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: 1px;
+
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.18s ease;
+}
+
+.sh-header-brand:hover { opacity: 0.85; }
+
+.sh-header-logo-you { color: #2563EB; }
+.sh-header-logo-p   { color: #10B981; }
+.sh-header-logo-ata { color: #F59E0B; }
+
+.sh-header-badge {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-left: 4px;
+  transform: translateY(2px);
+}
+
+/* ── Clickable avatar wrapper ────────────────────────── */
+.sh-header-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sh-header-avatar-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.sh-header-avatar-btn:active { transform: scale(0.97); }
+
+.sh-header-avatar-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+/* ── Overflow menu ───────────────────────────────────── */
+.sh-header-menu {
+  position: relative;
+}
+
+.sh-header-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #334155;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.sh-header-menu-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.sh-header-menu-btn.is-open {
+  background: #EEF2FF;
+  border-color: #BFDBFE;
+  color: #2563EB;
+}
+
+.sh-header-menu-btn:active { transform: scale(0.95); }
+
+.sh-header-menu-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+/* ── Dropdown ────────────────────────────────────────── */
+.sh-header-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+
+  min-width: 200px;
+  padding: 6px;
+
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow:
+    0 20px 40px -20px rgba(15, 23, 42, 0.35),
+    0 6px 14px -6px rgba(15, 23, 42, 0.15);
+
+  z-index: 40;
+
+  animation: sh-dropdown-in 0.16s ease-out;
+}
+
+@keyframes sh-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.sh-header-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #334155;
+
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 600;
+  text-align: left;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sh-header-dropdown-item:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.sh-header-dropdown-item:focus-visible {
+  outline: none;
+  background: #EEF2FF;
+  color: #2563EB;
+}
+
+.sh-header-dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.sh-header-dropdown-item:hover .sh-header-dropdown-icon {
+  color: #2563EB;
+}
+
+.sh-header-dropdown-label {
+  flex: 1;
+  line-height: 1;
+}
+
+.sh-header-dropdown-sep {
+  height: 1px;
+  background: #E2E8F0;
+  margin: 6px 8px;
+}
+
+.sh-header-dropdown-item--danger {
+  color: #B91C1C;
+}
+
+.sh-header-dropdown-item--danger .sh-header-dropdown-icon {
+  color: #EF4444;
+}
+
+.sh-header-dropdown-item--danger:hover {
+  background: #FEF2F2;
+  color: #991B1B;
+}
+
+.sh-header-dropdown-item--danger:hover .sh-header-dropdown-icon {
+  color: #B91C1C;
+}
+
+/* ─────────────────────────────────────────────────────
+   BRAND VISIBILITY
+   ─────────────────────────────────────────────────────
+   On desktop the sidebar already shows the wordmark.
+   The header brand is only shown below 1024px.
+   ───────────────────────────────────────────────────── */
+
+@media (min-width: 1025px) {
+  .sh-header-brand { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .sh-header { padding: 12px 22px; }
+
+  .sh-header-brand { font-size: 1.35rem; }
+  .sh-header-badge { display: none; }
+
+  .sh-header-right { gap: 8px; }
+}
+
+@media (max-width: 640px) {
+  .sh-header { padding: 12px 16px; }
+
+  .sh-header-brand { font-size: 1.25rem; }
+
+  .sh-header-menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .sh-header-brand { font-size: 1.15rem; }
+
+  .sh-header-dropdown { min-width: 180px; }
+}
+
+/* ─────────────────────────────────────────────────────
+   REDUCED MOTION
+   ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-header-avatar-btn,
+  .sh-header-menu-btn,
+  .sh-header-dropdown-item {
+    transition: none !important;
+  }
+
+  .sh-header-dropdown {
+    animation: none;
+  }
+}

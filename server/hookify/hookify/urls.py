@@ -185,12 +185,21 @@ urlpatterns = [
     ),
 
 
+  
+
+    path(
+        "plans/",
+        include("plans.urls"),
+    ),
+
+
     # ============================================================
     # SUBSCRIPTION
+    # A user's subscription to a plan.
     # ============================================================
 
-    # path(
-    #     "subscription/",
-    #     include("subscription.urls"),
-    # ),
+    path(
+        "subscription/",
+        include("subscription.urls"),
+    ),
 ]

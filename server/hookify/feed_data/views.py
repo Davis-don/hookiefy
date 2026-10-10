@@ -2,9 +2,10 @@
 # ============================================================
 # Feed views.
 #
-#   public_businesses_feed  → GET /feed/businesses/
-#   my_businesses_feed      → GET /feed/businesses/mine/
-#   my_feed                 → GET /feed/stories/mine/  (re-export)
+#   public_businesses_feed        → GET /feed/businesses/
+#   my_businesses_feed            → GET /feed/businesses/mine/
+#   my_feed                       → GET /feed/stories/mine/   (re-export)
+#   personalised_stories_feed     → GET /feed/stories/        (re-export)
 # ============================================================
 
 from django.db.models import Q
@@ -13,12 +14,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-# Re-exported from the story view file — its view function stays there.
-from .feed_views.story_view import my_feed
+# Re-exported from the story view file — those views live there.
+from .feed_views.story_view import (
+    my_feed,
+    personalised_stories_feed,
+)
 
 # Helpers only — no views in this module.
 from .feed_views.businesses_view import (
     build_feed_page,
+    build_personalised_feed_page,
     _parse_limit,
     _parse_kind,
 )
@@ -33,6 +38,8 @@ from .feed_views.businesses_view import (
 def public_businesses_feed(request):
     """
     Public mixed feed of Posts + Products from active businesses.
+
+    No personalisation — newest first.
 
     Query params:
         kind     — 'all' (default) | 'post' | 'product'
@@ -79,6 +86,14 @@ def my_businesses_feed(request):
     Excludes anything owned by the requesting user, so the feed
     shows only OTHER people's posts and products.
 
+    Ranking blends:
+        - Businesses the user already likes / follows the content of
+        - Same region / city / county as the user's own business
+        - Same category / business type as the businesses they
+          already engage with
+        - Popularity (likes + follows) as a soft tie-breaker
+        - Recency within each tier
+
     Query params:
         kind     — 'all' (default) | 'post' | 'product'
         limit    — 1..60, default 20
@@ -106,7 +121,9 @@ def my_businesses_feed(request):
     if category in ("goods", "services"):
         base &= Q(business__business_category=category)
 
-    payload = build_feed_page(base, kind, limit, before)
+    payload = build_personalised_feed_page(
+        request.user, base, kind, limit, before
+    )
     return Response(payload, status=status.HTTP_200_OK)
 
 
@@ -118,4 +135,5 @@ __all__ = [
     "public_businesses_feed",
     "my_businesses_feed",
     "my_feed",
+    "personalised_stories_feed",
 ]

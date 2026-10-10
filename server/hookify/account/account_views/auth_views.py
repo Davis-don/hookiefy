@@ -1,16 +1,23 @@
+
+
 from django.contrib.auth import authenticate
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.models import Accounts
 from account.serializers import CreateNewUserSerializer, UserSerializer
+from plans.models import Plan
+from subscription.services import subscribe
 
+
+# ============================================================
+# TOKENS
+# ============================================================
 
 def generate_tokens(user):
     """
@@ -24,6 +31,10 @@ def generate_tokens(user):
     }
 
 
+# ============================================================
+# CREATE USER
+# ============================================================
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_user(request):
@@ -35,23 +46,36 @@ def create_user(request):
         auth_provider = local
 
     Superadmins cannot be created through this endpoint.
+
+    On success, the user is subscribed to the system default plan.
+    Registration is refused with 503 when no plan exists.
     """
 
+    # ── 1. Resolve default plan BEFORE creating the user ──────
+    default_plan = Plan.get_default()
+
+    if default_plan is None:
+        return Response(
+            {
+                "message": (
+                    "Registration is temporarily unavailable. "
+                    "No subscription plan has been configured."
+                )
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    # ── 2. Sanitise the payload ───────────────────────────────
     data = request.data.copy()
 
-    # Never allow the client to choose the role.
     data["role"] = "user"
-
-    # Public registration is always local authentication.
     data["auth_provider"] = "local"
 
-    # Profile image is handled separately after registration.
     data.pop("profile_image_url", None)
     data.pop("profile_image_public_id", None)
-
-    # Google ID is also never accepted during local registration.
     data.pop("google_id", None)
 
+    # ── 3. Validate ───────────────────────────────────────────
     serializer = CreateNewUserSerializer(data=data)
 
     if not serializer.is_valid():
@@ -60,16 +84,22 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # ── 4. Create the user + attach subscription atomically ───
     try:
-        user = serializer.save()
+        with transaction.atomic():
+            user = serializer.save()
+            subscribe(
+                user,
+                default_plan,
+                note="Auto-subscribed on signup.",
+            )
     except IntegrityError:
         return Response(
-            {
-                "message": "An account with this email already exists."
-            },
+            {"message": "An account with this email already exists."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # ── 5. Issue tokens + respond ─────────────────────────────
     tokens = generate_tokens(user)
 
     return Response(
@@ -81,6 +111,10 @@ def create_user(request):
         status=status.HTTP_201_CREATED,
     )
 
+
+# ============================================================
+# LOGIN
+# ============================================================
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -94,9 +128,7 @@ def login_view(request):
 
     if not email or not password:
         return Response(
-            {
-                "message": "Email and password are required."
-            },
+            {"message": "Email and password are required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -108,17 +140,13 @@ def login_view(request):
 
     if user is None:
         return Response(
-            {
-                "message": "Invalid email or password."
-            },
+            {"message": "Invalid email or password."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
     if not user.is_active:
         return Response(
-            {
-                "message": "This account is inactive."
-            },
+            {"message": "This account is inactive."},
             status=status.HTTP_403_FORBIDDEN,
         )
 
@@ -134,6 +162,10 @@ def login_view(request):
     )
 
 
+# ============================================================
+# LOGOUT
+# ============================================================
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def logout_view(request):
@@ -145,9 +177,7 @@ def logout_view(request):
 
     if not refresh_token:
         return Response(
-            {
-                "message": "Refresh token is required."
-            },
+            {"message": "Refresh token is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -156,20 +186,20 @@ def logout_view(request):
         token.blacklist()
 
         return Response(
-            {
-                "message": "Logout successful."
-            },
+            {"message": "Logout successful."},
             status=status.HTTP_200_OK,
         )
 
     except Exception:
         return Response(
-            {
-                "message": "Invalid or expired refresh token."
-            },
+            {"message": "Invalid or expired refresh token."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+
+# ============================================================
+# AUTH CHECK
+# ============================================================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

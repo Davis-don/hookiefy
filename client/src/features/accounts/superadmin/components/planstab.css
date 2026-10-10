@@ -1,0 +1,108 @@
+/* ─────────────────────────────────────────────────────────
+   PlansTab — wrapper + floating add button
+   Class prefix: .planstab
+   ───────────────────────────────────────────────────────── */
+
+.planstab {
+  /* Container that the FAB anchors to. Position: relative is
+     important so the FAB knows which ancestor to attach to. */
+  position: relative;
+  min-height: 100%;
+}
+
+/* ─────────────────────────────────────────────────────
+   FLOATING ADD BUTTON
+   ───────────────────────────────────────────────────── */
+
+.planstab-fab {
+  position: fixed;
+
+  /* On desktop: bottom-right of the viewport */
+  right: 28px;
+  bottom: 28px;
+
+  /* Above the plan cards and the sidebar */
+  z-index: 100;
+
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+
+  /* Brand gradient — stands out against any background */
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 14px 30px -12px rgba(37, 99, 235, 0.75),
+    0 6px 12px -6px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+.planstab-fab:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow:
+    0 20px 40px -14px rgba(37, 99, 235, 0.9),
+    0 8px 16px -6px rgba(15, 23, 42, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.planstab-fab:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow:
+    0 8px 20px -10px rgba(37, 99, 235, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.planstab-fab:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.3),
+    0 14px 30px -12px rgba(37, 99, 235, 0.75);
+}
+
+/* Slightly smaller on tablets */
+@media (max-width: 1024px) {
+  .planstab-fab {
+    width: 54px;
+    height: 54px;
+    right: 22px;
+    bottom: 22px;
+  }
+}
+
+/* Lift above the mobile bottom nav (which is ~64px tall + safe area) */
+@media (max-width: 640px) {
+  .planstab-fab {
+    width: 52px;
+    height: 52px;
+    right: 16px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   REDUCED MOTION
+   ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .planstab-fab {
+    transition: none !important;
+  }
+
+  .planstab-fab:hover,
+  .planstab-fab:active {
+    transform: none;
+  }
+}

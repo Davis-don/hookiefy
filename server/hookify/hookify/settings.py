@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     "feed_data",
     "my_engagements",
     "plans",
+    "subscription",
     "assignments",
     "userpreference",
     "administration",

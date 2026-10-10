@@ -1,0 +1,241 @@
+/* ─────────────────────────────────────────────────────────
+   PlanForm — add a plan
+   Class prefix: .planform
+   ───────────────────────────────────────────────────────── */
+
+.planform-shell {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 0 100px;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.planform-head {
+  margin-bottom: 22px;
+}
+
+.planform-title {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #0F172A;
+}
+
+.planform-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748B;
+  line-height: 1.55;
+}
+
+/* ── Form ────────────────────────────────────────────── */
+.planform {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.planform-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+}
+
+.planform-section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.planform-section-hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #94A3B8;
+}
+
+/* ── Fields ──────────────────────────────────────────── */
+.planform-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planform-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #334155;
+}
+
+.planform-field input,
+.planform-field select,
+.planform-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+
+  background: #FFFFFF;
+  color: #0F172A;
+
+  font-family: inherit;
+  font-size: 0.98rem;
+  line-height: 1.4;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.planform-field textarea {
+  resize: vertical;
+  min-height: 76px;
+}
+
+.planform-field input:focus,
+.planform-field select:focus,
+.planform-field textarea:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.planform-field input:disabled,
+.planform-field select:disabled,
+.planform-field textarea:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.planform-hint {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* ── Two-column grid ─────────────────────────────────── */
+.planform-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+.planform-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.planform-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-width: 130px;
+  padding: 11px 22px;
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  border: 1.5px solid transparent;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    filter 0.15s ease;
+}
+
+.planform-btn-ghost {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #334155;
+}
+
+.planform-btn-ghost:hover:not(:disabled) {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+  color: #0F172A;
+}
+
+.planform-btn-primary {
+  background: linear-gradient(135deg, #2563EB, #10B981);
+  color: #FFFFFF;
+  box-shadow:
+    0 10px 22px -12px rgba(37, 99, 235, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.planform-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.planform-btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.planform-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.planform-btn-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .planform-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .planform-actions {
+    flex-direction: column-reverse;
+  }
+
+  .planform-btn {
+    width: 100%;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .planform-field input,
+  .planform-field select,
+  .planform-field textarea,
+  .planform-btn {
+    transition: none !important;
+  }
+}

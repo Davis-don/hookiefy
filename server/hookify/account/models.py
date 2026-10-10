@@ -1,3 +1,4 @@
+# account/models.py
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
@@ -250,3 +251,65 @@ class Accounts(AbstractUser):
 
         return self.auth_provider == "google"
 
+    # ========================================================
+    # SUBSCRIPTION HELPERS
+    # ========================================================
+    #
+    # A user's plan comes from their active Subscription row.
+    # `Accounts` itself has no plan FK — the relationship is
+    # one user → many subscriptions (one active at a time).
+    #
+    # These properties delegate to the subscription service so
+    # callers can keep using `user.effective_plan`, `user.plan_name`
+    # without knowing about the Subscription model.
+    # ========================================================
+
+    @property
+    def active_subscription(self):
+        """
+        The user's current Subscription instance, or None.
+
+        "Current" means: status is active/trialing and the
+        end_date hasn't passed (or is NULL = no expiry).
+        """
+        from subscription.services import get_active_subscription
+        return get_active_subscription(self)
+
+    @property
+    def effective_plan(self):
+        """
+        The plan the user is entitled to right now.
+
+        Priority:
+            1. Plan from the user's active subscription.
+            2. Plan marked is_default=True in the catalogue.
+            3. Cheapest active plan.
+            4. None.
+        """
+        from subscription.services import get_effective_plan
+        return get_effective_plan(self)
+
+    @property
+    def plan_name(self):
+        """
+        Convenience for templates — the effective plan's name,
+        or "—" when no plan can be resolved.
+        """
+        plan = self.effective_plan
+        return plan.plan_name if plan else "—"
+
+    @property
+    def is_on_default_plan(self):
+        """
+        True when the user is currently on whatever plan the
+        system marks as the default.
+        """
+        plan = self.effective_plan
+        return bool(plan and plan.is_default)
+
+    @property
+    def has_active_subscription(self):
+        """
+        True if a live Subscription row exists for this user.
+        """
+        return self.active_subscription is not None
