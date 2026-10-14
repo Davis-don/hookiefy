@@ -226,35 +226,6 @@
   background: #FFFFFF;
 }
 
-/* ─────────────────────────────────────────────────────────
-   PHONE FIELD WITH +254 PREFIX
-   ───────────────────────────────────────────────────────── */
-
-.yp-register-phone {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-
-.yp-register-phone-prefix {
-  padding: 0 10px 0 2px;
-  font-weight: 600;
-  font-size: 1.08rem;
-  color: #FFFFFF;
-  user-select: none;
-  pointer-events: none;
-  border-right: 1.5px solid rgba(255, 255, 255, 0.6);
-  margin-right: 10px;
-  opacity: 0.95;
-}
-
-.yp-register-phone input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-}
-
 /* ── Error ───────────────────────────────────────────── */
 .yp-register-error {
   margin: -6px 0 0;
@@ -282,7 +253,6 @@
   line-height: 1.35;
   border-radius: 12px;
 
-  /* Glass card so the text never fights the blue gradient */
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(6px);
@@ -297,7 +267,6 @@
   transition: color 0.2s ease;
 }
 
-/* Bullet = small round chip that shows ✕ or ✓ */
 .yp-password-rules li::before {
   content: '✕';
   display: inline-flex;
@@ -311,21 +280,19 @@
   line-height: 1;
   flex-shrink: 0;
 
-  /* default (not yet met) */
   background: rgba(255, 255, 255, 0.18);
   color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.28);
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-/* When the rule is satisfied */
 .yp-password-rules li.is-ok {
-  color: #EAFBEF; /* near-white with a green tint */
+  color: #EAFBEF;
 }
 
 .yp-password-rules li.is-ok::before {
   content: '✓';
-  background: #34D399;              /* friendly mint green */
+  background: #34D399;
   color: #053B22;
   border-color: #34D399;
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
@@ -454,8 +421,6 @@
   .yp-register-field input,
   .yp-register-field .yp-register-select { font-size: 1rem; }
 
-  .yp-register-phone-prefix { font-size: 1rem; padding: 0 8px 0 2px; margin-right: 8px; }
-
   .yp-password-rules { font-size: 0.8rem; padding: 10px 12px; }
 
   .yp-register-back {
@@ -493,8 +458,6 @@
   .yp-register-icon svg { width: 18px; height: 18px; }
   .yp-register-field input,
   .yp-register-field .yp-register-select { font-size: 0.98rem; }
-
-  .yp-register-phone-prefix { font-size: 0.98rem; }
 
   .yp-password-rules { font-size: 0.76rem; padding: 10px 12px; gap: 5px; }
   .yp-password-rules li::before {

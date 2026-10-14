@@ -1,5 +1,3 @@
-
-
 from django.contrib.auth import authenticate
 from django.db import IntegrityError, transaction
 
@@ -39,7 +37,8 @@ def generate_tokens(user):
 @permission_classes([AllowAny])
 def create_user(request):
     """
-    Create a normal user account using email and password.
+    Create a normal user account using first name, last name,
+    email and password.
 
     Public registration always creates:
         role = user

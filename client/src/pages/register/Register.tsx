@@ -13,8 +13,6 @@ import './register.css';
 type FormData = {
   firstName: string;
   lastName: string;
-  gender: string;
-  phoneNumber: string; // local part only, e.g. "712345678"
   email: string;
   password: string;
   confirmPassword: string;
@@ -23,50 +21,23 @@ type FormData = {
 const initialData: FormData = {
   firstName: '',
   lastName: '',
-  gender: '',
-  phoneNumber: '',
   email: '',
   password: '',
   confirmPassword: '',
 };
-
-// ---------- Phone helpers ----------
-
-/**
- * Extract just the 9 digits after +254 from whatever the user typed.
- */
-function normalizeLocalPhone(raw: string): string {
-  let digits = raw.replace(/\D/g, '');
-
-  if (digits.startsWith('254') && digits.length > 9) {
-    digits = digits.slice(3);
-  }
-
-  if (digits.startsWith('0')) {
-    digits = digits.slice(1);
-  }
-
-  if (digits.length !== 9) return '';
-  if (!/^[71]/.test(digits)) return '';
-
-  return digits;
-}
 
 // ---------- Email helpers ----------
 
 const EMAIL_SHAPE_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const COMMON_TLDS = new Set([
-  // generic
   'com', 'org', 'net', 'edu', 'gov', 'mil', 'int', 'info', 'biz',
   'io', 'co', 'app', 'dev', 'ai', 'me', 'tv', 'xyz', 'online',
   'site', 'store', 'tech', 'cloud', 'email', 'pro', 'name',
 
-  // Africa / Kenya + common
   'ke', 'tz', 'ug', 'rw', 'bi', 'et', 'so', 'ss', 'sd', 'eg',
   'za', 'ng', 'gh', 'zm', 'zw', 'mw', 'mz', 'na', 'bw',
 
-  // common others
   'uk', 'us', 'ca', 'au', 'nz', 'de', 'fr', 'es', 'it', 'nl',
   'be', 'ch', 'at', 'se', 'no', 'dk', 'fi', 'ie', 'pt', 'gr',
   'pl', 'cz', 'ro', 'hu', 'ru', 'ua', 'tr', 'il', 'ae', 'sa',
@@ -129,10 +100,6 @@ const DISPOSABLE_DOMAINS = new Set([
   'fakeinbox.com',
 ]);
 
-/**
- * Return an error message string, or "" if the email is valid.
- * Mirrors the backend's validate_email_address().
- */
 function validateEmail(raw: string): string {
   const value = raw.trim().toLowerCase();
 
@@ -214,9 +181,8 @@ function Register() {
   const [data, setData] = useState<FormData>(initialData);
   const [error, setError] = useState<string>('');
 
-  const totalSteps = 3;
+  const totalSteps = 2;
 
-  // Live checks
   const pwChecks = checkPassword(data.password);
   const pwAllGood = allPasswordChecksPass(pwChecks);
 
@@ -257,26 +223,10 @@ function Register() {
     setError('');
   };
 
-  // Digits only, max 10 (allows a leading 0 like 0712345678)
-  const updatePhone = (raw: string) => {
-    const digits = raw.replace(/\D/g, '').slice(0, 10);
-    update('phoneNumber', digits);
-  };
-
   const goNext = () => {
     if (step === 1) {
       if (!data.firstName.trim()) return setError('Please enter your first name.');
       if (!data.lastName.trim()) return setError('Please enter your last name.');
-      if (!data.phoneNumber.trim()) return setError('Please enter your phone number.');
-      if (!normalizeLocalPhone(data.phoneNumber)) {
-        return setError(
-          'Enter a valid Kenyan number. It must start with 07, 01, 7 or 1.'
-        );
-      }
-      if (!data.gender) return setError('Please select your gender.');
-    }
-
-    if (step === 2) {
       const emailError = validateEmail(data.email);
       if (emailError) return setError(emailError);
     }
@@ -293,10 +243,8 @@ function Register() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const local = normalizeLocalPhone(data.phoneNumber);
-    if (!local) {
-      return setError('Phone number is not valid.');
-    }
+    if (!data.firstName.trim()) return setError('Please enter your first name.');
+    if (!data.lastName.trim()) return setError('Please enter your last name.');
 
     const emailError = validateEmail(data.email);
     if (emailError) {
@@ -317,8 +265,6 @@ function Register() {
     registerMutation.mutate({
       firstName: data.firstName,
       lastName: data.lastName,
-      gender: data.gender,
-      phoneNumber: `+254${local}`,
       email: data.email.trim().toLowerCase(),
       password: data.password,
       confirmPassword: data.confirmPassword,
@@ -342,7 +288,7 @@ function Register() {
         <h1 className="yp-register-title">CREATE ACCOUNT</h1>
 
         <div className="yp-register-steps" aria-hidden="true">
-          {[1, 2, 3].map((n) => (
+          {[1, 2].map((n) => (
             <span key={n}
               className={
                 'yp-register-step-dot' +
@@ -418,65 +364,24 @@ function Register() {
                   autoComplete="family-name" disabled={busy} />
               </div>
 
-              {/* Phone with fixed +254 prefix */}
-              <div className="yp-register-field yp-register-phone">
-                <span className="yp-register-icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 7v5l3 2" />
-                  </svg>
-                </span>
-                <span className="yp-register-phone-prefix">+254</span>
-                <input type="tel" placeholder="Phone number starting with 01 or 07"
-                  value={data.phoneNumber}
-                  onChange={(e) => updatePhone(e.target.value)}
-                  autoComplete="tel-national" disabled={busy}
-                  inputMode="numeric"
-                  maxLength={10}
-                  aria-label="Kenyan phone number without the +254 prefix" />
-              </div>
-
               <div className="yp-register-field">
                 <span className="yp-register-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
                     strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M9 12l2 2 4-4" />
+                    <rect x="2.5" y="4.5" width="19" height="15" rx="1.5" />
+                    <path d="M3 5l9 7 9-7" />
                   </svg>
                 </span>
-                <select value={data.gender}
-                  onChange={(e) => update('gender', e.target.value)}
-                  className="yp-register-select" disabled={busy}>
-                  <option value="" disabled>Select gender</option>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                  <option value="O">Other</option>
-                </select>
+                <input type="email" placeholder="Email address"
+                  value={data.email}
+                  onChange={(e) => update('email', e.target.value)}
+                  autoComplete="email" disabled={busy} />
               </div>
             </>
           )}
 
           {step === 2 && (
-            <div className="yp-register-field">
-              <span className="yp-register-icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <rect x="2.5" y="4.5" width="19" height="15" rx="1.5" />
-                  <path d="M3 5l9 7 9-7" />
-                </svg>
-              </span>
-              <input type="email" placeholder="Email address"
-                value={data.email}
-                onChange={(e) => update('email', e.target.value)}
-                autoComplete="email" disabled={busy} />
-            </div>
-          )}
-
-          {step === 3 && (
             <>
               <div className="yp-register-field">
                 <span className="yp-register-icon" aria-hidden="true">
@@ -494,7 +399,6 @@ function Register() {
                   autoComplete="new-password" disabled={busy} />
               </div>
 
-              {/* Live password rules */}
               <ul className="yp-password-rules" aria-live="polite">
                 <li className={pwChecks.length ? 'is-ok' : ''}>
                   At least 8 characters

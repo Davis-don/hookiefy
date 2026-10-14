@@ -1,62 +1,200 @@
-/* src/pages/accounts/profile/components/editBio.css */
-
-/* ============================================================
-   STACKED CONTAINER
-   ============================================================ */
+/* ─────────────────────────────────────────────────────────
+   EditBio — missing-info notice + inline fill-in boxes
+   Scoped to .eb-* so nothing leaks.
+   ───────────────────────────────────────────────────────── */
 
 .overall-container-edit {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  animation: eb-stack-in 0.22s ease;
+  gap: 24px;
 }
 
-@keyframes eb-stack-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Notice card ──────────────────────────────────────── */
+.eb-notice {
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.10) 0%,
+    rgba(251, 191, 36, 0.04) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  color: #0F172A;
 }
 
-/* ── Optional close button at the bottom ─────────────── */
+.eb-notice-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
 
-.eb-close-panel {
-  align-self: center;
-  padding: 0.65rem 1.35rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #374151;
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 999px;
+.eb-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #B45309;
+  margin-top: 1px;
+}
+
+.eb-notice-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #78350F;
+  font-weight: 500;
+}
+
+/* ── List of missing fields ───────────────────────────── */
+.eb-notice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eb-notice-item {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Clickable box for a missing field ────────────────── */
+.eb-notice-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1.5px dashed rgba(180, 83, 9, 0.45);
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.06s ease;
-  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease,
+    transform 0.15s ease;
 }
 
-.eb-close-panel:hover {
-  background: #f7f7f7;
-  border-color: #d4d4d4;
-  color: #0a0a0a;
+.eb-notice-box:hover,
+.eb-notice-box:focus-visible {
+  border-color: #B45309;
+  background: #FFFBEB;
+  outline: none;
+  transform: translateY(-1px);
 }
 
-.eb-close-panel:active {
-  transform: translateY(1px);
+.eb-notice-label {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #78350F;
+  flex-shrink: 0;
 }
 
-/* ============================================================
-   MOBILE
-   ============================================================ */
+.eb-notice-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: #92400E;
+  opacity: 0.85;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
+.eb-notice-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(180, 83, 9, 0.12);
+  color: #B45309;
+  flex-shrink: 0;
+}
+
+/* ── Inline editor (expanded box) ─────────────────────── */
+.eb-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid #B45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+}
+
+.eb-inline-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  background: #F8FAFC;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: #0F172A;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.eb-inline-input:focus {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.eb-inline-done {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #B45309;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.eb-inline-done:hover,
+.eb-inline-done:focus-visible {
+  background: #92400E;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 480px) {
-  .overall-container-edit {
-    gap: 0.85rem;
+  .eb-notice {
+    padding: 14px 14px;
+    border-radius: 12px;
   }
 
-  .eb-close-panel {
-    width: 100%;
+  .eb-notice-text { font-size: 0.86rem; }
+
+  .eb-notice-box {
+    padding: 10px 12px;
+    gap: 10px;
   }
+
+  .eb-notice-label { font-size: 0.86rem; }
+  .eb-notice-hint  { font-size: 0.8rem; }
+
+  .eb-inline {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+  }
+  .eb-inline-input { width: 100%; }
+  .eb-inline-done  { width: 100%; }
 }

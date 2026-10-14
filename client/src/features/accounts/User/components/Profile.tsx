@@ -8,7 +8,7 @@ import { fetchCurrentUser } from '../../../profile/api/profileApi';
 
 import ProfileHero from '../../../profile/components/ProfileHero';
 import ProfileBio from '../../../profile/components/ProfileBio';
-
+import EditBio from '../../../profile/components/EditBio';
 import './profileTab.css';
 
 function ProfileTab() {
@@ -50,7 +50,7 @@ function ProfileTab() {
 
   const { user, counts } = data;
 
-  /* ── Hero — just the image ────────────────────────── */
+  /* ── Hero ─────────────────────────────────────────── */
   const heroProfile = {
     avatarUrl: user.profile_image_url ?? null,
     coverUrl: user.profile_image_url ?? null,
@@ -73,7 +73,7 @@ function ProfileTab() {
     lastName: user.last_name ?? '',
     phoneNumber: user.phone_number ?? '',
     email: user.email ?? '',
-    gender: user.gender ?? '',
+    gender: (user.gender as 'M' | 'F' | 'O' | '' | null) ?? '',
 
     counts,
   };
@@ -83,6 +83,16 @@ function ProfileTab() {
     <div className="ua-tab pf-shell">
       <ProfileHero profile={heroProfile} />
       <ProfileBio profile={bioProfile} />
+
+      {/* Always visible — no toggle, no button */}
+      <EditBio
+        initialFirstName={bioProfile.firstName}
+        initialLastName={bioProfile.lastName}
+        initialPhone={bioProfile.phoneNumber}
+        initialEmail={bioProfile.email}
+        initialGender={bioProfile.gender}
+        onSaved={() => refetch()}
+      />
     </div>
   );
 }

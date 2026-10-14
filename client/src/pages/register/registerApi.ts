@@ -6,8 +6,6 @@ const API_BASE =
 export type RegisterPayload = {
   firstName: string;
   lastName: string;
-  gender: string;
-  phoneNumber: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -37,8 +35,6 @@ export async function registerUser(
   const body = {
     first_name: payload.firstName,
     last_name: payload.lastName,
-    gender: payload.gender,
-    phone_number: payload.phoneNumber,
     email: payload.email,
     password: payload.password,
     password2: payload.confirmPassword,
