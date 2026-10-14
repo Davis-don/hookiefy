@@ -28,6 +28,41 @@ type Props = {
 };
 
 /* ──────────────────────────────────────────────────────────
+   Phone helpers — mirrored from Register / EditBio
+   ────────────────────────────────────────────────────────── */
+
+/** Extract just the 9 digits after +254 from whatever the user typed. */
+function normalizeLocalPhone(raw: string): string {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('254') && digits.length > 9) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (digits.length !== 9) return '';
+  if (!/^[71]/.test(digits)) return '';
+  return digits;
+}
+
+/** Strip a +254 / 254 / leading-0 prefix so the input shows only the local part. */
+function toLocalPart(raw: string | null | undefined): string {
+  if (!raw) return '';
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('254') && digits.length > 9) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  return digits.slice(0, 9);
+}
+
+/* ──────────────────────────────────────────────────────────
+   Email validation — same rules as Register
+   ────────────────────────────────────────────────────────── */
+
+function isValidEmail(raw: string): boolean {
+  const v = raw.trim().toLowerCase();
+  if (!v) return false;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return false;
+  if (v.length > 254) return false;
+  return true;
+}
+
+/* ──────────────────────────────────────────────────────────
    Component
    ────────────────────────────────────────────────────────── */
 
@@ -40,7 +75,8 @@ function AccountInfo({ initial, onSaved }: Props) {
   const [lastName, setLastName]   = useState(initial.lastName);
   const [email, setEmail]         = useState(initial.email);
   const [gender, setGender]       = useState<string>(initial.gender ?? '');
-  const [phone, setPhone]         = useState(initial.phoneNumber ?? '');
+  /* Phone state holds only the local 9-digit part (the +254 is a fixed prefix) */
+  const [phone, setPhone]         = useState(toLocalPart(initial.phoneNumber));
   const [error, setError]         = useState('');
 
   // Sync if parent data changes
@@ -49,7 +85,7 @@ function AccountInfo({ initial, onSaved }: Props) {
     setLastName(initial.lastName);
     setEmail(initial.email);
     setGender(initial.gender ?? '');
-    setPhone(initial.phoneNumber ?? '');
+    setPhone(toLocalPart(initial.phoneNumber));
     setError('');
   }, [
     initial.firstName,
@@ -82,19 +118,38 @@ function AccountInfo({ initial, onSaved }: Props) {
     const trimmedFirst = firstName.trim();
     const trimmedLast  = lastName.trim();
     const trimmedEmail = email.trim().toLowerCase();
-    const trimmedPhone = phone.trim();
 
     if (!trimmedFirst) return setError('Please enter your first name.');
     if (!trimmedLast)  return setError('Please enter your last name.');
     if (!trimmedEmail) return setError('Please enter your email.');
+    if (!isValidEmail(trimmedEmail)) {
+      return setError('Enter a valid email address.');
+    }
 
+    /* Phone: local part (9 digits) or empty */
+    const trimmedPhone = phone.trim();
+    let normalizedPhone = '';
+    if (trimmedPhone) {
+      const local = normalizeLocalPhone(trimmedPhone);
+      if (!local) {
+        return setError(
+          'Enter a valid Kenyan number. It must start with 07, 01, 7 or 1.'
+        );
+      }
+      normalizedPhone = `+254${local}`;
+    }
+
+    /* Build a diff-only payload */
     const payload: UpdateUserPayload = {};
     if (trimmedFirst !== initial.firstName) payload.first_name = trimmedFirst;
     if (trimmedLast  !== initial.lastName)  payload.last_name  = trimmedLast;
     if (trimmedEmail !== initial.email)     payload.email      = trimmedEmail;
-    if (trimmedPhone !== (initial.phoneNumber ?? '')) {
-      payload.phone_number = trimmedPhone;
+
+    const initialPhone = initial.phoneNumber ?? '';
+    if (normalizedPhone !== initialPhone) {
+      payload.phone_number = normalizedPhone; // '' clears the field
     }
+
     if (gender !== (initial.gender ?? '')) {
       payload.gender = gender as 'M' | 'F' | 'O' | '';
     }
@@ -117,7 +172,8 @@ function AccountInfo({ initial, onSaved }: Props) {
 
       <form className="ai-form" onSubmit={handleSubmit} noValidate>
         <div className="ai-grid">
-          <div className="ai-field">
+          {/* ── First name ─────────────────────────────── */}
+          <div className="ai-field" data-field="first_name">
             <label htmlFor="ai-first" className="ai-label">First name</label>
             <input
               id="ai-first"
@@ -132,7 +188,8 @@ function AccountInfo({ initial, onSaved }: Props) {
             />
           </div>
 
-          <div className="ai-field">
+          {/* ── Last name ──────────────────────────────── */}
+          <div className="ai-field" data-field="last_name">
             <label htmlFor="ai-last" className="ai-label">Last name</label>
             <input
               id="ai-last"
@@ -147,7 +204,8 @@ function AccountInfo({ initial, onSaved }: Props) {
             />
           </div>
 
-          <div className="ai-field ai-field-full">
+          {/* ── Email ──────────────────────────────────── */}
+          <div className="ai-field ai-field-full" data-field="email">
             <label htmlFor="ai-email" className="ai-label">Email</label>
             <input
               id="ai-email"
@@ -161,22 +219,30 @@ function AccountInfo({ initial, onSaved }: Props) {
             />
           </div>
 
-          <div className="ai-field">
+          {/* ── Phone with +254 prefix ─────────────────── */}
+          <div className="ai-field" data-field="phone_number">
             <label htmlFor="ai-phone" className="ai-label">Phone number</label>
-            <input
-              id="ai-phone"
-              type="tel"
-              className="ai-input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={busy}
-              maxLength={15}
-              placeholder="+254712345678"
-              autoComplete="tel"
-            />
+            <div className="ai-phone-wrap">
+              <span className="ai-phone-prefix">+254</span>
+              <input
+                id="ai-phone"
+                type="tel"
+                inputMode="numeric"
+                className="ai-input ai-phone-input"
+                value={phone}
+                onChange={(e) =>
+                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))
+                }
+                disabled={busy}
+                maxLength={9}
+                placeholder="712345678"
+                autoComplete="tel-national"
+              />
+            </div>
           </div>
 
-          <div className="ai-field">
+          {/* ── Gender ─────────────────────────────────── */}
+          <div className="ai-field" data-field="gender">
             <label htmlFor="ai-gender" className="ai-label">Gender</label>
             <select
               id="ai-gender"
