@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — LOGOUT BUTTON
    Idle: transparent (inherits nav look)
+   Confirm: soft red background, pulses twice
    Busy: solid blue background + white spinner so it's visible
    ───────────────────────────────────────────────────────── */
 
@@ -11,13 +12,35 @@
   transition:
     background 0.18s ease,
     color 0.18s ease,
-    opacity 0.18s ease;
+    opacity 0.18s ease,
+    transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Busy (logging out) state ─────────────────────────── */
+/* ── Confirm state (first click) ───────────────────────── */
 
-/* Solid blue background so the white spinner stands out */
+.ua-sidebar-link.is-confirming,
+.ua-bottom-link.is-confirming {
+  background: #FEF2F2;
+  color: #991B1B;
+  animation: ua-logout-pulse 1.2s ease-in-out infinite;
+}
+
+.ua-sidebar-link.is-confirming .ua-sidebar-icon,
+.ua-bottom-link.is-confirming {
+  color: #B91C1C;
+}
+
+@keyframes ua-logout-pulse {
+  0%, 100% { background: #FEF2F2; }
+  50%      { background: #FEE2E2; }
+}
+
+/* ── Busy (logging out) state ──────────────────────────── */
+
+/* Solid blue background so the white spinner stands out.
+   pointer-events: none + disabled attribute make sure the
+   user can't double-fire the request. */
 .ua-sidebar-link.is-busy,
 .ua-bottom-link.is-busy {
   background: #2563EB !important;
@@ -41,7 +64,7 @@
   border-radius: 12px;
 }
 
-/* ── Spinner slot ─────────────────────────────────────── */
+/* ── Spinner slot ──────────────────────────────────────── */
 
 /* Matches the icon slot so the swap is visually seamless */
 .ua-logout-spinner {
@@ -55,13 +78,38 @@
 
 /* Force the spinner ring to white while inside the logout
    button, regardless of what colour the parent context
-   would otherwise inherit */
-.ua-logout-spinner .yp-spinner-ring {
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  border-top-color: #FFFFFF !important;
+   would otherwise inherit.
+
+   Multiple selectors are listed so this works with any of
+   the common spinner class names. Extend the list if your
+   Spinner renders under a different class. */
+.ua-logout-spinner svg,
+.ua-logout-spinner span,
+.ua-logout-spinner div {
+  color: #FFFFFF !important;
 }
 
-/* ── Responsive tweaks ────────────────────────────────── */
+.ua-logout-spinner .yp-spinner-ring,
+.ua-logout-spinner .spinner-ring,
+.ua-logout-spinner .spinner__ring,
+.ua-logout-spinner .spinner-circle,
+.ua-logout-spinner [class*="spinner-ring"],
+.ua-logout-spinner [class*="spinner__ring"] {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  border-top-color: #FFFFFF !important;
+  border-right-color: rgba(255, 255, 255, 0.35) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.35) !important;
+  border-left-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* If the spinner uses an SVG stroke (common for react-loading
+   icons and hand-rolled SVGs), force the stroke to white too. */
+.ua-logout-spinner svg circle,
+.ua-logout-spinner svg path {
+  stroke: #FFFFFF !important;
+}
+
+/* ── Responsive tweaks ─────────────────────────────────── */
 
 @media (max-width: 1024px) {
   .ua-logout-spinner { width: 22px; height: 22px; }
@@ -77,4 +125,19 @@
 
 @media (max-width: 380px) {
   .ua-logout-spinner { width: 20px; height: 20px; }
+}
+
+/* ── Reduced motion ────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ua-sidebar-link.is-confirming,
+  .ua-bottom-link.is-confirming {
+    animation: none;
+    background: #FEF2F2;
+  }
+
+  .ua-sidebar-link,
+  .ua-bottom-link {
+    transition: none !important;
+  }
 }

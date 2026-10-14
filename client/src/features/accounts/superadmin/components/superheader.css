@@ -140,6 +140,12 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
+.sh-header-menu-btn:disabled {
+  cursor: progress;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* ── Dropdown ────────────────────────────────────────── */
 .sh-header-dropdown {
   position: absolute;
@@ -226,6 +232,7 @@
   margin: 6px 8px;
 }
 
+/* ── Danger variant (Logout) ─────────────────────────── */
 .sh-header-dropdown-item--danger {
   color: #B91C1C;
 }
@@ -243,9 +250,47 @@
   color: #B91C1C;
 }
 
+/* ── Busy (logging out) state on the dropdown item ───── */
+.sh-header-dropdown-item:disabled {
+  cursor: progress;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sh-header-dropdown-item--danger.is-busy {
+  background: #FEF2F2;
+  color: #991B1B;
+}
+
+.sh-header-dropdown-item--danger.is-busy .sh-header-dropdown-icon {
+  color: #B91C1C;
+}
+
+/* ── Small spinner inside the logout item ────────────── */
+.sh-header-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.sh-spinner-ring {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(185, 28, 28, 0.25);
+  border-top-color: #B91C1C;
+  animation: sh-spinner-spin 0.7s linear infinite;
+}
+
+@keyframes sh-spinner-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ─────────────────────────────────────────────────────
    BRAND VISIBILITY
-   ─────────────────────────────────────────────────────
    On desktop the sidebar already shows the wordmark.
    The header brand is only shown below 1024px.
    ───────────────────────────────────────────────────── */
@@ -297,5 +342,9 @@
 
   .sh-header-dropdown {
     animation: none;
+  }
+
+  .sh-spinner-ring {
+    animation-duration: 1.4s;
   }
 }

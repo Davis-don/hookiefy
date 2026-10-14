@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../../User/components/Avatar';
 import NotificationBell from '../../User/components/NotificationBell';
 import { useAuthStore } from '../../../../store/authStore';
+import { useToast } from '../../../../components/toast/ToastContext';
 
 import './superheader.css';
 
@@ -17,6 +18,15 @@ type SuperHeaderProps = {
   /** Fired when the Settings item is clicked. */
   onOpenSettings?: () => void;
 };
+
+/* ── Timing ──────────────────────────────────────────── */
+
+/** Minimum time the spinner stays visible, even on a fast reply. */
+const MIN_BUSY_MS = 400;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => window.setTimeout(r, ms));
+}
 
 /* ── Icons ───────────────────────────────────────────── */
 
@@ -75,7 +85,12 @@ function SuperHeader({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
+  const toast = useToast();
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const refresh = useAuthStore((s) => s.refresh);
+
+  /* Local logout state — drives the dropdown item's spinner */
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Close the dropdown when clicking outside it, or pressing Escape.
   useEffect(() => {
@@ -99,9 +114,60 @@ function SuperHeader({
     };
   }, [open]);
 
-  const handleLogout = () => {
+  /**
+   * Logout flow:
+   *   1. Fire an immediate "Logging you out…" toast.
+   *   2. Show spinner on the dropdown item.
+   *   3. Best-effort POST to /account/logout/ to blacklist the token.
+   *   4. Wait a minimum duration so the spinner is visible.
+   *   5. Clear local auth.
+   *   6. Fire a "logged out" toast.
+   *   7. Redirect to /login.
+   *
+   * On network failure we still log out locally — the user asked to leave.
+   */
+  const handleLogout = async () => {
+    if (loggingOut) return;
+
     setOpen(false);
+    setLoggingOut(true);
+
+    // 1. Immediate toast — queued even before navigation tears us down.
+    toast.success('Logging you out…');
+
+    // 2. Kick off the request and the minimum-duration timer in parallel.
+    const minDelay = delay(MIN_BUSY_MS);
+
+    const request = (async () => {
+      try {
+        if (refresh) {
+          await fetch(
+            `${
+              import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            }/account/logout/`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh }),
+            }
+          );
+        }
+      } catch {
+        /* swallow — we still clear locally */
+      }
+    })();
+
+    await Promise.all([request, minDelay]);
+
+    // 3. Clear local auth.
     clearAuth?.();
+
+    // 4. Success toast.
+    toast.success('You have been logged out.');
+
+    // 5. Give the toast a frame to mount before unmounting the shell.
+    await delay(60);
+
     navigate('/login', { replace: true });
   };
 
@@ -149,6 +215,7 @@ function SuperHeader({
             aria-haspopup="menu"
             aria-expanded={open}
             title="More"
+            disabled={loggingOut}
           >
             <MenuIcon />
           </button>
@@ -205,13 +272,26 @@ function SuperHeader({
               <button
                 type="button"
                 role="menuitem"
-                className="sh-header-dropdown-item sh-header-dropdown-item--danger"
+                className={
+                  'sh-header-dropdown-item sh-header-dropdown-item--danger' +
+                  (loggingOut ? ' is-busy' : '')
+                }
                 onClick={handleLogout}
+                disabled={loggingOut}
+                aria-busy={loggingOut}
               >
                 <span className="sh-header-dropdown-icon">
-                  <LogoutIcon />
+                  {loggingOut ? (
+                    <span className="sh-header-spinner">
+                      <span className="sh-spinner-ring" />
+                    </span>
+                  ) : (
+                    <LogoutIcon />
+                  )}
                 </span>
-                <span className="sh-header-dropdown-label">Logout</span>
+                <span className="sh-header-dropdown-label">
+                  {loggingOut ? 'Logging out…' : 'Logout'}
+                </span>
               </button>
             </div>
           )}
