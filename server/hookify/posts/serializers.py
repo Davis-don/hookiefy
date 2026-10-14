@@ -1,7 +1,16 @@
 # posts/serializers.py
 
 from rest_framework import serializers
+
 from .models import Posts
+
+
+# ============================================================
+# TEXT LIMITS
+# ============================================================
+
+MAX_POST_TITLE_LENGTH = 200
+MAX_POST_BODY_LENGTH  = 1000
 
 
 # ============================================================
@@ -78,6 +87,10 @@ class PostCreateSerializer(serializers.ModelSerializer):
     """
     Validate title + body.
 
+    Limits:
+        - title: required, ≤ 200 chars
+        - body:  optional, ≤ 1000 chars
+
     image_url and image_public_id are set by the view after
     it uploads the file to Cloudinary — they aren't part of
     the incoming form data.
@@ -89,11 +102,32 @@ class PostCreateSerializer(serializers.ModelSerializer):
             "title",
             "body",
         )
+        extra_kwargs = {
+            "title": {"required": True,  "allow_blank": False},
+            "body":  {"required": False, "allow_blank": True},
+        }
 
     def validate_title(self, value):
         value = (value or "").strip()
+
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
+
+        if len(value) > MAX_POST_TITLE_LENGTH:
+            raise serializers.ValidationError(
+                f"Title cannot exceed {MAX_POST_TITLE_LENGTH} characters."
+            )
+
+        return value
+
+    def validate_body(self, value):
+        value = (value or "").strip()
+
+        if len(value) > MAX_POST_BODY_LENGTH:
+            raise serializers.ValidationError(
+                f"Message cannot exceed {MAX_POST_BODY_LENGTH} characters."
+            )
+
         return value
 
 
@@ -105,6 +139,10 @@ class PostUpdateSerializer(serializers.ModelSerializer):
     """
     Same as create — only text fields are validated here.
     The view handles image replacement.
+
+    Limits:
+        - title: optional, ≤ 200 chars (if sent)
+        - body:  optional, ≤ 1000 chars (if sent)
     """
 
     class Meta:
@@ -114,14 +152,35 @@ class PostUpdateSerializer(serializers.ModelSerializer):
             "body",
         )
         extra_kwargs = {
-            "title": {"required": False},
-            "body": {"required": False, "allow_blank": True},
+            "title": {"required": False, "allow_blank": False},
+            "body":  {"required": False, "allow_blank": True},
         }
 
     def validate_title(self, value):
         if value is None:
             return value
+
         value = value.strip()
+
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
+
+        if len(value) > MAX_POST_TITLE_LENGTH:
+            raise serializers.ValidationError(
+                f"Title cannot exceed {MAX_POST_TITLE_LENGTH} characters."
+            )
+
+        return value
+
+    def validate_body(self, value):
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        if len(value) > MAX_POST_BODY_LENGTH:
+            raise serializers.ValidationError(
+                f"Message cannot exceed {MAX_POST_BODY_LENGTH} characters."
+            )
+
         return value

@@ -1,4 +1,6 @@
-import { useState, useRef, useMemo } from 'react';
+// src/pages/accounts/User/components/Newpost.tsx
+
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
@@ -6,6 +8,29 @@ import { useToast } from '../../../components/toast/ToastContext';
 import { Spinner } from '../../../components/spinner/Spinner';
 import { createPost, type PostPayload } from '../api/postsApi';
 import './newpost.css';
+
+/* ──────────────────────────────────────────────────────────
+   Limits — keep in sync with backend
+   (posts/views.py + posts/serializers.py)
+   ────────────────────────────────────────────────────────── */
+
+const MAX_TITLE_LENGTH = 200;
+const MAX_BODY_LENGTH  = 1000;
+const MIN_BODY_LENGTH  = 10;
+const MAX_IMAGE_BYTES  = 5 * 1024 * 1024; // 5 MB
+
+const ALLOWED_IMAGE_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+];
+
+const ALLOWED_IMAGE_LABEL = 'PNG, JPEG or WEBP';
+
+/* ──────────────────────────────────────────────────────────
+   Types
+   ────────────────────────────────────────────────────────── */
 
 type NewpostProps = {
   businessId: number;
@@ -26,6 +51,10 @@ const initialState: FormState = {
   imageFile: null,
 };
 
+/* ──────────────────────────────────────────────────────────
+   Component
+   ────────────────────────────────────────────────────────── */
+
 function Newpost({
   businessId,
   businessName,
@@ -41,12 +70,22 @@ function Newpost({
   const [form, setForm] = useState<FormState>(initialState);
   const [error, setError] = useState<string>('');
 
+  /* Preview URL — revoke on change / unmount so we don't leak */
   const previewUrl = useMemo(() => {
     if (!form.imageFile) return null;
     return URL.createObjectURL(form.imageFile);
   }, [form.imageFile]);
 
-  const update = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const update = <K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError('');
   };
@@ -66,22 +105,34 @@ function Newpost({
     },
 
     onError: (err: any) => {
-      toast.error(err?.message || 'Could not publish this post.');
+      const message =
+        err?.message || 'Could not publish this post. Please try again.';
+      setError(message);
+      toast.error(message);
     },
   });
 
+  /* ── Image selection with validation ────────────────── */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) {
-      setError('Please choose a JPG, PNG, WEBP or GIF image.');
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setError(
+        `Unsupported file type. Please choose ${ALLOWED_IMAGE_LABEL}.`
+      );
       e.target.value = '';
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
-      setError('Image must be under 8 MB.');
+
+    if (file.size <= 0) {
+      setError('That file appears to be empty.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      const mb = MAX_IMAGE_BYTES / (1024 * 1024);
+      setError(`Image is too large. Maximum size is ${mb} MB.`);
       e.target.value = '';
       return;
     }
@@ -93,21 +144,93 @@ function Newpost({
   const clearImage = () => {
     setForm((prev) => ({ ...prev, imageFile: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setError('');
   };
 
+  /* ── Per-field live validation ──────────────────────── */
+
+  const titleTrimmed = form.title.trim();
+  const bodyTrimmed  = form.body.trim();
+
+  const titleLength  = form.title.length;
+  const bodyLength   = form.body.length;
+
+  const titleOver    = titleLength > MAX_TITLE_LENGTH;
+  const bodyOver     = bodyLength  > MAX_BODY_LENGTH;
+  const bodyTooShort = bodyTrimmed.length > 0
+    && bodyTrimmed.length < MIN_BODY_LENGTH;
+
+  // Individual error strings (null when fine)
+  const titleError = titleOver
+    ? `Title cannot exceed ${MAX_TITLE_LENGTH} characters.`
+    : null;
+
+  const bodyError = bodyOver
+    ? `Message cannot exceed ${MAX_BODY_LENGTH} characters.`
+    : bodyTooShort
+      ? `Message is a bit short — write at least ${MIN_BODY_LENGTH} characters.`
+      : null;
+
+  /* Form is valid when:
+     - title present and within limit
+     - body present, at least MIN_BODY_LENGTH, within limit
+     - image attached and within the allowed limits
+     - no mutation currently running */
+  const canSubmit =
+    !mutation.isPending &&
+    titleTrimmed.length > 0 &&
+    !titleOver &&
+    bodyTrimmed.length >= MIN_BODY_LENGTH &&
+    !bodyOver &&
+    form.imageFile !== null &&
+    ALLOWED_IMAGE_TYPES.includes(form.imageFile.type) &&
+    form.imageFile.size > 0 &&
+    form.imageFile.size <= MAX_IMAGE_BYTES;
+
+  /* ── Submit-time validation ─────────────────────────── */
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
-    if (!form.title.trim()) return setError('Please add a title.');
-    if (!form.body.trim()) return setError('Please write something.');
-    if (form.body.trim().length < 10)
-      return setError('Your post is a bit short — say a little more.');
-    if (!form.imageFile) return setError('Please attach an image.');
+    if (!titleTrimmed) {
+      return setError('Please add a title.');
+    }
+    if (titleOver) {
+      return setError(
+        `Title cannot exceed ${MAX_TITLE_LENGTH} characters.`
+      );
+    }
+
+    if (!bodyTrimmed) {
+      return setError('Please write a message.');
+    }
+    if (bodyTooShort) {
+      return setError(
+        `Message is a bit short — write at least ${MIN_BODY_LENGTH} characters.`
+      );
+    }
+    if (bodyOver) {
+      return setError(
+        `Message cannot exceed ${MAX_BODY_LENGTH} characters.`
+      );
+    }
+
+    if (!form.imageFile) {
+      return setError('Please attach an image.');
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(form.imageFile.type)) {
+      return setError(
+        `Unsupported file type. Please choose ${ALLOWED_IMAGE_LABEL}.`
+      );
+    }
+    if (form.imageFile.size > MAX_IMAGE_BYTES) {
+      const mb = MAX_IMAGE_BYTES / (1024 * 1024);
+      return setError(`Image is too large. Maximum size is ${mb} MB.`);
+    }
 
     mutation.mutate({
-      title: form.title.trim(),
-      body: form.body.trim(),
+      title: titleTrimmed,
+      body: bodyTrimmed,
       imageFile: form.imageFile,
     });
   };
@@ -153,14 +276,27 @@ function Newpost({
           <input
             id="np-title"
             type="text"
-            className="np-input"
+            className={'np-input' + (titleOver ? ' is-invalid' : '')}
             placeholder="e.g. Weekend promo — 20% off all services"
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
-            maxLength={200}
             disabled={busy}
+            aria-invalid={titleOver || undefined}
+            aria-describedby={titleError ? 'np-title-error' : undefined}
           />
-          <span className="np-counter">{form.title.length} / 200</span>
+          <div className="np-field-foot">
+            <span
+              id="np-title-error"
+              className="np-field-msg"
+            >
+              {titleError}
+            </span>
+            <span
+              className={'np-counter' + (titleOver ? ' is-over' : '')}
+            >
+              {titleLength} / {MAX_TITLE_LENGTH}
+            </span>
+          </div>
         </div>
 
         {/* Body */}
@@ -168,15 +304,31 @@ function Newpost({
           <label className="np-label" htmlFor="np-body">Message</label>
           <textarea
             id="np-body"
-            className="np-input np-textarea"
+            className={'np-input np-textarea' + (bodyError ? ' is-invalid' : '')}
             placeholder="Write your post…"
             value={form.body}
             onChange={(e) => update('body', e.target.value)}
             rows={6}
-            maxLength={1000}
             disabled={busy}
+            aria-invalid={bodyError ? true : undefined}
+            aria-describedby={bodyError ? 'np-body-error' : undefined}
           />
-          <span className="np-counter">{form.body.length} / 1000</span>
+          <div className="np-field-foot">
+            <span
+              id="np-body-error"
+              className="np-field-msg"
+            >
+              {bodyError}
+            </span>
+            <span
+              className={
+                'np-counter' +
+                (bodyOver || bodyTooShort ? ' is-over' : '')
+              }
+            >
+              {bodyLength} / {MAX_BODY_LENGTH}
+            </span>
+          </div>
         </div>
 
         {/* Image upload — required */}
@@ -191,7 +343,7 @@ function Newpost({
                 id="np-image"
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
                 onChange={handleImageChange}
                 disabled={busy}
                 className="np-upload-input"
@@ -209,7 +361,8 @@ function Newpost({
                 Click to choose an image
               </span>
               <span className="np-upload-sub">
-                JPG, PNG, WEBP or GIF · up to 8 MB
+                {ALLOWED_IMAGE_LABEL} · up to{' '}
+                {MAX_IMAGE_BYTES / (1024 * 1024)} MB
               </span>
             </div>
           ) : (
@@ -258,9 +411,19 @@ function Newpost({
           <button
             type="submit"
             className="np-btn np-btn-primary"
-            disabled={busy}
+            disabled={busy || !canSubmit}
+            aria-disabled={busy || !canSubmit}
+            title={
+              !canSubmit && !busy
+                ? 'Fix the highlighted fields before publishing.'
+                : undefined
+            }
           >
-            {busy ? <Spinner size={18} label="Publishing…" /> : 'Publish post'}
+            {busy ? (
+              <Spinner size={18} label="Publishing…" />
+            ) : (
+              'Publish post'
+            )}
           </button>
         </div>
       </form>
