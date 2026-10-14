@@ -549,3 +549,34 @@
     flex: initial;
   }
 }
+/* ── Password eye toggle ─────────────────────────────── */
+.yp-register-eye {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  margin-left: 4px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.yp-register-eye:hover,
+.yp-register-eye:focus-visible {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.yp-register-eye:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .yp-register-eye svg { width: 18px; height: 18px; }
+}

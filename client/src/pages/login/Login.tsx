@@ -10,6 +10,32 @@ import { useToast } from '../../components/toast/ToastContext';
 import { Spinner } from '../../components/spinner/Spinner';
 import './login.css';
 
+/* ──────────────────────────────────────────────────────────
+   Eye icons
+   ────────────────────────────────────────────────────────── */
+
+function EyeIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,6 +49,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (location.state) {
@@ -161,7 +188,7 @@ function Login() {
             </span>
             <input
               id="login-password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder="Password"
               value={password}
@@ -169,6 +196,17 @@ function Login() {
               disabled={busy}
               required
             />
+            <button
+              type="button"
+              className="yp-login-eye"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
+              tabIndex={-1}
+              disabled={busy}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
           </div>
 
           <div className="yp-login-row">
