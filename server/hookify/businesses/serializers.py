@@ -72,11 +72,103 @@ class BusinessSerializer(serializers.ModelSerializer):
 # ============================================================
 # CREATE
 # ============================================================
+#
+# Status is SERVER-CONTROLLED on create.
+# The client cannot supply it — it's not in `fields`, and the
+# view also strips it from the payload. Every new business is
+# forced to "active".
+#
+# Only a superadmin can change status later, via:
+#     PATCH /businesses/<id>/status/
+#
+# ============================================================
 
 class BusinessCreateSerializer(serializers.ModelSerializer):
     """
     Create serializer — owner comes from the request.
-    Status is optional; defaults to "active" from the model.
+    Status is set by the server (always "active").
+    Profile completeness is enforced in the view, not here.
+    """
+
+    class Meta:
+        model = Businesses
+        fields = (
+            "business_name",
+            "business_category",
+            "business_type",
+            "description",
+            "county",
+            "city_town",
+            "region",
+            # NOTE: `status` intentionally omitted — server-controlled.
+        )
+
+    def validate_business_name(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Business name cannot be empty.")
+        return value
+
+    def validate_business_category(self, value):
+        if value not in ("goods", "services"):
+            raise serializers.ValidationError(
+                "Category must be 'goods' or 'services'."
+            )
+        return value
+
+    def validate_business_type(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Business type cannot be empty.")
+        return value
+
+    def validate_description(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Description cannot be empty.")
+        return value
+
+    def validate_county(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("County cannot be empty.")
+        return value
+
+    def validate_city_town(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("City/town cannot be empty.")
+        return value
+
+    def validate_region(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Region cannot be empty.")
+        return value
+
+    def create(self, validated_data):
+        # Owner comes from the request context.
+        validated_data["owner"] = self.context["request"].user
+
+        # Force the status — the client can never override this.
+        validated_data["status"] = "active"
+
+        return Businesses.objects.create(**validated_data)
+
+
+# ============================================================
+# UPDATE
+# ============================================================
+
+class BusinessUpdateSerializer(serializers.ModelSerializer):
+    """
+    Update serializer — ownership cannot be changed.
+
+    Rules:
+        - `status` can ONLY be changed by a superadmin.
+          If a regular user sends `status`, it is silently
+          dropped so the rest of the update still succeeds.
+        - All basic fields are optional (partial updates).
     """
 
     class Meta:
@@ -139,59 +231,6 @@ class BusinessCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_status(self, value):
-        if value in (None, ""):
-            return "active"
-        valid = {choice[0] for choice in Businesses.STATUS_CHOICES}
-        if value not in valid:
-            raise serializers.ValidationError(
-                f"Status must be one of: {', '.join(sorted(valid))}."
-            )
-        return value
-
-    def create(self, validated_data):
-        validated_data["owner"] = self.context["request"].user
-        validated_data.setdefault("status", "active")
-        return Businesses.objects.create(**validated_data)
-
-
-# ============================================================
-# UPDATE
-# ============================================================
-
-class BusinessUpdateSerializer(serializers.ModelSerializer):
-    """
-    Update serializer — ownership cannot be changed.
-    All fields optional.
-
-    `status` can only be changed by a superadmin. If a
-    non-superadmin sends it, the field is silently dropped
-    so the rest of the update still succeeds.
-    """
-
-    class Meta:
-        model = Businesses
-        fields = (
-            "business_name",
-            "business_category",
-            "business_type",
-            "description",
-            "county",
-            "city_town",
-            "region",
-            "status",
-        )
-        extra_kwargs = {
-            "status": {"required": False},
-        }
-
-    def validate_business_category(self, value):
-        if value not in ("goods", "services"):
-            raise serializers.ValidationError(
-                "Category must be 'goods' or 'services'."
-            )
-        return value
-
-    def validate_status(self, value):
         valid = {choice[0] for choice in Businesses.STATUS_CHOICES}
         if value not in valid:
             raise serializers.ValidationError(
@@ -201,8 +240,8 @@ class BusinessUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        Drop `status` from the payload if the requester is not a
-        superadmin. The rest of the update still goes through.
+        Drop `status` from the payload if the requester is not
+        a superadmin. The rest of the update still goes through.
         """
         request = self.context.get("request")
         new_status = attrs.get("status")

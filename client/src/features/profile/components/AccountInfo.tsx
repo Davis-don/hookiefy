@@ -16,6 +16,15 @@ import './accountInfo.css';
    Types
    ────────────────────────────────────────────────────────── */
 
+/** Values handed back to the parent after a successful save. */
+export type AccountInfoSnapshot = {
+  firstName: string;
+  lastName: string;
+  gender: 'M' | 'F' | 'O' | '' | null;
+  phoneNumber: string | null;
+  email: string;
+};
+
 type Props = {
   initial: {
     email: string;
@@ -24,7 +33,8 @@ type Props = {
     gender: 'M' | 'F' | 'O' | '' | null;
     phoneNumber: string | null;
   };
-  onSaved?: () => void;
+  /** Called after a successful save with the new values. */
+  onSaved?: (next: AccountInfoSnapshot) => void;
 };
 
 /* ──────────────────────────────────────────────────────────
@@ -79,7 +89,7 @@ function AccountInfo({ initial, onSaved }: Props) {
   const [phone, setPhone]         = useState(toLocalPart(initial.phoneNumber));
   const [error, setError]         = useState('');
 
-  // Sync if parent data changes
+  // Sync if parent data changes (e.g. after a refetch)
   useEffect(() => {
     setFirstName(initial.firstName);
     setLastName(initial.lastName);
@@ -98,10 +108,46 @@ function AccountInfo({ initial, onSaved }: Props) {
   const mutation = useMutation({
     mutationFn: (payload: UpdateUserPayload) => updateUserProfile(payload),
 
-    onSuccess: (res) => {
+    onSuccess: (res, variables) => {
       toast.success(res.message || 'Account updated.');
+
+      // Invalidate so any other component reading `current-user` re-fetches.
       queryClient.invalidateQueries({ queryKey: ['current-user'] });
-      onSaved?.();
+
+      /*
+       * Compute the post-save snapshot from the diff we sent, so
+       * the parent sees the exact values the server now holds —
+       * no guessing, no stale state.
+       *
+       * `variables` is the payload that was actually sent:
+       *   first_name?, last_name?, email?, phone_number?, gender?
+       * Any field NOT in the payload means "unchanged", so we fall
+       * back to the current initial.* value.
+       */
+      const next: AccountInfoSnapshot = {
+        firstName:
+          variables.first_name !== undefined
+            ? variables.first_name
+            : initial.firstName,
+        lastName:
+          variables.last_name !== undefined
+            ? variables.last_name
+            : initial.lastName,
+        email:
+          variables.email !== undefined
+            ? variables.email
+            : initial.email,
+        gender:
+          variables.gender !== undefined
+            ? (variables.gender as 'M' | 'F' | 'O' | '' | null)
+            : (initial.gender ?? null),
+        phoneNumber:
+          variables.phone_number !== undefined
+            ? (variables.phone_number || null)
+            : (initial.phoneNumber ?? null),
+      };
+
+      onSaved?.(next);
     },
 
     onError: (err: any) => {

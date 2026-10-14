@@ -78,6 +78,33 @@ def _check_business_limit(user):
     return (True, current, limit, "")
 
 
+def _profile_completeness(user):
+    """
+    Return (is_complete, missing_fields, complete_fields).
+
+    Required for publishing a business:
+        - first_name
+        - last_name
+        - email
+        - gender
+        - phone_number
+
+    Profile image is NOT required.
+    """
+    checks = {
+        "first_name":   bool((user.first_name or "").strip()),
+        "last_name":    bool((user.last_name or "").strip()),
+        "email":        bool((user.email or "").strip()),
+        "gender":       bool(user.gender),
+        "phone_number": bool((user.phone_number or "").strip()),
+    }
+
+    missing = [field for field, ok in checks.items() if not ok]
+    complete = [field for field, ok in checks.items() if ok]
+
+    return (len(missing) == 0, missing, complete)
+
+
 def _delete_business_images(business):
     deleted = 0
     failed = 0
@@ -134,6 +161,23 @@ def _delete_business_images(business):
 @permission_classes([IsAuthenticated])
 @requires_active_subscription
 def create_business(request):
+    # ── 1. Profile must be complete ────────────────────────
+    is_complete, missing, _ = _profile_completeness(request.user)
+
+    if not is_complete:
+        return Response(
+            {
+                "message": (
+                    "Please complete your profile before creating a "
+                    "business. Missing: " + ", ".join(missing) + "."
+                ),
+                "code": "profile_incomplete",
+                "missing_fields": missing,
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 2. Plan limit ──────────────────────────────────────
     allowed, current, limit, message = _check_business_limit(request.user)
 
     if not allowed:
@@ -147,8 +191,22 @@ def create_business(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    # ── 3. Sanitise the payload ────────────────────────────
+    #
+    # `status` is server-controlled on create. Any value the
+    # client sends is ignored, and the row is always created
+    # as "active". Only a superadmin can change it later via
+    # PATCH /businesses/<id>/status/.
+    #
+    # We also strip fields the client must never set.
+    data = request.data.copy()
+    data.pop("status", None)
+    data.pop("owner", None)
+    data.pop("id", None)
+
+    # ── 4. Validate + save ─────────────────────────────────
     serializer = BusinessCreateSerializer(
-        data=request.data,
+        data=data,
         context={"request": request},
     )
 
@@ -158,7 +216,9 @@ def create_business(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    business = serializer.save()
+    # Belt and braces — even if a caller later sets a default
+    # elsewhere, the view forces "active" here.
+    business = serializer.save(status="active")
     used = current + 1
 
     return Response(

@@ -1,6 +1,6 @@
 // src/pages/accounts/profile/components/EditBio.tsx
 
-import { useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import AccountInfo from './AccountInfo';
 import AccountPassword from './AccountPassword';
 import './editBio.css';
@@ -15,6 +15,7 @@ type Props = {
   initialPhone: string;
   initialEmail: string;
   initialGender: 'M' | 'F' | 'O' | '' | null;
+  /** Fired after the parent should re-fetch the user. */
   onSaved?: () => void;
 };
 
@@ -25,11 +26,6 @@ type FieldKey = 'gender' | 'phone_number' | 'email';
    Phone helpers
    ────────────────────────────────────────────────────────── */
 
-/**
- * Extract just the 9 digits after +254 from whatever the user typed.
- * Returns "" if the result isn't a valid Kenyan local number.
- * Used both for validation and for the "is the phone filled?" check.
- */
 function normalizeLocalPhone(raw: string): string {
   let digits = raw.replace(/\D/g, '');
 
@@ -42,10 +38,6 @@ function normalizeLocalPhone(raw: string): string {
   return digits;
 }
 
-/**
- * Strip a +254 / 254 / leading-0 prefix so the input shows only the
- * local 9-digit part. Returns "" if the input can't be interpreted.
- */
 function toLocalPart(raw: string): string {
   if (!raw) return '';
 
@@ -101,42 +93,61 @@ function EditBio({
   initialGender,
   onSaved,
 }: Props) {
-  const [gender, setGender] = useState<'M' | 'F' | 'O' | '' | null>(
+  /* Local mirrors — kept in sync with the parent props and with
+     live edits that bubble up from AccountInfo. */
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [lastName, setLastName]   = useState(initialLastName);
+  const [gender, setGender]       = useState<'M' | 'F' | 'O' | '' | null>(
     initialGender
   );
-  const [phone, setPhone]   = useState(toLocalPart(initialPhone));
-  const [email, setEmail]   = useState(initialEmail);
+  const [phone, setPhone]         = useState(toLocalPart(initialPhone));
+  const [email, setEmail]         = useState(initialEmail);
 
-  /* Keep setters reachable — they'll be wired to AccountInfo's onChange
-     once AccountInfo emits live values upward. For now they're used
-     indirectly through the helpers below, so no lint warnings. */
-  const updateGender = useCallback(
-    (v: 'M' | 'F' | 'O' | '' | null) => setGender(v),
-    []
-  );
-  const updatePhone = useCallback(
-    (v: string) => setPhone(toLocalPart(v)),
-    []
-  );
-  const updateEmail = useCallback(
-    (v: string) => setEmail(v.trim().toLowerCase()),
-    []
-  );
+  /* Whenever the parent re-fetches and passes new initial values,
+     resync our mirrors. This is what makes the pills disappear
+     after a successful save + refetch. */
+  useEffect(() => {
+    setFirstName(initialFirstName);
+    setLastName(initialLastName);
+    setGender(initialGender);
+    setPhone(toLocalPart(initialPhone));
+    setEmail(initialEmail);
+  }, [
+    initialFirstName,
+    initialLastName,
+    initialGender,
+    initialPhone,
+    initialEmail,
+  ]);
 
-  /* Prevent unused-variable warnings while still keeping the API. */
-  void updateGender;
-  void updatePhone;
-  void updateEmail;
+  /* Called from AccountInfo after a successful save.
+     1. Push the fresh values into local state so the pills update
+        on the current render (no waiting for refetch).
+     2. Notify the parent so it can re-fetch the canonical user. */
+  const handleAccountSaved = useCallback(
+    (next: {
+      firstName: string;
+      lastName: string;
+      gender: 'M' | 'F' | 'O' | '' | null;
+      phoneNumber: string | null;
+      email: string;
+    }) => {
+      setFirstName(next.firstName);
+      setLastName(next.lastName);
+      setGender(next.gender);
+      setPhone(toLocalPart(next.phoneNumber ?? ''));
+      setEmail(next.email);
+      onSaved?.();
+    },
+    [onSaved]
+  );
 
   /* Which fields are still empty or invalid? */
   const missing = useMemo<FieldKey[]>(() => {
     const list: FieldKey[] = [];
 
     if (!gender) list.push('gender');
-
-    // A phone counts as "missing" unless it normalises cleanly
     if (!normalizeLocalPhone(phone)) list.push('phone_number');
-
     if (!email.trim()) list.push('email');
 
     return list;
@@ -202,12 +213,12 @@ function EditBio({
       <AccountInfo
         initial={{
           email,
-          firstName: initialFirstName,
-          lastName: initialLastName,
+          firstName,
+          lastName,
           gender,
           phoneNumber: fullPhone || null,
         }}
-        onSaved={onSaved}
+        onSaved={handleAccountSaved}
       />
 
       {/* ── 2. Password change ─────────────────────────── */}

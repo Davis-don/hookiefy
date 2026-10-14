@@ -1,6 +1,5 @@
 # account/account_views/profile_views.py
 
-import re
 import traceback
 
 from rest_framework.decorators import (
@@ -17,8 +16,6 @@ from account.serializers import (
     UserSerializer,
     UpdateUserSerializer,
     UpdatePasswordSerializer,
-    validate_email_address,
-    validate_kenyan_phone,
 )
 
 from account.controllers.cloudinary_utils import (
@@ -29,17 +26,10 @@ from account.services.profile_stats import get_user_stats
 
 
 # ============================================================
-# PHONE HELPERS — mirror the frontend / register view
+# PHONE HELPERS
 # ============================================================
 
 def normalize_local_phone(raw):
-    """
-    Return the 9-digit local part if the input is a valid Kenyan
-    number, else "".
-
-    Accepts:
-        +254712345678 / 254712345678 / 0712345678 / 712345678
-    """
     if raw is None:
         return ""
 
@@ -47,17 +37,35 @@ def normalize_local_phone(raw):
 
     if digits.startswith("254") and len(digits) > 9:
         digits = digits[3:]
-
     if digits.startswith("0"):
         digits = digits[1:]
-
     if len(digits) != 9:
         return ""
-
     if digits[0] not in ("7", "1"):
         return ""
 
     return digits
+
+
+# ============================================================
+# FORBIDDEN KEYS — client must never set these
+# ============================================================
+
+FORBIDDEN_UPDATE_KEYS = (
+    "role",
+    "status",
+    "auth_provider",
+    "google_id",
+    "is_active",
+    "is_staff",
+    "is_superuser",
+    "password",
+    "password2",
+    "profile_image_url",
+    "profile_image_public_id",
+    "date_joined",
+    "last_login",
+)
 
 
 # ============================================================
@@ -67,10 +75,6 @@ def normalize_local_phone(raw):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def profile_image_url(request):
-    """
-    Return the current user's profile image information.
-    """
-
     user = request.user
 
     return Response(
@@ -91,10 +95,6 @@ def profile_image_url(request):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def upload_profile_image(request):
-    """
-    Upload or replace the authenticated user's profile image.
-    """
-
     image = request.FILES.get("image")
 
     if not image:
@@ -167,49 +167,31 @@ def update_user(request):
         email, first_name, last_name, gender, phone_number
 
     Not editable here:
-        role, auth_provider, profile_image_*, password, is_active
-
-    Phone handling:
-        - Any input format is accepted (0712…, 712…, 254712…, +254712…).
-        - It is normalised to +254XXXXXXXXX before validation.
-        - Empty string / None clears the field (stored as NULL).
+        role, status, auth_provider, is_active,
+        profile_image_*, password
     """
 
-    # ── 1. Work on a mutable copy ─────────────────────────────
+    # ── 1. Mutable copy ──────────────────────────────────────
     data = request.data.copy()
 
-    # ── 2. Strip dangerous fields the client must never set ───
-    for forbidden in (
-        "role",
-        "auth_provider",
-        "is_active",
-        "is_staff",
-        "is_superuser",
-        "password",
-        "password2",
-        "profile_image_url",
-        "profile_image_public_id",
-        "google_id",
-        "date_joined",
-        "last_login",
-    ):
-        data.pop(forbidden, None)
+    # ── 2. Strip every server-owned key ─────────────────────
+    for key in FORBIDDEN_UPDATE_KEYS:
+        data.pop(key, None)
 
-    # ── 3. Email — trim + lowercase before hitting serializer ─
+    # ── 3. Email — trim + lowercase ─────────────────────────
     if "email" in data and data["email"] is not None:
         data["email"] = str(data["email"]).strip().lower()
 
-    # ── 4. Gender — normalise blank → None ────────────────────
+    # ── 4. Gender — blank → None ────────────────────────────
     if "gender" in data:
         raw_gender = data.get("gender")
         if raw_gender in (None, ""):
             data["gender"] = None
 
-    # ── 5. Phone — accept any format, normalise to +254… ──────
+    # ── 5. Phone — accept any format, normalise ─────────────
     if "phone_number" in data:
         raw_phone = data.get("phone_number")
 
-        # Blank / None → clear the field
         if raw_phone in (None, ""):
             data["phone_number"] = None
         else:
@@ -226,7 +208,7 @@ def update_user(request):
                 )
             data["phone_number"] = f"+254{local}"
 
-    # ── 6. Serializer validation ──────────────────────────────
+    # ── 6. Serializer validation ────────────────────────────
     serializer = UpdateUserSerializer(
         request.user,
         data=data,
@@ -258,17 +240,6 @@ def update_user(request):
 @api_view(["PATCH", "PUT"])
 @permission_classes([IsAuthenticated])
 def update_password(request):
-    """
-    Change the authenticated user's password.
-
-    Body:
-        {
-            "old_password":     "...",
-            "new_password":     "...",
-            "new_password2":    "..."
-        }
-    """
-
     serializer = UpdatePasswordSerializer(
         data=request.data,
         context={"request": request},
@@ -295,11 +266,6 @@ def update_password(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    """
-    Return the full profile data of the authenticated user,
-    plus counts and view totals across their content.
-    """
-
     user = request.user
     stats = get_user_stats(user)
 
