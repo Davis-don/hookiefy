@@ -198,3 +198,70 @@
   .eb-inline-input { width: 100%; }
   .eb-inline-done  { width: 100%; }
 }
+/* ── Wrapper that lets us stack input + error ─────────── */
+.eb-inline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ── Phone input with fixed +254 prefix ───────────────── */
+.eb-inline-phone {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  background: #F8FAFC;
+  transition: border-color 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.eb-inline-phone:focus-within {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.eb-inline-phone-prefix {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #0F172A;
+  padding-right: 8px;
+  margin-right: 8px;
+  border-right: 1.5px solid rgba(15, 23, 42, 0.15);
+  user-select: none;
+  pointer-events: none;
+}
+
+.eb-inline-phone-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.eb-inline-phone-input:focus {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── Inline error message ─────────────────────────────── */
+.eb-inline-error {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #991B1B;
+  background: #FEF2F2;
+  border: 1px solid rgba(153, 27, 27, 0.25);
+  word-break: break-word;
+}

@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +12,169 @@ from account.models import Accounts
 from account.serializers import CreateNewUserSerializer, UserSerializer
 from plans.models import Plan
 from subscription.services import subscribe
+
+
+# ============================================================
+# VALIDATORS — mirror the frontend rules
+# ============================================================
+
+COMMON_TLDS = {
+    # generic
+    "com", "org", "net", "edu", "gov", "mil", "int", "info", "biz",
+    "io", "co", "app", "dev", "ai", "me", "tv", "xyz", "online",
+    "site", "store", "tech", "cloud", "email", "pro", "name",
+
+    # Africa / Kenya + common
+    "ke", "tz", "ug", "rw", "bi", "et", "so", "ss", "sd", "eg",
+    "za", "ng", "gh", "zm", "zw", "mw", "mz", "na", "bw",
+
+    # common others
+    "uk", "us", "ca", "au", "nz", "de", "fr", "es", "it", "nl",
+    "be", "ch", "at", "se", "no", "dk", "fi", "ie", "pt", "gr",
+    "pl", "cz", "ro", "hu", "ru", "ua", "tr", "il", "ae", "sa",
+    "in", "pk", "bd", "lk", "np", "cn", "jp", "kr", "sg", "my",
+    "id", "ph", "th", "vn", "hk", "tw",
+}
+
+EMAIL_TYPO_DOMAINS = {
+    "gmial.com": "gmail.com",
+    "gmai.com": "gmail.com",
+    "gmail.co": "gmail.com",
+    "gmail.cm": "gmail.com",
+    "gmail.con": "gmail.com",
+    "gmailcom": "gmail.com",
+    "gnail.com": "gmail.com",
+    "gmaill.com": "gmail.com",
+    "gmail.comm": "gmail.com",
+
+    "yaho.com": "yahoo.com",
+    "yahooo.com": "yahoo.com",
+    "yahoo.co": "yahoo.com",
+    "yahoo.con": "yahoo.com",
+    "yhaoo.com": "yahoo.com",
+
+    "hotmial.com": "hotmail.com",
+    "hotmai.com": "hotmail.com",
+    "hotmail.co": "hotmail.com",
+    "hotmail.con": "hotmail.com",
+    "homail.com": "hotmail.com",
+
+    "outlok.com": "outlook.com",
+    "outloo.com": "outlook.com",
+    "outlook.co": "outlook.com",
+    "outlook.con": "outlook.com",
+    "outllok.com": "outlook.com",
+
+    "iclod.com": "icloud.com",
+    "icloud.co": "icloud.com",
+    "icoud.com": "icloud.com",
+
+    "protonmai.com": "protonmail.com",
+    "protonmal.com": "protonmail.com",
+
+    "yandex.co": "yandex.com",
+    "yandex.con": "yandex.com",
+}
+
+DISPOSABLE_DOMAINS = {
+    "mailinator.com",
+    "10minutemail.com",
+    "tempmail.com",
+    "temp-mail.org",
+    "guerrillamail.com",
+    "sharklasers.com",
+    "throwawaymail.com",
+    "yopmail.com",
+    "trashmail.com",
+    "getnada.com",
+    "dispostable.com",
+    "fakeinbox.com",
+}
+
+
+def validate_email_address(raw: str) -> str:
+    """
+    Returns "" if valid, else an error message string.
+    Mirrors the frontend validateEmail().
+    """
+    value = (raw or "").strip().lower()
+
+    if not value:
+        return "Please enter your email address."
+
+    if value.count("@") != 1:
+        return "Enter a valid email address."
+
+    if len(value) > 254:
+        return "Email address is too long."
+
+    local, _, domain = value.partition("@")
+
+    if not local or not domain:
+        return "Enter a valid email address."
+
+    if len(local) > 64:
+        return "The part before @ cannot exceed 64 characters."
+
+    if "." not in domain:
+        return "Enter a valid email address."
+
+    tld = domain.rsplit(".", 1)[-1]
+
+    if tld not in COMMON_TLDS:
+        return f"'.{tld}' is not a recognised email domain ending."
+
+    if domain in EMAIL_TYPO_DOMAINS:
+        return f"Did you mean {local}@{EMAIL_TYPO_DOMAINS[domain]}?"
+
+    if domain in DISPOSABLE_DOMAINS:
+        return "Disposable email addresses are not allowed."
+
+    return ""
+
+
+def normalize_local_phone(raw: str) -> str:
+    """
+    Accepts a Kenyan number in any of these forms:
+        +254712345678 / 254712345678 / 0712345678 / 712345678
+    Returns the 9-digit local part if valid, else "".
+    Rules (mirroring the frontend):
+        - exactly 9 digits after stripping prefixes
+        - must start with 7 or 1
+    """
+    if raw is None:
+        return ""
+
+    digits = "".join(ch for ch in str(raw) if ch.isdigit())
+
+    if digits.startswith("254") and len(digits) > 9:
+        digits = digits[3:]
+
+    if digits.startswith("0"):
+        digits = digits[1:]
+
+    if len(digits) != 9:
+        return ""
+
+    if digits[0] not in ("7", "1"):
+        return ""
+
+    return digits
+
+
+def validate_phone_number(raw: str) -> str:
+    """
+    Returns "" if valid, else an error message string.
+    """
+    if raw is None or str(raw).strip() == "":
+        return ""  # optional — no phone provided is fine
+
+    if not normalize_local_phone(raw):
+        return (
+            "Enter a valid Kenyan number. It must start with 07, 01, 7 or 1."
+        )
+
+    return ""
 
 
 # ============================================================
@@ -39,6 +203,8 @@ def create_user(request):
     """
     Create a normal user account using first name, last name,
     email and password.
+
+    gender and phone_number are optional and validated if present.
 
     Public registration always creates:
         role = user
@@ -90,7 +256,31 @@ def create_user(request):
     data.pop("profile_image_public_id", None)
     data.pop("google_id", None)
 
-    # ── 4. Validate ───────────────────────────────────────────
+    # ── 4. Backend-side validation (email + phone) ────────────
+    errors = {}
+
+    email_error = validate_email_address(data.get("email", ""))
+    if email_error:
+        errors["email"] = [email_error]
+
+    phone_error = validate_phone_number(data.get("phone_number", ""))
+    if phone_error:
+        errors["phone_number"] = [phone_error]
+
+    # If a phone was supplied and valid, normalise it to +254XXXXXXXXX
+    if "phone_number" in data and not phone_error:
+        raw_phone = data.get("phone_number")
+        if raw_phone and str(raw_phone).strip():
+            local = normalize_local_phone(raw_phone)
+            data["phone_number"] = f"+254{local}"
+        else:
+            # Blank string → null so the model can store None
+            data["phone_number"] = None
+
+    if errors:
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # ── 5. Serializer validation ──────────────────────────────
     serializer = CreateNewUserSerializer(data=data)
 
     if not serializer.is_valid():
@@ -99,7 +289,7 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 5. Create the user + attach subscription atomically ───
+    # ── 6. Create the user + attach subscription atomically ───
     try:
         with transaction.atomic():
             user = serializer.save()
@@ -114,7 +304,7 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 6. Issue tokens + respond ─────────────────────────────
+    # ── 7. Issue tokens + respond ─────────────────────────────
     tokens = generate_tokens(user)
 
     return Response(

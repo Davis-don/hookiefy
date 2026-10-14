@@ -339,6 +339,9 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
     """
     Serializer used when creating a normal user account.
 
+    Required: email, password, password2, first_name, last_name.
+    Optional: gender, phone_number.
+
     Role and authentication provider are controlled by the server.
     """
 
@@ -351,6 +354,19 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(
         write_only=True,
         style={"input_type": "password"},
+    )
+
+    # Optional fields — the client may omit or send blank.
+    gender = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+
+    phone_number = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
     )
 
     class Meta:
@@ -373,6 +389,12 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
             "auth_provider",
         )
 
+        extra_kwargs = {
+            "first_name": {"required": True, "allow_blank": False},
+            "last_name":  {"required": True, "allow_blank": False},
+            "email":      {"required": True, "allow_blank": False},
+        }
+
     def validate_email(self, value):
         """
         Full email validation: shape, TLD, typo, disposable.
@@ -381,9 +403,7 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
 
         value = validate_email_address(value)
 
-        if Accounts.objects.filter(
-            email__iexact=value
-        ).exists():
+        if Accounts.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError(
                 "An account with this email already exists."
             )
@@ -391,7 +411,28 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone_number(self, value):
+        """
+        Optional — blank / None is allowed and normalised to None.
+        """
+        if value in (None, ""):
+            return None
+
         return validate_kenyan_phone(value)
+
+    def validate_gender(self, value):
+        """
+        Optional — blank / None is allowed and normalised to None.
+        If present, must be one of M / F / O.
+        """
+        if value in (None, ""):
+            return None
+
+        if value not in ("M", "F", "O"):
+            raise serializers.ValidationError(
+                "Gender must be one of: M, F, O."
+            )
+
+        return value
 
     def validate(self, attrs):
         password = attrs.get("password")
@@ -412,6 +453,13 @@ class CreateNewUserSerializer(serializers.ModelSerializer):
 
         validated_data["role"] = "user"
         validated_data["auth_provider"] = "local"
+
+        # Normalise blanks to None for optional fields
+        if validated_data.get("phone_number") in ("", None):
+            validated_data["phone_number"] = None
+
+        if validated_data.get("gender") in ("", None):
+            validated_data["gender"] = None
 
         user = Accounts.objects.create_user(
             password=password,
@@ -465,9 +513,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
         user = self.instance
 
-        if Accounts.objects.filter(
-            email__iexact=value
-        ).exclude(
+        if Accounts.objects.filter(email__iexact=value).exclude(
             pk=user.pk
         ).exists():
             raise serializers.ValidationError(
@@ -493,7 +539,27 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone_number(self, value):
+        """
+        Optional — blank / None is allowed and normalised to None.
+        """
+        if value in (None, ""):
+            return None
+
         return validate_kenyan_phone(value)
+
+    def validate_gender(self, value):
+        """
+        Optional — blank / None is allowed and normalised to None.
+        """
+        if value in (None, ""):
+            return None
+
+        if value not in ("M", "F", "O"):
+            raise serializers.ValidationError(
+                "Gender must be one of: M, F, O."
+            )
+
+        return value
 
 
 # ============================================================

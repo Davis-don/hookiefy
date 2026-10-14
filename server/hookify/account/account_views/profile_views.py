@@ -1,5 +1,6 @@
 # account/account_views/profile_views.py
 
+import re
 import traceback
 
 from rest_framework.decorators import (
@@ -16,6 +17,8 @@ from account.serializers import (
     UserSerializer,
     UpdateUserSerializer,
     UpdatePasswordSerializer,
+    validate_email_address,
+    validate_kenyan_phone,
 )
 
 from account.controllers.cloudinary_utils import (
@@ -23,6 +26,38 @@ from account.controllers.cloudinary_utils import (
 )
 
 from account.services.profile_stats import get_user_stats
+
+
+# ============================================================
+# PHONE HELPERS — mirror the frontend / register view
+# ============================================================
+
+def normalize_local_phone(raw):
+    """
+    Return the 9-digit local part if the input is a valid Kenyan
+    number, else "".
+
+    Accepts:
+        +254712345678 / 254712345678 / 0712345678 / 712345678
+    """
+    if raw is None:
+        return ""
+
+    digits = "".join(ch for ch in str(raw) if ch.isdigit())
+
+    if digits.startswith("254") and len(digits) > 9:
+        digits = digits[3:]
+
+    if digits.startswith("0"):
+        digits = digits[1:]
+
+    if len(digits) != 9:
+        return ""
+
+    if digits[0] not in ("7", "1"):
+        return ""
+
+    return digits
 
 
 # ============================================================
@@ -133,11 +168,68 @@ def update_user(request):
 
     Not editable here:
         role, auth_provider, profile_image_*, password, is_active
+
+    Phone handling:
+        - Any input format is accepted (0712…, 712…, 254712…, +254712…).
+        - It is normalised to +254XXXXXXXXX before validation.
+        - Empty string / None clears the field (stored as NULL).
     """
 
+    # ── 1. Work on a mutable copy ─────────────────────────────
+    data = request.data.copy()
+
+    # ── 2. Strip dangerous fields the client must never set ───
+    for forbidden in (
+        "role",
+        "auth_provider",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "password",
+        "password2",
+        "profile_image_url",
+        "profile_image_public_id",
+        "google_id",
+        "date_joined",
+        "last_login",
+    ):
+        data.pop(forbidden, None)
+
+    # ── 3. Email — trim + lowercase before hitting serializer ─
+    if "email" in data and data["email"] is not None:
+        data["email"] = str(data["email"]).strip().lower()
+
+    # ── 4. Gender — normalise blank → None ────────────────────
+    if "gender" in data:
+        raw_gender = data.get("gender")
+        if raw_gender in (None, ""):
+            data["gender"] = None
+
+    # ── 5. Phone — accept any format, normalise to +254… ──────
+    if "phone_number" in data:
+        raw_phone = data.get("phone_number")
+
+        # Blank / None → clear the field
+        if raw_phone in (None, ""):
+            data["phone_number"] = None
+        else:
+            local = normalize_local_phone(raw_phone)
+            if not local:
+                return Response(
+                    {
+                        "phone_number": [
+                            "Enter a valid Kenyan number. "
+                            "It must start with 07, 01, 7 or 1."
+                        ]
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            data["phone_number"] = f"+254{local}"
+
+    # ── 6. Serializer validation ──────────────────────────────
     serializer = UpdateUserSerializer(
         request.user,
-        data=request.data,
+        data=data,
         partial=True,
     )
 
