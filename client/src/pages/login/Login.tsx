@@ -119,7 +119,7 @@ function Login() {
           </svg>
         </div>
 
-        <h1 className="yp-login-title">CUSTOMER LOGIN</h1>
+        <h1 className="yp-login-title">ACCOUNT LOGIN</h1>
 
         {/* ── Google login ────────────────────────────── */}
         <div className="yp-login-google-wrap">
@@ -168,7 +168,7 @@ function Login() {
               id="login-email"
               type="email"
               autoComplete="email"
-              placeholder="Email ID"
+              placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={busy}
