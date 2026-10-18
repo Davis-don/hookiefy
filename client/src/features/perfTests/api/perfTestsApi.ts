@@ -5,6 +5,10 @@ import { useAuthStore } from '../../../store/authStore';
 const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// ============================================================
+// TYPES
+// ============================================================
+
 export type ImageCycleResult = {
   image: string;
   image_size_kb: number;
@@ -40,6 +44,10 @@ export type PerfRunResponse = {
   message?: string;
 };
 
+// ============================================================
+// FETCH
+// ============================================================
+
 export async function runPerfTests(): Promise<PerfRunResponse> {
   const access = useAuthStore.getState().access;
   if (!access) throw new Error('Not authenticated.');
@@ -55,9 +63,11 @@ export async function runPerfTests(): Promise<PerfRunResponse> {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw new Error(
-      data?.message || data?.detail || 'Could not run performance tests.',
-    );
+    const msg =
+      data?.message ||
+      data?.detail ||
+      'Could not run performance tests.';
+    throw new Error(msg);
   }
 
   return data as PerfRunResponse;
