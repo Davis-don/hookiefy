@@ -6,81 +6,43 @@ import { usePerfTestsLive } from '../hooks/usePerfTests';
 import Speedometer from './Speedometer';
 import './perftests.css';
 
-function fmtNum(n: number | undefined, decimals = 1): string {
-  if (n === undefined || n === null || !isFinite(n)) return '—';
-  if (n >= 100) return n.toFixed(0);
-  if (n >= 10) return n.toFixed(decimals);
-  return n.toFixed(decimals + 1);
+function fmt(v: number | undefined, decimals = 2): string {
+  if (v === undefined || v === null || !isFinite(v)) return '—';
+  return v.toFixed(decimals);
 }
 
-/* ── Gauge max scales ───────────────────────────────── */
-const GAUGE_MAX_MB = 5;
-const GAUGE_MAX_KB = 500;
-const GAUGE_MAX_B  = 2000;
-const GAUGE_MAX_GB = 1;
-const GAUGE_MAX_ROWS = 300;
+/* Gauge scales */
+const MAX_UPLOAD_SECONDS = 20;
+const MAX_CREATE_SECONDS = 5;
+const MAX_TOTAL_SECONDS = 30;
 
-/* Upload time — inverted: faster = fuller */
-const UPLOAD_FAST_MS = 300;
-const UPLOAD_SLOW_MS = 3000;
-
-function gaugeForDownload(unit: string, numericValue: string): number {
-  const v = parseFloat(numericValue);
-  if (!isFinite(v) || v <= 0) return 0;
-
-  switch (unit) {
-    case 'GB/s': return Math.min(100, (v / GAUGE_MAX_GB) * 100);
-    case 'MB/s': return Math.min(100, (v / GAUGE_MAX_MB) * 100);
-    case 'KB/s': return Math.min(100, (v / GAUGE_MAX_KB) * 100);
-    case 'B/s':  return Math.min(100, (v / GAUGE_MAX_B) * 100);
-    default:     return Math.min(100, (v / GAUGE_MAX_ROWS) * 100);
-  }
-}
-
-function gaugeForUploadMs(ms: number | undefined): number {
-  if (!ms || ms <= 0) return 0;
-  if (ms <= UPLOAD_FAST_MS) return 100;
-  if (ms >= UPLOAD_SLOW_MS) return 0;
-
-  const ratio =
-    (UPLOAD_SLOW_MS - ms) / (UPLOAD_SLOW_MS - UPLOAD_FAST_MS);
-  return Math.max(0, Math.min(100, ratio * 100));
+function gaugeInverted(value: number, max: number): number {
+  if (!value || value <= 0) return 0;
+  if (value >= max) return 100;
+  return Math.min(100, (value / max) * 100);
 }
 
 function PerfTestsCard() {
   const access = useAuthStore((s) => s.access);
 
   const { data, isFetching, isError, error, refetch } = usePerfTestsLive(
-    { imageRuns: 3, posts: 3, products: 3 },
+    {},
     { enabled: !!access, intervalMs: 60_000 },
   );
 
-  const upload = data?.result?.overall_upload;
-  const download = data?.result?.overall_download;
-  const image = data?.result?.image_upload;
+  const imageCycle = data?.result?.image_cycle;
+  const fullCycle = data?.result?.full_cycle;
   const summary = data?.result?.summary;
 
-  /* DOWNLOAD — MB/s or KB/s */
-  const downloadDisplay = download?.throughput?.total_display;
-  const downloadGauge = downloadDisplay
-    ? gaugeForDownload(downloadDisplay.unit, downloadDisplay.value)
-    : 0;
+  const uploadSec = imageCycle?.upload_seconds ?? 0;
+  const createSec = fullCycle?.total_create_seconds ?? 0;
+  const totalSec = summary?.total_seconds ?? 0;
 
-  /* UPLOAD — seconds per image (inverted scale) */
-  const uploadDisplay = image?.throughput?.upload_display;
-  const uploadGauge = gaugeForUploadMs(image?.avg_upload_ms);
-
-  /* WRITES — DB rows/sec */
-  const writeRps = upload?.throughput?.posts_per_second ?? 0;
-  const writesDisplay = {
-    value: writeRps >= 100 ? writeRps.toFixed(0) : writeRps.toFixed(1),
-    unit: '/sec',
-  };
-  const writesGauge = Math.min(100, (writeRps / GAUGE_MAX_ROWS) * 100);
+  const uploadGauge = gaugeInverted(uploadSec, MAX_UPLOAD_SECONDS);
+  const createGauge = gaugeInverted(createSec, MAX_CREATE_SECONDS);
+  const totalGauge = gaugeInverted(totalSec, MAX_TOTAL_SECONDS);
 
   const failed = summary?.tests_failed ?? 0;
-  const totalMs = summary?.total_ms ?? 0;
-  const endpointCount = Object.keys(download?.timings ?? {}).length;
   const hasAnyData = !!data?.result;
 
   const status = useMemo(() => {
@@ -109,7 +71,7 @@ function PerfTestsCard() {
           <div>
             <p className="perf-label">Performance Tests</p>
             <p className="perf-sub">
-              Live throughput from /perf/tests/run/
+              Upload · Create · Cleanup timings
             </p>
           </div>
         </div>
@@ -132,69 +94,70 @@ function PerfTestsCard() {
       </header>
 
       <div className="perf-gauges">
-        {/* DOWNLOAD — MB/s or KB/s */}
-        <Speedometer
-          value={downloadGauge}
-          label="Download"
-          display={
-            isFetching && !hasAnyData
-              ? '…'
-              : downloadDisplay?.value ?? '0'
-          }
-          unit={downloadDisplay?.unit ?? 'B/s'}
-          hint={`${endpointCount} endpoints`}
-          tone="blue"
-          settling={isFetching}
-        />
-
-        {/* UPLOAD — seconds per image */}
         <Speedometer
           value={uploadGauge}
           label="Upload"
           display={
-            isFetching && !hasAnyData
-              ? '…'
-              : uploadDisplay?.value ?? '—'
+            isFetching && !hasAnyData ? '…' : fmt(uploadSec, 2)
           }
-          unit={uploadDisplay?.unit ?? 's/img'}
-          hint={`${fmtNum(image?.avg_upload_ms, 0)} ms`}
+          unit="s/img"
+          hint={
+            imageCycle
+              ? `${fmt(imageCycle.image_size_kb, 0)} KB`
+              : '—'
+          }
           tone="violet"
           settling={isFetching}
         />
-
-        {/* WRITES — DB rows/sec */}
         <Speedometer
-          value={writesGauge}
-          label="Writes"
+          value={createGauge}
+          label="Create"
           display={
-            isFetching && !hasAnyData ? '…' : writesDisplay.value
+            isFetching && !hasAnyData ? '…' : fmt(createSec, 2)
           }
-          unit={writesDisplay.unit}
-          hint={`${fmtNum(upload?.total_upload_ms, 0)} ms`}
+          unit="s"
+          hint={
+            fullCycle
+              ? `${Object.keys(fullCycle.timings ?? {}).length} steps`
+              : '—'
+          }
           tone="emerald"
+          settling={isFetching}
+        />
+        <Speedometer
+          value={totalGauge}
+          label="Total"
+          display={
+            isFetching && !hasAnyData ? '…' : fmt(totalSec, 2)
+          }
+          unit="s"
+          hint={
+            summary ? `${summary.tests_run} tests` : '—'
+          }
+          tone="blue"
           settling={isFetching}
         />
       </div>
 
       <footer className="perf-foot">
         <div className="perf-foot-item">
-          <span className="perf-foot-label">Total</span>
+          <span className="perf-foot-label">Delete img</span>
           <span className="perf-foot-value">
             {isFetching && !hasAnyData
               ? '—'
-              : `${fmtNum(totalMs, 0)} ms`}
+              : `${fmt(imageCycle?.delete_seconds, 2)} s`}
           </span>
         </div>
         <span className="perf-foot-divider" aria-hidden="true" />
         <div className="perf-foot-item">
-          <span className="perf-foot-label">Tests</span>
+          <span className="perf-foot-label">Cleanup DB</span>
           <span className="perf-foot-value">
-            {isFetching && !hasAnyData ? '—' : summary?.tests_run ?? 0}
-            {!isFetching && failed > 0 && (
-              <span className="perf-foot-alert">
-                {' '}· {failed} failed
-              </span>
-            )}
+            {isFetching && !hasAnyData
+              ? '—'
+              : `${fmt(
+                  fullCycle?.timings?.cleanup_db_seconds,
+                  2,
+                )} s`}
           </span>
         </div>
         <span className="perf-foot-divider" aria-hidden="true" />
