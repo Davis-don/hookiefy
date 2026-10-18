@@ -23,6 +23,10 @@ const CLAMP_LINES = 2;
 function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
 
+  /* ── Image loading state ────────────────────────── */
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const body = item.body ?? '';
   const isLong = body.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
@@ -52,6 +56,9 @@ function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
       });
     },
   });
+
+  const hasImage = !!item.image_url;
+  const showSkeleton = hasImage && !imageLoaded && !imageError;
 
   return (
     <article className="post-card">
@@ -99,27 +106,71 @@ function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
         />
       </header>
 
-      {item.image_url && (
-        <div
-          className="post-card__cover"
-          role="button"
-          tabIndex={0}
-          aria-label={item.title ? `Open ${item.title}` : 'Open post'}
-          {...gesture}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              openPost();
-            }
-          }}
-        >
+      {/* ── Cover with skeleton loader ────────────────── */}
+      <div
+        className={
+          'post-card__cover' +
+          (showSkeleton ? ' is-loading' : '') +
+          (imageError ? ' is-error' : '')
+        }
+        role="button"
+        tabIndex={0}
+        aria-label={item.title ? `Open ${item.title}` : 'Open post'}
+        {...gesture}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPost();
+          }
+        }}
+      >
+        {/* Skeleton + spinner — visible until image loads */}
+        {showSkeleton && (
+          <div className="post-card__cover-skeleton" aria-hidden="true">
+            <div className="post-card__cover-shimmer" />
+            <div className="post-card__cover-spinner">
+              <span className="post-card__spinner-ring" />
+            </div>
+          </div>
+        )}
+
+        {/* Image fades in after load */}
+        {hasImage && !imageError && (
           <img
-            src={item.image_url}
+            src={item.image_url ?? ''}
             alt={item.title ?? 'Post'}
             loading="lazy"
+            className={
+              'post-card__cover-img' +
+              (imageLoaded ? ' is-loaded' : '')
+            }
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
           />
-        </div>
-      )}
+        )}
+
+        {/* Fallback if image fails */}
+        {imageError && (
+          <div className="post-card__cover-error" aria-hidden="true">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="M21 15l-5-5L5 21" />
+              <line x1="3" y1="3" x2="21" y2="21" />
+            </svg>
+            <span>Image unavailable</span>
+          </div>
+        )}
+      </div>
 
       {(item.title || body) && (
         <div className="post-card__body" {...gesture}>

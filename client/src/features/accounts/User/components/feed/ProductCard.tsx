@@ -34,6 +34,10 @@ function ProductCard({
 }: ProductCardProps) {
   const [expanded, setExpanded] = useState(false);
 
+  /* ── Image loading state ────────────────────────── */
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const priceLabel = formatPrice(item.price);
   const description = item.description ?? '';
   const isLong = description.length > CLAMP_LINES * 60;
@@ -64,6 +68,9 @@ function ProductCard({
       });
     },
   });
+
+  const hasImage = !!item.image_url;
+  const showSkeleton = hasImage && !imageLoaded && !imageError;
 
   return (
     <article className="product-card">
@@ -111,9 +118,14 @@ function ProductCard({
         />
       </header>
 
-      {item.image_url && (
+      {/* ── Cover with skeleton loader ────────────────── */}
+      {hasImage && (
         <div
-          className="product-card__cover"
+          className={
+            'product-card__cover' +
+            (showSkeleton ? ' is-loading' : '') +
+            (imageError ? ' is-error' : '')
+          }
           role="button"
           tabIndex={0}
           aria-label={item.name ? `Open ${item.name}` : 'Open product'}
@@ -125,11 +137,52 @@ function ProductCard({
             }
           }}
         >
-          <img
-            src={item.image_url}
-            alt={item.name ?? 'Product'}
-            loading="lazy"
-          />
+          {/* Skeleton + spinner — visible until image loads */}
+          {showSkeleton && (
+            <div className="product-card__cover-skeleton" aria-hidden="true">
+              <div className="product-card__cover-shimmer" />
+              <div className="product-card__cover-spinner">
+                <span className="product-card__spinner-ring" />
+              </div>
+            </div>
+          )}
+
+          {/* Image fades in after load */}
+          {!imageError && (
+            <img
+              src={item.image_url ?? ''}
+              alt={item.name ?? 'Product'}
+              loading="lazy"
+              className={
+                'product-card__cover-img' +
+                (imageLoaded ? ' is-loaded' : '')
+              }
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
+          )}
+
+          {/* Fallback if image fails */}
+          {imageError && (
+            <div className="product-card__cover-error" aria-hidden="true">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="M21 15l-5-5L5 21" />
+                <line x1="3" y1="3" x2="21" y2="21" />
+              </svg>
+              <span>Image unavailable</span>
+            </div>
+          )}
         </div>
       )}
 
