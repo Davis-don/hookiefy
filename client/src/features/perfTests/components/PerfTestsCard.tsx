@@ -14,7 +14,7 @@ function fmt(v: number | undefined, decimals = 2): string {
 /* Gauge scales */
 const MAX_UPLOAD_SECONDS = 20;
 const MAX_CREATE_SECONDS = 5;
-const MAX_TOTAL_SECONDS = 30;
+const MAX_TOTAL_SECONDS  = 30;
 
 function gaugeInverted(value: number, max: number): number {
   if (!value || value <= 0) return 0;
@@ -25,10 +25,11 @@ function gaugeInverted(value: number, max: number): number {
 function PerfTestsCard() {
   const access = useAuthStore((s) => s.access);
 
-  const { data, isFetching, isError, error, refetch } = usePerfTestsLive(
-    {},
-    { enabled: !!access, intervalMs: 60_000 },
-  );
+  /* ── THE ONLY CHANGE: single-argument call ───────── */
+  const { data, isFetching, isError, error, refetch } = usePerfTestsLive({
+    enabled: !!access,
+    intervalMs: 60_000,
+  });
 
   const imageCycle = data?.result?.image_cycle;
   const fullCycle = data?.result?.full_cycle;
