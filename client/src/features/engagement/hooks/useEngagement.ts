@@ -4,6 +4,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query';
 
 import {
@@ -19,20 +20,50 @@ import {
 
 /* ============================================================
    QUERY KEYS
+   ============================================================
+   These keys are the single source of truth. Every place that
+   reads or writes engagement state must reference them via
+   these helpers — never hand-construct the array elsewhere,
+   or components will miss cache updates.
    ============================================================ */
 
 export const engagementKeys = {
-  /** Status for content the user can LIKE (product / post / story). */
+  all: ['engagement'] as const,
+
+  /** Status for content that can be LIKED (product / post / story). */
   status: (kind: TargetKind, id: number) =>
     ['engagement', 'status', kind, id] as const,
 
-  /** Status for a BUSINESS the user can FOLLOW. */
+  /** Status for a BUSINESS that can be FOLLOWED. */
   businessFollow: (businessId: number) =>
     ['engagement', 'business-follow', businessId] as const,
 };
 
 /* ============================================================
-   useEngagementStatus — fetch current state for content
+   LIST KEYS — invalidated on mutation so lists stay fresh
+   ============================================================
+   If any page renders `likes_count` or `follows_count` from
+   a cached list (feed, business profile posts/products, etc.),
+   invalidating these on success forces those pages to refresh.
+   Add or remove keys here to match your app's queries.
+   ============================================================ */
+
+const LIST_KEYS_TO_INVALIDATE = [
+  ['feed'],
+  ['business-posts'],
+  ['business-products'],
+  ['business-feed'],
+  ['feed-businesses'],
+];
+
+function invalidateLists(qc: QueryClient) {
+  for (const key of LIST_KEYS_TO_INVALIDATE) {
+    qc.invalidateQueries({ queryKey: key });
+  }
+}
+
+/* ============================================================
+   useEngagementStatus — read current state (post/product/story)
    ============================================================ */
 
 export function useEngagementStatus(
@@ -49,7 +80,7 @@ export function useEngagementStatus(
 }
 
 /* ============================================================
-   useBusinessFollowStatus — fetch follow state for a business
+   useBusinessFollowStatus — read follow state for a business
    ============================================================ */
 
 export function useBusinessFollowStatus(businessId: number) {
@@ -63,31 +94,34 @@ export function useBusinessFollowStatus(businessId: number) {
 }
 
 /* ============================================================
-   useToggleLike — optimistic + double-burst friendly
+   useToggleLike — optimistic + confirmed + rollback
    ============================================================ */
 
 export type ToggleLikeResult = {
-  /** Fired instantly, before the request even leaves. */
-  onOptimistic: () => void;
-  /** Fired when the server confirms. */
-  onConfirmed: (data: ToggleResponse) => void;
-  /** Fired if the server rejects. */
-  onRollback: () => void;
+  onOptimistic?: () => void;
+  onConfirmed?: (data: ToggleResponse) => void;
+  onRollback?: () => void;
 };
 
 export function useToggleLike(
   targetKind: TargetKind,
   targetId: number,
-  callbacks: ToggleLikeResult,
+  callbacks: ToggleLikeResult = {},
 ) {
   const qc = useQueryClient();
   const key = engagementKeys.status(targetKind, targetId);
 
-  return useMutation<ToggleResponse, Error, void, { previous?: EngagementStatus }>({
+  return useMutation<
+    ToggleResponse,
+    Error,
+    void,
+    { previous?: EngagementStatus }
+  >({
     mutationFn: () => toggleLike(targetKind, targetId),
 
-    // ── Optimistic update ────────────────────────────────
+    /* ── Optimistic update ─────────────────────────────── */
     onMutate: async () => {
+      // Cancel in-flight refetches so they don't clobber us
       await qc.cancelQueries({ queryKey: key });
 
       const previous = qc.getQueryData<EngagementStatus>(key);
@@ -103,38 +137,50 @@ export function useToggleLike(
         });
       }
 
-      callbacks.onOptimistic();
+      callbacks.onOptimistic?.();
 
       return { previous };
     },
 
+    /* ── Server confirmed ──────────────────────────────── */
     onSuccess: (data) => {
+      // Write authoritative values into the cache
       qc.setQueryData<EngagementStatus>(key, (current) => {
         if (!current) return current;
         return {
           ...current,
           liked: data.liked ?? current.liked,
-          likes_count: data.likes_count,
-          follows_count: data.follows_count,
+          likes_count:
+            typeof data.likes_count === 'number'
+              ? data.likes_count
+              : current.likes_count,
+          follows_count:
+            typeof data.follows_count === 'number'
+              ? data.follows_count
+              : current.follows_count,
         };
       });
 
-      callbacks.onConfirmed(data);
+      // Any page that renders counts from a list should refetch
+      invalidateLists(qc);
+
+      callbacks.onConfirmed?.(data);
     },
 
+    /* ── Server rejected — roll back ───────────────────── */
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
         qc.setQueryData<EngagementStatus>(key, ctx.previous);
       }
-      callbacks.onRollback();
+      callbacks.onRollback?.();
     },
   });
 }
 
 /* ============================================================
-   useToggleFollow — BUSINESS ONLY
+   useToggleFollowBusiness — BUSINESS ONLY
    ============================================================
-   The Follow button never targets a post/product/story anymore.
+   The Follow button never targets a post/product/story.
    It always follows the business that owns the item.
    ============================================================ */
 
@@ -150,6 +196,7 @@ export function useToggleFollowBusiness(businessId: number) {
   >({
     mutationFn: () => toggleFollowBusiness(businessId),
 
+    /* ── Optimistic update ─────────────────────────────── */
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: key });
 
@@ -169,17 +216,25 @@ export function useToggleFollowBusiness(businessId: number) {
       return { previous };
     },
 
+    /* ── Server confirmed ──────────────────────────────── */
     onSuccess: (data) => {
       qc.setQueryData<BusinessFollowStatus>(key, (current) => {
         if (!current) return data;
         return {
           ...current,
           followed: data.followed ?? current.followed,
-          follows_count: data.follows_count,
+          follows_count:
+            typeof data.follows_count === 'number'
+              ? data.follows_count
+              : current.follows_count,
         };
       });
+
+      // Any page rendering business follows_count should refetch
+      invalidateLists(qc);
     },
 
+    /* ── Server rejected — roll back ───────────────────── */
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
         qc.setQueryData<BusinessFollowStatus>(key, ctx.previous);
