@@ -37,7 +37,7 @@ MAX_POST_BODY_LENGTH  = 1000
 
 # Hard ceiling for a single post image. Cloudinary will keep
 # whatever you send, so we cut it off here before the upload.
-MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024   # 5 MB
+MAX_POST_IMAGE_BYTES = 8 * 1024 * 1024   # 8 MB
 
 # Only the formats actually needed — PNG, JPEG (both MIME
 # variants), and WEBP. GIF and everything else is rejected.

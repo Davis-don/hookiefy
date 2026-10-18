@@ -17,7 +17,7 @@ import './newpost.css';
 const MAX_TITLE_LENGTH = 200;
 const MAX_BODY_LENGTH  = 1000;
 const MIN_BODY_LENGTH  = 10;
-const MAX_IMAGE_BYTES  = 5 * 1024 * 1024; // 5 MB
+const MAX_IMAGE_BYTES  = 8 * 1024 * 1024; // 8 MB
 
 const ALLOWED_IMAGE_TYPES = [
   'image/png',
