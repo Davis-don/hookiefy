@@ -13,14 +13,21 @@ from .models import Like, Follow
 # ============================================================
 #
 # Maps the "target_type" string sent by the client into
-# the actual Django model class. Only the three allowed
-# targets are listed here — anything else raises ValueError.
+# the actual Django model class.
+#
+# LIKE targets:    product, post, story
+# FOLLOW targets:  business
+#
+# The view layer (LikeActionSerializer / FollowActionSerializer)
+# restricts which of these each endpoint accepts — this mapping
+# just makes the models resolvable.
 # ============================================================
 
 TARGET_MODELS = {
-    "product": ("products", "Products"),
-    "post":    ("posts",    "Posts"),
-    "story":   ("stories",  "Story"),
+    "business": ("businesses", "Businesses"),
+    "product":  ("products",   "Products"),
+    "post":     ("posts",      "Posts"),
+    "story":    ("stories",    "Story"),
 }
 
 
@@ -103,7 +110,8 @@ def has_liked(user, obj):
 @transaction.atomic
 def follow_object(user, obj):
     """
-    User follows obj. Increments follows_count on new follows only.
+    User follows obj (Business).
+    Increments follows_count on new follows only.
     """
     created = Follow.objects.get_or_create(
         user=user,

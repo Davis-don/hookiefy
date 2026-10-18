@@ -1,9 +1,15 @@
 // src/components/feed/ProductCard.tsx
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FeedItem } from '../../api/feedApi';
-import LikeButton from '../../../../engagement/components/LikeButton';
 import FollowButton from '../../../../engagement/components/FollowButton';
+import LikeCount from '../../../../engagement/components/LikeCount';
+import FollowCount from '../../../../engagement/components/FollowCount';
+import HeartBurst, {
+  type HeartBurstHandle,
+} from '../../../../engagement/components/HeartBurst';
+import { useToggleLike } from '../../../../engagement/hooks/useEngagement';
+import { useDoubleTap } from '../../../../engagement/hooks/useDoubleTap';
 import './productcard.css';
 
 type ProductCardProps = {
@@ -33,21 +39,44 @@ function ProductCard({
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
-  // Header elements — open the business
   const openBusiness = () => onOpenBusiness(item.business.id);
-
-  // Everything else — open the product
   const openProduct = () => onOpenProduct(item.id);
+
+  const burstRef = useRef<HeartBurstHandle>(null);
+
+  const likeMutation = useToggleLike('product', item.id, {
+    onOptimistic: () => {},
+    onConfirmed: () => {},
+    onRollback: () => {},
+  });
+
+  const gesture = useDoubleTap({
+    onSingle: openProduct,
+    onDouble: (point) => {
+      if (likeMutation.isPending) return;
+
+      burstRef.current?.burst(point.x, point.y, false);
+
+      likeMutation.mutate(undefined, {
+        onSuccess: () => {
+          burstRef.current?.burst(point.x, point.y, true);
+        },
+      });
+    },
+  });
 
   return (
     <article className="product-card">
-      {/* ── 1. Header: avatar + business name ─────────
-              Both go to the business, not the product. */}
+      <HeartBurst ref={burstRef} />
+
       <header className="product-card__header">
         <button
           type="button"
           className="product-card__avatar"
-          onClick={openBusiness}
+          onClick={(e) => {
+            e.stopPropagation();
+            openBusiness();
+          }}
           aria-label={`Open ${item.business.business_name}`}
           title={item.business.business_name}
         >
@@ -67,72 +96,53 @@ function ProductCard({
         <button
           type="button"
           className="product-card__business"
-          onClick={openBusiness}
+          onClick={(e) => {
+            e.stopPropagation();
+            openBusiness();
+          }}
         >
           {item.business.business_name}
         </button>
+
+        <FollowButton
+          businessId={item.business.id}
+          businessName={item.business.business_name}
+          onOpenBusiness={openBusiness}
+        />
       </header>
 
-      {/* ── 2. Cover image — opens the PRODUCT ─────── */}
       {item.image_url && (
-        <button
-          type="button"
+        <div
           className="product-card__cover"
-          onClick={openProduct}
+          role="button"
+          tabIndex={0}
           aria-label={item.name ? `Open ${item.name}` : 'Open product'}
+          {...gesture}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openProduct();
+            }
+          }}
         >
           <img
             src={item.image_url}
             alt={item.name ?? 'Product'}
             loading="lazy"
           />
-        </button>
+        </div>
       )}
 
-      {/* ── 3. Actions: like + follow ─────────────────
-              Separate buttons — never navigate. */}
-      <div className="product-card__actions">
-        <LikeButton targetKind="product" targetId={item.id} />
-        <FollowButton targetKind="product" targetId={item.id} />
-      </div>
-
-      {/* ── 4. Body — everything here opens the PRODUCT ── */}
-      <div className="product-card__body">
-        {item.name && (
-          <button
-            type="button"
-            className="product-card__name"
-            onClick={openProduct}
-          >
-            {item.name}
-          </button>
-        )}
+      <div className="product-card__body" {...gesture}>
+        {item.name && <h3 className="product-card__name">{item.name}</h3>}
 
         {priceLabel && (
-          <span
-            className="product-card__price"
-            onClick={openProduct}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') openProduct();
-            }}
-          >
-            {priceLabel}
-          </span>
+          <span className="product-card__price">{priceLabel}</span>
         )}
 
         {description && (
           <>
-            <p
-              className={`product-card__desc${clampClass}`}
-              onClick={openProduct}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') openProduct();
-              }}
-            >
+            <p className={`product-card__desc${clampClass}`}>
               {description}
             </p>
 
@@ -140,8 +150,8 @@ function ProductCard({
               <button
                 type="button"
                 className="product-card__toggle"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
-                  // Stop the click from bubbling into the description
                   e.stopPropagation();
                   setExpanded((v) => !v);
                 }}
@@ -163,6 +173,21 @@ function ProductCard({
           </ul>
         )}
       </div>
+
+      <footer className="product-card__footer">
+        <LikeCount
+          targetKind="product"
+          targetId={item.id}
+          className="product-card__like-count"
+        />
+        <span className="product-card__footer-dot" aria-hidden="true">
+          ·
+        </span>
+        <FollowCount
+          businessId={item.business.id}
+          className="product-card__follow-count"
+        />
+      </footer>
     </article>
   );
 }

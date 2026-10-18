@@ -1,0 +1,42 @@
+/* ─────────────────────────────────────────────────────────
+   FollowCount — "N followers" text label
+   Class prefix: .follow-count
+   Used in card footers next to LikeCount.
+   ───────────────────────────────────────────────────────── */
+
+.follow-count {
+  display: inline-flex;
+  align-items: center;
+
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+
+  color: #475569;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  white-space: nowrap;
+
+  transition: color 0.18s ease;
+}
+
+.follow-count[aria-live] {
+  animation: follow-count-pop 0.28s ease;
+}
+
+@keyframes follow-count-pop {
+  0%   { transform: translateY(0)    scale(1); }
+  40%  { transform: translateY(-1px) scale(1.04); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-count {
+    transition: none;
+    animation: none !important;
+  }
+}

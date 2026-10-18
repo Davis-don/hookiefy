@@ -85,21 +85,32 @@ class FollowSerializer(serializers.ModelSerializer):
 # ACTION INPUT — like / follow toggles
 # ============================================================
 #
-# Only these three target types are valid:
-#
+# LIKE targets (unchanged):
 #     product   →  products.Products
 #     post      →  posts.Posts
 #     story     →  stories.Story
 #
+# FOLLOW targets (business only):
+#     business  →  businesses.Businesses
+#
 # The actor is the authenticated user; never sent in the body.
 # ============================================================
 
-class EngagementActionSerializer(serializers.Serializer):
+class LikeActionSerializer(serializers.Serializer):
+    """Payload for POST /my_engagements/like/toggle/."""
 
     target_type = serializers.ChoiceField(
         choices=("product", "post", "story"),
     )
+    target_id = serializers.IntegerField(min_value=1)
 
+
+class FollowActionSerializer(serializers.Serializer):
+    """Payload for POST /my_engagements/follow/toggle/."""
+
+    target_type = serializers.ChoiceField(
+        choices=("business",),
+    )
     target_id = serializers.IntegerField(min_value=1)
 
 

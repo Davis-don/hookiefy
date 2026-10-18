@@ -1,0 +1,33 @@
+/* ─────────────────────────────────────────────────────────
+   FollowCount — small grey "N followers" text
+   Class prefix: .follow-count
+   ───────────────────────────────────────────────────────── */
+
+.follow-count {
+  display: inline-flex;
+  align-items: center;
+
+  /* Match the LikeButton height/padding rhythm */
+  height: 40px;
+  padding: 0 4px;
+
+  color: #64748B;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  transition: color 0.18s ease;
+}
+
+@media (max-width: 640px) {
+  .follow-count {
+    height: 36px;
+    font-size: 13px;
+    padding: 0 2px;
+  }
+}

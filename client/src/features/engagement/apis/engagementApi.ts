@@ -9,6 +9,7 @@ const API_BASE =
    TYPES
    ============================================================ */
 
+/** Content that can be LIKED. */
 export type TargetKind = 'post' | 'product' | 'story';
 
 export type EngagementStatus = {
@@ -27,6 +28,15 @@ export type ToggleResponse = {
   follows_count: number;
   liked?: boolean;
   followed?: boolean;
+};
+
+/** Follow state for a BUSINESS. */
+export type BusinessFollowStatus = {
+  target_type: 'business';
+  target_id: number;
+  likes_count: number;
+  follows_count: number;
+  followed: boolean;
 };
 
 export type Liker = {
@@ -72,6 +82,13 @@ function extractErrorMessage(data: any, fallback: string): string {
   if (typeof data === 'object') {
     if (typeof data.detail === 'string') return data.detail;
     if (typeof data.message === 'string') return data.message;
+
+    // DRF field-level errors, e.g. { target_type: ["..."] }
+    for (const key of Object.keys(data)) {
+      const v = data[key];
+      if (Array.isArray(v) && typeof v[0] === 'string') return v[0];
+      if (typeof v === 'string') return v;
+    }
   }
   return fallback;
 }
@@ -106,6 +123,44 @@ export async function fetchEngagementStatus(
 }
 
 /* ============================================================
+   FETCH BUSINESS FOLLOW STATUS
+   GET /my_engagements/status/?target_type=business&target_id=<id>
+   ============================================================ */
+
+export async function fetchBusinessFollowStatus(
+  businessId: number,
+): Promise<BusinessFollowStatus> {
+  const qs = new URLSearchParams({
+    target_type: 'business',
+    target_id: String(businessId),
+  });
+
+  const res = await fetch(
+    `${API_BASE}/my_engagements/status/?${qs.toString()}`,
+    { method: 'GET', headers: authHeaders() },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractErrorMessage(data, 'Failed to load follow status.'),
+    );
+  }
+
+  // The server returns a superset (likes + follows fields);
+  // normalise into a stable shape.
+  const raw: any = data ?? {};
+  return {
+    target_type: 'business',
+    target_id: businessId,
+    likes_count: raw.likes_count ?? 0,
+    follows_count: raw.follows_count ?? 0,
+    followed: !!raw.followed,
+  };
+}
+
+/* ============================================================
    TOGGLE LIKE — POST /my_engagements/like/toggle/
    ============================================================ */
 
@@ -134,19 +189,19 @@ export async function toggleLike(
 }
 
 /* ============================================================
-   TOGGLE FOLLOW — POST /my_engagements/follow/toggle/
+   TOGGLE FOLLOW — BUSINESS ONLY
+   POST /my_engagements/follow/toggle/
    ============================================================ */
 
-export async function toggleFollow(
-  targetKind: TargetKind,
-  targetId: number,
-): Promise<ToggleResponse> {
+export async function toggleFollowBusiness(
+  businessId: number,
+): Promise<BusinessFollowStatus> {
   const res = await fetch(`${API_BASE}/my_engagements/follow/toggle/`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({
-      target_type: targetKind,
-      target_id: targetId,
+      target_type: 'business',
+      target_id: businessId,
     }),
   });
 
@@ -158,7 +213,14 @@ export async function toggleFollow(
     );
   }
 
-  return data as ToggleResponse;
+  const raw: any = data ?? {};
+  return {
+    target_type: 'business',
+    target_id: businessId,
+    likes_count: raw.likes_count ?? 0,
+    follows_count: raw.follows_count ?? 0,
+    followed: !!raw.followed,
+  };
 }
 
 /* ============================================================

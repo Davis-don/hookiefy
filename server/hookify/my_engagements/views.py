@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 
 from .models import Like, Follow
 from .serializers import (
-    EngagementActionSerializer,
+    LikeActionSerializer,
+    FollowActionSerializer,
     EngagementStatusSerializer,
     LikeSerializer,
     FollowSerializer,
@@ -25,7 +26,7 @@ from .services import (
 
 
 # ============================================================
-# LIKE TOGGLE
+# LIKE TOGGLE — product / post / story
 # ============================================================
 
 class LikeToggleView(APIView):
@@ -42,7 +43,7 @@ class LikeToggleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = EngagementActionSerializer(data=request.data)
+        serializer = LikeActionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         target_type = serializer.validated_data["target_type"]
@@ -83,7 +84,7 @@ class LikeToggleView(APIView):
 
 
 # ============================================================
-# FOLLOW TOGGLE
+# FOLLOW TOGGLE — business only
 # ============================================================
 
 class FollowToggleView(APIView):
@@ -91,14 +92,14 @@ class FollowToggleView(APIView):
     POST /my_engagements/follow/toggle/
 
     Body:
-        target_type: "product" | "post" | "story"
+        target_type: "business"
         target_id:   <int>
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = EngagementActionSerializer(data=request.data)
+        serializer = FollowActionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         target_type = serializer.validated_data["target_type"]
@@ -130,8 +131,8 @@ class FollowToggleView(APIView):
             EngagementStatusSerializer({
                 "target_type": target_type,
                 "target_id": target_id,
-                "likes_count": obj.likes_count,
-                "follows_count": obj.follows_count,
+                "likes_count": getattr(obj, "likes_count", 0),
+                "follows_count": getattr(obj, "follows_count", 0),
                 "followed": followed,
             }).data,
             status=status.HTTP_200_OK,
@@ -145,6 +146,7 @@ class FollowToggleView(APIView):
 class EngagementStatusView(APIView):
     """
     GET /my_engagements/status/?target_type=product&target_id=42
+    GET /my_engagements/status/?target_type=business&target_id=7
     """
 
     permission_classes = [IsAuthenticated]
@@ -175,10 +177,14 @@ class EngagementStatusView(APIView):
         return Response({
             "target_type": target_type,
             "target_id": int(target_id),
-            "likes_count": obj.likes_count,
-            "follows_count": obj.follows_count,
-            "liked": has_liked(request.user, obj),
-            "followed": has_followed(request.user, obj),
+            "likes_count": getattr(obj, "likes_count", 0),
+            "follows_count": getattr(obj, "follows_count", 0),
+            "liked": has_liked(request.user, obj)
+            if target_type != "business"
+            else False,
+            "followed": has_followed(request.user, obj)
+            if target_type == "business"
+            else False,
         })
 
 
@@ -228,12 +234,12 @@ class LikeListView(APIView):
 
 
 # ============================================================
-# WHO FOLLOWS AN OBJECT
+# WHO FOLLOWS A BUSINESS
 # ============================================================
 
 class FollowListView(APIView):
     """
-    GET /my_engagements/follows/?target_type=product&target_id=42
+    GET /my_engagements/follows/?target_type=business&target_id=7
     """
 
     permission_classes = [IsAuthenticated]

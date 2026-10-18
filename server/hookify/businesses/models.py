@@ -97,6 +97,27 @@ class Businesses(models.Model):
     )
 
     # --------------------------------------------------------
+    # ENGAGEMENT COUNTERS
+    # --------------------------------------------------------
+    # Cached totals so lists / cards can render counts without
+    # aggregating across the Like and Follow tables on every read.
+    # Kept in sync by my_engagements.services.
+    # --------------------------------------------------------
+
+    likes_count = models.PositiveIntegerField(
+        default=0,
+        help_text=(
+            "Cached number of likes across all of this business's content "
+            "(products, posts, stories) plus likes on the business itself."
+        ),
+    )
+
+    follows_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Cached number of users following this business.",
+    )
+
+    # --------------------------------------------------------
     # TIMESTAMPS
     # --------------------------------------------------------
 

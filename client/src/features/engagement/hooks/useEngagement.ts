@@ -8,9 +8,11 @@ import {
 
 import {
   fetchEngagementStatus,
+  fetchBusinessFollowStatus,
   toggleLike,
-  toggleFollow,
+  toggleFollowBusiness,
   type EngagementStatus,
+  type BusinessFollowStatus,
   type TargetKind,
   type ToggleResponse,
 } from '../apis/engagementApi';
@@ -20,12 +22,17 @@ import {
    ============================================================ */
 
 export const engagementKeys = {
+  /** Status for content the user can LIKE (product / post / story). */
   status: (kind: TargetKind, id: number) =>
     ['engagement', 'status', kind, id] as const,
+
+  /** Status for a BUSINESS the user can FOLLOW. */
+  businessFollow: (businessId: number) =>
+    ['engagement', 'business-follow', businessId] as const,
 };
 
 /* ============================================================
-   useEngagementStatus — fetch current state
+   useEngagementStatus — fetch current state for content
    ============================================================ */
 
 export function useEngagementStatus(
@@ -37,8 +44,21 @@ export function useEngagementStatus(
     queryFn: () => fetchEngagementStatus(targetKind, targetId),
     staleTime: 30_000,
     gcTime: 5 * 60_000,
-    // Only fetch if we have a valid id
     enabled: Number.isFinite(targetId) && targetId > 0,
+  });
+}
+
+/* ============================================================
+   useBusinessFollowStatus — fetch follow state for a business
+   ============================================================ */
+
+export function useBusinessFollowStatus(businessId: number) {
+  return useQuery<BusinessFollowStatus, Error>({
+    queryKey: engagementKeys.businessFollow(businessId),
+    queryFn: () => fetchBusinessFollowStatus(businessId),
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    enabled: Number.isFinite(businessId) && businessId > 0,
   });
 }
 
@@ -68,7 +88,6 @@ export function useToggleLike(
 
     // ── Optimistic update ────────────────────────────────
     onMutate: async () => {
-      // Cancel in-flight fetches so they don't overwrite us
       await qc.cancelQueries({ queryKey: key });
 
       const previous = qc.getQueryData<EngagementStatus>(key);
@@ -84,15 +103,12 @@ export function useToggleLike(
         });
       }
 
-      // Fire animation #1 immediately
       callbacks.onOptimistic();
 
       return { previous };
     },
 
-    // ── Server confirmed ─────────────────────────────────
     onSuccess: (data) => {
-      // Write authoritative values back
       qc.setQueryData<EngagementStatus>(key, (current) => {
         if (!current) return current;
         return {
@@ -103,11 +119,9 @@ export function useToggleLike(
         };
       });
 
-      // Fire animation #2 — the "successful" burst
       callbacks.onConfirmed(data);
     },
 
-    // ── Server rejected — roll back ──────────────────────
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
         qc.setQueryData<EngagementStatus>(key, ctx.previous);
@@ -118,25 +132,32 @@ export function useToggleLike(
 }
 
 /* ============================================================
-   useToggleFollow — same pattern, no animation callback
+   useToggleFollow — BUSINESS ONLY
+   ============================================================
+   The Follow button never targets a post/product/story anymore.
+   It always follows the business that owns the item.
    ============================================================ */
 
-export function useToggleFollow(
-  targetKind: TargetKind,
-  targetId: number,
-) {
+export function useToggleFollowBusiness(businessId: number) {
   const qc = useQueryClient();
-  const key = engagementKeys.status(targetKind, targetId);
+  const key = engagementKeys.businessFollow(businessId);
 
-  return useMutation<ToggleResponse, Error, void, { previous?: EngagementStatus }>({
-    mutationFn: () => toggleFollow(targetKind, targetId),
+  return useMutation<
+    BusinessFollowStatus,
+    Error,
+    void,
+    { previous?: BusinessFollowStatus }
+  >({
+    mutationFn: () => toggleFollowBusiness(businessId),
 
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<EngagementStatus>(key);
+
+      const previous = qc.getQueryData<BusinessFollowStatus>(key);
+
       if (previous) {
         const nextFollowed = !previous.followed;
-        qc.setQueryData<EngagementStatus>(key, {
+        qc.setQueryData<BusinessFollowStatus>(key, {
           ...previous,
           followed: nextFollowed,
           follows_count: nextFollowed
@@ -144,23 +165,25 @@ export function useToggleFollow(
             : Math.max(0, previous.follows_count - 1),
         });
       }
+
       return { previous };
     },
 
     onSuccess: (data) => {
-      qc.setQueryData<EngagementStatus>(key, (current) => {
-        if (!current) return current;
+      qc.setQueryData<BusinessFollowStatus>(key, (current) => {
+        if (!current) return data;
         return {
           ...current,
           followed: data.followed ?? current.followed,
-          likes_count: data.likes_count,
           follows_count: data.follows_count,
         };
       });
     },
 
     onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData<EngagementStatus>(key, ctx.previous);
+      if (ctx?.previous) {
+        qc.setQueryData<BusinessFollowStatus>(key, ctx.previous);
+      }
     },
   });
 }
