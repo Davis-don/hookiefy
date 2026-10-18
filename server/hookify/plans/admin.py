@@ -1,6 +1,6 @@
 # plans/admin.py
 
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from .models import Plan, PlanProperty
 
@@ -26,6 +26,41 @@ class PlanPropertyInline(admin.TabularInline):
 
 
 # ============================================================
+# HELPER — is a plan in use?
+# ============================================================
+
+def _plan_in_use(plan):
+    """
+    Return (in_use: bool, reason: str, count: int).
+    Checks both subscription rows and any User.plan FK.
+    """
+    from subscription.models import Subscription
+
+    sub_count = Subscription.objects.filter(plan=plan).count()
+    if sub_count > 0:
+        return (
+            True,
+            f"{sub_count} subscription(s) reference this plan",
+            sub_count,
+        )
+
+    try:
+        from account.models import User
+        if hasattr(User, "plan"):
+            user_count = User.objects.filter(plan=plan).count()
+            if user_count > 0:
+                return (
+                    True,
+                    f"{user_count} user(s) are directly assigned to this plan",
+                    user_count,
+                )
+    except Exception:
+        pass
+
+    return (False, "", 0)
+
+
+# ============================================================
 # PLAN ADMIN
 # ============================================================
 
@@ -35,6 +70,7 @@ class PlanAdmin(admin.ModelAdmin):
     # ── List view ─────────────────────────────────────────
     list_display = (
         "plan_name",
+        "slug",
         "price_display_column",
         "billing_cycle",
         "limits_summary",
@@ -43,7 +79,7 @@ class PlanAdmin(admin.ModelAdmin):
         "display_order",
     )
 
-    list_display_links = ("plan_name",)
+    list_display_links = ("plan_name", "slug")
 
     # ── Filters ───────────────────────────────────────────
     list_filter = (
@@ -65,6 +101,9 @@ class PlanAdmin(admin.ModelAdmin):
     ordering = ("display_order", "price", "plan_name")
     list_per_page = 25
     list_editable = ("is_active", "is_default", "display_order")
+
+    # ── Slug auto-fill when creating a new plan ───────────
+    prepopulated_fields = {"slug": ("plan_name",)}
 
     # ── Detail page layout ────────────────────────────────
     fieldsets = (
@@ -141,6 +180,7 @@ class PlanAdmin(admin.ModelAdmin):
         "mark_inactive",
         "mark_default",
         "clear_default",
+        "delete_selected_plans_safe",
     )
 
     # ── Custom columns ────────────────────────────────────
@@ -189,13 +229,12 @@ class PlanAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 "Select exactly one plan to mark as default.",
-                level="error",
+                level=messages.ERROR,
             )
             return
 
         plan = queryset.first()
 
-        # Un-mark any current default
         Plan.objects.exclude(pk=plan.pk).filter(
             is_default=True
         ).update(is_default=False)
@@ -204,7 +243,10 @@ class PlanAdmin(admin.ModelAdmin):
         plan.is_active = True
         plan.save(update_fields=["is_default", "is_active", "updated_at"])
 
-        self.message_user(request, f"{plan.plan_name} is now the default plan.")
+        self.message_user(
+            request,
+            f"{plan.plan_name} is now the default plan.",
+        )
 
     @admin.action(description="Remove default flag from selected plans")
     def clear_default(self, request, queryset):
@@ -213,6 +255,100 @@ class PlanAdmin(admin.ModelAdmin):
             request,
             f"Default flag removed from {updated} plan(s).",
         )
+
+    @admin.action(
+        description="Delete selected plans (blocked if in use)",
+    )
+    def delete_selected_plans_safe(self, request, queryset):
+        """
+        Bulk delete that refuses to touch any plan with
+        active subscribers or direct user links.
+        """
+        blocked = []
+        deletable = []
+
+        for plan in queryset:
+            in_use, reason, count = _plan_in_use(plan)
+            if in_use:
+                blocked.append((plan, reason, count))
+            else:
+                deletable.append(plan)
+
+        if blocked:
+            parts = [
+                f"{p.plan_name} ({reason})"
+                for p, reason, _ in blocked
+            ]
+            self.message_user(
+                request,
+                f"Could not delete {len(blocked)} plan(s): "
+                + "; ".join(parts),
+                level=messages.WARNING,
+            )
+
+        if deletable:
+            names = ", ".join(p.plan_name for p in deletable)
+            count = len(deletable)
+            for plan in deletable:
+                plan.delete()
+            self.message_user(
+                request,
+                f"Deleted {count} plan(s): {names}.",
+                level=messages.SUCCESS,
+            )
+
+        if not deletable and blocked:
+            self.message_user(
+                request,
+                "No plans were deleted — every selected plan is in use.",
+                level=messages.ERROR,
+            )
+
+    # ── Single-row delete guard ──────────────────────────
+
+    def delete_model(self, request, obj):
+        """Block single delete when the plan is in use."""
+        in_use, reason, count = _plan_in_use(obj)
+        if in_use:
+            self.message_user(
+                request,
+                f"Cannot delete '{obj.plan_name}' — {reason}.",
+                level=messages.ERROR,
+            )
+            return
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        """Block bulk delete (via Django's built-in action) on in-use plans."""
+        blocked = []
+        deletable_ids = []
+
+        for plan in queryset:
+            in_use, reason, count = _plan_in_use(plan)
+            if in_use:
+                blocked.append((plan, reason))
+            else:
+                deletable_ids.append(plan.pk)
+
+        if blocked:
+            parts = [
+                f"{p.plan_name} ({reason})"
+                for p, reason in blocked
+            ]
+            self.message_user(
+                request,
+                f"Skipped {len(blocked)} plan(s) that are in use: "
+                + "; ".join(parts),
+                level=messages.WARNING,
+            )
+
+        if deletable_ids:
+            Plan.objects.filter(pk__in=deletable_ids).delete()
+            self.message_user(
+                request,
+                f"Deleted {len(deletable_ids)} plan(s).",
+                level=messages.SUCCESS,
+            )
 
 
 # ============================================================

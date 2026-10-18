@@ -174,7 +174,13 @@ def update_plan(request, slug):
 # ============================================================
 # DELETE — DELETE /plans/<slug>/delete/
 # Superadmin only.
-# PROTECTed by Subscription FK — refuses if any subscriber.
+#
+# Safety gates (each returns 400 with a clear message):
+#   1. Subscription FK — anyone currently subscribed to it.
+#   2. User.plan FK    — if the user model links directly.
+#   3. Default plan    — refuse to delete the default without
+#                        a replacement active plan.
+#   4. ProtectedError  — catch any other FK block at delete.
 # ============================================================
 
 @api_view(["DELETE"])
@@ -188,34 +194,116 @@ def delete_plan(request, slug):
 
     plan = get_object_or_404(Plan, slug=slug)
 
-    # Refuse if any subscription references this plan.
+    # ── 1. Subscriptions currently on this plan ─────────────
     from subscription.models import Subscription
-    from django.db.models import ProtectedError
 
-    if Subscription.objects.filter(plan=plan).exists():
+    subs = Subscription.objects.filter(plan=plan)
+    sub_count = subs.count()
+
+    if sub_count > 0:
+        active_count = subs.filter(is_active=True).count() if hasattr(
+            Subscription, "is_active"
+        ) else sub_count
+
         return Response(
             {
                 "message": (
-                    "This plan is in use. Cancel or reassign all "
-                    "subscriptions before deleting it."
+                    "This plan cannot be deleted because users are "
+                    "currently subscribed to it. Cancel or move "
+                    "all subscriptions to another plan first."
                 ),
-                "subscription_count": Subscription.objects.filter(
-                    plan=plan
-                ).count(),
+                "code": "plan_in_use",
+                "subscription_count": sub_count,
+                "active_subscriptions": active_count,
+                "suggested_action": (
+                    "Use POST /subscriptions/<id>/cancel/ or "
+                    "reassign subscriptions to another plan."
+                ),
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    # ── 2. Users directly linked via User.plan (if that field exists)
+    try:
+        from account.models import User
+        if hasattr(User, "plan"):
+            user_qs = User.objects.filter(plan=plan)
+            user_count = user_qs.count()
+            if user_count > 0:
+                return Response(
+                    {
+                        "message": (
+                            "This plan cannot be deleted because "
+                            "users are directly assigned to it."
+                        ),
+                        "code": "plan_in_use",
+                        "user_count": user_count,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+    except Exception:
+        # User model doesn't have `.plan`, or import fails — skip.
+        pass
+
+    # ── 3. Refuse to delete the default plan ────────────────
+    if plan.is_default:
+        # Do we have another active plan we could promote instead?
+        replacement = (
+            Plan.objects
+            .filter(is_active=True)
+            .exclude(pk=plan.pk)
+            .order_by("price", "display_order")
+            .first()
+        )
+
+        if replacement is None:
+            return Response(
+                {
+                    "message": (
+                        "This is the default plan and no other "
+                        "active plan exists to replace it. "
+                        "Create or activate another plan first."
+                    ),
+                    "code": "default_plan_undeletable",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Auto-promote the cheapest active plan to default,
+        # then proceed to delete.
+        with transaction.atomic():
+            replacement.is_default = True
+            replacement.save(
+                update_fields=["is_default", "updated_at"]
+            )
+
+    # ── 4. Delete ───────────────────────────────────────────
+    from django.db.models import ProtectedError
 
     try:
         plan.delete()
     except ProtectedError:
         return Response(
-            {"message": "Cannot delete — protected by subscriptions."},
+            {
+                "message": (
+                    "Cannot delete this plan — it is protected by "
+                    "related records. Remove the references first."
+                ),
+                "code": "plan_protected",
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     return Response(
-        {"message": "Plan deleted."},
+        {
+            "message": f"{plan.plan_name} deleted.",
+            "replacement_default": (
+                replacement.plan_name
+                if 'replacement' in locals()
+                and replacement is not None
+                else None
+            ),
+        },
         status=status.HTTP_200_OK,
     )
 
@@ -240,15 +328,12 @@ def set_default_plan(request, slug):
     plan = get_object_or_404(Plan, slug=slug)
 
     with transaction.atomic():
-        # Un-mark any other default
         Plan.objects.filter(is_default=True).exclude(
             pk=plan.pk
         ).update(is_default=False)
 
         plan.is_default = True
 
-        # A default plan should always be active — otherwise new
-        # users would be assigned an inactive plan.
         if not plan.is_active:
             plan.is_active = True
 
