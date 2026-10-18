@@ -94,12 +94,11 @@ async function parseError(res: Response, fallback: string): Promise<string> {
 
 // ============================================================
 // MY FEED — GET /feed/businesses/mine/
-// Returns posts + products from OTHER businesses.
 // ============================================================
 
 export async function fetchMyFeed(
   token: string | null,
-  options: FetchFeedOptions = {}
+  options: FetchFeedOptions = {},
 ): Promise<FeedResponse> {
   if (!token) throw new Error('Not authenticated.');
 
@@ -130,11 +129,10 @@ export async function fetchMyFeed(
 
 // ============================================================
 // PUBLIC FEED — GET /feed/businesses/
-// No auth required. Same shape as fetchMyFeed.
 // ============================================================
 
 export async function fetchPublicFeed(
-  options: FetchFeedOptions = {}
+  options: FetchFeedOptions = {},
 ): Promise<FeedResponse> {
   const params = new URLSearchParams();
 

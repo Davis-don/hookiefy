@@ -185,10 +185,17 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 # DATABASE
 # ============================================================
 
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=config("DATABASE_URL"),
+#         conn_max_age=600,
+#         ssl_require=True,
+#     )
+# }
 DATABASES = {
     "default": dj_database_url.config(
         default=config("DATABASE_URL"),
-        conn_max_age=600,
+        conn_max_age=int(os.environ.get("DJANGO_DB_CONN_MAX_AGE", "600")),
         ssl_require=True,
     )
 }

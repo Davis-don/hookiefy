@@ -1,6 +1,6 @@
 // src/pages/Home.tsx
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useBusinessFeed } from '../hooks/useBusinessFeed';
 import { useAuthStore } from '../../../../store/authStore';
 import { Spinner } from '../../../../components/spinner/Spinner';
@@ -17,21 +17,58 @@ type OpenView =
   | { kind: 'product'; id: number }
   | null;
 
+/* Distance from bottom (px) at which we auto-load the next page. */
+const SCROLL_TRIGGER_PX = 400;
+
 function Home() {
   const access = useAuthStore((s) => s.access);
-  const [limit] = useState(20);
   const [openView, setOpenView] = useState<OpenView>(null);
 
   const {
     data,
     isLoading,
+    isFetching,
+    isFetchingMore,
     isError,
     error,
     refetch,
-    isFetching,
-  } = useBusinessFeed({ limit, kind: 'all' });
+    loadMore,
+  } = useBusinessFeed({ limit: 10, kind: 'all' });
 
-  /* ── Business details — takes over the whole view ────── */
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  /* ── Auto-load on scroll ──────────────────────────
+     Watches a sentinel div rendered below the list.
+     When it enters the viewport (or comes within
+     SCROLL_TRIGGER_PX of it), fires loadMore().
+     loadMore() is idempotent — rapid scroll events
+     cannot double-fire. */
+  useEffect(() => {
+    if (!data?.has_more) return;
+    if (isFetchingMore) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            loadMore();
+          }
+        }
+      },
+      {
+        rootMargin: `0px 0px ${SCROLL_TRIGGER_PX}px 0px`,
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [data?.has_more, isFetchingMore, loadMore]);
+
+  /* ── Business details ──────────────────────────── */
   if (openView?.kind === 'business') {
     return (
       <BusinessDetails
@@ -41,7 +78,7 @@ function Home() {
     );
   }
 
-  /* ── Post detail ─────────────────────────────────────── */
+  /* ── Post detail ───────────────────────────────── */
   if (openView?.kind === 'post') {
     return (
       <PostDetail
@@ -54,7 +91,7 @@ function Home() {
     );
   }
 
-  /* ── Product detail ──────────────────────────────────── */
+  /* ── Product detail ────────────────────────────── */
   if (openView?.kind === 'product') {
     return (
       <ProductDetail
@@ -78,6 +115,7 @@ function Home() {
     );
   }
 
+  /* ── First load ────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="home-state">
@@ -86,7 +124,10 @@ function Home() {
     );
   }
 
-  if (isError) {
+  /* ── Error ─────────────────────────────────────── */
+  if (isError && !data) {
+    const retrying = isFetching && !isFetchingMore;
+
     return (
       <div className="home-state home-state-error">
         <p>{(error as Error)?.message || 'Could not load the feed.'}</p>
@@ -94,9 +135,9 @@ function Home() {
           type="button"
           className="home-retry-btn"
           onClick={() => refetch()}
-          disabled={isFetching}
+          disabled={retrying}
         >
-          {isFetching ? 'Retrying…' : 'Try again'}
+          {retrying ? 'Retrying…' : 'Try again'}
         </button>
       </div>
     );
@@ -104,6 +145,7 @@ function Home() {
 
   const items = data?.results ?? [];
 
+  /* ── Empty feed ────────────────────────────────── */
   if (items.length === 0) {
     return (
       <div className="home-state home-state-empty">
@@ -115,6 +157,7 @@ function Home() {
     );
   }
 
+  /* ── Feed ──────────────────────────────────────── */
   return (
     <div className="home-shell">
       <ul className="home-list">
@@ -145,14 +188,51 @@ function Home() {
         ))}
       </ul>
 
-      {data?.has_more && (
+      {/* Sentinel — when this scrolls near the viewport, loadMore fires */}
+      <div ref={sentinelRef} className="home-sentinel" aria-hidden="true" />
+
+      {/* Loading row while fetching the next page */}
+      {isFetchingMore && (
+        <div className="home-loading-row">
+          <Spinner size={18} color="#64748B" label="Loading more…" />
+        </div>
+      )}
+
+      {/* End-of-feed state */}
+      {!data?.has_more && items.length > 0 && (
+        <div className="home-end">
+          <div className="home-end-icon" aria-hidden="true">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <p className="home-end-title">You're all caught up</p>
+          <p className="home-end-sub">
+            You've seen every post and product from your feed.
+          </p>
+        </div>
+      )}
+
+      {/* Manual fallback — appears when has_more and no page is
+          currently being fetched. Auto-scroll fires first in normal
+          use; this button catches the rare case where the sentinel
+          was missed (Safari quirks, programmatic jumps, etc.). */}
+      {data?.has_more && !isFetchingMore && (
         <button
           type="button"
           className="home-loadmore"
-          onClick={() => refetch()}
-          disabled={isFetching}
+          onClick={() => loadMore()}
         >
-          {isFetching ? 'Loading…' : 'Load more'}
+          Load more
         </button>
       )}
     </div>
