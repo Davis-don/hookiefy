@@ -618,3 +618,6 @@ class Command(BaseCommand):
             content=random.choice(STORY_CONTENT),
             category=random.choice(STORY_CATEGORIES),
         )
+
+
+        # DJANGO_DB_CONN_MAX_AGE=30 python manage.py seed_test_data --users 100 --start-index 1 --sleep 0.5
