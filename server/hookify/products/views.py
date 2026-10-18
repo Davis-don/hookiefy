@@ -1,5 +1,8 @@
 # products/views.py
 
+import os
+import re
+
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +14,7 @@ from businesses.models import Businesses
 from account.controllers.cloudinary_utils import (
     upload_image_to_cloudinary,
     delete_image_from_cloudinary,
+    ImageValidationError,
 )
 
 from subscription.guards import requires_active_subscription
@@ -21,6 +25,140 @@ from .serializers import (
     ProductCreateSerializer,
     ProductUpdateSerializer,
 )
+
+
+# ============================================================
+# TEXT RULES  — keep in sync with serializers.py
+# ============================================================
+
+PRODUCT_NAME_MIN_LENGTH        = 3
+PRODUCT_NAME_MAX_LENGTH        = 80
+PRODUCT_DESCRIPTION_MIN_LENGTH = 10
+PRODUCT_DESCRIPTION_MAX_LENGTH = 400
+
+URL_PATTERNS = (
+    re.compile(r"https?://", re.IGNORECASE),
+    re.compile(r"\bwww\.", re.IGNORECASE),
+    re.compile(
+        r"\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+        r"\.(?:com|net|org|io|co|ke|app|dev|me|info|biz|xyz|shop|store|site|online|link|click|tv|ly|to|gl)\b",
+        re.IGNORECASE,
+    ),
+)
+
+
+# ============================================================
+# IMAGE RULES — keep in sync with posts/views.py
+# ============================================================
+
+# Hard ceiling for a single product image (same as posts).
+MAX_PRODUCT_IMAGE_BYTES = 8 * 1024 * 1024   # 8 MB
+
+# Allowed MIME types for product images.
+ALLOWED_PRODUCT_IMAGE_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+}
+
+# Allowed file extensions — second layer so a mislabelled file
+# (e.g. a .gif with a fake content-type) is still rejected.
+ALLOWED_PRODUCT_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+
+# Human-readable label used in error messages.
+ALLOWED_PRODUCT_IMAGE_LABEL = "PNG, JPEG or WEBP"
+
+
+def _has_url(value: str) -> bool:
+    if not value:
+        return False
+    return any(p.search(value) for p in URL_PATTERNS)
+
+
+def _check_text_field(value, field_label, min_len, max_len):
+    """
+    Mirrors the serializer check so the view returns a
+    consistent error shape before touching the DB.
+    Returns (trimmed_value, error_or_None).
+    """
+    value = (value or "").strip()
+
+    if not value:
+        return (None, f"{field_label} is required.")
+    if len(value) < min_len:
+        return (
+            None,
+            f"{field_label} must be at least {min_len} characters.",
+        )
+    if len(value) > max_len:
+        return (None, f"{field_label} cannot exceed {max_len} characters.")
+    if _has_url(value):
+        return (None, f"{field_label} cannot contain links or URLs.")
+
+    return (value, None)
+
+
+def _validate_product_image(image_file):
+    """
+    Return (ok, error_message).
+
+    Same rules as posts:
+        - content type in {PNG, JPEG, JPG, WEBP}
+        - file extension in {.png, .jpg, .jpeg, .webp}
+        - size > 0
+        - size <= 8 MB
+
+    Never raises — always returns a message the caller can send
+    straight back to the client.
+    """
+    if image_file is None:
+        return (False, "An image is required.")
+
+    content_type = (image_file.content_type or "").lower()
+    if content_type not in ALLOWED_PRODUCT_IMAGE_TYPES:
+        return (
+            False,
+            f"Unsupported file type. Please use {ALLOWED_PRODUCT_IMAGE_LABEL}.",
+        )
+
+    filename = (getattr(image_file, "name", "") or "").lower()
+    extension = os.path.splitext(filename)[1]
+    if extension not in ALLOWED_PRODUCT_IMAGE_EXTENSIONS:
+        return (
+            False,
+            f"Unsupported file extension. Please use {ALLOWED_PRODUCT_IMAGE_LABEL}.",
+        )
+
+    size = getattr(image_file, "size", 0) or 0
+    if size <= 0:
+        return (False, "The image appears to be empty.")
+
+    if size > MAX_PRODUCT_IMAGE_BYTES:
+        mb_limit = MAX_PRODUCT_IMAGE_BYTES // (1024 * 1024)
+        return (
+            False,
+            f"Image is too large. Maximum size is {mb_limit} MB.",
+        )
+
+    return (True, "")
+
+
+def _validate_product_images(image_files):
+    """
+    Validate every image in the batch. Return (ok, error_message)
+    so the caller can short-circuit before uploading anything.
+    """
+    for index, image_file in enumerate(image_files):
+        ok, err = _validate_product_image(image_file)
+        if not ok:
+            # Prefix the failing file's name when we can — helps
+            # when the user attaches several images at once.
+            name = getattr(image_file, "name", None)
+            if name:
+                return (False, f'"{name}": {err}')
+            return (False, f"Image {index + 1}: {err}")
+    return (True, "")
 
 
 # ============================================================
@@ -196,7 +334,11 @@ def _save_images(product, image_files, replace=False):
                 image_file,
                 folder="product_images",
             )
+        except ImageValidationError:
+            # Re-raise so the caller can return 400 (not 503)
+            raise
         except Exception as e:
+            # Wrap non-validation failures as RuntimeError → 503
             raise RuntimeError(f"Image upload failed: {str(e)}")
 
         is_primary = (not has_primary) and (index == 0)
@@ -216,7 +358,6 @@ def _save_images(product, image_files, replace=False):
 
 # ============================================================
 # LIST PRODUCTS OF A BUSINESS
-# GET /products/business/<business_id>/
 # ============================================================
 
 @api_view(["GET"])
@@ -249,7 +390,6 @@ def list_products(request, business_id):
 
 # ============================================================
 # CREATE PRODUCT
-# POST /products/business/<business_id>/create/
 # ============================================================
 
 @api_view(["POST"])
@@ -285,10 +425,44 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # ── Name (already validated by serializer, re-checked for safety)
+    name = (serializer.validated_data.get("name") or "").strip()
+    name_err = None
+    if not name:
+        name_err = "Product name is required."
+    elif _has_url(name):
+        name_err = "Product name cannot contain links or URLs."
+    if name_err:
+        return Response(
+            {"name": [name_err]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # ── Description (required, 10–400 chars, no URLs) ───────
+    description, desc_err = _check_text_field(
+        serializer.validated_data.get("description"),
+        "Description",
+        PRODUCT_DESCRIPTION_MIN_LENGTH,
+        PRODUCT_DESCRIPTION_MAX_LENGTH,
+    )
+    if desc_err:
+        return Response(
+            {"description": [desc_err]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     image_files = _extract_images_from_request(request)
     if not image_files:
         return Response(
             {"message": "At least one image is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # ── Image content/extension/size (same rules as posts) ──
+    ok, img_err = _validate_product_images(image_files)
+    if not ok:
+        return Response(
+            {"message": img_err},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -312,8 +486,8 @@ def create_product(request, business_id):
 
     product = Products.objects.create(
         business=business,
-        name=serializer.validated_data["name"],
-        description=serializer.validated_data.get("description", ""),
+        name=name,
+        description=description,
         price=serializer.validated_data.get("price"),
     )
 
@@ -323,11 +497,17 @@ def create_product(request, business_id):
 
     try:
         _save_images(product, image_files, replace=False)
-    except RuntimeError as e:
+    except ImageValidationError as e:
         product.delete()
         return Response(
             {"message": str(e)},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+    except RuntimeError as e:
+        product.delete()
+        return Response(
+            {"message": str(e)},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
     product.refresh_from_db()
@@ -353,7 +533,6 @@ def create_product(request, business_id):
 
 # ============================================================
 # RETRIEVE PRODUCT — PUBLIC
-# GET /products/<product_id>/
 # ============================================================
 
 @api_view(["GET"])
@@ -371,7 +550,6 @@ def retrieve_product(request, product_id):
 
 # ============================================================
 # UPDATE PRODUCT
-# PATCH /products/<product_id>/update/
 # ============================================================
 
 @api_view(["PATCH", "PUT"])
@@ -401,12 +579,50 @@ def update_product(request, product_id):
     validated = dict(serializer.validated_data)
     validated.pop("properties", None)
 
+    # ── Name (if sent) — must pass same rules as create ────
+    if "name" in validated and validated["name"] is not None:
+        name, name_err = _check_text_field(
+            validated["name"],
+            "Product name",
+            PRODUCT_NAME_MIN_LENGTH,
+            PRODUCT_NAME_MAX_LENGTH,
+        )
+        if name_err:
+            return Response(
+                {"name": [name_err]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        validated["name"] = name
+
+    # ── Description (if sent) ───────────────────────────────
+    if "description" in validated and validated["description"] is not None:
+        description, desc_err = _check_text_field(
+            validated["description"],
+            "Description",
+            PRODUCT_DESCRIPTION_MIN_LENGTH,
+            PRODUCT_DESCRIPTION_MAX_LENGTH,
+        )
+        if desc_err:
+            return Response(
+                {"description": [desc_err]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        validated["description"] = description
+
     image_files = _extract_images_from_request(request)
     replace_images = str(
         request.data.get("replace_images", "")
     ).lower() in ("1", "true", "yes")
 
     if image_files:
+        # ── Image content/extension/size (same rules as posts) ──
+        ok, img_err = _validate_product_images(image_files)
+        if not ok:
+            return Response(
+                {"message": img_err},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         existing_count = 0 if replace_images else product.images.count()
 
         allowed, total_after, img_limit, message = _check_image_count_limit(
@@ -440,10 +656,15 @@ def update_product(request, product_id):
     if image_files:
         try:
             _save_images(product, image_files, replace=replace_images)
-        except RuntimeError as e:
+        except ImageValidationError as e:
             return Response(
                 {"message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except RuntimeError as e:
+            return Response(
+                {"message": str(e)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
     product.refresh_from_db()
@@ -459,7 +680,6 @@ def update_product(request, product_id):
 
 # ============================================================
 # DELETE PRODUCT
-# DELETE /products/<product_id>/delete/
 # ============================================================
 
 @api_view(["DELETE"])
@@ -490,7 +710,6 @@ def delete_product(request, product_id):
 
 # ============================================================
 # DELETE A SINGLE PRODUCT IMAGE
-# DELETE /products/images/<image_id>/delete/
 # ============================================================
 
 @api_view(["DELETE"])
@@ -534,7 +753,6 @@ def delete_product_image(request, image_id):
 
 # ============================================================
 # SET PRIMARY IMAGE
-# POST /products/images/<image_id>/primary/
 # ============================================================
 
 @api_view(["POST"])

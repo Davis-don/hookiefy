@@ -20,6 +20,9 @@ from account.serializers import (
 
 from account.controllers.cloudinary_utils import (
     upload_or_replace_profile_image,
+    ImageValidationError,
+    ALLOWED_MIME_TYPES,
+    ALLOWED_IMAGE_LABEL,
 )
 
 from account.services.profile_stats import get_user_stats
@@ -103,21 +106,17 @@ def upload_profile_image(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    allowed_types = {
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-    }
-
-    if image.content_type not in allowed_types:
+    # ── Quick MIME gate before touching the util ────────────
+    # Uses the same allowed set as cloudinary_utils, so this
+    # view can never accept something the util will reject.
+    content_type = (getattr(image, "content_type", "") or "").lower()
+    if content_type not in ALLOWED_MIME_TYPES:
         return Response(
             {
                 "message": (
-                    "Unsupported file type. "
-                    "Please use JPG, PNG, WEBP or GIF."
+                    f"Unsupported file type. Please use {ALLOWED_IMAGE_LABEL}."
                 ),
-                "received_content_type": image.content_type,
+                "received_content_type": content_type,
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -129,15 +128,23 @@ def upload_profile_image(request):
             image_file=image,
             user=user,
         )
+
+    except ImageValidationError as error:
+        # Bad / corrupt / wrong type / oversized image → 400
+        return Response(
+            {"message": str(error)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     except Exception as error:
+        # Network / Cloudinary-side failure after retries → 503
         traceback.print_exc()
         return Response(
             {
-                "message": "Failed to upload profile image.",
-                "error": str(error),
+                "message": f"Image upload failed: {str(error)}",
                 "error_type": error.__class__.__name__,
             },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
     return Response(

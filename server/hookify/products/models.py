@@ -27,10 +27,13 @@ class Products(models.Model):
     name = models.CharField(max_length=200)
 
     # --------------------------------------------------------
-    # DESCRIPTION
+    # DESCRIPTION — required
     # --------------------------------------------------------
 
-    description = models.TextField(default="", blank=True)
+    description = models.TextField(
+        blank=False,
+        help_text="Product description. Required.",
+    )
 
     # --------------------------------------------------------
     # PRICE (optional)

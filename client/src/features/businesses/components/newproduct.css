@@ -44,11 +44,7 @@
 .npr-icon-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Header ─────────────────────────────────────────── */
-.npr-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+.npr-header { display: flex; flex-direction: column; gap: 6px; }
 
 .npr-title {
   font-size: 1.5rem;
@@ -67,11 +63,7 @@
 }
 
 /* ── Form ────────────────────────────────────────────── */
-.npr-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
+.npr-form { display: flex; flex-direction: column; gap: 18px; }
 
 .npr-field {
   display: flex;
@@ -142,6 +134,45 @@
   font-size: 0.78rem;
   color: #94A3B8;
   margin-top: -2px;
+  transition: color 0.18s ease;
+}
+
+/* Counter at or past a limit */
+.npr-counter.is-over {
+  color: #EF4444;
+  font-weight: 700;
+}
+
+/* Row under an input: message left, counter right */
+.npr-field-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -2px;
+  min-height: 18px;
+}
+
+/* Inline error message — empty when there's no error */
+.npr-field-msg {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #DC2626;
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* Invalid input styling */
+.npr-input.is-invalid {
+  border-color: #FCA5A5;
+  background: #FEF2F2;
+}
+.npr-input.is-invalid:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
 }
 
 /* ── Properties — unlimited list ─────────────────────── */
@@ -153,7 +184,7 @@
 
 .npr-prop-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   animation: nprPropIn 0.22s ease;
 }
@@ -163,8 +194,17 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.npr-prop-name  { flex: 1 1 40%; min-width: 0; }
-.npr-prop-value { flex: 1 1 60%; min-width: 0; }
+/* Wrapper so an inline error can sit under each input */
+.npr-prop-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.npr-prop-name  { width: 100%; }
+.npr-prop-value { width: 100%; }
 
 .npr-prop-remove {
   display: inline-flex;
@@ -178,6 +218,7 @@
   color: #B91C1C;
   cursor: pointer;
   flex-shrink: 0;
+  margin-top: 8px;
   transition: background 0.18s ease, border-color 0.18s ease,
               transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
@@ -188,10 +229,9 @@
   border-color: #EF4444;
   transform: translateY(-1px);
 }
-
 .npr-prop-remove:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* The "add another property" button */
+/* "Add another property" */
 .npr-prop-add {
   display: inline-flex;
   align-items: center;
@@ -217,7 +257,6 @@
   border-color: #2563EB;
   transform: translateY(-1px);
 }
-
 .npr-prop-add:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Image upload (empty state) ──────────────────────── */
@@ -272,7 +311,7 @@
   color: #94A3B8;
 }
 
-/* ── Image grid (multiple previews) ──────────────────── */
+/* ── Image grid ──────────────────────────────────────── */
 .npr-preview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -301,7 +340,6 @@
   display: block;
 }
 
-/* "Cover" badge on first image */
 .npr-preview-badge {
   position: absolute;
   top: 8px;
@@ -316,7 +354,6 @@
   pointer-events: none;
 }
 
-/* Remove button — top-right of each tile */
 .npr-preview-remove {
   position: absolute;
   top: 8px;
@@ -346,17 +383,9 @@
   background: #DC2626;
   transform: scale(1.08);
 }
+.npr-preview-remove:active:not(:disabled) { transform: scale(0.96); }
+.npr-preview-remove:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.npr-preview-remove:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-.npr-preview-remove:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* "Add more" tile */
 .npr-preview-add {
   display: flex;
   flex-direction: column;
@@ -384,7 +413,7 @@
   transform: translateY(-1px);
 }
 
-/* ── Error ───────────────────────────────────────────── */
+/* ── Global error ───────────────────────────────────── */
 .npr-error {
   padding: 12px 14px;
   border-radius: 12px;
@@ -392,6 +421,7 @@
   background: #FEF2F2;
   border: 1px solid #FECACA;
   color: #B91C1C;
+  word-break: break-word;
 }
 
 /* ── Actions ─────────────────────────────────────────── */
@@ -444,6 +474,14 @@
   box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
 }
 
+/* Disabled submit still looks intentional */
+.npr-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 640px) {
   .npr-shell { gap: 16px; }
@@ -453,8 +491,9 @@
   .npr-input { padding: 12px 13px; font-size: 0.96rem; }
   .npr-textarea { min-height: 88px; }
 
-  .npr-prop-row { gap: 8px; }
-  .npr-prop-remove { width: 32px; height: 32px; }
+  .npr-prop-row { flex-wrap: wrap; gap: 8px; }
+  .npr-prop-col { flex-basis: 100%; }
+  .npr-prop-remove { width: 32px; height: 32px; margin-top: 0; align-self: flex-end; }
 
   .npr-upload { padding: 22px 16px; }
 
@@ -463,23 +502,13 @@
     gap: 8px;
   }
   .npr-preview-remove {
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
-    top: 6px;
-    right: 6px;
+    width: 24px; height: 24px; font-size: 14px; top: 6px; right: 6px;
   }
   .npr-preview-badge {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    top: 6px;
-    left: 6px;
+    font-size: 0.65rem; padding: 2px 6px; top: 6px; left: 6px;
   }
 
-  .npr-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
+  .npr-actions { flex-direction: column-reverse; align-items: stretch; }
   .npr-btn { width: 100%; text-align: center; }
 }
 
@@ -489,4 +518,11 @@
     grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
   }
   .npr-prop-add { padding: 8px 14px; font-size: 0.86rem; }
+
+  .npr-field-foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .npr-counter { align-self: flex-end; }
 }

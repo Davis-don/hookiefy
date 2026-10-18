@@ -11,6 +11,7 @@ from businesses.models import Businesses
 from account.controllers.cloudinary_utils import (
     upload_image_to_cloudinary,
     delete_image_from_cloudinary,
+    ImageValidationError,
 )
 
 from subscription.guards import requires_active_subscription
@@ -302,10 +303,17 @@ def create_post(request, business_id):
             image_file,
             folder="post_images",
         )
+    except ImageValidationError as e:
+        # Corrupt / wrong format / oversized image → 400
+        return Response(
+            {"message": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     except Exception as e:
+        # Network / Cloudinary backend failure after retries → 503
         return Response(
             {"message": f"Image upload failed: {str(e)}"},
-            status=status.HTTP_400_BAD_REQUEST,
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
     post = Posts.objects.create(
@@ -446,10 +454,17 @@ def update_post(request, post_id):
             )
             validated["image_url"] = upload_result["url"]
             validated["image_public_id"] = upload_result["public_id"]
+        except ImageValidationError as e:
+            # Corrupt / wrong format / oversized image → 400
+            return Response(
+                {"message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
+            # Network / Cloudinary backend failure → 503
             return Response(
                 {"message": f"Image upload failed: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
     for field, value in validated.items():

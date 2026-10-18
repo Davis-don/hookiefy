@@ -1,8 +1,73 @@
 # products/serializers.py
 
+import re
+
 from rest_framework import serializers
 
 from .models import Products, ProductImage, ProductProperty
+
+
+# ============================================================
+# LIMITS & VALIDATION HELPERS
+# ============================================================
+
+PRODUCT_NAME_MIN_LENGTH        = 3
+PRODUCT_NAME_MAX_LENGTH        = 80
+PRODUCT_DESCRIPTION_MIN_LENGTH = 10
+PRODUCT_DESCRIPTION_MAX_LENGTH = 400
+
+# Property name/value limits
+PROPERTY_NAME_MAX_LENGTH  = 60
+PROPERTY_VALUE_MAX_LENGTH = 120
+
+# Patterns that would let a user paste links into text fields
+URL_PATTERNS = (
+    re.compile(r"https?://", re.IGNORECASE),
+    re.compile(r"\bwww\.", re.IGNORECASE),
+    re.compile(
+        r"\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+        r"\.(?:com|net|org|io|co|ke|app|dev|me|info|biz|xyz|shop|store|site|online|link|click|tv|xyz|ly|to|gl)\b",
+        re.IGNORECASE,
+    ),
+)
+
+
+def _has_url(value: str) -> bool:
+    if not value:
+        return False
+    return any(p.search(value) for p in URL_PATTERNS)
+
+
+def _check_text_field(value, field_label, min_len, max_len):
+    """
+    Shared text validator:
+      - trims whitespace
+      - rejects empty
+      - rejects too short / too long
+      - rejects any URL / link
+    Returns the trimmed value or raises ValidationError.
+    """
+    value = (value or "").strip()
+
+    if not value:
+        raise serializers.ValidationError(f"{field_label} is required.")
+
+    if len(value) < min_len:
+        raise serializers.ValidationError(
+            f"{field_label} must be at least {min_len} characters."
+        )
+
+    if len(value) > max_len:
+        raise serializers.ValidationError(
+            f"{field_label} cannot exceed {max_len} characters."
+        )
+
+    if _has_url(value):
+        raise serializers.ValidationError(
+            f"{field_label} cannot contain links or URLs."
+        )
+
+    return value
 
 
 # ============================================================
@@ -33,6 +98,34 @@ class ProductPropertySerializer(serializers.ModelSerializer):
             "sort_order",
         )
 
+    def validate_name(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Property name is required.")
+        if len(value) > PROPERTY_NAME_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f"Property name cannot exceed {PROPERTY_NAME_MAX_LENGTH} characters."
+            )
+        if _has_url(value):
+            raise serializers.ValidationError(
+                "Property name cannot contain links or URLs."
+            )
+        return value
+
+    def validate_value(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Property value is required.")
+        if len(value) > PROPERTY_VALUE_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f"Property value cannot exceed {PROPERTY_VALUE_MAX_LENGTH} characters."
+            )
+        if _has_url(value):
+            raise serializers.ValidationError(
+                "Property value cannot contain links or URLs."
+            )
+        return value
+
 
 # ============================================================
 # READ
@@ -40,12 +133,7 @@ class ProductPropertySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """
-    Read serializer — returns the full product shape:
-        - business info (flat: name, category, type)
-        - nested owner (from the business)
-        - images + primary_image
-        - properties
-        - engagement counters (views, likes, follows)
+    Read serializer — returns the full product shape.
     """
 
     business_name = serializers.CharField(
@@ -63,18 +151,12 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    # Nested owner, resolved from business.owner
     owner = serializers.SerializerMethodField()
 
-    # Nested images
     images = ProductImageSerializer(many=True, read_only=True)
 
-    # The model @property returns a ProductImage (or None).
-    # Wrap it so DRF uses the nested serializer instead of
-    # trying to JSON-encode the model instance.
     primary_image = serializers.SerializerMethodField()
 
-    # Nested properties (via the `property_items` related_name)
     properties = ProductPropertySerializer(
         source="property_items",
         many=True,
@@ -132,8 +214,13 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     """
     Validate text fields + optional properties.
-    Images are handled separately (uploaded to Cloudinary in the view).
-    Properties can be passed as a list of {name, value} dicts.
+
+    Rules:
+        - name:        required, 3–80 chars, no URLs
+        - description: required, 10–400 chars, no URLs
+        - properties:  each name/value ≤ limit, no URLs
+        - price:       optional, ≥ 0
+        - images:      handled in the view (uploaded to Cloudinary)
     """
 
     properties = ProductPropertySerializer(many=True, required=False)
@@ -147,15 +234,26 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "properties",
         )
         extra_kwargs = {
-            "description": {"required": False, "allow_blank": True},
+            "name":        {"required": True,  "allow_blank": False},
+            "description": {"required": True,  "allow_blank": False},
             "price":       {"required": False, "allow_null": True},
         }
 
     def validate_name(self, value):
-        value = (value or "").strip()
-        if not value:
-            raise serializers.ValidationError("Product name cannot be empty.")
-        return value
+        return _check_text_field(
+            value,
+            "Product name",
+            PRODUCT_NAME_MIN_LENGTH,
+            PRODUCT_NAME_MAX_LENGTH,
+        )
+
+    def validate_description(self, value):
+        return _check_text_field(
+            value,
+            "Description",
+            PRODUCT_DESCRIPTION_MIN_LENGTH,
+            PRODUCT_DESCRIPTION_MAX_LENGTH,
+        )
 
     def validate_price(self, value):
         if value is None:
@@ -192,6 +290,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 class ProductUpdateSerializer(serializers.ModelSerializer):
     """
     Same validation as create, but every field is optional.
+    Any field that IS sent must still pass the same rules
+    (including the "no URLs" rule).
     Properties, if provided, replace the existing set entirely.
     """
 
@@ -206,18 +306,30 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "properties",
         )
         extra_kwargs = {
-            "name":        {"required": False},
-            "description": {"required": False, "allow_blank": True},
+            "name":        {"required": False, "allow_blank": False},
+            "description": {"required": False, "allow_blank": False},
             "price":       {"required": False, "allow_null": True},
         }
 
     def validate_name(self, value):
         if value is None:
             return value
-        value = value.strip()
-        if not value:
-            raise serializers.ValidationError("Product name cannot be empty.")
-        return value
+        return _check_text_field(
+            value,
+            "Product name",
+            PRODUCT_NAME_MIN_LENGTH,
+            PRODUCT_NAME_MAX_LENGTH,
+        )
+
+    def validate_description(self, value):
+        if value is None:
+            return value
+        return _check_text_field(
+            value,
+            "Description",
+            PRODUCT_DESCRIPTION_MIN_LENGTH,
+            PRODUCT_DESCRIPTION_MAX_LENGTH,
+        )
 
     def validate_price(self, value):
         if value is None:
