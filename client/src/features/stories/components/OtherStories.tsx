@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authStore';
 import { Spinner } from '../../../components/spinner/Spinner';
 import LikeButton from '../../engagement/components/LikeButton';
-import FollowButton from '../../engagement/components/FollowButton';
 import { listAllStories, type Story } from '../api/storiesApi';
 import './otherStories.css';
 
@@ -127,10 +126,10 @@ function OtherStories() {
                 dangerouslySetInnerHTML={{ __html: story.content_html }}
               />
 
-              {/* ── Actions: like + follow ─────────────── */}
+              {/* ── Actions: like only ───────────────────
+                     Stories aren't followed (that's for businesses). */}
               <div className="os-post-actions">
                 <LikeButton targetKind="story" targetId={story.id} />
-                <FollowButton targetKind="story" targetId={story.id} />
               </div>
 
               {/* ── Read more / less ───────────────────── */}

@@ -87,15 +87,6 @@ function formatPrice(price: string | null | undefined): string | null {
 
 /* ============================================================
    LIGHTBOX
-   ============================================================
-   A self-contained full-screen viewer. Renders nothing when
-   `open` is false. Accepts a list of images and an index to
-   display. Supports:
-       - click outside to close
-       - Escape to close
-       - ArrowLeft / ArrowRight to navigate
-       - left / right chevron buttons (when there are > 1 images)
-       - thumbnail strip at the bottom (when > 1 image)
    ============================================================ */
 
 type LightboxProps = {
@@ -128,7 +119,6 @@ function Lightbox({
     onNavigate((index + 1) % total);
   }, [hasMultiple, index, total, onNavigate]);
 
-  /* ── Keyboard handling ────────────────────────────── */
   useEffect(() => {
     if (!open) return;
 
@@ -139,7 +129,6 @@ function Lightbox({
     };
 
     window.addEventListener('keydown', onKey);
-    // Lock body scroll while open
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
@@ -161,7 +150,6 @@ function Lightbox({
       aria-label="Image viewer"
       onClick={onClose}
     >
-      {/* Close button */}
       <button
         type="button"
         className="lightbox__close"
@@ -187,8 +175,6 @@ function Lightbox({
         </svg>
       </button>
 
-      {/* Image — clicking the image itself does nothing,
-          clicking outside (the backdrop) closes. */}
       <div
         className="lightbox__stage"
         onClick={(e) => e.stopPropagation()}
@@ -201,7 +187,6 @@ function Lightbox({
         />
       </div>
 
-      {/* Prev / next */}
       {hasMultiple && (
         <>
           <button
@@ -254,14 +239,12 @@ function Lightbox({
         </>
       )}
 
-      {/* Counter */}
       {hasMultiple && (
         <div className="lightbox__counter">
           {index + 1} / {total}
         </div>
       )}
 
-      {/* Thumbnail strip */}
       {hasMultiple && (
         <div
           className="lightbox__thumbs"
@@ -311,13 +294,8 @@ function ProductDetailPage({
     staleTime: 30_000,
   });
 
-  /* ── Lightbox state ──────────────────────────────────
-     `lightboxIndex` is null when closed, otherwise holds the
-     index of the currently visible image inside the ordered
-     images array. */
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  /* ── Reset lightbox when the product changes ───────── */
   useEffect(() => {
     setLightboxIndex(null);
   }, [productId]);
@@ -347,10 +325,6 @@ function ProductDetailPage({
 
   const priceLabel = formatPrice(data.price);
 
-  /* ── Build an ordered, deduplicated gallery list ─────
-     Prefer the primary image first, then any remaining
-     images ordered by sort_order. Dedupe by id so the
-     primary doesn't appear twice. */
   const galleryImages: ProductImage[] = [];
   const seen = new Set<number>();
 
@@ -431,7 +405,10 @@ function ProductDetailPage({
 
       <div className="product-detail__actions">
         <LikeButton targetKind="product" targetId={data.id} />
-        <FollowButton targetKind="product" targetId={data.id} />
+        <FollowButton
+          businessId={data.business}
+          businessName={data.business_name}
+        />
       </div>
 
       <div className="product-detail__body">
@@ -481,7 +458,6 @@ function ProductDetailPage({
         <span>{data.follows_count} follows</span>
       </footer>
 
-      {/* ── Lightbox overlay ─────────────────────────────── */}
       <Lightbox
         images={galleryImages}
         index={lightboxIndex ?? 0}

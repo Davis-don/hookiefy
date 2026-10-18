@@ -151,7 +151,10 @@ function PostDetailPage({
       <div className="post-detail__shell">
         <div className="post-detail__actions">
           <LikeButton targetKind="post" targetId={data.id} />
-          <FollowButton targetKind="post" targetId={data.id} />
+          <FollowButton
+            businessId={data.business}
+            businessName={data.business_name}
+          />
         </div>
 
         <div className="post-detail__body">
