@@ -323,3 +323,163 @@
   .spdm-value.is-sweeping { animation: none; }
   .spdm--sweeping .spdm-svg { filter: none; }
 }
+
+/* ─────────────────────────────────────────────────────────
+   RUN TESTS BUTTON
+   ───────────────────────────────────────────────────────── */
+
+.perf-run-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 4px;
+
+  border-radius: 12px;
+  border: none;
+
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  color: #FFFFFF;
+
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 10px 22px -12px rgba(139, 92, 246, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.15s ease;
+}
+
+.perf-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px -12px rgba(139, 92, 246, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  filter: brightness(1.05);
+}
+
+.perf-run-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.perf-run-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow:
+    0 6px 14px -10px rgba(139, 92, 246, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Spinner inside the button while running */
+.perf-run-btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #FFFFFF;
+  animation: perf-run-spin 0.8s linear infinite;
+}
+
+@keyframes perf-run-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perf-run-btn,
+  .perf-run-btn-spinner {
+    transition: none;
+    animation-duration: 2s;
+  }
+}
+/* ─────────────────────────────────────────────────────────
+   RUN TESTS BUTTON
+   ───────────────────────────────────────────────────────── */
+
+.perf-run-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 4px;
+
+  border-radius: 12px;
+  border: none;
+
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  color: #FFFFFF;
+
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 10px 22px -12px rgba(139, 92, 246, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.15s ease;
+}
+
+.perf-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px -12px rgba(139, 92, 246, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  filter: brightness(1.05);
+}
+
+.perf-run-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.perf-run-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner inside the button while running */
+.perf-run-btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #FFFFFF;
+  animation: perf-run-spin 0.8s linear infinite;
+}
+
+@keyframes perf-run-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perf-run-btn,
+  .perf-run-btn-spinner {
+    transition: none;
+    animation-duration: 2s;
+  }
+}

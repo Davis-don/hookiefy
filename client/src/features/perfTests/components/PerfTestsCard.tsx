@@ -1,8 +1,10 @@
 // src/features/perfTests/components/PerfTestsCard.tsx
 
 import { useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../store/authStore';
-import { usePerfTestsLive } from '../hooks/usePerfTests';
+import { usePerfTestsManual } from '../hooks/usePerfTests';
+import type { PerfRunResponse } from '../api/perfTestsApi';
 import Speedometer from './Speedometer';
 import './perftests.css';
 
@@ -24,12 +26,19 @@ function gaugeInverted(value: number, max: number): number {
 
 function PerfTestsCard() {
   const access = useAuthStore((s) => s.access);
+  const queryClient = useQueryClient();
 
-  /* ── THE ONLY CHANGE: single-argument call ───────── */
-  const { data, isFetching, isError, error, refetch } = usePerfTestsLive({
-    enabled: !!access,
-    intervalMs: 60_000,
-  });
+  /* ── Manual mutation — fires only when user clicks ── */
+  const mutation = usePerfTestsManual();
+
+  /* ── Read cached result (survives re-renders) ─────── */
+  const cached = queryClient.getQueryData<PerfRunResponse>([
+    'perf-tests',
+    'manual-result',
+  ]);
+
+  /* ── Whatever the mutation returned, or the cache ─── */
+  const data = mutation.data ?? cached;
 
   const imageCycle = data?.result?.image_cycle;
   const fullCycle = data?.result?.full_cycle;
@@ -45,14 +54,30 @@ function PerfTestsCard() {
 
   const failed = summary?.tests_failed ?? 0;
   const hasAnyData = !!data?.result;
+  const isRunning = mutation.isPending;
+  const isError = mutation.isError;
+  const neverRan = !data && !isRunning && !isError;
 
   const status = useMemo(() => {
-    if (isFetching) return { label: 'Testing…', tone: 'blue' as const };
+    if (isRunning) return { label: 'Running…', tone: 'blue' as const };
     if (isError) return { label: 'Error', tone: 'orange' as const };
     if (failed > 0)
       return { label: `${failed} failed`, tone: 'orange' as const };
+    if (neverRan) return { label: 'Idle', tone: 'blue' as const };
     return { label: 'Healthy', tone: 'emerald' as const };
-  }, [isFetching, isError, failed]);
+  }, [isRunning, isError, failed, neverRan]);
+
+  const buttonLabel = isRunning
+    ? 'Running…'
+    : hasAnyData
+      ? 'Run tests again'
+      : 'Run tests';
+
+  const handleRun = () => {
+    if (isRunning) return;
+    if (!access) return;
+    mutation.mutate();
+  };
 
   return (
     <div className="perf-card">
@@ -72,7 +97,7 @@ function PerfTestsCard() {
           <div>
             <p className="perf-label">Performance Tests</p>
             <p className="perf-sub">
-              Upload · Create · Cleanup timings
+              Click "Run tests" to measure upload, create, and cleanup.
             </p>
           </div>
         </div>
@@ -82,15 +107,6 @@ function PerfTestsCard() {
             <span className="perf-dot" />
             {status.label}
           </span>
-          <button
-            type="button"
-            className="perf-refresh"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            title="Re-run now"
-          >
-            {isFetching ? '…' : '↻'}
-          </button>
         </div>
       </header>
 
@@ -99,7 +115,7 @@ function PerfTestsCard() {
           value={uploadGauge}
           label="Upload"
           display={
-            isFetching && !hasAnyData ? '…' : fmt(uploadSec, 2)
+            isRunning && !hasAnyData ? '…' : fmt(uploadSec, 2)
           }
           unit="s/img"
           hint={
@@ -108,13 +124,13 @@ function PerfTestsCard() {
               : '—'
           }
           tone="violet"
-          settling={isFetching}
+          settling={isRunning}
         />
         <Speedometer
           value={createGauge}
           label="Create"
           display={
-            isFetching && !hasAnyData ? '…' : fmt(createSec, 2)
+            isRunning && !hasAnyData ? '…' : fmt(createSec, 2)
           }
           unit="s"
           hint={
@@ -123,20 +139,20 @@ function PerfTestsCard() {
               : '—'
           }
           tone="emerald"
-          settling={isFetching}
+          settling={isRunning}
         />
         <Speedometer
           value={totalGauge}
           label="Total"
           display={
-            isFetching && !hasAnyData ? '…' : fmt(totalSec, 2)
+            isRunning && !hasAnyData ? '…' : fmt(totalSec, 2)
           }
           unit="s"
           hint={
             summary ? `${summary.tests_run} tests` : '—'
           }
           tone="blue"
-          settling={isFetching}
+          settling={isRunning}
         />
       </div>
 
@@ -144,7 +160,7 @@ function PerfTestsCard() {
         <div className="perf-foot-item">
           <span className="perf-foot-label">Delete img</span>
           <span className="perf-foot-value">
-            {isFetching && !hasAnyData
+            {isRunning && !hasAnyData
               ? '—'
               : `${fmt(imageCycle?.delete_seconds, 2)} s`}
           </span>
@@ -153,7 +169,7 @@ function PerfTestsCard() {
         <div className="perf-foot-item">
           <span className="perf-foot-label">Cleanup DB</span>
           <span className="perf-foot-value">
-            {isFetching && !hasAnyData
+            {isRunning && !hasAnyData
               ? '—'
               : `${fmt(
                   fullCycle?.timings?.cleanup_db_seconds,
@@ -163,14 +179,52 @@ function PerfTestsCard() {
         </div>
         <span className="perf-foot-divider" aria-hidden="true" />
         <div className="perf-foot-item">
-          <span className="perf-foot-label">Auto</span>
-          <span className="perf-foot-value">60s</span>
+          <span className="perf-foot-label">Status</span>
+          <span className="perf-foot-value">
+            {neverRan
+              ? 'Not run yet'
+              : isRunning
+                ? 'Running…'
+                : 'Done'}
+          </span>
         </div>
       </footer>
 
+      {/* ── Primary action — the only way to trigger a run ── */}
+      <button
+        type="button"
+        className="perf-run-btn"
+        onClick={handleRun}
+        disabled={isRunning || !access}
+      >
+        {isRunning ? (
+          <>
+            <span className="perf-run-btn-spinner" aria-hidden="true" />
+            Running…
+          </>
+        ) : (
+          <>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polygon points="6 3 20 12 6 21 6 3" fill="currentColor" />
+            </svg>
+            {buttonLabel}
+          </>
+        )}
+      </button>
+
       {isError && (
         <p className="perf-error">
-          {(error as Error)?.message ||
+          {(mutation.error as Error)?.message ||
             'Could not run performance tests.'}
         </p>
       )}

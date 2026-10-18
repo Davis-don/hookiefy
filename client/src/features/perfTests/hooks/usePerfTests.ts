@@ -1,39 +1,42 @@
 // src/features/perfTests/hooks/usePerfTests.ts
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { runPerfTests } from '../api/perfTestsApi';
 
 /* ============================================================
-   MUTATION — one-shot run
+   MANUAL RUN — mutation only
+   ============================================================
+   The perf test only fires when the user explicitly calls
+   `run()` from a button click. Nothing runs on mount, on
+   refetch, on window focus, or on interval.
    ============================================================ */
 
-export function useRunPerfTests() {
+export function usePerfTestsManual() {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: () => runPerfTests(),
     onSuccess: (data) => {
-      qc.setQueryData(['perf-tests', 'last'], data);
+      // Cache the result so it survives unmount/remount
+      // without triggering another network call.
+      qc.setQueryData(['perf-tests', 'manual-result'], data);
     },
   });
 }
 
 /* ============================================================
-   QUERY — live auto-refresh card
+   LAST RESULT — read-only
+   ============================================================
+   Reads whatever the last successful run returned, if any.
+   Returns `undefined` until the user runs the test once.
+   No network call is made by this hook.
    ============================================================ */
 
-export function usePerfTestsLive(
-  {
-    enabled = true,
-    intervalMs = 60_000,
-  }: { enabled?: boolean; intervalMs?: number } = {},
-) {
-  return useQuery({
-    queryKey: ['perf-tests', 'live'],
-    queryFn: () => runPerfTests(),
-    enabled,
-    refetchInterval: intervalMs,
-    staleTime: Math.max(0, intervalMs - 1_000),
-    refetchOnWindowFocus: false,
-  });
+export function useLastPerfResult() {
+  const qc = useQueryClient();
+  return qc.getQueryData(['perf-tests', 'manual-result']) as
+    | ReturnType<typeof runPerfTests> extends Promise<infer R>
+      ? R
+      : unknown
+    | undefined;
 }
