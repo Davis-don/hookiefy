@@ -36,12 +36,8 @@ MAX_POST_BODY_LENGTH  = 1000
 # IMAGE RULES
 # ============================================================
 
-# Hard ceiling for a single post image. Cloudinary will keep
-# whatever you send, so we cut it off here before the upload.
 MAX_POST_IMAGE_BYTES = 8 * 1024 * 1024   # 8 MB
 
-# Only the formats actually needed — PNG, JPEG (both MIME
-# variants), and WEBP. GIF and everything else is rejected.
 ALLOWED_POST_IMAGE_TYPES = {
     "image/png",
     "image/jpeg",
@@ -91,7 +87,6 @@ def _validate_post_image(image_file):
     if image_file is None:
         return (False, "An image is required.")
 
-    # Content type — only PNG, JPEG / JPG, WEBP
     content_type = (image_file.content_type or "").lower()
     if content_type not in ALLOWED_POST_IMAGE_TYPES:
         return (
@@ -99,7 +94,6 @@ def _validate_post_image(image_file):
             "Unsupported file type. Please use PNG, JPEG or WEBP.",
         )
 
-    # Size
     size = getattr(image_file, "size", 0) or 0
     if size <= 0:
         return (False, "The image appears to be empty.")
@@ -201,6 +195,95 @@ def _check_post_limit(user, business):
     return (True, used, limit, "")
 
 
+# ────────────────────────────────────────────────────────────
+# NEW: subscription expiry check
+# ────────────────────────────────────────────────────────────
+
+def _check_subscription_current(user):
+    """
+    Return (ok, error_dict).
+
+    Returns (True, None) when the user has a currently valid
+    subscription (active/trialing and not expired by date).
+    Returns (False, {...}) with a ready-to-send error payload
+    when the user has no subscription or it has expired.
+
+    The Subscription model's `is_current` property already
+    encapsulates:
+        - status ∈ {active, trialing}
+        - end_date is null OR end_date > now
+        - start_date < end_date (not an inverted window)
+    """
+    from subscription.models import Subscription
+
+    # Active or trialing rows that haven't expired yet
+    current = (
+        Subscription.objects
+        .filter(user=user)
+        .active()
+        .first()
+    )
+
+    if current is not None and current.is_current:
+        return (True, None)
+
+    # Is there any subscription at all? If yes but expired,
+    # give a specific message. If none, different message.
+    latest = (
+        Subscription.objects
+        .filter(user=user)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if latest is None:
+        return (
+            False,
+            {
+                "message": (
+                    "Your account has no subscription. "
+                    "Subscribe to a plan to publish posts."
+                ),
+                "code": "subscription_required",
+            },
+        )
+
+    # There's a subscription, but it's not currently valid.
+    if latest.is_expired:
+        return (
+            False,
+            {
+                "message": (
+                    f"Your subscription expired on "
+                    f"{latest.end_date:%d %b %Y}. "
+                    f"Renew your plan to publish new posts."
+                ),
+                "code": "subscription_expired",
+                "status": latest.status,
+                "end_date": latest.end_date.isoformat()
+                if latest.end_date else None,
+                "days_since_expiry": (
+                    (timezone.now() - latest.end_date).days
+                    if latest.end_date else None
+                ),
+            },
+        )
+
+    # Fallback for cancelled / pending / other statuses
+    return (
+        False,
+        {
+            "message": (
+                f"Your subscription is not currently active "
+                f"(status: {latest.get_status_display()}). "
+                f"Please activate a plan to publish posts."
+            ),
+            "code": "subscription_inactive",
+            "status": latest.status,
+        },
+    )
+
+
 # ============================================================
 # LIST POSTS OF A BUSINESS
 # GET /posts/business/<business_id>/
@@ -249,7 +332,17 @@ def create_post(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # ── Plan limit ──────────────────────────────────────────
+    # ── 0. Subscription must be current (not expired) ───────
+    #     Runs BEFORE plan-limit so an expired user gets the
+    #     clearer "renew" message instead of "plan limit".
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 1. Plan limit ───────────────────────────────────────
     allowed, used, limit, message = _check_post_limit(
         request.user, business
     )
@@ -265,7 +358,7 @@ def create_post(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ── Text limits ─────────────────────────────────────────
+    # ── 2. Text limits ──────────────────────────────────────
     text_ok, text_errors = _validate_post_text(
         request.data.get("title"),
         request.data.get("body"),
@@ -273,7 +366,7 @@ def create_post(request, business_id):
     if not text_ok:
         return Response(text_errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # ── Validate body fields (serializer shape) ─────────────
+    # ── 3. Validate body fields (serializer shape) ──────────
     serializer = PostCreateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
@@ -281,7 +374,7 @@ def create_post(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Exactly one image ───────────────────────────────────
+    # ── 4. Exactly one image ────────────────────────────────
     multi_error = _reject_multiple_images(request)
     if multi_error:
         return Response(
@@ -297,20 +390,18 @@ def create_post(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Upload ──────────────────────────────────────────────
+    # ── 5. Upload ───────────────────────────────────────────
     try:
         upload_result = upload_image_to_cloudinary(
             image_file,
             folder="post_images",
         )
     except ImageValidationError as e:
-        # Corrupt / wrong format / oversized image → 400
         return Response(
             {"message": str(e)},
             status=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
-        # Network / Cloudinary backend failure after retries → 503
         return Response(
             {"message": f"Image upload failed: {str(e)}"},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -371,11 +462,16 @@ def update_post(request, post_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Subscription must be current (not expired) ──────────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     partial = request.method == "PATCH"
 
-    # ── Text limits — only check fields that are actually sent
-    #    on a PATCH, so a title-only edit isn't rejected for a
-    #    missing body (or vice versa).
     title_to_check = (
         request.data.get("title")
         if "title" in request.data
@@ -387,14 +483,11 @@ def update_post(request, post_id):
         else post.body
     )
 
-    # Only run the length check when the field is being written.
     if "title" in request.data or "body" in request.data:
         text_ok, text_errors = _validate_post_text(
             title_to_check,
             body_to_check,
         )
-        # On PATCH, ignore a "Title is required" error unless title
-        # was explicitly set — we only care about length here.
         if not text_ok:
             if partial:
                 text_errors.pop("title", None) if "title" not in request.data else None
@@ -418,13 +511,11 @@ def update_post(request, post_id):
 
     validated = dict(serializer.validated_data)
 
-    # Trim trailing whitespace on text fields before saving
     if "title" in validated and validated["title"] is not None:
         validated["title"] = validated["title"].strip()
     if "body" in validated and validated["body"] is not None:
         validated["body"] = validated["body"].strip()
 
-    # ── Exactly one image (if any) ──────────────────────────
     multi_error = _reject_multiple_images(request)
     if multi_error:
         return Response(
@@ -455,13 +546,11 @@ def update_post(request, post_id):
             validated["image_url"] = upload_result["url"]
             validated["image_public_id"] = upload_result["public_id"]
         except ImageValidationError as e:
-            # Corrupt / wrong format / oversized image → 400
             return Response(
                 {"message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            # Network / Cloudinary backend failure → 503
             return Response(
                 {"message": f"Image upload failed: {str(e)}"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,

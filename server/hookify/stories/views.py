@@ -95,6 +95,84 @@ def _check_story_limit(user):
     return (True, used, limit, "")
 
 
+# ────────────────────────────────────────────────────────────
+# NEW: subscription expiry check (same as posts/views.py)
+# ────────────────────────────────────────────────────────────
+
+def _check_subscription_current(user):
+    """
+    Return (ok, error_dict).
+
+    Returns (True, None) when the user has a currently valid
+    subscription (active/trialing and not expired by date).
+    Returns (False, {...}) with a ready-to-send error payload
+    when the user has no subscription or it has expired.
+    """
+    from subscription.models import Subscription
+
+    current = (
+        Subscription.objects
+        .filter(user=user)
+        .active()
+        .first()
+    )
+
+    if current is not None and current.is_current:
+        return (True, None)
+
+    latest = (
+        Subscription.objects
+        .filter(user=user)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if latest is None:
+        return (
+            False,
+            {
+                "message": (
+                    "Your account has no subscription. "
+                    "Subscribe to a plan to publish stories."
+                ),
+                "code": "subscription_required",
+            },
+        )
+
+    if latest.is_expired:
+        return (
+            False,
+            {
+                "message": (
+                    f"Your subscription expired on "
+                    f"{latest.end_date:%d %b %Y}. "
+                    f"Renew your plan to publish new stories."
+                ),
+                "code": "subscription_expired",
+                "status": latest.status,
+                "end_date": latest.end_date.isoformat()
+                if latest.end_date else None,
+                "days_since_expiry": (
+                    (timezone.now() - latest.end_date).days
+                    if latest.end_date else None
+                ),
+            },
+        )
+
+    return (
+        False,
+        {
+            "message": (
+                f"Your subscription is not currently active "
+                f"(status: {latest.get_status_display()}). "
+                f"Please activate a plan to publish stories."
+            ),
+            "code": "subscription_inactive",
+            "status": latest.status,
+        },
+    )
+
+
 # ============================================================
 # LIST MINE — GET /stories/mine/
 # ============================================================
@@ -163,6 +241,15 @@ def list_all_stories(request):
 @permission_classes([IsAuthenticated])
 @requires_active_subscription
 def create_story(request):
+    # ── 0. Subscription must be current (not expired) ───────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 1. Monthly plan limit ───────────────────────────────
     allowed, used, limit, message = _check_story_limit(request.user)
 
     if not allowed:
@@ -177,6 +264,7 @@ def create_story(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    # ── 2. Serializer validation ────────────────────────────
     serializer = StoryCreateSerializer(data=request.data)
 
     if not serializer.is_valid():
@@ -241,6 +329,14 @@ def update_story(request, story_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Subscription must be current (not expired) ──────────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     partial = request.method == "PATCH"
 
     serializer = StoryUpdateSerializer(
@@ -269,6 +365,8 @@ def update_story(request, story_id):
 # ============================================================
 # DELETE — DELETE /stories/<story_id>/delete/
 # ============================================================
+# Deliberately NOT gated by subscription expiry, so expired
+# users can still clean up their existing stories.
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])

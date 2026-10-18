@@ -2,6 +2,7 @@
 # ============================================================
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -105,6 +106,83 @@ def _profile_completeness(user):
     return (len(missing) == 0, missing, complete)
 
 
+# ────────────────────────────────────────────────────────────
+# NEW: subscription expiry check (same as posts/stories/products)
+# ────────────────────────────────────────────────────────────
+
+def _check_subscription_current(user):
+    """
+    Return (ok, error_dict).
+
+    Returns (True, None) when the user has a currently valid
+    subscription. Returns (False, {...}) with a ready-to-send
+    error payload otherwise.
+    """
+    from subscription.models import Subscription
+
+    current = (
+        Subscription.objects
+        .filter(user=user)
+        .active()
+        .first()
+    )
+
+    if current is not None and current.is_current:
+        return (True, None)
+
+    latest = (
+        Subscription.objects
+        .filter(user=user)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if latest is None:
+        return (
+            False,
+            {
+                "message": (
+                    "Your account has no subscription. "
+                    "Subscribe to a plan to manage businesses."
+                ),
+                "code": "subscription_required",
+            },
+        )
+
+    if latest.is_expired:
+        return (
+            False,
+            {
+                "message": (
+                    f"Your subscription expired on "
+                    f"{latest.end_date:%d %b %Y}. "
+                    f"Renew your plan to manage businesses."
+                ),
+                "code": "subscription_expired",
+                "status": latest.status,
+                "end_date": latest.end_date.isoformat()
+                if latest.end_date else None,
+                "days_since_expiry": (
+                    (timezone.now() - latest.end_date).days
+                    if latest.end_date else None
+                ),
+            },
+        )
+
+    return (
+        False,
+        {
+            "message": (
+                f"Your subscription is not currently active "
+                f"(status: {latest.get_status_display()}). "
+                f"Please activate a plan to manage businesses."
+            ),
+            "code": "subscription_inactive",
+            "status": latest.status,
+        },
+    )
+
+
 def _delete_business_images(business):
     deleted = 0
     failed = 0
@@ -161,6 +239,14 @@ def _delete_business_images(business):
 @permission_classes([IsAuthenticated])
 @requires_active_subscription
 def create_business(request):
+    # ── 0. Subscription must be current (not expired) ───────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     # ── 1. Profile must be complete ────────────────────────
     is_complete, missing, _ = _profile_completeness(request.user)
 
@@ -197,8 +283,6 @@ def create_business(request):
     # client sends is ignored, and the row is always created
     # as "active". Only a superadmin can change it later via
     # PATCH /businesses/<id>/status/.
-    #
-    # We also strip fields the client must never set.
     data = request.data.copy()
     data.pop("status", None)
     data.pop("owner", None)
@@ -216,8 +300,6 @@ def create_business(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Belt and braces — even if a caller later sets a default
-    # elsewhere, the view forces "active" here.
     business = serializer.save(status="active")
     used = current + 1
 
@@ -383,6 +465,14 @@ def update_business(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Subscription must be current (not expired) ──────────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     serializer = BusinessUpdateSerializer(
         business,
         data=request.data,
@@ -454,6 +544,8 @@ def update_business_status(request, business_id):
 # ============================================================
 # DELETE — DELETE /businesses/<id>/delete/
 # ============================================================
+# Deliberately NOT gated by subscription expiry, so expired
+# users can still clean up their existing businesses.
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])

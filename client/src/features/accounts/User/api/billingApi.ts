@@ -104,15 +104,22 @@ export async function fetchCurrentSubscription(): Promise<CurrentSubscriptionRes
   return data as CurrentSubscriptionResponse;
 }
 
-
-// ── inside src/pages/accounts/User/api/billingApi.ts ──
+/* ============================================================
+   SUBSCRIPTION PAYMENT
+   ============================================================ */
 
 export type SubscriptionPayment = {
   id: string;
   merchant_reference: string;
   order_tracking_id: string | null;
   gateway: 'pesapal' | 'paystack' | 'mpesa';
-  status: 'pending' | 'completed' | 'failed' | 'reversed' | 'invalid' | 'cancelled';
+  status:
+    | 'pending'
+    | 'completed'
+    | 'failed'
+    | 'reversed'
+    | 'invalid'
+    | 'cancelled';
   amount: string;
   currency: string;
   phone_number: string | null;
@@ -137,8 +144,6 @@ export type InitiatePaymentResponse = {
 
 /**
  * Start a PesaPal payment for a plan.
- *
- * Returns the redirect URL the browser should navigate to.
  */
 export async function initiatePayment(
   planSlug: string,
@@ -166,7 +171,6 @@ export async function initiatePayment(
 
 /**
  * Poll the local payment row for its current status.
- * Useful on the billing page after the user returns from PesaPal.
  */
 export async function fetchPaymentStatus(
   merchantReference: string,
@@ -189,10 +193,6 @@ export async function fetchPaymentStatus(
 
   return data as SubscriptionPayment;
 }
-
-/* ============================================================
-   SYNC PAYMENT — POST /subscription_payments/<ref>/sync/
-   ============================================================ */
 
 export type SyncPaymentResponse = {
   message: string;
@@ -220,4 +220,78 @@ export async function syncPayment(
   }
 
   return data as SyncPaymentResponse;
+}
+
+/* ============================================================
+   DOWNGRADE PRE-CHECK — POST /subscription/pre-check-downgrade/
+   ============================================================ */
+
+export type PlanOverflow = {
+  businesses: number;
+  posts: number;
+  products: number;
+  images: number;
+};
+
+export type DowngradePreCheckResponse = {
+  ok: boolean;
+  target_plan_slug: string;
+  target_plan_name: string;
+  usage: PlanOverflow;
+  limits: PlanOverflow;
+  overflow: PlanOverflow;
+  total_overflow: number;
+  confirmation_token: string | null;
+  message: string;
+  requires_confirmation: boolean;
+  prune_summary?: {
+    deleted: PlanOverflow;
+    images_cloudinary_deleted: number;
+    images_cloudinary_failed: number;
+  };
+};
+
+/**
+ * Audit a plan downgrade.
+ *
+ * - Called WITHOUT a token → returns the audit.
+ *     - 200 = content fits, safe to pay.
+ *     - 409 = overflow; must confirm before paying.
+ * - Called WITH a token → verifies the token, prunes overflow,
+ *     and returns 200. On stale token, returns 409 again.
+ *
+ * Non-409 failures throw, so the caller can show a plain error.
+ */
+export async function preCheckDowngrade(
+  planSlug: string,
+  confirmationToken?: string,
+): Promise<DowngradePreCheckResponse> {
+  const res = await fetch(
+    `${API_BASE}/subscription/pre-check-downgrade/`,
+    {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        plan_slug: planSlug,
+        ...(confirmationToken
+          ? { confirmation_token: confirmationToken }
+          : {}),
+      }),
+    },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  // 409 carries structured data — return it, don't throw
+  if (res.status === 409) {
+    return data as DowngradePreCheckResponse;
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Could not check plan downgrade.'),
+    );
+  }
+
+  return data as DowngradePreCheckResponse;
 }

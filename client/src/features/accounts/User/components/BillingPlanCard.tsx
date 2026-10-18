@@ -3,10 +3,16 @@
 import { useState } from 'react';
 
 import { useAuthStore } from '../../../../store/authStore';
+import { useToast } from '../../../../components/toast/ToastContext';
 
 import type { Plan } from '../api/billingApi';
+import {
+  preCheckDowngrade,
+  type DowngradePreCheckResponse,
+} from '../api/billingApi';
 
 import BillingPaymentModal from './BillingPaymentModal';
+import DowngradeConfirmModal from './DowngradeConfirmModal';
 
 import './billings.css';
 
@@ -31,15 +37,83 @@ function BillingPlanCard({
   isExpired = false,
 }: BillingPlanCardProps) {
   const user = useAuthStore((s) => s.user);
+  const toast = useToast();
+
+  /* Payment modal */
   const [modalOpen, setModalOpen] = useState(false);
+
+  /* Downgrade guard */
+  const [audit, setAudit] = useState<DowngradePreCheckResponse | null>(
+    null,
+  );
+  const [checking, setChecking] = useState(false);
 
   const highlighted = isCurrent || isEffective;
 
-  const handleClick = () => {
-    setModalOpen(true);
+  /* ── Step 1: click handler — check downgrade, then open payment ── */
+  const handleClick = async () => {
+    if (checking) return;
+    setChecking(true);
+
+    try {
+      const report = await preCheckDowngrade(plan.slug);
+
+      if (report.ok) {
+        // Content fits — open payment directly.
+        setModalOpen(true);
+        return;
+      }
+
+      // Overflow — show confirmation modal.
+      setAudit(report);
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not check plan downgrade.',
+      );
+    } finally {
+      setChecking(false);
+    }
   };
 
-  /* ── Badge logic ────────────────────────────────────── */
+  /* ── Step 2: user confirmed → re-check with token → prune → pay ── */
+  const handleConfirmDowngrade = async () => {
+    if (!audit) return;
+
+    try {
+      const result = await preCheckDowngrade(
+        plan.slug,
+        audit.confirmation_token ?? undefined,
+      );
+
+      if (!result.ok) {
+        // Stale token — refresh the modal with the new report
+        toast.error(
+          result.message ||
+            'Your content changed. Please review again.',
+        );
+        setAudit(result);
+        return;
+      }
+
+      toast.success(result.message);
+      setAudit(null);
+      setModalOpen(true);
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not complete downgrade.',
+      );
+    }
+  };
+
+  const handleCancelDowngrade = () => {
+    setAudit(null);
+  };
+
+  /* ── Badges ─────────────────────────────────────────── */
   const renderBadges = () => (
     <div className="billing-plan-badges">
       {isCurrent && !isExpired && (
@@ -63,13 +137,7 @@ function BillingPlanCard({
     </div>
   );
 
-  /* ── Footer button logic ────────────────────────────
-     Four states:
-       - Current + expired        → red "Expired" button
-       - Current + active         → disabled "Current plan"
-       - Free (not current)       → non-actionable label
-       - Paid (not current)       → opens modal
-     ────────────────────────────────────────────────── */
+  /* ── Footer ─────────────────────────────────────────── */
   const renderFooter = () => {
     if (isCurrent) {
       if (isExpired) {
@@ -78,8 +146,9 @@ function BillingPlanCard({
             type="button"
             className="billing-plan-btn is-expired"
             onClick={handleClick}
+            disabled={checking}
           >
-            Expired — Renew
+            {checking ? 'Checking…' : 'Expired — Renew'}
           </button>
         );
       }
@@ -108,8 +177,9 @@ function BillingPlanCard({
         type="button"
         className="billing-plan-btn"
         onClick={handleClick}
+        disabled={checking}
       >
-        Choose this plan
+        {checking ? 'Checking…' : 'Choose this plan'}
       </button>
     );
   };
@@ -179,7 +249,7 @@ function BillingPlanCard({
         </footer>
       </article>
 
-      {/* Modal — mounts once per card, opens on demand */}
+      {/* Payment modal */}
       <BillingPaymentModal
         plan={plan}
         open={modalOpen}
@@ -187,6 +257,15 @@ function BillingPlanCard({
         email={user?.email ?? ''}
         onClose={() => setModalOpen(false)}
       />
+
+      {/* Downgrade confirmation modal */}
+      {audit && (
+        <DowngradeConfirmModal
+          audit={audit}
+          onCancel={handleCancelDowngrade}
+          onConfirm={handleConfirmDowngrade}
+        />
+      )}
     </>
   );
 }

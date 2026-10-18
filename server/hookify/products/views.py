@@ -4,6 +4,7 @@ import os
 import re
 
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -51,10 +52,8 @@ URL_PATTERNS = (
 # IMAGE RULES — keep in sync with posts/views.py
 # ============================================================
 
-# Hard ceiling for a single product image (same as posts).
 MAX_PRODUCT_IMAGE_BYTES = 8 * 1024 * 1024   # 8 MB
 
-# Allowed MIME types for product images.
 ALLOWED_PRODUCT_IMAGE_TYPES = {
     "image/png",
     "image/jpeg",
@@ -62,11 +61,8 @@ ALLOWED_PRODUCT_IMAGE_TYPES = {
     "image/webp",
 }
 
-# Allowed file extensions — second layer so a mislabelled file
-# (e.g. a .gif with a fake content-type) is still rejected.
 ALLOWED_PRODUCT_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
-# Human-readable label used in error messages.
 ALLOWED_PRODUCT_IMAGE_LABEL = "PNG, JPEG or WEBP"
 
 
@@ -102,15 +98,6 @@ def _check_text_field(value, field_label, min_len, max_len):
 def _validate_product_image(image_file):
     """
     Return (ok, error_message).
-
-    Same rules as posts:
-        - content type in {PNG, JPEG, JPG, WEBP}
-        - file extension in {.png, .jpg, .jpeg, .webp}
-        - size > 0
-        - size <= 8 MB
-
-    Never raises — always returns a message the caller can send
-    straight back to the client.
     """
     if image_file is None:
         return (False, "An image is required.")
@@ -146,14 +133,11 @@ def _validate_product_image(image_file):
 
 def _validate_product_images(image_files):
     """
-    Validate every image in the batch. Return (ok, error_message)
-    so the caller can short-circuit before uploading anything.
+    Validate every image in the batch.
     """
     for index, image_file in enumerate(image_files):
         ok, err = _validate_product_image(image_file)
         if not ok:
-            # Prefix the failing file's name when we can — helps
-            # when the user attaches several images at once.
             name = getattr(image_file, "name", None)
             if name:
                 return (False, f'"{name}": {err}')
@@ -264,6 +248,83 @@ def _check_image_count_limit(user, business, incoming_count, existing_count=0):
     return (True, total_after, limit, "")
 
 
+# ────────────────────────────────────────────────────────────
+# NEW: subscription expiry check (same as posts/stories)
+# ────────────────────────────────────────────────────────────
+
+def _check_subscription_current(user):
+    """
+    Return (ok, error_dict).
+
+    Returns (True, None) when the user has a currently valid
+    subscription. Returns (False, {...}) with a ready-to-send
+    error payload otherwise.
+    """
+    from subscription.models import Subscription
+
+    current = (
+        Subscription.objects
+        .filter(user=user)
+        .active()
+        .first()
+    )
+
+    if current is not None and current.is_current:
+        return (True, None)
+
+    latest = (
+        Subscription.objects
+        .filter(user=user)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if latest is None:
+        return (
+            False,
+            {
+                "message": (
+                    "Your account has no subscription. "
+                    "Subscribe to a plan to publish products."
+                ),
+                "code": "subscription_required",
+            },
+        )
+
+    if latest.is_expired:
+        return (
+            False,
+            {
+                "message": (
+                    f"Your subscription expired on "
+                    f"{latest.end_date:%d %b %Y}. "
+                    f"Renew your plan to publish new products."
+                ),
+                "code": "subscription_expired",
+                "status": latest.status,
+                "end_date": latest.end_date.isoformat()
+                if latest.end_date else None,
+                "days_since_expiry": (
+                    (timezone.now() - latest.end_date).days
+                    if latest.end_date else None
+                ),
+            },
+        )
+
+    return (
+        False,
+        {
+            "message": (
+                f"Your subscription is not currently active "
+                f"(status: {latest.get_status_display()}). "
+                f"Please activate a plan to publish products."
+            ),
+            "code": "subscription_inactive",
+            "status": latest.status,
+        },
+    )
+
+
 def _extract_properties_from_request(request):
     properties = []
 
@@ -335,10 +396,8 @@ def _save_images(product, image_files, replace=False):
                 folder="product_images",
             )
         except ImageValidationError:
-            # Re-raise so the caller can return 400 (not 503)
             raise
         except Exception as e:
-            # Wrap non-validation failures as RuntimeError → 503
             raise RuntimeError(f"Image upload failed: {str(e)}")
 
         is_primary = (not has_primary) and (index == 0)
@@ -403,6 +462,15 @@ def create_product(request, business_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── 0. Subscription must be current (not expired) ───────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 1. Plan limit ───────────────────────────────────────
     allowed, used, limit, message = _check_product_limit(
         request.user, business
     )
@@ -418,6 +486,7 @@ def create_product(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    # ── 2. Serializer validation ────────────────────────────
     serializer = ProductCreateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
@@ -425,7 +494,7 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Name (already validated by serializer, re-checked for safety)
+    # ── 3. Name ─────────────────────────────────────────────
     name = (serializer.validated_data.get("name") or "").strip()
     name_err = None
     if not name:
@@ -438,7 +507,7 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Description (required, 10–400 chars, no URLs) ───────
+    # ── 4. Description ──────────────────────────────────────
     description, desc_err = _check_text_field(
         serializer.validated_data.get("description"),
         "Description",
@@ -451,6 +520,7 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # ── 5. Images ───────────────────────────────────────────
     image_files = _extract_images_from_request(request)
     if not image_files:
         return Response(
@@ -458,7 +528,6 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Image content/extension/size (same rules as posts) ──
     ok, img_err = _validate_product_images(image_files)
     if not ok:
         return Response(
@@ -484,6 +553,7 @@ def create_product(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    # ── 6. Persist ──────────────────────────────────────────
     product = Products.objects.create(
         business=business,
         name=name,
@@ -563,6 +633,14 @@ def update_product(request, product_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Subscription must be current (not expired) ──────────
+    sub_ok, sub_error = _check_subscription_current(request.user)
+    if not sub_ok:
+        return Response(
+            sub_error,
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     partial = request.method == "PATCH"
 
     serializer = ProductUpdateSerializer(
@@ -579,7 +657,6 @@ def update_product(request, product_id):
     validated = dict(serializer.validated_data)
     validated.pop("properties", None)
 
-    # ── Name (if sent) — must pass same rules as create ────
     if "name" in validated and validated["name"] is not None:
         name, name_err = _check_text_field(
             validated["name"],
@@ -594,7 +671,6 @@ def update_product(request, product_id):
             )
         validated["name"] = name
 
-    # ── Description (if sent) ───────────────────────────────
     if "description" in validated and validated["description"] is not None:
         description, desc_err = _check_text_field(
             validated["description"],
@@ -615,7 +691,6 @@ def update_product(request, product_id):
     ).lower() in ("1", "true", "yes")
 
     if image_files:
-        # ── Image content/extension/size (same rules as posts) ──
         ok, img_err = _validate_product_images(image_files)
         if not ok:
             return Response(
@@ -681,6 +756,8 @@ def update_product(request, product_id):
 # ============================================================
 # DELETE PRODUCT
 # ============================================================
+# Deliberately NOT gated by subscription expiry, so expired
+# users can still clean up their existing products.
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
