@@ -3,6 +3,7 @@
 import SystemBalance from './SystemBalance';
 import SystemUsers from './SystemUsers';
 import SystemBusinesses from './SystemBusinesses';
+import PerfTestsCard from '../../../../features/perfTests/components/PerfTestsCard';
 
 import './homeTab.css';
 
@@ -15,6 +16,7 @@ function HomeTab() {
         <SystemBalance />
         <SystemUsers />
         <SystemBusinesses />
+        <PerfTestsCard />
       </section>
     </div>
   );

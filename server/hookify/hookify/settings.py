@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "notifications",
     "system_balance",
     "system_stats", 
+    "perfomance_tests",
     "assignments",
     "userpreference",
     "administration",

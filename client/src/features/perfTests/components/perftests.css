@@ -1,0 +1,325 @@
+/* ─────────────────────────────────────────────────────────
+   PerfTestsCard + Speedometer
+   ───────────────────────────────────────────────────────── */
+
+.perf-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  width: 100%;
+  max-width: 420px;
+
+  padding: 22px 24px;
+  border-radius: 22px;
+
+  background: linear-gradient(150deg, #FFFFFF 0%, #F3F0FF 100%);
+  border: 1px solid rgba(139, 92, 246, 0.14);
+
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.10),
+    0 4px 10px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.perf-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.14),
+    0 6px 16px rgba(139, 92, 246, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.perf-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(139, 92, 246, 0.22) 0%,
+    rgba(139, 92, 246, 0) 70%
+  );
+  pointer-events: none;
+}
+
+.perf-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.perf-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.perf-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  box-shadow:
+    0 8px 18px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.perf-label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.perf-sub {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.perf-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.perf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.perf-pill-blue    { background: #EEF2FF; color: #1D4ED8; }
+.perf-pill-emerald { background: #ECFDF5; color: #047857; }
+.perf-pill-orange  { background: #FFF7ED; color: #C2410C; }
+
+.perf-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.perf-pill-blue    .perf-dot { animation: perfPulse 1.2s ease-in-out infinite; }
+.perf-pill-emerald .perf-dot { animation: perfPulse 2s ease-in-out infinite; }
+
+@keyframes perfPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(0.85); }
+}
+
+.perf-refresh {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s ease, color 0.18s ease,
+              background 0.18s ease;
+}
+
+.perf-refresh:hover:not(:disabled) {
+  border-color: #8B5CF6;
+  color: #8B5CF6;
+  background: #F8FAFF;
+}
+
+.perf-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.perf-gauges {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.perf-foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding-top: 14px;
+  border-top: 1px solid rgba(139, 92, 246, 0.12);
+}
+
+.perf-foot-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perf-foot-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+.perf-foot-value {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0F172A;
+  font-variant-numeric: tabular-nums;
+}
+
+.perf-foot-alert { color: #DC2626; }
+
+.perf-foot-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(148, 163, 184, 0.3);
+}
+
+.perf-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SPEEDOMETER
+   ───────────────────────────────────────────────────────── */
+
+.spdm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.spdm-svg {
+  width: 100%;
+  max-width: 110px;
+  height: auto;
+  display: block;
+}
+
+.spdm-center {
+  margin-top: -6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-height: 34px;
+}
+
+.spdm-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.spdm-value.is-sweeping {
+  animation: spdm-value-fade 1.2s ease-in-out infinite;
+}
+
+@keyframes spdm-value-fade {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.spdm-unit {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #94A3B8;
+  line-height: 1;
+}
+
+.spdm-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.spdm-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.spdm-hint {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94A3B8;
+  font-variant-numeric: tabular-nums;
+}
+
+.spdm--sweeping .spdm-svg {
+  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.15));
+}
+
+@media (max-width: 480px) {
+  .perf-card { padding: 18px 20px; border-radius: 18px; gap: 16px; }
+  .perf-icon { width: 36px; height: 36px; border-radius: 12px; }
+  .perf-label { font-size: 0.9rem; }
+  .perf-sub { font-size: 0.72rem; }
+  .perf-gauges { gap: 4px; }
+  .spdm-value { font-size: 0.96rem; }
+  .spdm-unit  { font-size: 0.58rem; }
+  .spdm-label { font-size: 0.66rem; }
+  .spdm-hint  { font-size: 0.64rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perf-card,
+  .perf-refresh { transition: none; }
+  .perf-pill .perf-dot { animation: none; }
+  .spdm-value.is-sweeping { animation: none; }
+  .spdm--sweeping .spdm-svg { filter: none; }
+}

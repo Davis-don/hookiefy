@@ -239,4 +239,22 @@ urlpatterns = [
         "notifications/",
         include("notifications.urls"),
     ),
+
+
+    # ============================================================
+    # PERFORMANCE TESTS
+    #
+    #   POST /perf/tests/run/           → run all 3 perf tests
+    #                                     (?image_runs=5&posts=5&products=5)
+    #   POST /perf/tests/image-upload/  → just the image upload test
+    #   POST /perf/tests/overall-upload/  → just the upload test
+    #   POST /perf/tests/overall-download/ → just the download test
+    #
+    # Superadmin only. Every test cleans up after itself.
+    # ============================================================
+
+    path(
+        "perf/",
+        include("perfomance_tests.urls"),
+    ),
 ]
