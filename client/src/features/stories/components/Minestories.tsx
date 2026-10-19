@@ -1,15 +1,25 @@
 // src/components/AllStories.jsx
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
 import { useToast } from '../../../components/toast/ToastContext';
 import { Spinner } from '../../../components/spinner/Spinner';
-import { listMyStories, deleteStory, type Story } from '../api/storiesApi';
+import {
+  listMyStories,
+  deleteStory,
+  type Story,
+} from '../api/storiesApi';
 import ConfirmDeleteModal from '../../businesses/components/ConfirmDeleteModal';
 import EditStory from './EditStory';
 import './allStories.css';
+
+const PAGE_SIZE = 10;
 
 type AllStoriesProps = {
   onAdd?: () => void;
@@ -24,17 +34,51 @@ function MineStories({ onAdd }: AllStoriesProps) {
   const [deleteTarget, setDeleteTarget] = useState<Story | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
   const {
-    data: stories = [],
+    data,
     isLoading,
     isError,
     error,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['my-stories', access],
-    queryFn: () => listMyStories().then((r) => r.results),
+    queryFn: ({ pageParam = 1 }) =>
+      listMyStories({ page: pageParam }),
     enabled: !!access,
     staleTime: 30_000,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.next != null ? lastPage.next : undefined,
+    placeholderData: (prev) => prev,
   });
+
+  const stories: Story[] = useMemo(
+    () => data?.pages.flatMap((p) => p.results) ?? [],
+    [data],
+  );
+
+  /* ── Infinite scroll: observe the sentinel ─────────── */
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteStory(id),
@@ -42,6 +86,7 @@ function MineStories({ onAdd }: AllStoriesProps) {
       toast.success(res.message || 'Story deleted.');
       queryClient.invalidateQueries({ queryKey: ['my-stories'] });
       queryClient.invalidateQueries({ queryKey: ['stories'] });
+      queryClient.invalidateQueries({ queryKey: ['all-stories'] });
       setDeleteTarget(null);
     },
     onError: (err: any) => {
@@ -213,6 +258,27 @@ function MineStories({ onAdd }: AllStoriesProps) {
           </div>
         );
       })}
+
+      {/* ── Infinite-scroll sentinel ────────────────── */}
+      <div ref={sentinelRef} />
+
+      {/* ── Loading-more spinner ────────────────────── */}
+      {isFetchingNextPage && (
+        <div className="as-state" style={{ paddingTop: 12 }}>
+          <Spinner
+            size={20}
+            color="#2563EB"
+            label="Loading more stories…"
+          />
+        </div>
+      )}
+
+      {/* ── End-of-feed marker ──────────────────────── */}
+      {!hasNextPage && stories.length >= PAGE_SIZE && (
+        <div className="as-end" aria-hidden="true">
+          You're all caught up
+        </div>
+      )}
 
       {/* ── Delete confirm modal ────────────────────── */}
       <ConfirmDeleteModal

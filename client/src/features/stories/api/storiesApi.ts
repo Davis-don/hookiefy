@@ -1,6 +1,6 @@
 // src/pages/stories/storiesApi.ts
 
-import {useAuthStore} from '../../../store/authStore';
+import { useAuthStore } from '../../../store/authStore';
 
 const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -41,8 +41,15 @@ export type Story = {
   updated_at: string;
 };
 
+/* ── Paginated list response (matches backend _paginate_queryset) ── */
+
 export type ListStoriesResponse = {
   count: number;
+  page: number;
+  page_size: number;
+  pages: number;
+  next: number | null;
+  previous: number | null;
   results: Story[];
 };
 
@@ -63,6 +70,7 @@ export type DeleteStoryResponse = {
 export type ListStoriesParams = {
   category?: StoryCategory;
   user?: number;
+  page?: number;
 };
 
 /* ============================================================
@@ -70,7 +78,6 @@ export type ListStoriesParams = {
    ============================================================ */
 
 function authHeaders(): HeadersInit {
-  // Read the live token from the store (persisted via zustand/persist)
   const access = useAuthStore.getState().access;
 
   const headers: Record<string, string> = {
@@ -80,7 +87,6 @@ function authHeaders(): HeadersInit {
   if (access) {
     headers['Authorization'] = `Bearer ${access}`;
   } else {
-    // helpful while debugging — remove in production
     // eslint-disable-next-line no-console
     console.warn('[storiesApi] No access token found in authStore.');
   }
@@ -122,6 +128,7 @@ function buildQuery(params?: ListStoriesParams): string {
   const usp = new URLSearchParams();
   if (params.category) usp.set('category', params.category);
   if (params.user != null) usp.set('user', String(params.user));
+  if (params.page != null) usp.set('page', String(params.page));
   const qs = usp.toString();
   return qs ? `?${qs}` : '';
 }
@@ -131,7 +138,7 @@ function buildQuery(params?: ListStoriesParams): string {
    ============================================================ */
 
 export async function createStory(
-  payload: StoryPayload
+  payload: StoryPayload,
 ): Promise<CreateStoryResponse> {
   const res = await fetch(`${API_BASE}/stories/create/`, {
     method: 'POST',
@@ -153,21 +160,21 @@ export async function createStory(
    ============================================================ */
 
 export async function listMyStories(
-  params?: ListStoriesParams
+  params?: ListStoriesParams,
 ): Promise<ListStoriesResponse> {
   const res = await fetch(
     `${API_BASE}/stories/mine/${buildQuery(params)}`,
     {
       method: 'GET',
       headers: authHeaders(),
-    }
+    },
   );
 
   const data = await parseJsonSafe(res);
 
   if (!res.ok) {
     throw new Error(
-      extractErrorMessage(data, 'Failed to load your stories.')
+      extractErrorMessage(data, 'Failed to load your stories.'),
     );
   }
 
@@ -179,14 +186,14 @@ export async function listMyStories(
    ============================================================ */
 
 export async function listAllStories(
-  params?: ListStoriesParams
+  params?: ListStoriesParams,
 ): Promise<ListStoriesResponse> {
   const res = await fetch(
     `${API_BASE}/stories/${buildQuery(params)}`,
     {
       method: 'GET',
       headers: authHeaders(),
-    }
+    },
   );
 
   const data = await parseJsonSafe(res);
@@ -223,7 +230,7 @@ export async function retrieveStory(id: number): Promise<Story> {
 
 export async function updateStory(
   id: number,
-  payload: StoryUpdatePayload
+  payload: StoryUpdatePayload,
 ): Promise<UpdateStoryResponse> {
   const res = await fetch(`${API_BASE}/stories/${id}/update/`, {
     method: 'PATCH',
@@ -245,7 +252,7 @@ export async function updateStory(
    ============================================================ */
 
 export async function deleteStory(
-  id: number
+  id: number,
 ): Promise<DeleteStoryResponse> {
   const res = await fetch(`${API_BASE}/stories/${id}/delete/`, {
     method: 'DELETE',
@@ -266,21 +273,21 @@ export async function deleteStory(
    ============================================================ */
 
 export async function adminListStories(
-  params?: ListStoriesParams
+  params?: ListStoriesParams,
 ): Promise<ListStoriesResponse> {
   const res = await fetch(
     `${API_BASE}/stories/admin/all/${buildQuery(params)}`,
     {
       method: 'GET',
       headers: authHeaders(),
-    }
+    },
   );
 
   const data = await parseJsonSafe(res);
 
   if (!res.ok) {
     throw new Error(
-      extractErrorMessage(data, 'Failed to load stories (admin).')
+      extractErrorMessage(data, 'Failed to load stories (admin).'),
     );
   }
 

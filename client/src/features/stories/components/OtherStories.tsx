@@ -1,7 +1,7 @@
 // src/pages/stories/components/OtherStories.tsx
 
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
 import { Spinner } from '../../../components/spinner/Spinner';
@@ -9,29 +9,67 @@ import LikeButton from '../../engagement/components/LikeButton';
 import { listAllStories, type Story } from '../api/storiesApi';
 import './otherStories.css';
 
+const PAGE_SIZE = 10;
+
 function OtherStories() {
   const access = useAuthStore((s) => s.access);
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const {
-    data: allStories = [],
+    data,
     isLoading,
     isError,
     error,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['all-stories', access],
-    queryFn: () => listAllStories().then((r) => r.results),
+    queryFn: ({ pageParam = 1 }) =>
+      listAllStories({ page: pageParam }),
     enabled: !!access,
     staleTime: 30_000,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.next != null ? lastPage.next : undefined,
+    // We pull 10 at a time from the backend; each page is up to 10.
+    // (PAGE_SIZE constant kept for parity if you switch to client-side paging.)
+    placeholderData: (prev) => prev,
   });
+
+  /* Flatten every page into one array */
+  const allStories: Story[] = useMemo(
+    () => data?.pages.flatMap((p) => p.results) ?? [],
+    [data],
+  );
 
   /* Exclude the current user's own stories — this tab is "Other Stories" */
   const stories = useMemo<Story[]>(
     () => allStories.filter((s) => s.user !== currentUserId),
     [allStories, currentUserId],
   );
+
+  /* ── Infinite scroll: observe the sentinel ─────────── */
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   /* ── Loading ──────────────────────────────────────── */
   if (isLoading) {
@@ -126,8 +164,7 @@ function OtherStories() {
                 dangerouslySetInnerHTML={{ __html: story.content_html }}
               />
 
-              {/* ── Actions: like only ───────────────────
-                     Stories aren't followed (that's for businesses). */}
+              {/* ── Actions: like only ─────────────────── */}
               <div className="os-post-actions">
                 <LikeButton targetKind="story" targetId={story.id} />
               </div>
@@ -167,6 +204,27 @@ function OtherStories() {
           </div>
         );
       })}
+
+      {/* ── Infinite-scroll sentinel ────────────────── */}
+      <div ref={sentinelRef} />
+
+      {/* ── Loading-more spinner ────────────────────── */}
+      {isFetchingNextPage && (
+        <div className="os-state" style={{ paddingTop: 12 }}>
+          <Spinner
+            size={20}
+            color="#2563EB"
+            label="Loading more stories…"
+          />
+        </div>
+      )}
+
+      {/* ── End-of-feed marker ──────────────────────── */}
+      {!hasNextPage && stories.length >= PAGE_SIZE && (
+        <div className="os-end" aria-hidden="true">
+          You're all caught up
+        </div>
+      )}
     </div>
   );
 }

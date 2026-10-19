@@ -21,6 +21,9 @@ from .serializers import (
 # HELPERS
 # ============================================================
 
+PAGE_SIZE = 10
+
+
 def _own_story_or_404(user, story_id):
     return (
         Story.objects
@@ -96,7 +99,51 @@ def _check_story_limit(user):
 
 
 # ────────────────────────────────────────────────────────────
-# NEW: subscription expiry check (same as posts/views.py)
+# Pagination helper
+# ────────────────────────────────────────────────────────────
+
+def _paginate_queryset(qs, request, page_size=PAGE_SIZE):
+    """
+    Return (page_qs, meta_dict).
+
+    Reads `?page=` from query params (1-based, default 1).
+    Meta always includes total count, page, page_size, pages,
+    next, previous — so the response shape stays stable.
+    """
+    total = qs.count()
+
+    try:
+        page = int(request.query_params.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+
+    if page < 1:
+        page = 1
+
+    pages = (total + page_size - 1) // page_size if page_size else 0
+
+    if pages and page > pages:
+        page = pages  # clamp so out-of-range still returns last page
+
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    page_qs = qs[start:end]
+
+    meta = {
+        "count": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+        "next": page + 1 if page < pages else None,
+        "previous": page - 1 if page > 1 else None,
+    }
+
+    return page_qs, meta
+
+
+# ────────────────────────────────────────────────────────────
+# Subscription expiry check (same as posts/views.py)
 # ────────────────────────────────────────────────────────────
 
 def _check_subscription_current(user):
@@ -190,11 +237,13 @@ def list_my_stories(request):
     if category:
         qs = qs.filter(category=category)
 
-    serializer = StorySerializer(qs, many=True)
+    page_qs, meta = _paginate_queryset(qs, request)
+
+    serializer = StorySerializer(page_qs, many=True)
 
     return Response(
         {
-            "count": qs.count(),
+            **meta,
             "results": serializer.data,
         },
         status=status.HTTP_200_OK,
@@ -222,11 +271,13 @@ def list_all_stories(request):
     if user_id:
         qs = qs.filter(user_id=user_id)
 
-    serializer = StorySerializer(qs, many=True)
+    page_qs, meta = _paginate_queryset(qs, request)
+
+    serializer = StorySerializer(page_qs, many=True)
 
     return Response(
         {
-            "count": qs.count(),
+            **meta,
             "results": serializer.data,
         },
         status=status.HTTP_200_OK,
@@ -415,11 +466,13 @@ def admin_list_stories(request):
     if user_id:
         qs = qs.filter(user_id=user_id)
 
-    serializer = StorySerializer(qs, many=True)
+    page_qs, meta = _paginate_queryset(qs, request)
+
+    serializer = StorySerializer(page_qs, many=True)
 
     return Response(
         {
-            "count": qs.count(),
+            **meta,
             "results": serializer.data,
         },
         status=status.HTTP_200_OK,

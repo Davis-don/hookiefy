@@ -421,3 +421,9 @@
     transition: none !important;
   }
 }
+.os-end {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
