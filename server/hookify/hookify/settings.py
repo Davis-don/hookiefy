@@ -193,13 +193,67 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 #         ssl_require=True,
 #     )
 # }
+
+# ============================================================
+# DATABASE — SSL MODE DRIVEN BY ENV
+# ============================================================
+#
+# The "SSL SYSCALL error: EOF detected" was happening on the
+# very first connect (during check_migrations), which means
+# the server is dropping the SSL handshake — not a pool /
+# idle-timeout problem.
+#
+# To diagnose and fix it, every SSL and connection knob is
+# now read from .env via decouple's config():
+#
+#   DJANGO_DB_SSLMODE                require | prefer | disable | verify-ca | verify-full
+#   DJANGO_DB_CONN_MAX_AGE           0 disables pooling (safest while debugging)
+#   DJANGO_DB_CONNECT_TIMEOUT        seconds
+#   DJANGO_DB_KEEPALIVES             0 | 1
+#   DJANGO_DB_KEEPALIVES_IDLE        seconds
+#   DJANGO_DB_KEEPALIVES_INTERVAL    seconds
+#   DJANGO_DB_KEEPALIVES_COUNT       count
+#
+# Default is "require" so existing behaviour is preserved.
+# ============================================================
+
+_DB_SSLMODE = config("DJANGO_DB_SSLMODE", default="require")
+
+_DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=600, cast=int)
+
+_DB_CONNECT_TIMEOUT = config("DJANGO_DB_CONNECT_TIMEOUT", default=10, cast=int)
+
+_DB_KEEPALIVES = config("DJANGO_DB_KEEPALIVES", default=1, cast=int)
+
+_DB_KEEPALIVES_IDLE = config("DJANGO_DB_KEEPALIVES_IDLE", default=30, cast=int)
+
+_DB_KEEPALIVES_INTERVAL = config("DJANGO_DB_KEEPALIVES_INTERVAL", default=10, cast=int)
+
+_DB_KEEPALIVES_COUNT = config("DJANGO_DB_KEEPALIVES_COUNT", default=5, cast=int)
+
+# ssl_require is True unless sslmode is explicitly disabled,
+# so dj_database_url still appends its own ssl bits correctly.
+_DB_SSL_REQUIRE = _DB_SSLMODE != "disable"
+
 DATABASES = {
     "default": dj_database_url.config(
         default=config("DATABASE_URL"),
-        conn_max_age=int(os.environ.get("DJANGO_DB_CONN_MAX_AGE", "600")),
-        ssl_require=True,
+        conn_max_age=_DB_CONN_MAX_AGE,
+        ssl_require=_DB_SSL_REQUIRE,
+        conn_health_checks=True,
     )
 }
+
+DATABASES["default"].setdefault("OPTIONS", {})
+
+DATABASES["default"]["OPTIONS"].update({
+    "sslmode": _DB_SSLMODE,
+    "connect_timeout": _DB_CONNECT_TIMEOUT,
+    "keepalives": _DB_KEEPALIVES,
+    "keepalives_idle": _DB_KEEPALIVES_IDLE,
+    "keepalives_interval": _DB_KEEPALIVES_INTERVAL,
+    "keepalives_count": _DB_KEEPALIVES_COUNT,
+})
 
 
 # ============================================================
@@ -940,6 +994,41 @@ if DEBUG:
     print(
         f"  DATABASE_URL: "
         f"{'✅ Configured' if config('DATABASE_URL', default='') else '❌ NOT SET'}"
+    )
+
+    print(
+        f"  sslmode: "
+        f"{_DB_SSLMODE}"
+    )
+
+    print(
+        f"  conn_max_age: "
+        f"{_DB_CONN_MAX_AGE}s"
+    )
+
+    print(
+        f"  connect_timeout: "
+        f"{_DB_CONNECT_TIMEOUT}s"
+    )
+
+    print(
+        f"  keepalives: "
+        f"{_DB_KEEPALIVES}"
+    )
+
+    print(
+        f"  keepalives_idle: "
+        f"{_DB_KEEPALIVES_IDLE}s"
+    )
+
+    print(
+        f"  keepalives_interval: "
+        f"{_DB_KEEPALIVES_INTERVAL}s"
+    )
+
+    print(
+        f"  keepalives_count: "
+        f"{_DB_KEEPALIVES_COUNT}"
     )
 
     print("=" * 70 + "\n")
