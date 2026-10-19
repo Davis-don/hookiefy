@@ -21,6 +21,10 @@ import './allStories.css';
 
 const PAGE_SIZE = 10;
 
+/* ── Cache tuning ─────────────────────────────────────── */
+const STALE_TIME = 5 * 60_000;   // 5 min — fresh data
+const GC_TIME = 30 * 60_000;     // 30 min — keep in memory
+
 type AllStoriesProps = {
   onAdd?: () => void;
 };
@@ -49,10 +53,18 @@ function MineStories({ onAdd }: AllStoriesProps) {
     queryFn: ({ pageParam = 1 }) =>
       listMyStories({ page: pageParam }),
     enabled: !!access,
-    staleTime: 30_000,
+
+    /* ── Caching ──────────────────────────────────────── */
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.next != null ? lastPage.next : undefined,
+
     placeholderData: (prev) => prev,
   });
 
@@ -84,9 +96,13 @@ function MineStories({ onAdd }: AllStoriesProps) {
     mutationFn: (id: number) => deleteStory(id),
     onSuccess: (res) => {
       toast.success(res.message || 'Story deleted.');
+
+      /* Invalidate BOTH caches so the Other Stories tab and
+         Mine Stories tab pick up the change next time they mount. */
       queryClient.invalidateQueries({ queryKey: ['my-stories'] });
-      queryClient.invalidateQueries({ queryKey: ['stories'] });
       queryClient.invalidateQueries({ queryKey: ['all-stories'] });
+      queryClient.invalidateQueries({ queryKey: ['stories'] });
+
       setDeleteTarget(null);
     },
     onError: (err: any) => {

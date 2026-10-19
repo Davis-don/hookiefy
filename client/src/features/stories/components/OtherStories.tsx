@@ -11,6 +11,10 @@ import './otherStories.css';
 
 const PAGE_SIZE = 10;
 
+/* ── Cache tuning ─────────────────────────────────────── */
+const STALE_TIME = 5 * 60_000;   // 5 min — fresh data
+const GC_TIME = 30 * 60_000;     // 30 min — keep in memory
+
 function OtherStories() {
   const access = useAuthStore((s) => s.access);
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -31,12 +35,18 @@ function OtherStories() {
     queryFn: ({ pageParam = 1 }) =>
       listAllStories({ page: pageParam }),
     enabled: !!access,
-    staleTime: 30_000,
+
+    /* ── Caching ──────────────────────────────────────── */
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnWindowFocus: false,   // don't refetch when tab regains focus
+    refetchOnMount: false,         // use cached pages instantly on remount
+    refetchOnReconnect: true,      // still revalidate if network dropped
+
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.next != null ? lastPage.next : undefined,
-    // We pull 10 at a time from the backend; each page is up to 10.
-    // (PAGE_SIZE constant kept for parity if you switch to client-side paging.)
+
     placeholderData: (prev) => prev,
   });
 
