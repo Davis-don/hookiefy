@@ -220,7 +220,7 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 _DB_SSLMODE = config("DJANGO_DB_SSLMODE", default="require")
 
 # ↓ 30s — recycle before the network / Miget kills idle connections
-_DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=30, cast=int)
+_DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=0, cast=int)
 
 # ↓ 20s — more time for the SSL handshake on Render → Miget
 _DB_CONNECT_TIMEOUT = config("DJANGO_DB_CONNECT_TIMEOUT", default=20, cast=int)
