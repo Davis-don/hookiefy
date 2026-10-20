@@ -4,7 +4,7 @@ const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /* ============================================================
-   SCOPES
+   SCOPES / TYPES (unchanged)
    ============================================================ */
 
 export type SearchScope =
@@ -14,10 +14,6 @@ export type SearchScope =
   | 'stories'
   | 'products'
   | 'users';
-
-/* ============================================================
-   ITEM TYPES
-   ============================================================ */
 
 export type SearchBusiness = {
   id: number;
@@ -65,10 +61,6 @@ export type SearchUser = {
   full_name: string;
 };
 
-/* ============================================================
-   RESULT BUCKETS
-   ============================================================ */
-
 export type SearchResults = {
   businesses: SearchBusiness[];
   posts: SearchPost[];
@@ -78,14 +70,22 @@ export type SearchResults = {
 };
 
 export type SearchKind = keyof SearchResults;
-
-/* ── Per-kind row type, keyed by the bucket name ──── */
-
 export type SearchRow<K extends SearchKind> = SearchResults[K][number];
 
-/* ============================================================
-   RESPONSE
-   ============================================================ */
+/* ── One chunk per kind (streaming) ─────────────────── */
+
+export type SearchChunk<K extends SearchKind = SearchKind> = {
+  kind: K;
+  page: number;
+  page_size: number;
+  items: SearchRow<K>[];
+  total: number;
+  total_pages: number;
+  has_more: boolean;
+  error?: string;
+};
+
+/* ── Full response (used only in non-streaming mode) ── */
 
 export type SearchResponse = {
   query: string;
@@ -106,99 +106,90 @@ export type SearchParams = {
 };
 
 /* ============================================================
-   HELPERS
+   SEARCH — streaming NDJSON
+   ============================================================
+   Calls `onChunk` once per kind (as soon as the backend
+   finishes that kind), then resolves once the "done"
+   marker arrives. Pass `onChunk` to wire results into
+   React Query per-kind.
    ============================================================ */
 
-async function parseError(res: Response, fallback: string): Promise<string> {
-  const text = await res.text();
-  let data: any = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
-  }
-
-  if (data && typeof data === 'object') {
-    if (typeof data.message === 'string') return data.message;
-    if (typeof data.error === 'string') return data.error;
-    if (typeof data.detail === 'string') return data.detail;
-
-    const firstKey = Object.keys(data)[0];
-    if (firstKey) {
-      const val = data[firstKey];
-      const first = Array.isArray(val) ? val[0] : String(val);
-      return `${firstKey}: ${first}`;
-    }
-  }
-  return fallback;
-}
-
-/* ============================================================
-   SEARCH — GET /api/search/?q=…&kind=…&page=…
-   ============================================================ */
-
-export async function searchEverything(
+export async function searchStreaming(
   params: SearchParams,
+  onChunk: (chunk: SearchChunk) => void,
   token?: string | null,
-): Promise<SearchResponse> {
+  signal?: AbortSignal,
+): Promise<void> {
   const q = params.q.trim();
   const page = params.page ?? 1;
 
-  if (q.length < 2) {
-    return {
-      query: q,
-      kind: params.kind ?? 'all',
-      page,
-      page_size: 10,
-      pages: {
-        businesses: 0,
-        posts: 0,
-        stories: 0,
-        products: 0,
-        users: 0,
-      },
-      has_more: {
-        businesses: false,
-        posts: false,
-        stories: false,
-        products: false,
-        users: false,
-      },
-      results: {
-        businesses: [],
-        posts: [],
-        stories: [],
-        products: [],
-        users: [],
-      },
-      counts: {
-        businesses: 0,
-        posts: 0,
-        stories: 0,
-        products: 0,
-        users: 0,
-      },
-      total: 0,
-    };
-  }
+  if (q.length < 2) return;
 
   const usp = new URLSearchParams();
   usp.set('q', q);
   if (params.kind) usp.set('kind', params.kind);
   usp.set('page', String(page));
+  usp.set('stream', '1');
 
   const url = `${API_BASE}/api/search/?${usp.toString()}`;
 
   const headers: Record<string, string> = {
-    Accept: 'application/json',
+    Accept: 'application/x-ndjson',
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(url, { headers });
+  const res = await fetch(url, { headers, signal });
 
-  if (!res.ok) {
-    throw new Error(await parseError(res, 'Search failed.'));
+  if (!res.ok || !res.body) {
+    throw new Error('Search failed.');
   }
 
-  return (await res.json()) as SearchResponse;
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIdx: number;
+      while ((newlineIdx = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newlineIdx).trim();
+        buffer = buffer.slice(newlineIdx + 1);
+
+        if (!line) continue;
+
+        let parsed: any;
+        try {
+          parsed = JSON.parse(line);
+        } catch {
+          continue;  // skip malformed line
+        }
+
+        if (parsed.type === 'done') return;
+
+        if (parsed.error) {
+          // Per-kind error — surface but keep going
+          onChunk({
+            kind: parsed.kind,
+            page,
+            page_size: 0,
+            items: [],
+            total: 0,
+            total_pages: 0,
+            has_more: false,
+            error: parsed.error,
+          });
+          continue;
+        }
+
+        onChunk(parsed as SearchChunk);
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }
