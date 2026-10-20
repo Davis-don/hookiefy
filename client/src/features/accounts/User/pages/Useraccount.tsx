@@ -1,4 +1,4 @@
-// src/pages/accounts/User/Useraccount.tsx
+// src/features/accounts/User/pages/Useraccount.tsx
 
 import { useState } from 'react';
 
@@ -10,6 +10,8 @@ import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
 import Logout from '../components/Logout';
 import SubscriptionGuard from '../components/SubscriptionGuard';
+import SearchResults from '../components/SearchResults';
+import type { SearchScope } from '../components/SearchBar';
 
 import './useraccount.css';
 
@@ -19,7 +21,6 @@ type NavItem = {
   key: TabKey;
   label: string;
   icon: React.ReactNode;
-  /** Renders as the floating gradient pill in the mobile bottom nav. */
   primary?: boolean;
 };
 
@@ -64,6 +65,9 @@ const BillingIcon = () => (
 function Useraccount() {
   const [active, setActive] = useState<TabKey>('home');
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchScope, setSearchScope] = useState<SearchScope>('all');
+
   const navItems: NavItem[] = [
     { key: 'home',     label: 'Home',     icon: <HomeIcon /> },
     { key: 'stories',  label: 'Stories',  icon: <StoriesIcon /> },
@@ -85,18 +89,21 @@ function Useraccount() {
     }
   };
 
-  /* ── The guard only wraps non-Billing tabs ───────────
-     When the user is on the Billing tab, we let them
-     through unconditionally so they can complete a
-     renewal. Everywhere else, the guard blurs the
-     content and shows the upgrade overlay. */
-  const content = active === 'billing'
-    ? renderTab()
-    : (
-      <SubscriptionGuard onUpgrade={goToBilling}>
-        {renderTab()}
-      </SubscriptionGuard>
-    );
+  const content = searchQuery
+    ? (
+      <SearchResults
+        query={searchQuery}
+        scope={searchScope}
+        onClose={() => setSearchQuery('')}
+      />
+    )
+    : active === 'billing'
+      ? renderTab()
+      : (
+        <SubscriptionGuard onUpgrade={goToBilling}>
+          {renderTab()}
+        </SubscriptionGuard>
+      );
 
   return (
     <div className="ua-shell">
@@ -112,7 +119,10 @@ function Useraccount() {
             <button
               key={item.key}
               type="button"
-              onClick={() => setActive(item.key)}
+              onClick={() => {
+                setActive(item.key);
+                setSearchQuery('');
+              }}
               className={
                 'ua-sidebar-link' +
                 (active === item.key ? ' is-active' : '')
@@ -128,7 +138,12 @@ function Useraccount() {
       </aside>
 
       <div className="ua-main">
-        <UserHeader onOpenProfile={goToProfile} />
+        <UserHeader
+          onOpenProfile={goToProfile}
+          onSearch={(q) => setSearchQuery(q)}
+          scope={searchScope}
+          onScopeChange={setSearchScope}
+        />
         <div className="ua-content">{content}</div>
       </div>
 
@@ -137,7 +152,10 @@ function Useraccount() {
           <button
             key={item.key}
             type="button"
-            onClick={() => setActive(item.key)}
+            onClick={() => {
+              setActive(item.key);
+              setSearchQuery('');
+            }}
             className={
               'ua-bottom-link' +
               (active === item.key ? ' is-active' : '') +

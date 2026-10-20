@@ -1,4 +1,4 @@
-// src/pages/accounts/User/components/UserHeader.tsx
+// src/features/accounts/User/components/UserHeader.tsx
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,15 +6,23 @@ import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import NotificationBell from './NotificationBell';
 import NotificationsPanel from './NotificationsPanel';
+import SearchBar, { type SearchScope } from './SearchBar';
 
 import './UserHeader.css';
 
 type UserHeaderProps = {
-  /** Called when the avatar is clicked — e.g. to switch to the Profile tab. */
   onOpenProfile?: () => void;
+  onSearch?: (query: string, scope: SearchScope) => void;
+  scope: SearchScope;
+  onScopeChange: (scope: SearchScope) => void;
 };
 
-function UserHeader({ onOpenProfile }: UserHeaderProps) {
+function UserHeader({
+  onOpenProfile,
+  onSearch,
+  scope,
+  onScopeChange,
+}: UserHeaderProps) {
   const [panelOpen, setPanelOpen] = useState(false);
 
   return (
@@ -25,6 +33,15 @@ function UserHeader({ onOpenProfile }: UserHeaderProps) {
           <span className="ua-header-logo-p">p</span>
           <span className="ua-header-logo-ata">ata</span>
         </Link>
+
+        <div className="ua-header-search">
+          <SearchBar
+            scope={scope}
+            onScopeChange={onScopeChange}
+            onSearch={(q, s) => onSearch?.(q, s)}
+            onClear={() => onSearch?.('', scope)}
+          />
+        </div>
 
         <div className="ua-header-right">
           <NotificationBell onClick={() => setPanelOpen(true)} />
