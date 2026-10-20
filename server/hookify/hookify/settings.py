@@ -90,6 +90,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # ── Required for GinIndex / trigram search ──────────
+    "django.contrib.postgres",
+
     "account",
     "businesses",
     "posts",
@@ -182,18 +185,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "hookify.wsgi.application"
 
-
-# ============================================================
-# DATABASE
-# ============================================================
-
-# DATABASES = {
-#     "default": dj_database_url.config(
-#         default=config("DATABASE_URL"),
-#         conn_max_age=600,
-#         ssl_require=True,
-#     )
-# }
 
 # ============================================================
 # DATABASE — SSL MODE DRIVEN BY ENV

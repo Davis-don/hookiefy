@@ -1,5 +1,9 @@
-from django.db import models
+# businesses/models.py
+
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.db import models
+from django.db.models.functions import Upper
 
 
 # ============================================================
@@ -8,10 +12,6 @@ from django.conf import settings
 
 class Businesses(models.Model):
 
-    # --------------------------------------------------------
-    # OWNER (many-to-one)
-    # --------------------------------------------------------
-
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -19,17 +19,7 @@ class Businesses(models.Model):
         help_text="The account that owns this business.",
     )
 
-    # --------------------------------------------------------
-    # BUSINESS NAME
-    # --------------------------------------------------------
-
-    business_name = models.CharField(
-        max_length=200,
-    )
-
-    # --------------------------------------------------------
-    # CATEGORY — goods or services
-    # --------------------------------------------------------
+    business_name = models.CharField(max_length=200)
 
     CATEGORY_CHOICES = (
         ("goods",    "Goods"),
@@ -41,45 +31,19 @@ class Businesses(models.Model):
         choices=CATEGORY_CHOICES,
     )
 
-    # --------------------------------------------------------
-    # BUSINESS TYPE
-    # Examples: "Agriculture & Livestock", "Vehicle & Automotive"
-    # --------------------------------------------------------
+    business_type = models.CharField(max_length=120)
 
-    business_type = models.CharField(
-        max_length=120,
-    )
+    description = models.TextField(default="", blank=True)
 
-    # --------------------------------------------------------
-    # DESCRIPTION
-    # --------------------------------------------------------
-
-    description = models.TextField(
-        default="",
-        blank=True,
-    )
-
-    # --------------------------------------------------------
-    # LOCATION
-    # --------------------------------------------------------
-
-    county = models.CharField(
-        max_length=120,
-    )
-
+    county = models.CharField(max_length=120)
     city_town = models.CharField(
         max_length=120,
         help_text="City or town where the business is located.",
     )
-
     region = models.CharField(
         max_length=120,
         help_text="Specific area or locality, e.g. Kasuku, Kawangware.",
     )
-
-    # --------------------------------------------------------
-    # STATUS
-    # --------------------------------------------------------
 
     STATUS_CHOICES = (
         ("active",    "Active"),
@@ -96,14 +60,6 @@ class Businesses(models.Model):
         help_text="Current lifecycle state of the business.",
     )
 
-    # --------------------------------------------------------
-    # ENGAGEMENT COUNTERS
-    # --------------------------------------------------------
-    # Cached totals so lists / cards can render counts without
-    # aggregating across the Like and Follow tables on every read.
-    # Kept in sync by my_engagements.services.
-    # --------------------------------------------------------
-
     likes_count = models.PositiveIntegerField(
         default=0,
         help_text=(
@@ -117,21 +73,8 @@ class Businesses(models.Model):
         help_text="Cached number of users following this business.",
     )
 
-    # --------------------------------------------------------
-    # TIMESTAMPS
-    # --------------------------------------------------------
-
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
-
-    # --------------------------------------------------------
-    # META
-    # --------------------------------------------------------
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Business"
@@ -142,18 +85,36 @@ class Businesses(models.Model):
             models.Index(fields=("business_category",)),
             models.Index(fields=("county", "city_town")),
             models.Index(fields=("status",)),
-        )
 
-    # --------------------------------------------------------
-    # STRING REPRESENTATION
-    # --------------------------------------------------------
+            # ── Trigram indexes for fast __icontains search ────
+            GinIndex(
+                OpClass(Upper("business_name"), name="gin_trgm_ops"),
+                name="biz_name_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("business_type"), name="gin_trgm_ops"),
+                name="biz_type_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("description"), name="gin_trgm_ops"),
+                name="biz_desc_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("county"), name="gin_trgm_ops"),
+                name="biz_county_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("city_town"), name="gin_trgm_ops"),
+                name="biz_city_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("region"), name="gin_trgm_ops"),
+                name="biz_region_trgm_idx",
+            ),
+        )
 
     def __str__(self):
         return f"{self.business_name} ({self.get_business_category_display()})"
-
-    # --------------------------------------------------------
-    # STATUS HELPERS
-    # --------------------------------------------------------
 
     @property
     def is_active(self):

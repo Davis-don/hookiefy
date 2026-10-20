@@ -4,7 +4,7 @@ const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /* ============================================================
-   SCOPES / TYPES (unchanged)
+   SCOPES
    ============================================================ */
 
 export type SearchScope =
@@ -14,6 +14,10 @@ export type SearchScope =
   | 'stories'
   | 'products'
   | 'users';
+
+/* ============================================================
+   ITEM TYPES
+   ============================================================ */
 
 export type SearchBusiness = {
   id: number;
@@ -72,7 +76,7 @@ export type SearchResults = {
 export type SearchKind = keyof SearchResults;
 export type SearchRow<K extends SearchKind> = SearchResults[K][number];
 
-/* ── One chunk per kind (streaming) ─────────────────── */
+/* ── One streamed chunk per kind ──────────────────── */
 
 export type SearchChunk<K extends SearchKind = SearchKind> = {
   kind: K;
@@ -85,37 +89,15 @@ export type SearchChunk<K extends SearchKind = SearchKind> = {
   error?: string;
 };
 
-/* ── Full response (used only in non-streaming mode) ── */
-
-export type SearchResponse = {
-  query: string;
-  kind: SearchScope;
-  page: number;
-  page_size: number;
-  pages: Record<SearchKind, number>;
-  has_more: Record<SearchKind, boolean>;
-  results: SearchResults;
-  counts: Record<SearchKind, number>;
-  total: number;
-};
-
-export type SearchParams = {
-  q: string;
-  kind?: SearchScope;
-  page?: number;
-};
-
 /* ============================================================
-   SEARCH — streaming NDJSON
+   STREAMING SEARCH
    ============================================================
-   Calls `onChunk` once per kind (as soon as the backend
-   finishes that kind), then resolves once the "done"
-   marker arrives. Pass `onChunk` to wire results into
-   React Query per-kind.
+   Reads NDJSON line-by-line, calling `onChunk` for each kind
+   as it arrives, then resolves when the "done" marker hits.
    ============================================================ */
 
 export async function searchStreaming(
-  params: SearchParams,
+  params: { q: string; kind: SearchScope; page?: number },
   onChunk: (chunk: SearchChunk) => void,
   token?: string | null,
   signal?: AbortSignal,
@@ -127,7 +109,7 @@ export async function searchStreaming(
 
   const usp = new URLSearchParams();
   usp.set('q', q);
-  if (params.kind) usp.set('kind', params.kind);
+  usp.set('kind', params.kind);
   usp.set('page', String(page));
   usp.set('stream', '1');
 
@@ -141,7 +123,11 @@ export async function searchStreaming(
   const res = await fetch(url, { headers, signal });
 
   if (!res.ok || !res.body) {
-    throw new Error('Search failed.');
+    const text = await res.text().catch(() => '');
+    throw new Error(
+      `Search failed (${res.status}${res.statusText ? ' ' + res.statusText : ''})` +
+        (text ? `: ${text.slice(0, 200)}` : ''),
+    );
   }
 
   const reader = res.body.getReader();
@@ -166,13 +152,12 @@ export async function searchStreaming(
         try {
           parsed = JSON.parse(line);
         } catch {
-          continue;  // skip malformed line
+          continue;
         }
 
         if (parsed.type === 'done') return;
 
         if (parsed.error) {
-          // Per-kind error — surface but keep going
           onChunk({
             kind: parsed.kind,
             page,

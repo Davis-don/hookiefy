@@ -484,3 +484,22 @@
   background: #FFFFFF;
   box-shadow: none;
 }
+/* Section still streaming in — shows title + tiny spinner */
+.sr-group--pending {
+  opacity: 0.75;
+}
+
+.sr-group--pending .sr-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+}
+
+/* Inline "searching…" hint in the header while chunks stream */
+.sr-heading-streaming {
+  color: #94A3B8;
+  font-weight: 500;
+  font-size: 12.5px;
+  font-style: italic;
+}

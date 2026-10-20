@@ -18,7 +18,6 @@ type SearchResultsProps = {
   onOpenStory: (id: number) => void;
 };
 
-/* Distance from bottom (px) at which a section auto-loads. */
 const SCROLL_TRIGGER_PX = 300;
 
 /* ── Helpers ──────────────────────────────────────── */
@@ -58,8 +57,6 @@ function Thumb({
   );
 }
 
-/* ── Per-section sentinel ─────────────────────────── */
-
 function SectionSentinel({
   kind,
   hasMore,
@@ -94,6 +91,22 @@ function SectionSentinel({
   return <div ref={ref} className="sr-sentinel" aria-hidden="true" />;
 }
 
+/* ── Row that says "still searching this section…" ─ */
+function SectionPending({ label }: { label: string }) {
+  return (
+    <section className="sr-group sr-group--pending">
+      <h3 className="sr-group-title">
+        {label}
+        <Spinner size={12} color="#94A3B8" label="Searching…" />
+      </h3>
+    </section>
+  );
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+
 function SearchResults({
   query,
   scope,
@@ -111,7 +124,6 @@ function SearchResults({
   const trimmed = query.trim();
   const tooShort = trimmed.length < 2;
 
-  /* Typed accessors — no more `unknown` */
   const businesses = search.results('businesses');
   const posts = search.results('posts');
   const products = search.results('products');
@@ -126,7 +138,25 @@ function SearchResults({
     totalFor('stories') +
     totalFor('users');
 
-  const allEmpty = totalAll === 0;
+  /* ── UI mode flags ────────────────────────────────
+     isLoading   → no chunk yet
+     hasAnyResult → at least one kind came back
+     isComplete  → stream finished, all kinds done
+     isFetching  → stream still running
+     allEmpty    → stream done AND nothing found anywhere
+  */
+  const showFirstSpinner =
+    !tooShort && search.isLoading && !search.hasAnyResult;
+
+  const showEmpty =
+    !tooShort &&
+    !search.isLoading &&
+    !search.isError &&
+    search.isComplete &&
+    totalAll === 0;
+
+  const showResults =
+    !tooShort && !search.isError && search.hasAnyResult;
 
   return (
     <section className="sr-shell" aria-label={`Search results for ${query}`}>
@@ -140,16 +170,18 @@ function SearchResults({
           <span className="sr-heading-sep" aria-hidden="true">·</span>
           <span className="sr-heading-text">
             Results for <strong>{query}</strong>
-            {!search.isLoading && !tooShort && (
+            {!showFirstSpinner && !tooShort && totalAll > 0 && (
               <span className="sr-heading-count"> ({totalAll})</span>
+            )}
+            {search.isFetching && search.hasAnyResult && (
+              <span className="sr-heading-streaming">
+                {' '}· searching…
+              </span>
             )}
           </span>
         </p>
 
         <div className="sr-header-right">
-          {search.isFetching && !search.isLoading && (
-            <Spinner size={14} color="#2563EB" label="Searching…" />
-          )}
           <button
             type="button"
             className="sr-close"
@@ -176,13 +208,15 @@ function SearchResults({
           </div>
         )}
 
-        {!tooShort && search.isLoading && (
+        {/* First-load spinner: nothing has arrived yet */}
+        {showFirstSpinner && (
           <div className="sr-loading">
             <Spinner size={22} color="#2563EB" label="Searching…" />
           </div>
         )}
 
-        {!tooShort && search.isError && (
+        {/* Fatal error: no chunk ever arrived */}
+        {!tooShort && search.isError && !search.hasAnyResult && (
           <div className="sr-error">
             <p className="sr-error-title">Search failed</p>
             <p className="sr-error-sub">
@@ -191,7 +225,8 @@ function SearchResults({
           </div>
         )}
 
-        {!tooShort && !search.isLoading && !search.isError && allEmpty && (
+        {/* Empty: stream complete and nothing found */}
+        {showEmpty && (
           <div className="sr-empty">
             <div className="sr-empty-icon" aria-hidden="true">
               {scopeDef.icon}
@@ -205,7 +240,8 @@ function SearchResults({
           </div>
         )}
 
-        {!tooShort && !search.isLoading && !search.isError && !allEmpty && (
+        {/* Results + pending sections */}
+        {showResults && (
           <div className="sr-groups">
             {/* ── Businesses ─────────────────────── */}
             {businesses.length > 0 && (
@@ -219,11 +255,8 @@ function SearchResults({
                 <ul className="sr-group-list">
                   {businesses.map((b) => (
                     <li key={`business-${b.id}`}>
-                      <button
-                        type="button"
-                        className="sr-card"
-                        onClick={() => onOpenBusiness(b.id)}
-                      >
+                      <button type="button" className="sr-card"
+                        onClick={() => onOpenBusiness(b.id)}>
                         <div className="sr-card-inner">
                           <Thumb
                             src={null}
@@ -235,22 +268,14 @@ function SearchResults({
                             }
                           />
                           <div className="sr-card-body">
-                            <p className="sr-card-title">
-                              {b.business_name}
-                            </p>
+                            <p className="sr-card-title">{b.business_name}</p>
                             <p className="sr-card-meta">
-                              {[
-                                b.business_category,
-                                b.city_town,
-                                b.county,
-                              ]
+                              {[b.business_category, b.city_town, b.county]
                                 .filter(Boolean)
                                 .join(' · ') || b.business_type}
                             </p>
                             {b.description && (
-                              <p className="sr-card-text">
-                                {b.description}
-                              </p>
+                              <p className="sr-card-text">{b.description}</p>
                             )}
                           </div>
                         </div>
@@ -258,14 +283,12 @@ function SearchResults({
                     </li>
                   ))}
                 </ul>
-
                 <SectionSentinel
                   kind="businesses"
                   hasMore={search.hasMore('businesses')}
                   isFetchingMore={search.isFetchingMore('businesses')}
                   loadMore={search.loadMore}
                 />
-
                 {search.isFetchingMore('businesses') && (
                   <div className="sr-loading-row">
                     <Spinner size={16} color="#64748B" label="Loading more…" />
@@ -273,8 +296,13 @@ function SearchResults({
                 )}
               </section>
             )}
+            {businesses.length === 0 &&
+              !search.hasArrived('businesses') &&
+              search.isFetching && (
+                <SectionPending label="Businesses" />
+              )}
 
-            {/* ── Posts ───────────────────────────── */}
+            {/* ── Posts ──────────────────────────── */}
             {posts.length > 0 && (
               <section className="sr-group">
                 <h3 className="sr-group-title">
@@ -284,11 +312,8 @@ function SearchResults({
                 <ul className="sr-group-list">
                   {posts.map((p) => (
                     <li key={`post-${p.id}`}>
-                      <button
-                        type="button"
-                        className="sr-card"
-                        onClick={() => onOpenPost(p.id)}
-                      >
+                      <button type="button" className="sr-card"
+                        onClick={() => onOpenPost(p.id)}>
                         <div className="sr-card-inner">
                           <Thumb
                             src={p.image_url}
@@ -303,9 +328,7 @@ function SearchResults({
                             <p className="sr-card-title">
                               {p.title || 'Untitled post'}
                             </p>
-                            <p className="sr-card-meta">
-                              {p.business_name}
-                            </p>
+                            <p className="sr-card-meta">{p.business_name}</p>
                             {p.body && (
                               <p className="sr-card-text">{p.body}</p>
                             )}
@@ -315,14 +338,12 @@ function SearchResults({
                     </li>
                   ))}
                 </ul>
-
                 <SectionSentinel
                   kind="posts"
                   hasMore={search.hasMore('posts')}
                   isFetchingMore={search.isFetchingMore('posts')}
                   loadMore={search.loadMore}
                 />
-
                 {search.isFetchingMore('posts') && (
                   <div className="sr-loading-row">
                     <Spinner size={16} color="#64748B" label="Loading more…" />
@@ -330,6 +351,11 @@ function SearchResults({
                 )}
               </section>
             )}
+            {posts.length === 0 &&
+              !search.hasArrived('posts') &&
+              search.isFetching && (
+                <SectionPending label="Posts" />
+              )}
 
             {/* ── Products ────────────────────────── */}
             {products.length > 0 && (
@@ -343,11 +369,8 @@ function SearchResults({
                 <ul className="sr-group-list">
                   {products.map((p) => (
                     <li key={`product-${p.id}`}>
-                      <button
-                        type="button"
-                        className="sr-card"
-                        onClick={() => onOpenProduct(p.id)}
-                      >
+                      <button type="button" className="sr-card"
+                        onClick={() => onOpenProduct(p.id)}>
                         <div className="sr-card-inner">
                           <Thumb
                             src={p.image_url}
@@ -363,15 +386,11 @@ function SearchResults({
                             <p className="sr-card-meta">
                               {p.business_name}
                               {p.price && (
-                                <span className="sr-price">
-                                  {' '}· {p.price}
-                                </span>
+                                <span className="sr-price"> · {p.price}</span>
                               )}
                             </p>
                             {p.description && (
-                              <p className="sr-card-text">
-                                {p.description}
-                              </p>
+                              <p className="sr-card-text">{p.description}</p>
                             )}
                           </div>
                         </div>
@@ -379,14 +398,12 @@ function SearchResults({
                     </li>
                   ))}
                 </ul>
-
                 <SectionSentinel
                   kind="products"
                   hasMore={search.hasMore('products')}
                   isFetchingMore={search.isFetchingMore('products')}
                   loadMore={search.loadMore}
                 />
-
                 {search.isFetchingMore('products') && (
                   <div className="sr-loading-row">
                     <Spinner size={16} color="#64748B" label="Loading more…" />
@@ -394,6 +411,11 @@ function SearchResults({
                 )}
               </section>
             )}
+            {products.length === 0 &&
+              !search.hasArrived('products') &&
+              search.isFetching && (
+                <SectionPending label="Products" />
+              )}
 
             {/* ── Stories ─────────────────────────── */}
             {stories.length > 0 && (
@@ -407,11 +429,8 @@ function SearchResults({
                 <ul className="sr-group-list">
                   {stories.map((s) => (
                     <li key={`story-${s.id}`}>
-                      <button
-                        type="button"
-                        className="sr-card"
-                        onClick={() => onOpenStory(s.id)}
-                      >
+                      <button type="button" className="sr-card"
+                        onClick={() => onOpenStory(s.id)}>
                         <div className="sr-card-inner">
                           <Thumb
                             src={null}
@@ -439,14 +458,12 @@ function SearchResults({
                     </li>
                   ))}
                 </ul>
-
                 <SectionSentinel
                   kind="stories"
                   hasMore={search.hasMore('stories')}
                   isFetchingMore={search.isFetchingMore('stories')}
                   loadMore={search.loadMore}
                 />
-
                 {search.isFetchingMore('stories') && (
                   <div className="sr-loading-row">
                     <Spinner size={16} color="#64748B" label="Loading more…" />
@@ -454,6 +471,11 @@ function SearchResults({
                 )}
               </section>
             )}
+            {stories.length === 0 &&
+              !search.hasArrived('stories') &&
+              search.isFetching && (
+                <SectionPending label="Stories" />
+              )}
 
             {/* ── Users ───────────────────────────── */}
             {users.length > 0 && (
@@ -481,14 +503,12 @@ function SearchResults({
                     </li>
                   ))}
                 </ul>
-
                 <SectionSentinel
                   kind="users"
                   hasMore={search.hasMore('users')}
                   isFetchingMore={search.isFetchingMore('users')}
                   loadMore={search.loadMore}
                 />
-
                 {search.isFetchingMore('users') && (
                   <div className="sr-loading-row">
                     <Spinner size={16} color="#64748B" label="Loading more…" />
@@ -496,6 +516,11 @@ function SearchResults({
                 )}
               </section>
             )}
+            {users.length === 0 &&
+              !search.hasArrived('users') &&
+              search.isFetching && (
+                <SectionPending label="People" />
+              )}
           </div>
         )}
       </div>

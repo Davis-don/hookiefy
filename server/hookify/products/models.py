@@ -1,6 +1,8 @@
 # products/models.py
 
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
+from django.db.models.functions import Upper
 
 
 # ============================================================
@@ -9,10 +11,6 @@ from django.db import models
 
 class Products(models.Model):
 
-    # --------------------------------------------------------
-    # BUSINESS (many-to-one)
-    # --------------------------------------------------------
-
     business = models.ForeignKey(
         "businesses.Businesses",
         on_delete=models.CASCADE,
@@ -20,24 +18,12 @@ class Products(models.Model):
         help_text="The business this product belongs to.",
     )
 
-    # --------------------------------------------------------
-    # NAME
-    # --------------------------------------------------------
-
     name = models.CharField(max_length=200)
-
-    # --------------------------------------------------------
-    # DESCRIPTION — required
-    # --------------------------------------------------------
 
     description = models.TextField(
         blank=False,
         help_text="Product description. Required.",
     )
-
-    # --------------------------------------------------------
-    # PRICE (optional)
-    # --------------------------------------------------------
 
     price = models.DecimalField(
         max_digits=12,
@@ -47,18 +33,10 @@ class Products(models.Model):
         help_text="Price in KES. Optional.",
     )
 
-    # --------------------------------------------------------
-    # VIEWS
-    # --------------------------------------------------------
-
     views = models.PositiveIntegerField(
         default=0,
         help_text="Total number of times this product was opened.",
     )
-
-    # --------------------------------------------------------
-    # ENGAGEMENT COUNTERS
-    # --------------------------------------------------------
 
     likes_count = models.PositiveIntegerField(
         default=0,
@@ -70,16 +48,8 @@ class Products(models.Model):
         help_text="Cached total number of follows.",
     )
 
-    # --------------------------------------------------------
-    # TIMESTAMPS
-    # --------------------------------------------------------
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # --------------------------------------------------------
-    # META
-    # --------------------------------------------------------
 
     class Meta:
         verbose_name = "Product"
@@ -88,19 +58,21 @@ class Products(models.Model):
         indexes = (
             models.Index(fields=("business",)),
             models.Index(fields=("created_at",)),
-        )
 
-    # --------------------------------------------------------
-    # STRING REPRESENTATION
-    # --------------------------------------------------------
+            # ── Trigram indexes for fast __icontains search ────
+            GinIndex(
+                OpClass(Upper("name"), name="gin_trgm_ops"),
+                name="prod_name_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("description"), name="gin_trgm_ops"),
+                name="prod_desc_trgm_idx",
+            ),
+        )
 
     def __str__(self):
         name = self.business.business_name if self.business_id else "—"
         return f"{self.name} · {name}"
-
-    # --------------------------------------------------------
-    # HELPERS
-    # --------------------------------------------------------
 
     @property
     def has_price(self):
@@ -137,20 +109,12 @@ class Products(models.Model):
 
 class ProductImage(models.Model):
 
-    # --------------------------------------------------------
-    # PRODUCT (many-to-one)
-    # --------------------------------------------------------
-
     product = models.ForeignKey(
         Products,
         on_delete=models.CASCADE,
         related_name="images",
         help_text="The product this image belongs to.",
     )
-
-    # --------------------------------------------------------
-    # IMAGE — Cloudinary URL + public ID
-    # --------------------------------------------------------
 
     image_url = models.URLField(
         max_length=1000,
@@ -166,33 +130,17 @@ class ProductImage(models.Model):
         help_text="Cloudinary public ID — used for deletion / updates.",
     )
 
-    # --------------------------------------------------------
-    # PRIMARY FLAG
-    # --------------------------------------------------------
-
     is_primary = models.BooleanField(
         default=False,
         help_text="Mark this image as the primary/cover image for the product.",
     )
-
-    # --------------------------------------------------------
-    # ORDERING
-    # --------------------------------------------------------
 
     sort_order = models.PositiveIntegerField(
         default=0,
         help_text="Order in which the image appears in the gallery.",
     )
 
-    # --------------------------------------------------------
-    # TIMESTAMPS
-    # --------------------------------------------------------
-
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # --------------------------------------------------------
-    # META
-    # --------------------------------------------------------
 
     class Meta:
         verbose_name = "Product Image"
@@ -209,17 +157,9 @@ class ProductImage(models.Model):
             ),
         )
 
-    # --------------------------------------------------------
-    # STRING REPRESENTATION
-    # --------------------------------------------------------
-
     def __str__(self):
         label = "primary" if self.is_primary else "secondary"
         return f"Image for {self.product.name} ({label})"
-
-    # --------------------------------------------------------
-    # SAVE — ensure only one primary image per product
-    # --------------------------------------------------------
 
     def save(self, *args, **kwargs):
         if self.is_primary:
@@ -230,14 +170,10 @@ class ProductImage(models.Model):
 
 
 # ============================================================
-# PRODUCT PROPERTY MODEL (unlimited properties)
+# PRODUCT PROPERTY MODEL
 # ============================================================
 
 class ProductProperty(models.Model):
-
-    # --------------------------------------------------------
-    # PRODUCT (many-to-one)
-    # --------------------------------------------------------
 
     product = models.ForeignKey(
         Products,
@@ -245,10 +181,6 @@ class ProductProperty(models.Model):
         related_name="property_items",
         help_text="The product this property belongs to.",
     )
-
-    # --------------------------------------------------------
-    # NAME & VALUE
-    # --------------------------------------------------------
 
     name = models.CharField(
         max_length=200,
@@ -260,24 +192,12 @@ class ProductProperty(models.Model):
         help_text="Property value, e.g. 'XL', 'Blue', 'Cotton'.",
     )
 
-    # --------------------------------------------------------
-    # ORDERING
-    # --------------------------------------------------------
-
     sort_order = models.PositiveIntegerField(
         default=0,
         help_text="Order in which the property appears.",
     )
 
-    # --------------------------------------------------------
-    # TIMESTAMPS
-    # --------------------------------------------------------
-
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # --------------------------------------------------------
-    # META
-    # --------------------------------------------------------
 
     class Meta:
         verbose_name = "Product Property"
@@ -286,10 +206,6 @@ class ProductProperty(models.Model):
         indexes = (
             models.Index(fields=("product",)),
         )
-
-    # --------------------------------------------------------
-    # STRING REPRESENTATION
-    # --------------------------------------------------------
 
     def __str__(self):
         return f"{self.name}: {self.value}"

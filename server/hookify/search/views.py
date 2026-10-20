@@ -2,10 +2,8 @@
 
 import json
 
-from django.http import StreamingHttpResponse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views import View
 
 from .services import (
     search_businesses,
@@ -18,16 +16,7 @@ from .services import (
 
 PAGE_SIZE = 10
 
-
-# ============================================================
-# RUN ORDER — kinds stream in this sequence
-# ============================================================
-# Each block below fires in this exact order. The moment a
-# block finishes, its JSON line is flushed to the client.
-# Put the fastest / most-expected kinds first so users see
-# something on screen sooner.
-# ============================================================
-
+# Order matters — the frontend renders sections in this order.
 STREAM_ORDER = (
     "businesses",
     "posts",
@@ -37,30 +26,25 @@ STREAM_ORDER = (
 )
 
 
-class SearchView(APIView):
+class SearchView(View):
     """
-    Unified search with per-kind pagination + streaming.
+    Unified search — NDJSON streaming (default) or single JSON object.
 
     Query params:
-        q       — search string (must be ≥ 2 chars to run)
+        q       — search string (must be ≥ 2 chars)
         kind    — all | businesses | posts | stories | products | users
         page    — 1-based page number (default 1)
-        stream  — if "1" (default), response is NDJSON;
-                  if "0", response is a single JSON object.
+        stream  — "1" (default) → NDJSON lines
+                  "0"          → single JSON object
 
-    Streaming response (default):
-        Each line is one JSON object:
-        { "kind": "businesses", "page": 1, "page_size": 10,
-          "items": [...], "total": 24, "total_pages": 3,
-          "has_more": true }
-        ...
-        { "type": "done", "query": "...", "kind": "all", "page": 1 }
+    Streaming response is `application/x-ndjson`. Each line is
+    one JSON object. The final line has `"type": "done"`.
     """
 
     def get(self, request):
-        query = request.query_params.get("q", "").strip()
-        kind = request.query_params.get("kind", "all").strip().lower()
-        wants_stream = request.query_params.get("stream", "1") != "0"
+        query = request.GET.get("q", "").strip()
+        kind = request.GET.get("kind", "all").strip().lower()
+        wants_stream = request.GET.get("stream", "1") != "0"
 
         allowed_kinds = {
             "all",
@@ -70,47 +54,34 @@ class SearchView(APIView):
             "products",
             "users",
         }
-
         if kind not in allowed_kinds:
-            return Response(
-                {"error": "Invalid search kind."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return JsonResponse({"error": "Invalid search kind."}, status=400)
 
-        # ── Parse `page` (1-based, clamped to ≥ 1) ──────────
         try:
-            page = int(request.query_params.get("page", 1))
+            page = int(request.GET.get("page", 1))
         except (TypeError, ValueError):
             page = 1
         if page < 1:
             page = 1
 
-        # ── Which kinds to run? ─────────────────────────────
-        if kind == "all":
-            kinds_to_run = [k for k in STREAM_ORDER]
-        else:
-            kinds_to_run = [kind]
+        kinds_to_run = (
+            list(STREAM_ORDER) if kind == "all" else [kind]
+        )
 
-        # ── Too-short query: single JSON response, no stream ──
+        # ── Too-short query ─────────────────────────────
         if len(query) < 2:
-            empty_results = {k: [] for k in STREAM_ORDER}
-            empty_counts = {k: 0 for k in STREAM_ORDER}
-            empty_pages = {k: 0 for k in STREAM_ORDER}
-            empty_has_more = {k: False for k in STREAM_ORDER}
-
-            return Response({
+            return JsonResponse({
                 "query":     query,
                 "kind":      kind,
                 "page":      page,
                 "page_size": PAGE_SIZE,
-                "pages":     empty_pages,
-                "has_more":  empty_has_more,
-                "results":   empty_results,
-                "counts":    empty_counts,
+                "pages":     {k: 0 for k in STREAM_ORDER},
+                "has_more":  {k: False for k in STREAM_ORDER},
+                "results":   {k: [] for k in STREAM_ORDER},
+                "counts":    {k: 0 for k in STREAM_ORDER},
                 "total":     0,
             })
 
-        # ── Dispatch table ──────────────────────────────────
         handlers = {
             "businesses": _run_businesses,
             "posts":      _run_posts,
@@ -119,26 +90,43 @@ class SearchView(APIView):
             "users":      _run_users,
         }
 
+        # ── Non-streaming fallback ──────────────────────
         if not wants_stream:
-            # ── Non-streaming: run everything, return once ──
-            return self._non_stream_response(
-                query, kind, page, kinds_to_run, handlers,
-            )
+            results = {k: [] for k in STREAM_ORDER}
+            counts = {k: 0 for k in STREAM_ORDER}
+            pages = {k: 0 for k in STREAM_ORDER}
+            has_more = {k: False for k in STREAM_ORDER}
 
-        # ── Streaming: yield one line per kind ──────────────
+            for one_kind in kinds_to_run:
+                payload = handlers[one_kind](query, page)
+                results[one_kind] = payload["items"]
+                counts[one_kind] = payload["total"]
+                pages[one_kind] = payload["total_pages"]
+                has_more[one_kind] = payload["has_more"]
+
+            return JsonResponse({
+                "query":     query,
+                "kind":      kind,
+                "page":      page,
+                "page_size": PAGE_SIZE,
+                "pages":     pages,
+                "has_more":  has_more,
+                "results":   results,
+                "counts":    counts,
+                "total":     sum(counts.values()),
+            })
+
+        # ── Streaming (NDJSON) ──────────────────────────
         def generate():
             for one_kind in kinds_to_run:
                 try:
                     payload = handlers[one_kind](query, page)
-                    yield json.dumps(payload) + "\n"
+                    yield json.dumps(payload, default=str) + "\n"
                 except Exception as exc:
-                    # Don't kill the stream — report this kind's error
                     yield json.dumps({
                         "kind":  one_kind,
                         "error": str(exc),
                     }) + "\n"
-
-            # Final marker
             yield json.dumps({
                 "type":  "done",
                 "query": query,
@@ -151,56 +139,13 @@ class SearchView(APIView):
             content_type="application/x-ndjson",
         )
         response["Cache-Control"] = "no-cache"
-        response["X-Accel-Buffering"] = "no"  # disable proxy buffering
+        response["X-Accel-Buffering"] = "no"
         return response
-
-    # ────────────────────────────────────────────────────────
-    # Non-streaming path (same shape as before)
-    # ────────────────────────────────────────────────────────
-
-    def _non_stream_response(
-        self, query, kind, page, kinds_to_run, handlers,
-    ):
-        results = {k: [] for k in STREAM_ORDER}
-        counts = {k: 0 for k in STREAM_ORDER}
-        pages = {k: 0 for k in STREAM_ORDER}
-        has_more = {k: False for k in STREAM_ORDER}
-
-        for one_kind in kinds_to_run:
-            payload = handlers[one_kind](query, page)
-            results[one_kind] = payload["items"]
-            counts[one_kind] = payload["total"]
-            pages[one_kind] = payload["total_pages"]
-            has_more[one_kind] = payload["has_more"]
-
-        return Response({
-            "query":     query,
-            "kind":      kind,
-            "page":      page,
-            "page_size": PAGE_SIZE,
-            "pages":     pages,
-            "has_more":  has_more,
-            "results":   results,
-            "counts":    counts,
-            "total":     sum(counts.values()),
-        })
 
 
 # ============================================================
 # PER-KIND RUNNERS
 # ============================================================
-# Each returns a dict:
-#   {
-#     "kind":        "posts",
-#     "page":        1,
-#     "page_size":   10,
-#     "items":       [ ...up to 10 rows... ],
-#     "total":       47,
-#     "total_pages": 5,
-#     "has_more":    true,
-#   }
-# ============================================================
-
 
 def _paginate(qs, page):
     total = qs.count()

@@ -1,4 +1,9 @@
+# stories/models.py
+
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
+from django.db.models.functions import Upper
+
 from account.models import Accounts
 
 
@@ -25,10 +30,6 @@ class Story(models.Model):
 
     views = models.PositiveIntegerField(default=0)
 
-    # ============================================================
-    # ENGAGEMENT COUNTERS  (denormalised for fast reads)
-    # ============================================================
-
     likes_count = models.PositiveIntegerField(
         default=0,
         help_text="Cached total number of likes.",
@@ -38,8 +39,6 @@ class Story(models.Model):
         default=0,
         help_text="Cached total number of follows.",
     )
-
-    # ------------------------------------------------------------
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -52,6 +51,16 @@ class Story(models.Model):
             models.Index(fields=("user",)),
             models.Index(fields=("category",)),
             models.Index(fields=("created_at",)),
+
+            # ── Trigram indexes for fast __icontains search ────
+            GinIndex(
+                OpClass(Upper("title"), name="gin_trgm_ops"),
+                name="story_title_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("content"), name="gin_trgm_ops"),
+                name="story_content_trgm_idx",
+            ),
         )
 
     def __str__(self):
