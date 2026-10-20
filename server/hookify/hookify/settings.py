@@ -219,7 +219,7 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 
 _DB_SSLMODE = config("DJANGO_DB_SSLMODE", default="require")
 
-_DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=600, cast=int)
+_DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=30, cast=int)
 
 _DB_CONNECT_TIMEOUT = config("DJANGO_DB_CONNECT_TIMEOUT", default=10, cast=int)
 
