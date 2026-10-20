@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     "system_balance",
     "system_stats", 
     "perfomance_tests",
+    "search",
     "assignments",
     "userpreference",
     "administration",

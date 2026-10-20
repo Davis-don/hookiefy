@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import NotificationBell from './NotificationBell';
 import NotificationsPanel from './NotificationsPanel';
-import SearchBar, { type SearchScope } from './SearchBar';
+import SearchBar, { type SearchScope } from '../../../search/components/SearchBar';
 
 import './UserHeader.css';
 

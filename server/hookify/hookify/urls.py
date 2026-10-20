@@ -257,4 +257,5 @@ urlpatterns = [
         "perf/",
         include("perfomance_tests.urls"),
     ),
+    path("api/search/", include("search.urls")),
 ]

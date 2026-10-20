@@ -10,12 +10,29 @@ import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
 import Logout from '../components/Logout';
 import SubscriptionGuard from '../components/SubscriptionGuard';
-import SearchResults from '../components/SearchResults';
-import type { SearchScope } from '../components/SearchBar';
+
+import SearchResults from '../../../search/components/SearchResults';
+import type { SearchScope } from '../../../search/components/SearchBar';
+
+import BusinessDetails from '../../../businesses/components/BusinessDetails';
+import PostDetailPage from '../components/feed/PostDetail';
+import ProductDetailPage from '../components/feed/ProductDetail';
+import StoryDetail from '../../../stories/components/StoryDetail';
 
 import './useraccount.css';
 
+/* ============================================================
+   TYPES
+   ============================================================ */
+
 type TabKey = 'home' | 'stories' | 'business' | 'profile' | 'billing';
+
+type OpenView =
+  | { kind: 'business'; id: number }
+  | { kind: 'post'; id: number }
+  | { kind: 'product'; id: number }
+  | { kind: 'story'; id: number }
+  | null;
 
 type NavItem = {
   key: TabKey;
@@ -23,6 +40,10 @@ type NavItem = {
   icon: React.ReactNode;
   primary?: boolean;
 };
+
+/* ============================================================
+   ICONS
+   ============================================================ */
 
 const HomeIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -62,11 +83,15 @@ const BillingIcon = () => (
   </svg>
 );
 
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
+
 function Useraccount() {
   const [active, setActive] = useState<TabKey>('home');
-
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<SearchScope>('all');
+  const [openView, setOpenView] = useState<OpenView>(null);
 
   const navItems: NavItem[] = [
     { key: 'home',     label: 'Home',     icon: <HomeIcon /> },
@@ -77,6 +102,8 @@ function Useraccount() {
 
   const goToProfile = () => setActive('profile');
   const goToBilling = () => setActive('billing');
+
+  const handleSearch = (q: string) => setSearchQuery(q);
 
   const renderTab = () => {
     switch (active) {
@@ -89,24 +116,82 @@ function Useraccount() {
     }
   };
 
-  const content = searchQuery
-    ? (
-      <SearchResults
-        query={searchQuery}
-        scope={searchScope}
-        onClose={() => setSearchQuery('')}
-      />
-    )
-    : active === 'billing'
-      ? renderTab()
-      : (
-        <SubscriptionGuard onUpgrade={goToBilling}>
-          {renderTab()}
-        </SubscriptionGuard>
-      );
+  const renderContent = (): React.ReactNode => {
+    /* ── 1. Detail view takes over ────────────────── */
+    if (openView) {
+      switch (openView.kind) {
+        case 'business':
+          return (
+            <BusinessDetails
+              businessId={openView.id}
+              onBack={() => setOpenView(null)}
+            />
+          );
 
+        case 'post':
+          return (
+            <PostDetailPage
+              postId={openView.id}
+              onBack={() => setOpenView(null)}
+              onOpenBusiness={(id) =>
+                setOpenView({ kind: 'business', id })
+              }
+            />
+          );
+
+        case 'product':
+          return (
+            <ProductDetailPage
+              productId={openView.id}
+              onBack={() => setOpenView(null)}
+              onOpenBusiness={(id) =>
+                setOpenView({ kind: 'business', id })
+              }
+            />
+          );
+
+        case 'story':
+          return (
+            <StoryDetail
+              storyId={openView.id}
+              onBack={() => setOpenView(null)}
+            />
+          );
+      }
+    }
+
+    /* ── 2. Search results ────────────────────────── */
+    if (searchQuery) {
+      return (
+        <SearchResults
+          query={searchQuery}
+          scope={searchScope}
+          onClose={() => setSearchQuery('')}
+          onOpenBusiness={(id) => setOpenView({ kind: 'business', id })}
+          onOpenPost={(id) => setOpenView({ kind: 'post', id })}
+          onOpenProduct={(id) => setOpenView({ kind: 'product', id })}
+          onOpenStory={(id) => setOpenView({ kind: 'story', id })}
+        />
+      );
+    }
+
+    /* ── 3. Billing tab (no guard) ────────────────── */
+    if (active === 'billing') return renderTab();
+
+    /* ── 4. Everything else under the guard ───────── */
+    return (
+      <SubscriptionGuard onUpgrade={goToBilling}>
+        {renderTab()}
+      </SubscriptionGuard>
+    );
+  };
+
+  /* ============================================================
+     SHELL RENDER
+     ============================================================ */
   return (
     <div className="ua-shell">
+      {/* ── Sidebar ──────────────────────────────────── */}
       <aside className="ua-sidebar">
         <div className="ua-sidebar-logo">
           <span className="ua-logo-you">You</span>
@@ -122,6 +207,7 @@ function Useraccount() {
               onClick={() => {
                 setActive(item.key);
                 setSearchQuery('');
+                setOpenView(null);
               }}
               className={
                 'ua-sidebar-link' +
@@ -137,16 +223,18 @@ function Useraccount() {
         </nav>
       </aside>
 
+      {/* ── Main ─────────────────────────────────────── */}
       <div className="ua-main">
         <UserHeader
           onOpenProfile={goToProfile}
-          onSearch={(q) => setSearchQuery(q)}
+          onSearch={handleSearch}
           scope={searchScope}
           onScopeChange={setSearchScope}
         />
-        <div className="ua-content">{content}</div>
+        <div className="ua-content">{renderContent()}</div>
       </div>
 
+      {/* ── Bottom nav (mobile) ──────────────────────── */}
       <nav className="ua-bottom-nav">
         {navItems.map((item) => (
           <button
@@ -155,6 +243,7 @@ function Useraccount() {
             onClick={() => {
               setActive(item.key);
               setSearchQuery('');
+              setOpenView(null);
             }}
             className={
               'ua-bottom-link' +
