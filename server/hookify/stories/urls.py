@@ -69,4 +69,11 @@ urlpatterns = [
         views.admin_list_stories,
         name="admin-list-stories",
     ),
+        # Public retrieve — any authenticated user
+    # GET /stories/<story_id>/public/
+    path(
+        "<int:story_id>/public/",
+        views.retrieve_story_public,
+        name="retrieve-story-public",
+    ),
 ]

@@ -1,68 +1,28 @@
 // src/features/stories/components/StoryDetail.tsx
 
-import { useQuery } from '@tanstack/react-query';
 import { Spinner } from '../../../components/spinner/Spinner';
 import LikeButton from '../../engagement/components/LikeButton';
-import { useAuthStore } from '../../../store/authStore';
+import { useStory } from '../hooks/useStory';
 import './storydetail.css';
-
-const API_BASE =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-/* ── Types — flat, matching StorySerializer ─────────── */
-
-export type StoryDetailData = {
-  id: number;
-  user: number;
-  author_email: string;
-  author_full_name: string;
-  title: string;
-  content: string;
-  content_html: string;
-  content_text: string;
-  summary: string;
-  category: string;
-  category_display: string;
-  created_at: string;
-  updated_at: string;
-};
-
-async function fetchStory(id: number): Promise<StoryDetailData> {
-  const access = useAuthStore.getState().access;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (access) headers.Authorization = `Bearer ${access}`;
-
-  const res = await fetch(`${API_BASE}/stories/${id}/`, { headers });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!res.ok) {
-    throw new Error(
-      (data && (data.detail || data.message)) || 'Failed to load story.',
-    );
-  }
-  return data as StoryDetailData;
-}
-
-/* ── Component ──────────────────────────────────────── */
 
 type StoryDetailProps = {
   storyId: number;
   onBack: () => void;
 };
 
+/* ── Category display fallback (in case category_display
+      is missing on older rows) ──────────────────────── */
+const CATEGORY_LABELS: Record<string, string> = {
+  journey: 'Journeys',
+  motivation: 'Motivation',
+  success: 'Success Stories',
+  experience: 'Experiences',
+  lessons: 'Lessons',
+  inspiration: 'Inspiration',
+};
+
 function StoryDetailPage({ storyId, onBack }: StoryDetailProps) {
-  const { data, isLoading, isError, error } = useQuery<
-    StoryDetailData,
-    Error
-  >({
-    queryKey: ['story', storyId],
-    queryFn: () => fetchStory(storyId),
-    enabled: Number.isFinite(storyId) && storyId > 0,
-    staleTime: 30_000,
-  });
+  const { data, isLoading, isError, error } = useStory(storyId);
 
   if (isLoading) {
     return (
@@ -86,6 +46,11 @@ function StoryDetailPage({ storyId, onBack }: StoryDetailProps) {
   const author =
     data.author_full_name || data.author_email || 'Anonymous';
 
+  const categoryLabel =
+    data.category_display ||
+    CATEGORY_LABELS[data.category] ||
+    data.category;
+
   const formattedDate = new Date(data.created_at).toLocaleDateString(
     undefined,
     { day: 'numeric', month: 'long', year: 'numeric' },
@@ -93,23 +58,26 @@ function StoryDetailPage({ storyId, onBack }: StoryDetailProps) {
 
   return (
     <article className="story-detail">
-      {/* ── Top shell: back + meta ───────────────── */}
+      {/* ── Top bar: back + author meta ─────────────── */}
       <div className="story-detail__shell">
         <button
           type="button"
           className="story-detail-back"
           onClick={onBack}
-          aria-label="Back to search"
+          aria-label="Back"
         >
-          ← Back
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+            aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back
         </button>
 
         <div className="story-detail__meta">
           <span className="story-detail__author">{author}</span>
           <span className="story-detail__dot" aria-hidden="true">·</span>
-          <span className="story-detail__category">
-            {data.category_display || data.category}
-          </span>
+          <span className="story-detail__category">{categoryLabel}</span>
           <span className="story-detail__dot" aria-hidden="true">·</span>
           <time
             className="story-detail__date"
@@ -120,30 +88,32 @@ function StoryDetailPage({ storyId, onBack }: StoryDetailProps) {
         </div>
       </div>
 
-      {/* ── Title ────────────────────────────────── */}
-      <div className="story-detail__shell">
+      {/* ── Title + summary ─────────────────────────── */}
+      <header className="story-detail__header">
         <h1 className="story-detail__title">{data.title}</h1>
 
         {data.summary && (
           <p className="story-detail__summary">{data.summary}</p>
         )}
-      </div>
+      </header>
 
-      {/* ── Body (bleached HTML) ─────────────────── */}
-      <div className="story-detail__shell">
+      {/* ── Divider ─────────────────────────────────── */}
+      <div className="story-detail__divider" aria-hidden="true" />
+
+      {/* ── Body (bleached HTML from backend) ───────── */}
+      <div className="story-detail__body-wrap">
         <div
           className="story-detail__body"
-          // backend bleached this HTML — safe to inject
           dangerouslySetInnerHTML={{ __html: data.content_html }}
         />
       </div>
 
-      {/* ── Actions ──────────────────────────────── */}
-      <div className="story-detail__shell">
+      {/* ── Footer: actions ─────────────────────────── */}
+      <footer className="story-detail__footer">
         <div className="story-detail__actions">
           <LikeButton targetKind="story" targetId={data.id} />
         </div>
-      </div>
+      </footer>
     </article>
   );
 }

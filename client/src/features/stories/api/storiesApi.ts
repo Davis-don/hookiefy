@@ -74,7 +74,7 @@ export type ListStoriesParams = {
 };
 
 /* ============================================================
-   AUTH HEADERS — reads token from zustand authStore
+   AUTH HEADERS
    ============================================================ */
 
 function authHeaders(): HeadersInit {
@@ -206,11 +206,36 @@ export async function listAllStories(
 }
 
 /* ============================================================
-   RETRIEVE — GET /stories/<id>/
+   RETRIEVE (author only) — GET /stories/<id>/
+   ============================================================
+   Use this only in edit flows — it 404s when the caller
+   is not the author.
    ============================================================ */
 
 export async function retrieveStory(id: number): Promise<Story> {
   const res = await fetch(`${API_BASE}/stories/${id}/`, {
+    method: 'GET',
+    headers: authHeaders(),
+  });
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(extractErrorMessage(data, 'Story not found.'));
+  }
+
+  return data as Story;
+}
+
+/* ============================================================
+   RETRIEVE (public) — GET /stories/<id>/public/
+   ============================================================
+   Any authenticated user can view any story.
+   This is the endpoint the detail page uses.
+   ============================================================ */
+
+export async function fetchStoryPublic(id: number): Promise<Story> {
+  const res = await fetch(`${API_BASE}/stories/${id}/public/`, {
     method: 'GET',
     headers: authHeaders(),
   });

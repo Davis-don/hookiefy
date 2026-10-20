@@ -460,3 +460,27 @@
   background: #FFFFFF;
   box-shadow: none;
 }
+/* Sentinel — sits at the end of each section.
+   Zero height; only exists to trigger IntersectionObserver. */
+.sr-sentinel {
+  height: 1px;
+  width: 100%;
+}
+
+/* Loading row that appears inside a section while fetching more */
+.sr-loading-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+/* Static (non-clickable) card, used for users */
+.sr-card--static {
+  cursor: default;
+}
+
+.sr-card--static:hover {
+  border-color: #E2E8F0;
+  background: #FFFFFF;
+  box-shadow: none;
+}

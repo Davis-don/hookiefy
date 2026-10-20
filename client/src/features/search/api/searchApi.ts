@@ -4,7 +4,7 @@ const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /* ============================================================
-   TYPES
+   SCOPES
    ============================================================ */
 
 export type SearchScope =
@@ -14,6 +14,10 @@ export type SearchScope =
   | 'stories'
   | 'products'
   | 'users';
+
+/* ============================================================
+   ITEM TYPES
+   ============================================================ */
 
 export type SearchBusiness = {
   id: number;
@@ -61,6 +65,10 @@ export type SearchUser = {
   full_name: string;
 };
 
+/* ============================================================
+   RESULT BUCKETS
+   ============================================================ */
+
 export type SearchResults = {
   businesses: SearchBusiness[];
   posts: SearchPost[];
@@ -69,16 +77,32 @@ export type SearchResults = {
   users: SearchUser[];
 };
 
+export type SearchKind = keyof SearchResults;
+
+/* ── Per-kind row type, keyed by the bucket name ──── */
+
+export type SearchRow<K extends SearchKind> = SearchResults[K][number];
+
+/* ============================================================
+   RESPONSE
+   ============================================================ */
+
 export type SearchResponse = {
   query: string;
   kind: SearchScope;
+  page: number;
+  page_size: number;
+  pages: Record<SearchKind, number>;
+  has_more: Record<SearchKind, boolean>;
   results: SearchResults;
-  counts: Record<keyof SearchResults, number>;
+  counts: Record<SearchKind, number>;
+  total: number;
 };
 
 export type SearchParams = {
   q: string;
   kind?: SearchScope;
+  page?: number;
 };
 
 /* ============================================================
@@ -110,7 +134,7 @@ async function parseError(res: Response, fallback: string): Promise<string> {
 }
 
 /* ============================================================
-   SEARCH — GET /api/search/?q=…&kind=…
+   SEARCH — GET /api/search/?q=…&kind=…&page=…
    ============================================================ */
 
 export async function searchEverything(
@@ -118,13 +142,28 @@ export async function searchEverything(
   token?: string | null,
 ): Promise<SearchResponse> {
   const q = params.q.trim();
+  const page = params.page ?? 1;
 
   if (q.length < 2) {
-    /* Avoid a pointless network call for 0–1 char queries.
-       Return an empty, well-formed response instead. */
     return {
       query: q,
       kind: params.kind ?? 'all',
+      page,
+      page_size: 10,
+      pages: {
+        businesses: 0,
+        posts: 0,
+        stories: 0,
+        products: 0,
+        users: 0,
+      },
+      has_more: {
+        businesses: false,
+        posts: false,
+        stories: false,
+        products: false,
+        users: false,
+      },
       results: {
         businesses: [],
         posts: [],
@@ -139,12 +178,14 @@ export async function searchEverything(
         products: 0,
         users: 0,
       },
+      total: 0,
     };
   }
 
   const usp = new URLSearchParams();
   usp.set('q', q);
   if (params.kind) usp.set('kind', params.kind);
+  usp.set('page', String(page));
 
   const url = `${API_BASE}/api/search/?${usp.toString()}`;
 

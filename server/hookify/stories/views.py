@@ -522,3 +522,33 @@ def story_usage(request):
         },
         status=status.HTTP_200_OK,
     )
+
+# ============================================================
+# PUBLIC RETRIEVE — GET /stories/<story_id>/public/
+# ============================================================
+# Any authenticated user can view any story.
+# The author-only retrieve_story remains for editing flows.
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def retrieve_story_public(request, story_id):
+    story = (
+        Story.objects
+        .select_related("user")
+        .filter(id=story_id)
+        .first()
+    )
+
+    if story is None:
+        return Response(
+            {"message": "Story not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Optional: bump view count
+    Story.objects.filter(id=story_id).update(views=story.views + 1)
+
+    return Response(
+        StorySerializer(story).data,
+        status=status.HTTP_200_OK,
+    )
