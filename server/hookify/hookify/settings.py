@@ -183,45 +183,47 @@ WSGI_APPLICATION = "hookify.wsgi.application"
 
 
 # ============================================================
-# DATABASE
-# ============================================================
-
-# DATABASES = {
-#     "default": dj_database_url.config(
-#         default=config("DATABASE_URL"),
-#         conn_max_age=600,
-#         ssl_require=True,
-#     )
-# }
-
-# ============================================================
 # DATABASE — SSL MODE DRIVEN BY ENV
 # ============================================================
 #
-# The "SSL SYSCALL error: EOF detected" was happening on the
-# very first connect (during check_migrations), which means
-# the server is dropping the SSL handshake — not a pool /
-# idle-timeout problem.
+# The "SSL SYSCALL error: EOF detected" was happening on
+# new connection attempts (during SSL handshake), not only
+# on reused connections.
 #
-# To diagnose and fix it, every SSL and connection knob is
-# now read from .env via decouple's config():
+# Fixes applied below:
+#
+#   1. CONN_MAX_AGE lowered from 600 → 30
+#      → Django recycles the connection before the network
+#        / Miget silently kills it, so it never reuses a
+#        zombie connection.
+#
+#   2. conn_health_checks=True
+#      → Django pings the DB before reusing a connection.
+#        If the ping fails, it opens a fresh one.
+#
+#   3. connect_timeout raised from 10 → 20
+#      → Gives the SSL handshake more time to complete
+#        between Render and Miget.
+#
+# Every SSL and connection knob is read from .env via
+# decouple's config():
 #
 #   DJANGO_DB_SSLMODE                require | prefer | disable | verify-ca | verify-full
-#   DJANGO_DB_CONN_MAX_AGE           0 disables pooling (safest while debugging)
+#   DJANGO_DB_CONN_MAX_AGE           seconds (30 = safe default)
 #   DJANGO_DB_CONNECT_TIMEOUT        seconds
 #   DJANGO_DB_KEEPALIVES             0 | 1
 #   DJANGO_DB_KEEPALIVES_IDLE        seconds
 #   DJANGO_DB_KEEPALIVES_INTERVAL    seconds
 #   DJANGO_DB_KEEPALIVES_COUNT       count
-#
-# Default is "require" so existing behaviour is preserved.
 # ============================================================
 
 _DB_SSLMODE = config("DJANGO_DB_SSLMODE", default="require")
 
+# ↓ 30s — recycle before the network / Miget kills idle connections
 _DB_CONN_MAX_AGE = config("DJANGO_DB_CONN_MAX_AGE", default=30, cast=int)
 
-_DB_CONNECT_TIMEOUT = config("DJANGO_DB_CONNECT_TIMEOUT", default=10, cast=int)
+# ↓ 20s — more time for the SSL handshake on Render → Miget
+_DB_CONNECT_TIMEOUT = config("DJANGO_DB_CONNECT_TIMEOUT", default=20, cast=int)
 
 _DB_KEEPALIVES = config("DJANGO_DB_KEEPALIVES", default=1, cast=int)
 
