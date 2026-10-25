@@ -223,6 +223,140 @@ export async function syncPayment(
 }
 
 /* ============================================================
+   PRODUCT PAYMENT
+   ============================================================ */
+//
+// Parallel to the subscription-payment helpers above. The
+// callback page dispatches on the merchant_reference prefix:
+//
+//     SUB-…   → syncPayment / fetchPaymentStatus
+//     PROD-…  → syncProductPayment / fetchProductPaymentStatus
+//
+// Both flows share the same PesaPal account and IPN URL — the
+// routing happens purely on the frontend (and in the backend
+// views), never at the gateway level.
+// ============================================================
+
+export type ProductPayment = {
+  id: string;
+  merchant_reference: string;
+  order_tracking_id: string | null;
+  gateway: 'pesapal' | 'paystack' | 'mpesa';
+  status:
+    | 'pending'
+    | 'completed'
+    | 'failed'
+    | 'reversed'
+    | 'invalid'
+    | 'cancelled';
+  amount: string;
+  amount_display: string;
+  currency: string;
+  quantity: number;
+  product: number | null;
+  product_name: string | null;
+  business: number | null;
+  business_name: string | null;
+  phone_number: string | null;
+  email: string | null;
+  confirmation_code: string | null;
+  payment_method: string | null;
+  payment_account: string | null;
+  error_message: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InitiateProductPaymentResponse = {
+  message: string;
+  payment: ProductPayment;
+  redirect_url: string;
+};
+
+/**
+ * Start a PesaPal payment for a product purchase.
+ */
+export async function initiateProductPayment(
+  productId: number,
+  quantity: number = 1,
+  phone?: string,
+): Promise<InitiateProductPaymentResponse> {
+  const res = await fetch(`${API_BASE}/product_payments/initiate/`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      product_id: productId,
+      quantity,
+      phone: phone ?? '',
+    }),
+  });
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Could not start the payment.'),
+    );
+  }
+
+  return data as InitiateProductPaymentResponse;
+}
+
+/**
+ * Poll the local product-payment row for its current status.
+ */
+export async function fetchProductPaymentStatus(
+  merchantReference: string,
+): Promise<ProductPayment> {
+  const res = await fetch(
+    `${API_BASE}/product_payments/${merchantReference}/status/`,
+    {
+      method: 'GET',
+      headers: authHeaders(),
+    },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Could not load payment status.'),
+    );
+  }
+
+  return data as ProductPayment;
+}
+
+export type SyncProductPaymentResponse = {
+  message: string;
+  payment: ProductPayment;
+  detail?: string;
+};
+
+export async function syncProductPayment(
+  merchantReference: string,
+): Promise<SyncProductPaymentResponse> {
+  const res = await fetch(
+    `${API_BASE}/product_payments/${merchantReference}/sync/`,
+    {
+      method: 'POST',
+      headers: authHeaders(),
+    },
+  );
+
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok) {
+    throw new Error(
+      extractError(data, 'Could not verify the payment.'),
+    );
+  }
+
+  return data as SyncProductPaymentResponse;
+}
+
+/* ============================================================
    DOWNGRADE PRE-CHECK — POST /subscription/pre-check-downgrade/
    ============================================================ */
 

@@ -9,7 +9,10 @@ import { Spinner } from '../components/spinner/Spinner';
 import {
   syncPayment,
   fetchPaymentStatus,
+  syncProductPayment,
+  fetchProductPaymentStatus,
   type SubscriptionPayment,
+  type ProductPayment,
 } from '../features/accounts/User/api/billingApi';
 
 import './paymentcallback.css';
@@ -19,6 +22,68 @@ import './paymentcallback.css';
    ============================================================ */
 
 type Phase = 'syncing' | 'success' | 'pending' | 'failed' | 'error';
+
+type PaymentKind = 'subscription' | 'product';
+
+/**
+ * A normalized view over what the callback page needs to
+ * render, whether the row came from SubscriptionPayment or
+ * ProductPayment.
+ */
+type NormalizedPayment = {
+  status: SubscriptionPayment['status'];
+  currency: string;
+  amount: string;
+  confirmation_code: string | null;
+  payment_method: string | null;
+  error_message: string | null;
+  /** Subscription only */
+  plan_name?: string | null;
+  /** Product only */
+  product_name?: string | null;
+  business_name?: string | null;
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function detectKind(merchantReference: string): PaymentKind {
+  return merchantReference.startsWith('PROD-')
+    ? 'product'
+    : 'subscription';
+}
+
+function normalizeSubscription(
+  p: SubscriptionPayment,
+): NormalizedPayment {
+  return {
+    status: p.status,
+    currency: p.currency,
+    amount: p.amount,
+    confirmation_code: p.confirmation_code,
+    payment_method: p.payment_method,
+    error_message: p.error_message,
+    plan_name: p.plan_name,
+  };
+}
+
+function normalizeProduct(p: ProductPayment): NormalizedPayment {
+  return {
+    status: p.status,
+    currency: p.currency,
+    amount: p.amount,
+    confirmation_code: p.confirmation_code,
+    payment_method: p.payment_method,
+    error_message: p.error_message,
+    product_name: p.product_name,
+    business_name: p.business_name,
+  };
+}
+
+const TERMINAL_FAILURE = new Set<
+  SubscriptionPayment['status']
+>(['failed', 'reversed', 'invalid', 'cancelled']);
 
 /* ============================================================
    PAGE
@@ -34,8 +99,10 @@ function PaymentCallback() {
     params.get('merchant_reference') ||
     '';
 
+  const kind: PaymentKind = detectKind(merchantReference);
+
   const [phase, setPhase] = useState<Phase>('syncing');
-  const [payment, setPayment] = useState<SubscriptionPayment | null>(null);
+  const [payment, setPayment] = useState<NormalizedPayment | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   /* ── Not logged in → bounce to login, keeping the URL
@@ -52,10 +119,11 @@ function PaymentCallback() {
   /* ── Sync + poll ──────────────────────────────────── */
   useEffect(() => {
     if (!access) return;
+
     if (!merchantReference) {
       setPhase('error');
       setErrorMessage(
-        'The payment reference is missing from the URL. Please check your billing page.',
+        'The payment reference is missing from the URL. Please check your payments page.',
       );
       return;
     }
@@ -64,32 +132,37 @@ function PaymentCallback() {
 
     (async () => {
       try {
-        const syncResult = await syncPayment(merchantReference);
-        if (cancelled) return;
+        // ── 1. Initial sync — dispatch by prefix ──────
+        let initial: NormalizedPayment;
 
-        const synced = syncResult.payment;
-        setPayment(synced);
+        if (kind === 'product') {
+          const syncResult = await syncProductPayment(merchantReference);
+          if (cancelled) return;
+          initial = normalizeProduct(syncResult.payment);
+        } else {
+          const syncResult = await syncPayment(merchantReference);
+          if (cancelled) return;
+          initial = normalizeSubscription(syncResult.payment);
+        }
 
-        if (synced.status === 'completed') {
+        setPayment(initial);
+
+        // ── 2. Terminal outcomes → render immediately ─
+        if (initial.status === 'completed') {
           setPhase('success');
           return;
         }
 
-        if (
-          synced.status === 'failed' ||
-          synced.status === 'reversed' ||
-          synced.status === 'invalid' ||
-          synced.status === 'cancelled'
-        ) {
+        if (TERMINAL_FAILURE.has(initial.status)) {
           setPhase('failed');
           setErrorMessage(
-            synced.error_message ||
+            initial.error_message ||
               'The gateway reported that the payment did not complete.',
           );
           return;
         }
 
-        // Still pending — poll a few times.
+        // ── 3. Still pending → poll a few times ───────
         setPhase('pending');
         const maxAttempts = 6;
         const intervalMs = 2000;
@@ -99,8 +172,19 @@ function PaymentCallback() {
           if (cancelled) return;
 
           try {
-            const latest = await fetchPaymentStatus(merchantReference);
-            if (cancelled) return;
+            let latest: NormalizedPayment;
+
+            if (kind === 'product') {
+              const row = await fetchProductPaymentStatus(
+                merchantReference,
+              );
+              if (cancelled) return;
+              latest = normalizeProduct(row);
+            } else {
+              const row = await fetchPaymentStatus(merchantReference);
+              if (cancelled) return;
+              latest = normalizeSubscription(row);
+            }
 
             setPayment(latest);
 
@@ -109,12 +193,7 @@ function PaymentCallback() {
               return;
             }
 
-            if (
-              latest.status === 'failed' ||
-              latest.status === 'reversed' ||
-              latest.status === 'invalid' ||
-              latest.status === 'cancelled'
-            ) {
+            if (TERMINAL_FAILURE.has(latest.status)) {
               setPhase('failed');
               setErrorMessage(
                 latest.error_message ||
@@ -140,7 +219,30 @@ function PaymentCallback() {
     return () => {
       cancelled = true;
     };
-  }, [access, merchantReference]);
+  }, [access, merchantReference, kind]);
+
+  /* ── Copy that adapts to the payment kind ─────────── */
+  const successCopy = (() => {
+    if (!payment) {
+      return kind === 'product'
+        ? 'Your purchase is confirmed.'
+        : 'Your subscription has been activated.';
+    }
+
+    if (kind === 'product') {
+      return payment.product_name
+        ? `You bought ${payment.product_name}${
+            payment.business_name
+              ? ` from ${payment.business_name}`
+              : ''
+          }.`
+        : 'Your purchase is confirmed.';
+    }
+
+    return payment.plan_name
+      ? `You're now subscribed to ${payment.plan_name}.`
+      : 'Your subscription has been activated.';
+  })();
 
   /* ── Render ───────────────────────────────────────── */
   return (
@@ -173,11 +275,7 @@ function PaymentCallback() {
             </div>
 
             <h1 className="paycb-title">Payment successful</h1>
-            <p className="paycb-sub">
-              {payment?.plan_name
-                ? `You're now subscribed to ${payment.plan_name}.`
-                : 'Your subscription has been activated.'}
-            </p>
+            <p className="paycb-sub">{successCopy}</p>
 
             {payment && (
               <dl className="paycb-details">
@@ -230,8 +328,10 @@ function PaymentCallback() {
             <h1 className="paycb-title">Payment pending</h1>
             <p className="paycb-sub">
               Your payment is still being processed by the gateway.
-              Your subscription will activate automatically as soon as
-              we receive confirmation — you don't need to do anything.
+              {kind === 'product'
+                ? ' Your purchase will be confirmed automatically as soon as we receive confirmation.'
+                : ' Your subscription will activate automatically as soon as we receive confirmation.'}{' '}
+              You don't need to do anything.
             </p>
 
             {merchantReference && (
