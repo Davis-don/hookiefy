@@ -15,6 +15,20 @@ import {
 import './editproduct.css';
 
 // ============================================================
+// LIMITS — keep in sync with backend
+//   (products/serializers.py + products/views.py)
+// ============================================================
+
+const NAME_MAX_LENGTH        = 80;
+const DESCRIPTION_MAX_LENGTH = 400;
+
+const PROPERTY_NAME_MAX_LENGTH  = 60;
+const PROPERTY_VALUE_MAX_LENGTH = 120;
+
+const QUANTITY_MIN = 0;
+const QUANTITY_MAX = 1_000_000;
+
+// ============================================================
 // TYPES
 // ============================================================
 
@@ -28,6 +42,7 @@ type FormState = {
   name: string;
   description: string;
   price: string;
+  quantity: string;
 };
 
 type EditableProperty = {
@@ -71,6 +86,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
     name: '',
     description: '',
     price: '',
+    quantity: '1',
   });
 
   // New images the user has picked but not yet uploaded
@@ -108,6 +124,10 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           product.price !== null && product.price !== undefined
             ? String(product.price)
             : '',
+        quantity:
+          product.quantity !== null && product.quantity !== undefined
+            ? String(product.quantity)
+            : '1',
       });
 
       const loaded = (product.properties ?? []).map((p) => ({
@@ -221,6 +241,24 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
       parsedPrice = n;
     }
 
+    // Quantity — required, whole number within bounds.
+    const rawQty = form.quantity.trim();
+    if (rawQty === '') return setError('Please enter a quantity.');
+
+    if (!/^\d+$/.test(rawQty)) {
+      return setError('Quantity must be a whole number.');
+    }
+
+    const parsedQuantity = Number(rawQty);
+    if (parsedQuantity < QUANTITY_MIN) {
+      return setError(`Quantity cannot be less than ${QUANTITY_MIN}.`);
+    }
+    if (parsedQuantity > QUANTITY_MAX) {
+      return setError(
+        `Quantity cannot exceed ${QUANTITY_MAX.toLocaleString()}.`
+      );
+    }
+
     const cleanedProperties: ProductProperty[] = properties
       .map((p) => ({ name: p.name.trim(), value: p.value.trim() }))
       .filter((p) => p.name && p.value);
@@ -229,6 +267,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
       name: form.name.trim(),
       description: form.description.trim(),
       price: parsedPrice,
+      quantity: parsedQuantity,   // ← added — fixes TS(2345)
       properties: cleanedProperties,
       imageFiles: newImages,
       replaceImages,
@@ -378,10 +417,12 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           placeholder="Give your product a name"
           value={form.name}
           onChange={(e) => update('name', e.target.value)}
-          maxLength={200}
+          maxLength={NAME_MAX_LENGTH}
           disabled={busy}
         />
-        <span className="epr-editor-counter">{form.name.length} / 200</span>
+        <span className="epr-editor-counter">
+          {form.name.length} / {NAME_MAX_LENGTH}
+        </span>
       </div>
 
       {/* ── 4. Description ───────────────────────────── */}
@@ -396,11 +437,11 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
           rows={3}
-          maxLength={1000}
+          maxLength={DESCRIPTION_MAX_LENGTH}
           disabled={busy}
         />
         <span className="epr-editor-counter">
-          {form.description.length} / 1000
+          {form.description.length} / {DESCRIPTION_MAX_LENGTH}
         </span>
       </div>
 
@@ -422,7 +463,30 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
         />
       </div>
 
-      {/* ── 6. Properties — unlimited ────────────────── */}
+      {/* ── 6. Quantity ──────────────────────────────── */}
+      <div className="epr-editor-field">
+        <label className="epr-editor-label" htmlFor="epr-quantity">
+          Quantity / Stock
+        </label>
+        <input
+          id="epr-quantity"
+          type="number"
+          className="epr-editor-quantity"
+          placeholder="e.g. 10"
+          value={form.quantity}
+          onChange={(e) => update('quantity', e.target.value)}
+          min={QUANTITY_MIN}
+          max={QUANTITY_MAX}
+          step="1"
+          inputMode="numeric"
+          disabled={busy}
+        />
+        <span className="epr-editor-help">
+          Set to 0 to mark the product as sold out.
+        </span>
+      </div>
+
+      {/* ── 7. Properties — unlimited ────────────────── */}
       <div className="epr-editor-field">
         <label className="epr-editor-label">Properties</label>
         <p className="epr-editor-help">
@@ -438,7 +502,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
                 placeholder="Name (e.g. Size)"
                 value={prop.name}
                 onChange={(e) => updateProperty(index, 'name', e.target.value)}
-                maxLength={200}
+                maxLength={PROPERTY_NAME_MAX_LENGTH}
                 disabled={busy}
               />
               <input
@@ -447,7 +511,7 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
                 placeholder="Value (e.g. XL)"
                 value={prop.value}
                 onChange={(e) => updateProperty(index, 'value', e.target.value)}
-                maxLength={500}
+                maxLength={PROPERTY_VALUE_MAX_LENGTH}
                 disabled={busy}
               />
 

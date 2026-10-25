@@ -556,3 +556,83 @@
     transition: none !important;
   }
 }
+/* ─────────────────────────────────────────────────────────
+   SOLD-OUT STATE — product detail
+   ───────────────────────────────────────────────────────── */
+
+/* Cover — desaturate the image so it reads as "not for sale" */
+.product-detail.is-sold-out .product-detail__cover--button img {
+  filter: grayscale(0.7) brightness(0.94);
+}
+
+/* Sold-out pill — overlaid on the cover, top-left */
+.product-detail__sold-out {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+
+  color: #B91C1C;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #FECACA;
+
+  box-shadow:
+    0 2px 6px -2px rgba(15, 23, 42, 0.1),
+    0 4px 12px -6px rgba(185, 28, 28, 0.25);
+
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Muted price — signals the product isn't purchasable */
+.product-detail__price.is-sold-out {
+  color: #94A3B8;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #CBD5E1;
+}
+
+/* Disabled purchase button — flat grey, no gradient,
+   no hover effect, not clickable */
+.product-detail__purchase-btn.is-sold-out,
+.product-detail__purchase-btn.is-sold-out:hover,
+.product-detail__purchase-btn.is-sold-out:active,
+.product-detail__purchase-btn.is-sold-out:focus-visible {
+  background: #F1F5F9;
+  color: #94A3B8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.product-detail__purchase-btn.is-sold-out {
+  transition: none;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .product-detail__sold-out {
+    top: 12px;
+    left: 12px;
+    font-size: 0.72rem;
+    padding: 5px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-detail.is-sold-out .product-detail__cover--button img {
+    transition: none !important;
+  }
+}

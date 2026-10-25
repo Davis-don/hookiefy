@@ -4,6 +4,7 @@ import logging
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 
 from notifications.models import Notification
@@ -269,12 +270,13 @@ def sync_product_payment_from_pesapal(merchant_reference):
 
     On a completed payment:
       - marks the payment completed
-      - marks the purchase as fulfilled (notifies seller;
-        extend via _mark_product_purchased for order rows,
-        download tokens, shipping, etc.)
-      - credits the SystemBalance (inside the same atomic
-        block, so a completed payment can never be persisted
-        without the balance reflecting it)
+      - decrements product stock (atomic)
+      - notifies the seller
+      - credits the SystemBalance
+
+    All four steps run inside one transaction.atomic() block
+    so a completed payment can never be persisted without the
+    stock and balance reflecting it.
 
     On a terminal failure:
       - updates the payment status
@@ -347,11 +349,7 @@ def sync_product_payment_from_pesapal(merchant_reference):
                 ]
             )
 
-            # ── The subscription equivalent of this line is
-            #    activate_subscription(payment). For a one-off
-            #    product purchase there's no subscription to
-            #    flip; instead the seller is notified and any
-            #    downstream fulfillment happens here.
+            # ── Decrement stock + notify seller ───────────
             _mark_product_purchased(payment)
 
             # ── Credit the platform balance in the same tx ──
@@ -407,9 +405,10 @@ def _credit_system_balance_for_payment(payment):
       missing).
     - Uses select_for_update so concurrent payments can't race.
     - If the credit fails, we RAISE — which rolls back the
-      whole atomic block (payment status change + purchase
-      confirmation). A payment row can never be marked
-      completed without the platform balance reflecting it.
+      whole atomic block (payment status change, stock
+      decrement, purchase confirmation). A payment row can
+      never be marked completed without the platform balance
+      reflecting it.
     """
 
     from system_balance.services import credit_system_balance
@@ -432,15 +431,16 @@ def _credit_system_balance_for_payment(payment):
 # MARK PRODUCT PURCHASED
 # ============================================================
 #
-# Product-side equivalent of activate_subscription(). Whatever
-# "granting the buyer access to the product" means in your
-# domain goes here — e.g. creating a ProductOrder row,
-# incrementing a sales counter, unlocking download links, or
-# (as below) simply notifying the seller.
+# Product-side equivalent of activate_subscription(). Runs
+# inside sync_product_payment_from_pesapal's atomic block, so:
 #
-# Kept as a single named function so the parallel with
-# `activate_subscription` is obvious and future fulfilment
-# logic has exactly one home.
+#   • a successful stock decrement + seller notification is
+#     only committed if SystemBalance credit also succeeds;
+#   • a failure in any of these rolls the payment back to
+#     `pending`, letting the IPN retry or the user re-sync.
+#
+# Extend here when the domain grows (order rows, download
+# tokens, shipping, digital delivery, etc.).
 # ============================================================
 
 def _mark_product_purchased(payment):
@@ -448,10 +448,20 @@ def _mark_product_purchased(payment):
     Hook invoked when a ProductPayment transitions to
     `completed`.
 
-    Default behaviour: notify the seller they have a sale.
-    Extend here when the domain grows (order rows, download
-    tokens, shipping, digital delivery, etc.).
+    Runs inside the caller's transaction.atomic() block:
+
+      1. Decrements Products.quantity atomically — using F()
+         arithmetic so concurrent completions never lose
+         updates, plus a clamp-to-zero for the rare race
+         where two payments both passed the pre-check.
+      2. Notifies the seller that they have a sale.
+
+    A failure in either step raises, which rolls back the
+    whole block — payment stays `pending`, stock is unchanged,
+    SystemBalance is unchanged.
     """
+    from products.models import Products
+
     business = payment.business
     product = payment.product
 
@@ -462,6 +472,45 @@ def _mark_product_purchased(payment):
         )
         return
 
+    # ── 1. Decrement stock atomically ─────────────────────
+    #
+    # Using Products.objects.filter(...).update(...) rather
+    # than loading, subtracting, and saving:
+    #
+    #   • avoids the read-modify-write race — two purchases
+    #     completing at the same time each subtract from the
+    #     live DB value, not from a stale in-memory copy;
+    #   • doesn't trigger ProductImage.save() side-effects
+    #     or run any model save() hooks.
+    #
+    # Then clamp to zero for the race where quantity started
+    # at 1 and two buyers both got through the pre-check.
+    # The second buyer's payment still succeeds — we never
+    # reject a real payment to protect inventory — but stock
+    # never goes negative.
+    #
+    if product is not None:
+        Products.objects.filter(id=product.id).update(
+            quantity=F("quantity") - payment.quantity
+        )
+        Products.objects.filter(
+            id=product.id,
+            quantity__lt=0,
+        ).update(quantity=0)
+
+        logger.info(
+            "Stock decremented | ref=%s | product_id=%s | "
+            "sold=%s | remaining=%s",
+            payment.merchant_reference,
+            product.id,
+            payment.quantity,
+            Products.objects
+            .filter(id=product.id)
+            .values_list("quantity", flat=True)
+            .first(),
+        )
+
+    # ── 2. Notify the seller ──────────────────────────────
     try:
         recipient = business.owner if business.owner_id else None
         if recipient is not None:

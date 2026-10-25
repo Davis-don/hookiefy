@@ -73,6 +73,8 @@ class FeedItemSerializer(serializers.Serializer):
         max_digits=12, decimal_places=2,
         required=False, allow_null=True,
     )
+    quantity = serializers.IntegerField(required=False, default=0)
+    in_stock = serializers.BooleanField(required=False, default=True)
     extra_images = serializers.ListField(
         child=serializers.URLField(),
         required=False, default=list,
@@ -190,6 +192,15 @@ def _product_item(product):
         "name": product.name,
         "description": product.description,
         "price": product.price,
+
+        # ── Stock ─────────────────────────────────────────
+        # quantity = raw stock on hand
+        # in_stock = model property (quantity > 0) — kept as
+        #   its own field so the frontend doesn't have to know
+        #   the derivation rule; matches ProductSerializer.
+        "quantity": product.quantity,
+        "in_stock": product.in_stock,
+
         "image_url": primary.image_url if primary else None,
         "extra_images": extra_images,
         "properties": properties,

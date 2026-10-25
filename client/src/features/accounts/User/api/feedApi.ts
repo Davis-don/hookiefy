@@ -52,6 +52,16 @@ export type FeedItem = {
   name?: string;
   description?: string;
   price?: string | null;
+  /**
+   * Units in stock. Only meaningful for products.
+   * Omitted or 0 for posts.
+   */
+  quantity?: number;
+  /**
+   * True when quantity > 0. Only meaningful for products.
+   * Omitted for posts (or true by default).
+   */
+  in_stock?: boolean;
   extra_images?: string[];
   properties?: FeedProperty[];
 };

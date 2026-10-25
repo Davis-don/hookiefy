@@ -13,6 +13,11 @@ function YoupataManagedProductCard({
   onPurchase,
   ...cardProps
 }: ProductCardProps) {
+  // Sold out when the backend explicitly says in_stock is false.
+  // Matches ProductCard's derivation so the card and the
+  // purchase button can never disagree.
+  const soldOut = cardProps.item.in_stock === false;
+
   return (
     <div className="youpata-product-card-wrap">
       <ProductCard
@@ -21,13 +26,25 @@ function YoupataManagedProductCard({
       />
 
       <div className="youpata-product-card-actions">
-        <button
-          type="button"
-          className="youpata-product-card-purchase"
-          onClick={() => onPurchase(cardProps.item.id)}
-        >
-          Purchase now
-        </button>
+        {soldOut ? (
+          <button
+            type="button"
+            className="youpata-product-card-purchase is-sold-out"
+            disabled
+            aria-disabled="true"
+            title="This product is currently out of stock"
+          >
+            Sold out
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="youpata-product-card-purchase"
+            onClick={() => onPurchase(cardProps.item.id)}
+          >
+            Purchase now
+          </button>
+        )}
       </div>
     </div>
   );

@@ -33,6 +33,14 @@ class Products(models.Model):
         help_text="Price in KES. Optional.",
     )
 
+    quantity = models.PositiveIntegerField(
+        default=1,
+        help_text=(
+            "Number of units currently available for purchase. "
+            "Defaults to 1 so existing products remain purchasable."
+        ),
+    )
+
     views = models.PositiveIntegerField(
         default=0,
         help_text="Total number of times this product was opened.",
@@ -89,6 +97,11 @@ class Products(models.Model):
     @property
     def has_price(self):
         return self.price is not None
+
+    @property
+    def in_stock(self):
+        """True when at least one unit is available."""
+        return self.quantity > 0
 
     @property
     def properties(self):

@@ -26,6 +26,10 @@ const DESCRIPTION_MAX_LENGTH = 400;
 const PROPERTY_NAME_MAX_LENGTH  = 60;
 const PROPERTY_VALUE_MAX_LENGTH = 120;
 
+// Quantity — mirrors PRODUCT_QUANTITY_MAX in serializers/views
+const QUANTITY_MIN = 0;
+const QUANTITY_MAX = 1_000_000;
+
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -56,6 +60,7 @@ type FormState = {
   name: string;
   description: string;
   price: string;
+  quantity: string;
 };
 
 type EditableProperty = {
@@ -68,6 +73,7 @@ const initialState: FormState = {
   name: '',
   description: '',
   price: '',
+  quantity: '1',
 };
 
 let propertyKeyCounter = 0;
@@ -81,7 +87,7 @@ const makeEmptyProperty = (): EditableProperty => ({
 
 /** Map a server error response → field-keyed messages. */
 type ServerFieldErrors = Partial<Record<
-  'name' | 'description' | 'price' | 'properties' | 'image',
+  'name' | 'description' | 'price' | 'quantity' | 'properties' | 'image',
   string
 >>;
 
@@ -98,6 +104,7 @@ function normaliseServerErrors(raw: any): ServerFieldErrors {
   pick('name');
   pick('description');
   pick('price');
+  pick('quantity');
   pick('properties');
 
   // Generic image / message errors from the view
@@ -259,6 +266,7 @@ function Newproduct({
           fieldErrors.name ||
           fieldErrors.description ||
           fieldErrors.price ||
+          fieldErrors.quantity ||
           fieldErrors.properties ||
           fieldErrors.image ||
           'Please fix the highlighted fields.';
@@ -339,7 +347,7 @@ function Newproduct({
     (r) => r.name || r.value
   );
 
-  // Price validity
+  // ── Price ────────────────────────────────────────────
   let parsedPrice: number | null = null;
   let priceError: string | null = serverErrors.price ?? null;
   if (form.price.trim()) {
@@ -348,6 +356,35 @@ function Newproduct({
       priceError = 'Price must be a positive number.';
     } else {
       parsedPrice = n;
+    }
+  }
+
+  // ── Quantity ─────────────────────────────────────────
+  //
+  // Quantity is required (default '1'), must be a whole
+  // number between QUANTITY_MIN and QUANTITY_MAX.
+  // 0 is valid and means "out of stock" — the product
+  // appears in the catalogue but cannot be purchased until
+  // stock is added.
+  //
+  let parsedQuantity: number | null = null;
+  let quantityError: string | null = serverErrors.quantity ?? null;
+
+  if (quantityError === null) {
+    const raw = form.quantity.trim();
+    if (raw === '') {
+      quantityError = 'Quantity is required.';
+    } else if (!/^\d+$/.test(raw)) {
+      quantityError = 'Quantity must be a whole number.';
+    } else {
+      const n = Number(raw);
+      if (n < QUANTITY_MIN) {
+        quantityError = `Quantity cannot be less than ${QUANTITY_MIN}.`;
+      } else if (n > QUANTITY_MAX) {
+        quantityError = `Quantity cannot exceed ${QUANTITY_MAX.toLocaleString()}.`;
+      } else {
+        parsedQuantity = n;
+      }
     }
   }
 
@@ -362,6 +399,8 @@ function Newproduct({
     !descHasUrl &&
     !hasPropertyRowError &&
     !priceError &&
+    parsedQuantity !== null &&
+    !quantityError &&
     imageFiles.length > 0;
 
   // ── Submit ───────────────────────────────────────────
@@ -381,6 +420,11 @@ function Newproduct({
     }
 
     if (priceError) return setError(priceError);
+
+    if (quantityError || parsedQuantity === null) {
+      return setError(quantityError || 'Please enter a quantity.');
+    }
+
     if (hasPropertyRowError) {
       return setError('Please fix the highlighted property fields.');
     }
@@ -393,6 +437,7 @@ function Newproduct({
       name: nameTrimmed,
       description: descriptionTrimmed,
       price: parsedPrice,
+      quantity: parsedQuantity,
       properties: cleanedProperties,
       imageFiles,
     });
@@ -526,6 +571,44 @@ function Newproduct({
               {priceError}
             </span>
           )}
+        </div>
+
+        {/* ── Quantity ──────────────────────────────── */}
+        <div className="npr-field">
+          <label className="npr-label" htmlFor="npr-quantity">
+            Quantity / Stock <span className="npr-required">*</span>
+          </label>
+          <input
+            id="npr-quantity"
+            type="number"
+            className={
+              'npr-input' + (quantityError ? ' is-invalid' : '')
+            }
+            placeholder="e.g. 10"
+            value={form.quantity}
+            onChange={(e) => update('quantity', e.target.value)}
+            min={QUANTITY_MIN}
+            max={QUANTITY_MAX}
+            step="1"
+            inputMode="numeric"
+            disabled={busy}
+            aria-invalid={quantityError ? true : undefined}
+            aria-describedby={
+              quantityError ? 'npr-quantity-error' : 'npr-quantity-hint'
+            }
+          />
+          <div className="npr-field-foot">
+            <span
+              id={
+                quantityError
+                  ? 'npr-quantity-error'
+                  : 'npr-quantity-hint'
+              }
+              className="npr-field-msg"
+            >
+              {quantityError || 'Set to 0 to mark as sold out.'}
+            </span>
+          </div>
         </div>
 
         {/* ── Properties ────────────────────────────── */}

@@ -30,6 +30,12 @@ export type Product = {
   name: string;
   description: string;
   price: number | null;
+
+  /** Units currently in stock. 0 means "out of stock". */
+  quantity: number;                 // ← added
+  /** True when quantity > 0 — mirror of the model property. */
+  in_stock: boolean;                // ← added
+
   images: ProductImage[];
   primary_image: ProductImage | null;
   has_images: boolean;
@@ -46,6 +52,10 @@ export type ProductPayload = {
   name: string;
   description: string;
   price: number | null;
+
+  /** Units in stock. Required by the serializer on create. */
+  quantity: number;                 // ← added
+
   properties?: ProductProperty[];     // unlimited named properties
   imageFiles?: File[];                // multiple images
   replaceImages?: boolean;            // update only — wipe old images first
@@ -144,6 +154,11 @@ export async function createProduct(
     formData.append('price', String(payload.price));
   }
 
+  // Quantity — required by the serializer on create.
+  // Send it explicitly even when the value is 0, so the
+  // backend never falls back to its default of 1.
+  formData.append('quantity', String(payload.quantity));   // ← added
+
   // Properties — parallel arrays, only send filled ones
   (payload.properties ?? []).forEach((p) => {
     if (p.name?.trim() && p.value?.trim()) {
@@ -196,6 +211,13 @@ export async function updateProduct(
 
   if (payload.price !== null && payload.price !== undefined) {
     formData.append('price', String(payload.price));
+  }
+
+  // Quantity — always send it explicitly when the form
+  // provides one, so an admin edit can lower stock to 0
+  // (mark as sold out) without ambiguity.
+  if (payload.quantity !== undefined && payload.quantity !== null) {
+    formData.append('quantity', String(payload.quantity));  // ← added
   }
 
   // Properties — if provided, they replace ALL existing ones

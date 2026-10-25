@@ -39,6 +39,23 @@ logger = logging.getLogger(__name__)
 def initiate_payment(request):
     """
     Start a PesaPal payment for a product purchase.
+
+    Stock enforcement:
+
+      • The product must have at least `quantity` units
+        available. Otherwise the request is rejected with
+        `insufficient_stock` before ever reaching PesaPal.
+
+      • The atomic decrement of `Products.quantity` happens
+        later, in `sync_product_payment_from_pesapal`, when
+        the payment transitions to `completed` — so an
+        abandoned checkout doesn't lock inventory forever.
+
+      • Between initiate and sync, the stock shown on the
+        product is the *pre-purchase* value. That's the
+        correct UX: a user shouldn't see "out of stock"
+        because they (or someone else) once started a
+        checkout and walked away.
     """
 
     # ── 1. Validate input ──────────────────────────────
@@ -94,12 +111,41 @@ def initiate_payment(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 5. Build the merchant reference ───────────────
+    # ── 5. Stock pre-check ────────────────────────────
+    #
+    # This is UX, not the real guarantee. The real guarantee
+    # is the atomic F()-expression decrement that runs when
+    # the payment completes (inside sync_product_payment_from_pesapal).
+    #
+    # Here, we just prevent the user from landing on the
+    # PesaPal checkout page with a request that will fail
+    # anyway. If two buyers race between this check and
+    # payment, both can be allowed through — the atomic
+    # decrement clamps quantity to zero instead of allowing
+    # negatives, and the second buyer's purchase is still
+    # recorded. That's the standard overselling trade-off
+    # (never lose a real payment), not a bug.
+    #
+    if product.quantity < quantity:
+        return Response(
+            {
+                "message": (
+                    f"Only {product.quantity} unit(s) available. "
+                    f"You requested {quantity}."
+                ),
+                "code": "insufficient_stock",
+                "available": product.quantity,
+                "requested": quantity,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # ── 6. Build the merchant reference ───────────────
     merchant_reference = (
         f"PROD-{product.id}-{uuid.uuid4().hex[:12].upper()}"
     )
 
-    # ── 6. Submit the order to PesaPal ────────────────
+    # ── 7. Submit the order to PesaPal ────────────────
     order_payload = {
         "merchant_reference": merchant_reference,
         "amount": str(amount),
@@ -151,7 +197,7 @@ def initiate_payment(request):
             status=status.HTTP_502_BAD_GATEWAY,
         )
 
-    # ── 7. Persist the pending payment row ────────────
+    # ── 8. Persist the pending payment row ────────────
     try:
         payment = record_pending_payment(
             user=user,
@@ -182,12 +228,38 @@ def initiate_payment(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    # ── 8. Respond with the redirect URL ──────────────
+    # ── 9. Respond with the redirect URL + stock context ──
+    #
+    # `remaining_stock` is what the product's quantity *will*
+    # be once this purchase completes. Because the decrement
+    # happens on completion (in sync), not on initiate, the
+    # value here is `product.quantity - quantity`, clamped to 0.
+    #
+    # The frontend can use it to grey out the card right away
+    # without waiting for the IPN to land — but it should still
+    # refetch on callback to get the authoritative value.
+    #
+    remaining_stock = max(0, product.quantity - quantity)
+
     return Response(
         {
             "message": "Payment initialised. Redirecting…",
             "payment": ProductPaymentSerializer(payment).data,
             "redirect_url": redirect_url,
+
+            # Convenience fields — the frontend gets everything
+            # it needs to render the pending state without a
+            # second product fetch.
+            "quantity": quantity,
+            "amount": str(amount),
+            "currency": payment.currency,
+            "remaining_stock": remaining_stock,
+            "product": {
+                "id": product.id,
+                "name": product.name,
+                "quantity": product.quantity,            # current, pre-purchase
+                "in_stock": product.quantity > 0,
+            },
         },
         status=status.HTTP_201_CREATED,
     )

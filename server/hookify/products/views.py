@@ -37,6 +37,9 @@ PRODUCT_NAME_MAX_LENGTH        = 80
 PRODUCT_DESCRIPTION_MIN_LENGTH = 10
 PRODUCT_DESCRIPTION_MAX_LENGTH = 400
 
+# Stock ceiling — keep in sync with serializers.py
+PRODUCT_QUANTITY_MAX = 1_000_000
+
 URL_PATTERNS = (
     re.compile(r"https?://", re.IGNORECASE),
     re.compile(r"\bwww\.", re.IGNORECASE),
@@ -92,6 +95,23 @@ def _check_text_field(value, field_label, min_len, max_len):
     if _has_url(value):
         return (None, f"{field_label} cannot contain links or URLs.")
 
+    return (value, None)
+
+
+def _check_quantity(value):
+    """
+    Mirrors the serializer check.
+    Returns (value_or_None, error_or_None).
+    """
+    if value is None:
+        return (None, "Quantity cannot be null.")
+    if value < 0:
+        return (None, "Quantity cannot be negative.")
+    if value > PRODUCT_QUANTITY_MAX:
+        return (
+            None,
+            f"Quantity cannot exceed {PRODUCT_QUANTITY_MAX}.",
+        )
     return (value, None)
 
 
@@ -542,7 +562,25 @@ def create_product(request, business_id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── 5. Images ───────────────────────────────────────────
+    # ── 5. Quantity ─────────────────────────────────────────
+    #
+    # The serializer validates quantity when it's present.
+    # When it's absent, we fall back to the model default (1).
+    # The check here is a belt-and-braces guard so the view
+    # never writes an invalid value even if the serializer's
+    # validate_quantity is later relaxed.
+    raw_qty = serializer.validated_data.get("quantity", None)
+    if raw_qty is not None:
+        qty, qty_err = _check_quantity(raw_qty)
+        if qty_err:
+            return Response(
+                {"quantity": [qty_err]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    else:
+        qty = 1  # model default
+
+    # ── 6. Images ───────────────────────────────────────────
     image_files = _extract_images_from_request(request)
     if not image_files:
         return Response(
@@ -575,7 +613,7 @@ def create_product(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ── 6. Decide the Youpata-managed flag ──────────────────
+    # ── 7. Decide the Youpata-managed flag ──────────────────
     #
     # Derived from the caller, never from the request body:
     #
@@ -587,12 +625,13 @@ def create_product(request, business_id):
         request.user
     )
 
-    # ── 7. Persist ──────────────────────────────────────────
+    # ── 8. Persist ──────────────────────────────────────────
     product = Products.objects.create(
         business=business,
         name=name,
         description=description,
         price=serializer.validated_data.get("price"),
+        quantity=qty,                       # ← added
         is_youpata_managed=youpata_managed,
     )
 
@@ -719,6 +758,20 @@ def update_product(request, product_id):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         validated["description"] = description
+
+    # ── Quantity — belt-and-braces re-check ─────────────────
+    #
+    # The serializer already validates quantity when present.
+    # This second check mirrors the view's other text-field
+    # re-checks, so the view's contract is self-contained.
+    if "quantity" in validated and validated["quantity"] is not None:
+        qty, qty_err = _check_quantity(validated["quantity"])
+        if qty_err:
+            return Response(
+                {"quantity": [qty_err]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        validated["quantity"] = qty
 
     image_files = _extract_images_from_request(request)
     replace_images = str(
@@ -914,7 +967,20 @@ def product_usage(request, business_id):
         )
 
     plan = _get_effective_plan(request.user)
-    used = Products.objects.filter(business=business).count()
+    qs = Products.objects.filter(business=business)
+    used = qs.count()
+
+    # ── Stock aggregates ────────────────────────────────────
+    #
+    # Small set of counts the seller's usage page can render
+    # to answer "how much of my catalogue is actually sellable
+    # right now?". A product counts as "in stock" only when it
+    # has quantity > 0 AND a price (an unpriced product can't
+    # be purchased regardless of stock).
+    in_stock_count = qs.filter(
+        quantity__gt=0, price__isnull=False
+    ).count()
+    out_of_stock_count = qs.filter(quantity=0).count()
 
     if plan is None:
         return Response(
@@ -927,6 +993,10 @@ def product_usage(request, business_id):
                 "is_unlimited": False,
                 "has_plan": False,
                 "images_per_product_limit": 0,
+                "stock": {
+                    "in_stock": in_stock_count,
+                    "out_of_stock": out_of_stock_count,
+                },
             },
             status=status.HTTP_200_OK,
         )
@@ -945,6 +1015,10 @@ def product_usage(request, business_id):
             "is_unlimited": is_unlimited,
             "has_plan": True,
             "images_per_product_limit": plan.images_per_product,
+            "stock": {
+                "in_stock": in_stock_count,
+                "out_of_stock": out_of_stock_count,
+            },
         },
         status=status.HTTP_200_OK,
     )

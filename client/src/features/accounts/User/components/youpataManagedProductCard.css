@@ -92,3 +92,29 @@
     transition: none !important;
   }
 }
+/* ─────────────────────────────────────────────────────────
+   SOLD-OUT PURCHASE BUTTON
+   ─────────────────────────────────────────────────────────
+   Same footprint as the "Purchase now" button so the
+   card's layout doesn't shift between states — only the
+   appearance changes. Uses a flat grey surface + muted
+   text, no shadow, no hover effect.
+   ───────────────────────────────────────────────────────── */
+
+.youpata-product-card-purchase.is-sold-out,
+.youpata-product-card-purchase.is-sold-out:hover,
+.youpata-product-card-purchase.is-sold-out:active,
+.youpata-product-card-purchase.is-sold-out:focus-visible {
+  background: #F1F5F9;
+  color: #94A3B8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Keep the disabled button from responding to :hover / :active
+   transitions that the primary style defines */
+.youpata-product-card-purchase.is-sold-out {
+  transition: none;
+}

@@ -1,7 +1,17 @@
 # products/admin.py
 
 from django.contrib import admin
+from django.utils.html import format_html
+
 from .models import Products, ProductImage, ProductProperty
+
+
+# ============================================================
+# LOW-STOCK THRESHOLD
+# ============================================================
+#
+# Below this number, the badge turns amber. Tune to taste.
+LOW_STOCK_THRESHOLD = 5
 
 
 # ============================================================
@@ -23,6 +33,40 @@ class ProductPropertyInline(admin.TabularInline):
 
 
 # ============================================================
+# STOCK FILTER
+# ============================================================
+#
+# Custom SimpleListFilter so the sidebar shows four buckets —
+# In stock / Low stock / Out of stock / All — driven by the
+# quantity column rather than an equality check.
+# ============================================================
+
+class StockStatusFilter(admin.SimpleListFilter):
+    title = "stock status"
+    parameter_name = "stock"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("in",   "In stock"),
+            ("low",  f"Low stock (≤ {LOW_STOCK_THRESHOLD})"),
+            ("out",  "Out of stock"),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "in":
+            return queryset.filter(quantity__gt=LOW_STOCK_THRESHOLD)
+        if value == "low":
+            return queryset.filter(
+                quantity__gt=0,
+                quantity__lte=LOW_STOCK_THRESHOLD,
+            )
+        if value == "out":
+            return queryset.filter(quantity=0)
+        return queryset
+
+
+# ============================================================
 # PRODUCTS ADMIN
 # ============================================================
 
@@ -34,6 +78,7 @@ class ProductsAdmin(admin.ModelAdmin):
         "name",
         "business",
         "price",
+        "stock_badge",
         "is_youpata_managed",
         "has_images",
         "likes_count",
@@ -46,6 +91,7 @@ class ProductsAdmin(admin.ModelAdmin):
     # ── Filters ───────────────────────────────────────────
     list_filter = (
         "is_youpata_managed",
+        StockStatusFilter,          # ← added
         "created_at",
     )
 
@@ -62,7 +108,12 @@ class ProductsAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_select_related = ("business",)
     raw_id_fields = ("business",)
-    readonly_fields = ("created_at", "updated_at", "likes_count", "follows_count")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "likes_count",
+        "follows_count",
+    )
     list_per_page = 25
 
     # ── Inlines ───────────────────────────────────────────
@@ -81,6 +132,7 @@ class ProductsAdmin(admin.ModelAdmin):
                 "name",
                 "description",
                 "price",
+                "quantity",         # ← added
                 "is_youpata_managed",
             ),
         }),
@@ -89,11 +141,46 @@ class ProductsAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
         ("Timestamps", {
-            "fields": ("created_at", "updated_at"),
+            "fields": (
+                "created_at",
+                "updated_at",
+            ),
             "classes": ("collapse",),
         }),
     )
 
+    # ── Computed columns ──────────────────────────────────
+
     @admin.display(boolean=True, description="Images")
     def has_images(self, obj):
         return obj.images.exists()
+
+    @admin.display(
+        description="Stock",
+        ordering="quantity",           # sortable
+    )
+    def stock_badge(self, obj):
+        """
+        Colour-coded stock indicator.
+
+        Green: > LOW_STOCK_THRESHOLD
+        Amber: 1..LOW_STOCK_THRESHOLD
+        Red:   0 (out of stock)
+        """
+        qty = obj.quantity
+
+        if qty == 0:
+            bg, fg, label = "#FEF2F2", "#B91C1C", "Out of stock"
+        elif qty <= LOW_STOCK_THRESHOLD:
+            bg, fg, label = "#FEF3C7", "#92400E", f"{qty} left"
+        else:
+            bg, fg, label = "#ECFDF5", "#047857", f"{qty} in stock"
+
+        return format_html(
+            '<span style="display:inline-block;padding:2px 8px;'
+            'border-radius:999px;font-size:0.72rem;font-weight:700;'
+            'letter-spacing:0.3px;background:{};color:{};">{}</span>',
+            bg,
+            fg,
+            label,
+        )

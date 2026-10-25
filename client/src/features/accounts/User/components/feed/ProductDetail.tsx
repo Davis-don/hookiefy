@@ -47,6 +47,11 @@ export type ProductDetailData = {
   description: string;
   price: string | null;
 
+  /** Units currently in stock. */
+  quantity?: number;
+  /** True when quantity > 0 — mirrors the model property. */
+  in_stock?: boolean;
+
   images: ProductImage[];
   primary_image: ProductImage | null;
   properties: ProductProperty[];
@@ -334,6 +339,12 @@ function ProductDetailPage({
 
   const priceLabel = formatPrice(data.price);
 
+  // Sold out when the backend explicitly says in_stock is false.
+  // `undefined` — older cached payloads, or the flag not yet
+  // rolled out — is treated as available so we never silently
+  // hide the CTA on a product that's actually buyable.
+  const soldOut = data.in_stock === false;
+
   const galleryImages: ProductImage[] = [];
   const seen = new Set<number>();
 
@@ -371,7 +382,11 @@ function ProductDetailPage({
     typeof onPurchase === 'function';
 
   return (
-    <article className="product-detail">
+    <article
+      className={
+        'product-detail' + (soldOut ? ' is-sold-out' : '')
+      }
+    >
       <button
         type="button"
         className="product-detail-back"
@@ -417,6 +432,16 @@ function ProductDetailPage({
           aria-label="Open image"
         >
           <img src={primary.image_url} alt={data.name} />
+
+          {/* ── Sold-out pill ───────────────────────── */}
+          {soldOut && (
+            <span
+              className="product-detail__sold-out"
+              aria-label="Sold out"
+            >
+              Sold out
+            </span>
+          )}
         </button>
       )}
 
@@ -432,7 +457,14 @@ function ProductDetailPage({
         <h1 className="product-detail__name">{data.name}</h1>
 
         {priceLabel && (
-          <span className="product-detail__price">{priceLabel}</span>
+          <span
+            className={
+              'product-detail__price' +
+              (soldOut ? ' is-sold-out' : '')
+            }
+          >
+            {priceLabel}
+          </span>
         )}
 
         {data.description && (
@@ -477,13 +509,25 @@ function ProductDetailPage({
       {/* ── Youpata-managed purchase bar ────────────── */}
       {showPurchaseBar && (
         <div className="product-detail__purchase">
-          <button
-            type="button"
-            className="product-detail__purchase-btn"
-            onClick={() => onPurchase?.(data.id)}
-          >
-            Purchase now
-          </button>
+          {soldOut ? (
+            <button
+              type="button"
+              className="product-detail__purchase-btn is-sold-out"
+              disabled
+              aria-disabled="true"
+              title="This product is currently out of stock"
+            >
+              Sold out
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="product-detail__purchase-btn"
+              onClick={() => onPurchase?.(data.id)}
+            >
+              Purchase now
+            </button>
+          )}
         </div>
       )}
 

@@ -46,6 +46,12 @@ function ProductCard({
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
+  // Sold out when the backend explicitly says in_stock is false.
+  // `undefined` (older cached payloads, or posts masquerading
+  // as products) is treated as available — never hides the CTA
+  // on a product that's actually buyable.
+  const soldOut = item.in_stock === false;
+
   const openBusiness = () => onOpenBusiness(item.business.id);
   const openProduct = () => onOpenProduct(item.id);
 
@@ -76,7 +82,11 @@ function ProductCard({
   const showSkeleton = hasImage && !imageLoaded && !imageError;
 
   return (
-    <article className="product-card">
+    <article
+      className={
+        'product-card' + (soldOut ? ' is-sold-out' : '')
+      }
+    >
       <HeartBurst ref={burstRef} />
 
       <header className="product-card__header">
@@ -130,7 +140,8 @@ function ProductCard({
           className={
             'product-card__cover' +
             (showSkeleton ? ' is-loading' : '') +
-            (imageError ? ' is-error' : '')
+            (imageError ? ' is-error' : '') +
+            (soldOut ? ' is-sold-out' : '')
           }
           role="button"
           tabIndex={0}
@@ -186,6 +197,16 @@ function ProductCard({
               <span>Image unavailable</span>
             </div>
           )}
+
+          {/* ── Sold-out pill ─────────────────────────── */}
+          {soldOut && (
+            <span
+              className="product-card__sold-out"
+              aria-label="Sold out"
+            >
+              Sold out
+            </span>
+          )}
         </div>
       )}
 
@@ -193,7 +214,13 @@ function ProductCard({
         {item.name && <h3 className="product-card__name">{item.name}</h3>}
 
         {priceLabel && (
-          <span className="product-card__price">{priceLabel}</span>
+          <span
+            className={
+              'product-card__price' + (soldOut ? ' is-sold-out' : '')
+            }
+          >
+            {priceLabel}
+          </span>
         )}
 
         {description && (

@@ -364,3 +364,84 @@
     transition: opacity 0.2s ease;
   }
 }
+/* ─────────────────────────────────────────────────────────
+   SOLD OUT STATE
+   ─────────────────────────────────────────────────────────
+   A card marked sold out:
+     • desaturates the cover image so it visually recedes
+     • renders a "Sold out" pill over the cover top-left
+     • mutes the price colour so it doesn't compete with
+       the "available" price of in-stock products
+   The click / gesture behaviour is unchanged — users can
+   still open the detail page to see what they missed.
+   ───────────────────────────────────────────────────────── */
+
+/* Cover — desaturate the image on sold-out cards */
+.product-card__cover.is-sold-out .product-card__cover-img {
+  filter: grayscale(0.7) brightness(0.94);
+}
+
+.product-card__cover.is-sold-out:hover .product-card__cover-img.is-loaded {
+  transform: none;
+}
+
+/* Sold-out pill — overlaid top-left of the cover */
+.product-card__sold-out {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+
+  color: #B91C1C;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #FECACA;
+
+  box-shadow:
+    0 2px 6px -2px rgba(15, 23, 42, 0.1),
+    0 4px 12px -6px rgba(185, 28, 28, 0.25);
+
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Muted price — signals the product isn't purchasable */
+.product-card__price.is-sold-out {
+  color: #94A3B8;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #CBD5E1;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .product-card__sold-out {
+    top: 10px;
+    left: 10px;
+    font-size: 0.68rem;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .product-card__sold-out {
+    font-size: 0.64rem;
+    padding: 3px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card__cover.is-sold-out .product-card__cover-img {
+    transition: none !important;
+  }
+}

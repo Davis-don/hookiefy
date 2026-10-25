@@ -20,6 +20,9 @@ PRODUCT_DESCRIPTION_MAX_LENGTH = 400
 PROPERTY_NAME_MAX_LENGTH  = 60
 PROPERTY_VALUE_MAX_LENGTH = 120
 
+# Stock limits — keep absurd values out
+PRODUCT_QUANTITY_MAX = 1_000_000
+
 # Patterns that would let a user paste links into text fields
 URL_PATTERNS = (
     re.compile(r"https?://", re.IGNORECASE),
@@ -65,6 +68,30 @@ def _check_text_field(value, field_label, min_len, max_len):
     if _has_url(value):
         raise serializers.ValidationError(
             f"{field_label} cannot contain links or URLs."
+        )
+
+    return value
+
+
+def _check_quantity(value):
+    """
+    Shared quantity validator:
+      - rejects negative
+      - rejects absurdly large (guards against typos like 1e9)
+    PositiveIntegerField already rejects negatives at DB level,
+    but the serializer should surface the error before we hit it.
+    """
+    if value is None:
+        return value
+
+    if value < 0:
+        raise serializers.ValidationError(
+            "Quantity cannot be negative."
+        )
+
+    if value > PRODUCT_QUANTITY_MAX:
+        raise serializers.ValidationError(
+            f"Quantity cannot exceed {PRODUCT_QUANTITY_MAX}."
         )
 
     return value
@@ -163,6 +190,8 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    in_stock = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Products
         fields = (
@@ -175,6 +204,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "price",
+            "quantity",
+            "in_stock",
             "images",
             "primary_image",
             "has_images",
@@ -213,13 +244,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     """
-    Validate text fields + optional properties.
+    Validate text fields + optional properties + optional stock.
 
     Rules:
         - name:        required, 3–80 chars, no URLs
         - description: required, 10–400 chars, no URLs
         - properties:  each name/value ≤ limit, no URLs
         - price:       optional, ≥ 0
+        - quantity:    optional, ≥ 0, ≤ 1 000 000
         - images:      handled in the view (uploaded to Cloudinary)
     """
 
@@ -231,12 +263,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "price",
+            "quantity",
             "properties",
         )
         extra_kwargs = {
             "name":        {"required": True,  "allow_blank": False},
             "description": {"required": True,  "allow_blank": False},
             "price":       {"required": False, "allow_null": True},
+            "quantity":    {"required": False},
         }
 
     def validate_name(self, value):
@@ -261,6 +295,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Price cannot be negative.")
         return value
+
+    def validate_quantity(self, value):
+        return _check_quantity(value)
 
     def validate_properties(self, value):
         for item in value:
@@ -303,12 +340,14 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "price",
+            "quantity",
             "properties",
         )
         extra_kwargs = {
             "name":        {"required": False, "allow_blank": False},
             "description": {"required": False, "allow_blank": False},
             "price":       {"required": False, "allow_null": True},
+            "quantity":    {"required": False},
         }
 
     def validate_name(self, value):
@@ -337,6 +376,11 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Price cannot be negative.")
         return value
+
+    def validate_quantity(self, value):
+        if value is None:
+            return value
+        return _check_quantity(value)
 
     def validate_properties(self, value):
         for item in value:
