@@ -29,6 +29,43 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# SHARED SYNC DISPATCH
+# ============================================================
+#
+# Subscription and product payments share one IPN URL and one
+# browser-callback URL. PesaPal sends PROD-… references for
+# product payments and SUB-… references for subscriptions, so
+# the shared handlers can route by prefix.
+#
+# Both branches import lazily to avoid the circular import
+# between subscription_payment and product_payment at module
+# load time.
+# ============================================================
+
+def _sync_by_reference(merchant_reference):
+    """
+    Sync the payment row matching `merchant_reference`, whether
+    it's a subscription payment or a product payment.
+    """
+    from .controllers.services import sync_payment_from_pesapal
+
+    if merchant_reference.startswith("SUB-"):
+        sync_payment_from_pesapal(merchant_reference)
+        return
+
+    if merchant_reference.startswith("PROD-"):
+        from product_payment.controllers.services import (
+            sync_product_payment_from_pesapal,
+        )
+        sync_product_payment_from_pesapal(merchant_reference)
+        return
+
+    raise Exception(
+        f"Unrecognised merchant_reference prefix: {merchant_reference}"
+    )
+
+
+# ============================================================
 # INITIATE PAYMENT
 # POST /subscription_payments/initiate/
 # ============================================================
@@ -261,7 +298,6 @@ def sync_payment(request, merchant_reference):
     """
 
     from .models import SubscriptionPayment
-    from .controllers.services import sync_payment_from_pesapal
 
     payment = (
         SubscriptionPayment.objects
@@ -280,7 +316,7 @@ def sync_payment(request, merchant_reference):
         )
 
     try:
-        sync_payment_from_pesapal(merchant_reference)
+        _sync_by_reference(merchant_reference)
     except Exception as e:
         logger.exception(
             "Sync failed on user request ref=%s",
@@ -313,7 +349,15 @@ def sync_payment(request, merchant_reference):
 #
 # PesaPal redirects the customer's BROWSER here after payment.
 #
-# This view:
+# This view is SHARED by subscription and product payments —
+# the browser callback URL is set once in
+# settings.PESAPAL_CALLBACK_URL. The handler dispatches by
+# merchant_reference prefix:
+#
+#     SUB-…  → subscription_payment sync
+#     PROD-… → product_payment sync
+#
+# The view:
 #   1. Syncs the payment against PesaPal (so the row is
 #      immediately up to date even if the IPN hasn't landed).
 #   2. Redirects the browser to the FRONTEND callback page,
@@ -326,15 +370,14 @@ def sync_payment(request, merchant_reference):
 @permission_classes([])
 def payment_success_callback(request):
     """
-    PesaPal browser redirect target.
+    PesaPal browser redirect target — shared by subscription
+    and product payments.
 
     Syncs the payment, then 302-redirects to the frontend
     /payment/callback page. The frontend can re-sync and
     render the correct result screen (success / pending /
     failed).
     """
-
-    from .controllers.services import sync_payment_from_pesapal
 
     merchant_reference = request.query_params.get(
         "OrderMerchantReference"
@@ -350,7 +393,7 @@ def payment_success_callback(request):
     # ── Best-effort sync. Never block the redirect on it. ──
     if merchant_reference:
         try:
-            sync_payment_from_pesapal(merchant_reference)
+            _sync_by_reference(merchant_reference)
         except Exception:
             logger.exception(
                 "Failed to sync payment on callback ref=%s",
@@ -384,8 +427,14 @@ def payment_success_callback(request):
 # IPN
 # POST /subscription_payments/ipn/
 #
-# Server-to-server notification from PesaPal. Must return
-# 200 (even on error) so PesaPal doesn't keep retrying.
+# Server-to-server notification from PesaPal — shared by
+# subscription and product payments. Must return 200 (even
+# on error) so PesaPal doesn't keep retrying.
+#
+# Dispatches by merchant_reference prefix:
+#
+#     SUB-…  → subscription_payment sync
+#     PROD-… → product_payment sync
 # ============================================================
 
 @api_view(["POST"])
@@ -395,15 +444,14 @@ def payment_ipn(request):
     Server-to-server notification from PesaPal.
     """
 
-    from .controllers.services import sync_payment_from_pesapal
-
     payload = request.data if hasattr(request, "data") else {}
 
     merchant_reference = (
         payload.get("OrderMerchantReference")
         or payload.get("orderMerchantReference")
         or payload.get("merchant_reference")
-    )
+        or ""
+    ).strip()
 
     logger.info(
         "IPN received | ref=%s | payload=%s",
@@ -412,13 +460,20 @@ def payment_ipn(request):
     )
 
     if not merchant_reference:
-        return Response({"received": True}, status=status.HTTP_200_OK)
-
-    try:
-        sync_payment_from_pesapal(merchant_reference)
-    except Exception:
-        logger.exception(
-            "IPN failed to sync ref=%s", merchant_reference
+        return Response(
+            {"received": True},
+            status=status.HTTP_200_OK,
         )
 
-    return Response({"received": True}, status=status.HTTP_200_OK)
+    try:
+        _sync_by_reference(merchant_reference)
+    except Exception:
+        logger.exception(
+            "IPN failed to sync ref=%s",
+            merchant_reference,
+        )
+
+    return Response(
+        {"received": True},
+        status=status.HTTP_200_OK,
+    )
