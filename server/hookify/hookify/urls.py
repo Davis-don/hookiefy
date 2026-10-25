@@ -61,12 +61,19 @@ urlpatterns = [
 
 
     # ============================================================
-    # Plan 
+    # PLANS
+    # Subscription plan catalogue.
     # ============================================================
+
     path(
         "plans/",
         include("plans.urls"),
     ),
+
+
+    # ============================================================
+    # FEED
+    # ============================================================
 
     path(
         "feed/",
@@ -79,13 +86,33 @@ urlpatterns = [
     #
     #   POST /subscription_payments/initiate/
     #   GET  /subscription_payments/<ref>/status/
-    #   GET  /subscription_payments/payment-success/
-    #   POST /subscription_payments/ipn/
+    #   POST /subscription_payments/<ref>/sync/
+    #   GET  /subscription_payments/payment-success/   ← shared callback
+    #   POST /subscription_payments/ipn/               ← shared IPN
     # ============================================================
 
     path(
         "subscription_payments/",
         include("subscription_payment.urls"),
+    ),
+
+
+    # ============================================================
+    # PRODUCT PAYMENTS
+    #
+    #   POST /product_payments/initiate/
+    #   GET  /product_payments/<ref>/status/
+    #   POST /product_payments/<ref>/sync/
+    #
+    # The browser callback and server-to-server IPN are shared
+    # with subscription payments (see the URLs above) — the
+    # shared handler dispatches on the merchant_reference
+    # prefix ("SUB-…" vs "PROD-…").
+    # ============================================================
+
+    path(
+        "product_payments/",
+        include("product_payment.urls"),
     ),
 
 
@@ -210,17 +237,6 @@ urlpatterns = [
 
 
     # ============================================================
-    # PLANS
-    # Subscription plan catalogue.
-    # ============================================================
-
-    path(
-        "plans/",
-        include("plans.urls"),
-    ),
-
-
-    # ============================================================
     # SUBSCRIPTION
     # A user's subscription to a plan.
     # ============================================================
@@ -257,5 +273,14 @@ urlpatterns = [
         "perf/",
         include("perfomance_tests.urls"),
     ),
-    path("api/search/", include("search.urls")),
+
+
+    # ============================================================
+    # SEARCH
+    # ============================================================
+
+    path(
+        "api/search/",
+        include("search.urls"),
+    ),
 ]

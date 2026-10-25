@@ -14,6 +14,7 @@ class AccountsAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
         "role",
+        "is_youpata_managed",
         "current_plan",      # ← computed from subscription
         "auth_provider",
         "is_active",
@@ -23,6 +24,7 @@ class AccountsAdmin(admin.ModelAdmin):
     # ── Filters ───────────────────────────────────────────
     list_filter = (
         "role",
+        "is_youpata_managed",
         "auth_provider",
         "is_active",
         "gender",
@@ -65,6 +67,13 @@ class AccountsAdmin(admin.ModelAdmin):
                 "is_staff",
                 "is_superuser",
                 "role",
+            ),
+        }),
+        ("Youpata management", {
+            "fields": ("is_youpata_managed",),
+            "description": (
+                "Only non-superadmin accounts can be marked as "
+                "Youpata-managed."
             ),
         }),
         ("Profile", {
@@ -131,3 +140,31 @@ class AccountsAdmin(admin.ModelAdmin):
             f"status: {sub.status} · "
             f"{sub.duration_display}"
         )
+
+    # ── Form hardening ────────────────────────────────────
+    #
+    # Hide the is_youpata_managed checkbox from the form when
+    # editing a superadmin, so admins can't even attempt the
+    # invalid combination. The model's clean() and the DB
+    # CheckConstraint are still the real enforcement.
+    # ───────────────────────────────────────────────────────
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+
+        if obj is not None and obj.is_superadmin:
+            fieldsets = tuple(
+                (
+                    title,
+                    {
+                        **options,
+                        "fields": tuple(
+                            f for f in options["fields"]
+                            if f != "is_youpata_managed"
+                        ),
+                    },
+                )
+                for title, options in fieldsets
+            )
+
+        return fieldsets

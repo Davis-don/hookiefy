@@ -3,6 +3,7 @@ from .account_views.auth_views import (
     login_view,
     logout_view,
     auth_check,
+    youpata_managed_accounts,  
 )
 
 from .account_views.google_views import (

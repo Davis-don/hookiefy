@@ -49,6 +49,15 @@ urlpatterns = [
     ),
 
     # ========================================================
+    # YOUPATA-MANAGED ACCOUNTS (superadmin only)
+    # ========================================================
+    path(
+        "accounts/",
+        views.youpata_managed_accounts,
+        name="youpata_managed_accounts",
+    ),
+
+    # ========================================================
     # PROFILE — READ
     # ========================================================
     path(

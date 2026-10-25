@@ -249,7 +249,7 @@ def _check_image_count_limit(user, business, incoming_count, existing_count=0):
 
 
 # ────────────────────────────────────────────────────────────
-# NEW: subscription expiry check (same as posts/stories)
+# Subscription expiry check (same as posts/stories)
 # ────────────────────────────────────────────────────────────
 
 def _check_subscription_current(user):
@@ -323,6 +323,28 @@ def _check_subscription_current(user):
             "status": latest.status,
         },
     )
+
+
+# ────────────────────────────────────────────────────────────
+# Youpata-managed product flag
+# ────────────────────────────────────────────────────────────
+
+def _caller_creates_youpata_managed_products(user):
+    """
+    True if products created by this user should be flagged
+    is_youpata_managed=True.
+
+    Rules (mirror the account-creation endpoint):
+        • superadmin caller              → True
+        • is_youpata_managed=True caller → True
+        • everyone else                  → False
+
+    The client can never set the flag directly — it is always
+    derived from who is making the request.
+    """
+    if getattr(user, "is_superadmin", False):
+        return True
+    return bool(getattr(user, "is_youpata_managed", False))
 
 
 def _extract_properties_from_request(request):
@@ -553,12 +575,25 @@ def create_product(request, business_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # ── 6. Persist ──────────────────────────────────────────
+    # ── 6. Decide the Youpata-managed flag ──────────────────
+    #
+    # Derived from the caller, never from the request body:
+    #
+    #   • superadmin caller              → True
+    #   • is_youpata_managed=True caller → True
+    #   • everyone else                  → False
+    #
+    youpata_managed = _caller_creates_youpata_managed_products(
+        request.user
+    )
+
+    # ── 7. Persist ──────────────────────────────────────────
     product = Products.objects.create(
         business=business,
         name=name,
         description=description,
         price=serializer.validated_data.get("price"),
+        is_youpata_managed=youpata_managed,
     )
 
     properties_data = _extract_properties_from_request(request)

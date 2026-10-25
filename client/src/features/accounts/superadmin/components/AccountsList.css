@@ -1,0 +1,566 @@
+/* src/pages/accounts/components/AccountsList.css
+   ─────────────────────────────────────────────────────────
+   ALL ACCOUNTS — toolbar, search, table, empty state,
+   loading skeleton, buttons, alerts, row actions, inline editor.
+   Full-bleed — the editor form stretches edge to edge.
+   ───────────────────────────────────────────────────────── */
+
+.sa-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Toolbar ─────────────────────────────────────────── */
+.sa-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sa-list-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sa-list-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.sa-list-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+/* ── Search box ──────────────────────────────────────── */
+.sa-list-search {
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  outline: none;
+  min-width: 240px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sa-list-search::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.sa-list-search:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sa-list-search:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.sa-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  background: #FFFFFF;
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+.sa-table thead th {
+  text-align: left;
+  font-size: 0.78rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #64748B;
+  font-weight: 700;
+  background: #F8FAFC;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.sa-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #0F172A;
+  vertical-align: middle;
+}
+
+.sa-table tbody tr:last-child td { border-bottom: none; }
+.sa-table tbody tr:hover { background: #F8FAFC; }
+
+/* ── Empty state ─────────────────────────────────────── */
+.sa-empty {
+  text-align: center;
+  padding: 56px 20px;
+  border: 1px dashed #CBD5E1;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #475569;
+}
+
+.sa-empty p {
+  margin: 0 0 14px;
+  font-size: 0.98rem;
+}
+
+/* ── Loading skeleton ────────────────────────────────── */
+.sa-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sa-list-skeleton-row {
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    #F1F5F9 0%,
+    #E2E8F0 50%,
+    #F1F5F9 100%
+  );
+  background-size: 200% 100%;
+  animation: sa-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes sa-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.sa-btn {
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.sa-btn-primary {
+  background: #2563EB;
+  color: #FFFFFF;
+}
+
+.sa-btn-primary:hover:not(:disabled) { background: #1D4ED8; }
+
+.sa-btn-ghost {
+  background: transparent;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+.sa-btn-ghost:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.sa-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Alerts ──────────────────────────────────────────── */
+.sa-alert {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.sa-alert-error {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.sa-alert-success {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   ROW ACTIONS
+   ───────────────────────────────────────────────────────── */
+
+.sa-th-actions {
+  width: 56px;
+  text-align: right;
+}
+
+.sa-td-actions {
+  text-align: right;
+  width: 56px;
+}
+
+.sa-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748B;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sa-icon-btn:hover {
+  background: #EEF2FF;
+  border-color: #C7D2FE;
+  color: #2563EB;
+}
+
+.sa-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* ─────────────────────────────────────────────────────────
+   INLINE ROW EDITOR
+   ─────────────────────────────────────────────────────────
+   Full-bleed: the editor itself has zero padding, so the
+   fields grid stretches from column edge to column edge.
+   A tiny inset (4–6px) on the inner blocks keeps inputs from
+   visually touching the screen border without turning the
+   form into a boxed card.
+   ───────────────────────────────────────────────────────── */
+
+.sa-tr-editing > td {
+  padding: 0;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.sa-row-editor {
+  display: block;
+  padding: 0;
+}
+
+/* ── Field grid — full width, tiny horizontal inset ──── */
+.sa-row-editor-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px 20px;
+
+  width: 100%;
+  padding: 16px 6px 0;
+}
+
+.sa-field-span {
+  grid-column: 1 / -1;
+}
+
+.sa-row-editor .sa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.sa-row-editor .sa-field input,
+.sa-row-editor .sa-field select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sa-row-editor .sa-field input::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.sa-row-editor .sa-field input:focus,
+.sa-row-editor .sa-field select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sa-row-editor .sa-field input:disabled,
+.sa-row-editor .sa-field select:disabled {
+  background: #F1F5F9;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* ── Error ───────────────────────────────────────────── */
+.sa-row-editor .sa-alert {
+  margin: 14px 6px 0;
+}
+
+/* ── Action bar — full width, tiny horizontal inset ──── */
+.sa-row-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 18px;
+  padding: 14px 6px 16px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.sa-row-editor-actions .sa-btn {
+  padding: 9px 18px;
+  font-size: 0.92rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   INLINE EDITOR — password sub-section
+   ─────────────────────────────────────────────────────────
+   Same full-bleed treatment: dashed divider spans the row,
+   inner blocks use the same 6px inset as the fields.
+   ───────────────────────────────────────────────────────── */
+
+.sa-row-editor-pw {
+  margin: 0;
+  padding: 0 6px 16px;
+  border-top: 1px dashed #E2E8F0;
+}
+
+.sa-row-editor-pw-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #2563EB;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 14px 0 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sa-row-editor-pw-toggle:hover {
+  color: #1D4ED8;
+}
+
+.sa-row-editor-pw-caret {
+  display: inline-block;
+  width: 12px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.sa-row-editor-pw-body {
+  margin-top: 4px;
+}
+
+/* Password fields grid reuses .sa-row-editor-fields but
+   without the extra top padding we set on the profile grid */
+.sa-row-editor-pw-body .sa-row-editor-fields {
+  padding-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sa-row-editor-pw-body .sa-password-rules {
+  margin-top: 12px;
+}
+
+.sa-row-editor-pw-body .sa-alert {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.sa-row-editor-pw-body .sa-row-editor-actions {
+  padding-left: 0;
+  padding-right: 0;
+  border-top: none;
+  margin-top: 12px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Password rules list ─────────────────────────────── */
+.sa-password-rules {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 6px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #94A3B8;
+}
+
+@media (min-width: 720px) {
+  .sa-password-rules {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 18px;
+  }
+}
+
+.sa-password-rules li {
+  position: relative;
+  padding-left: 20px;
+  line-height: 1.4;
+  transition: color 0.16s ease;
+}
+
+.sa-password-rules li::before {
+  content: '✕';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #CBD5E1;
+}
+
+.sa-password-rules li.is-ok {
+  color: #047857;
+}
+
+.sa-password-rules li.is-ok::before {
+  content: '✓';
+  color: #10B981;
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .sa-list-toolbar-right {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .sa-list-search {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .sa-list-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sa-list-toolbar-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sa-list-search { width: 100%; }
+
+  .sa-btn { width: 100%; text-align: center; }
+
+  .sa-table thead th,
+  .sa-table tbody td {
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+
+  /* Hide Gender + Phone columns so the pencil stays reachable */
+  .sa-table th:nth-child(3),
+  .sa-table td:nth-child(3),
+  .sa-table th:nth-child(4),
+  .sa-table td:nth-child(4) {
+    display: none;
+  }
+
+  /* Editor: full-bleed, 4px inset only */
+  .sa-row-editor-fields {
+    padding: 14px 4px 0;
+    gap: 12px 14px;
+  }
+
+  .sa-row-editor .sa-alert {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .sa-row-editor-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    padding: 12px 4px 14px;
+    margin-top: 14px;
+  }
+
+  .sa-row-editor-actions .sa-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sa-row-editor-pw {
+    padding: 0 4px 14px;
+  }
+
+  .sa-row-editor-pw-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 12px;
+  }
+
+  .sa-row-editor-pw-body .sa-row-editor-actions {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-list-skeleton-row {
+    animation: none;
+    background: #F1F5F9;
+  }
+  .sa-btn,
+  .sa-list-search,
+  .sa-icon-btn,
+  .sa-row-editor .sa-field input,
+  .sa-row-editor .sa-field select {
+    transition: none !important;
+  }
+}

@@ -34,6 +34,7 @@ class ProductsAdmin(admin.ModelAdmin):
         "name",
         "business",
         "price",
+        "is_youpata_managed",
         "has_images",
         "likes_count",
         "follows_count",
@@ -44,6 +45,7 @@ class ProductsAdmin(admin.ModelAdmin):
 
     # ── Filters ───────────────────────────────────────────
     list_filter = (
+        "is_youpata_managed",
         "created_at",
     )
 
@@ -79,6 +81,7 @@ class ProductsAdmin(admin.ModelAdmin):
                 "name",
                 "description",
                 "price",
+                "is_youpata_managed",
             ),
         }),
         ("Engagement", {

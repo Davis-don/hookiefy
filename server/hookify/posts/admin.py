@@ -11,6 +11,7 @@ class PostsAdmin(admin.ModelAdmin):
         "title",
         "business",
         "has_image",
+        "is_youpata_managed",
         "likes_count",
         "follows_count",
         "created_at",
@@ -19,6 +20,7 @@ class PostsAdmin(admin.ModelAdmin):
     list_display_links = ("title",)
 
     list_filter = (
+        "is_youpata_managed",
         "created_at",
     )
 
@@ -55,6 +57,14 @@ class PostsAdmin(admin.ModelAdmin):
                 "image_public_id",
             ),
         }),
+        ("Youpata management", {
+            "fields": ("is_youpata_managed",),
+            "description": (
+                "Mark this post as managed directly by Youpata. "
+                "Posts created by superadmins or Youpata-managed "
+                "accounts are flagged automatically at creation."
+            ),
+        }),
         ("Engagement", {
             "fields": ("likes_count", "follows_count"),
             "classes": ("collapse",),
@@ -65,6 +75,28 @@ class PostsAdmin(admin.ModelAdmin):
         }),
     )
 
+    actions = ("mark_youpata_managed", "unmark_youpata_managed")
+
+    # ── Computed columns ──────────────────────────────────
+
     @admin.display(boolean=True, description="Image")
     def has_image(self, obj):
         return bool(obj.image_url)
+
+    # ── Bulk actions ──────────────────────────────────────
+
+    @admin.action(description="Mark selected posts as Youpata-managed")
+    def mark_youpata_managed(self, request, queryset):
+        updated = queryset.update(is_youpata_managed=True)
+        self.message_user(
+            request,
+            f"{updated} post(s) marked as Youpata-managed.",
+        )
+
+    @admin.action(description="Unmark selected posts as Youpata-managed")
+    def unmark_youpata_managed(self, request, queryset):
+        updated = queryset.update(is_youpata_managed=False)
+        self.message_user(
+            request,
+            f"{updated} post(s) unmarked.",
+        )

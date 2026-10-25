@@ -51,6 +51,11 @@ class Posts(models.Model):
         help_text="Cached total number of follows.",
     )
 
+    is_youpata_managed = models.BooleanField(
+        default=False,
+        help_text="True if this post is managed by Youpata directly.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -61,6 +66,13 @@ class Posts(models.Model):
         indexes = (
             models.Index(fields=("business",)),
             models.Index(fields=("created_at",)),
+
+            # Partial index — only indexes rows where the flag is True.
+            models.Index(
+                fields=("is_youpata_managed",),
+                condition=models.Q(is_youpata_managed=True),
+                name="post_youpata_managed_idx",
+            ),
 
             # ── Trigram indexes for fast __icontains search ────
             GinIndex(

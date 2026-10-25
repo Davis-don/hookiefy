@@ -6,6 +6,7 @@ import SuperHeader from '../components/SuperHeader';
 import HomeTab from '../components/HomeTab';
 import BusinessesTab from '../components/BusinessesTab';
 import UsersTab from '../components/UsersTab';
+import AccountsTab from '../components/AccountsTab';
 import PlansTab from '../components/PlansTab';
 import SettingsTab from '../components/SettingsTab';
 import SuperProfile from '../components/SuperProfile';
@@ -16,6 +17,7 @@ type TabKey =
   | 'home'
   | 'businesses'
   | 'users'
+  | 'accounts'
   | 'plans'
   | 'settings'
   | 'profile';
@@ -59,18 +61,30 @@ const UsersIcon = () => (
   </svg>
 );
 
+const AccountsIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <circle cx="9" cy="12" r="2.2" />
+    <path d="M5.5 16.5c.6-1.6 1.9-2.5 3.5-2.5s2.9.9 3.5 2.5" />
+    <path d="M15 10.5h4" />
+    <path d="M15 13.5h3" />
+  </svg>
+);
+
 /* ── Component ───────────────────────────────────────── */
 
 function Superaccount() {
   const [active, setActive] = useState<TabKey>('home');
 
-  // Only the primary destinations live in the sidebar /
-  // bottom nav. Plans, Settings, and Profile are reached
-  // through the header menu (and the avatar).
+  // Primary destinations live in the sidebar / bottom nav.
+  // Plans, Settings, and Profile are reached through the
+  // header menu (and the avatar).
   const navItems: NavItem[] = [
     { key: 'home',       label: 'Home',       icon: <HomeIcon /> },
     { key: 'businesses', label: 'Businesses', icon: <BusinessesIcon /> },
     { key: 'users',      label: 'Users',      icon: <UsersIcon /> },
+    { key: 'accounts',   label: 'Accounts',   icon: <AccountsIcon /> },
   ];
 
   const renderTab = () => {
@@ -78,6 +92,7 @@ function Superaccount() {
       case 'home':       return <HomeTab />;
       case 'businesses': return <BusinessesTab />;
       case 'users':      return <UsersTab />;
+      case 'accounts':   return <AccountsTab />;
       case 'plans':      return <PlansTab />;
       case 'settings':   return <SettingsTab />;
       case 'profile':    return <SuperProfile />;

@@ -1,0 +1,94 @@
+/* src/components/feed/youpataManagedProductCard.css
+   ─────────────────────────────────────────────────────────
+   Wrapper around ProductCard that:
+     • injects the Youpata-managed badge into the header
+     • adds a "Purchase now" action row below the card
+
+   The wrapper itself adds no visual chrome to the card — the
+   badge and card are unchanged, only the extra action row and
+   mobile header adjustments live here.
+   ───────────────────────────────────────────────────────── */
+
+.youpata-product-card-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+/* ── Purchase action row ─────────────────────────────── */
+.youpata-product-card-actions {
+  padding: 4px 18px 16px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.youpata-product-card-purchase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.16s ease,
+              filter 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 14px -6px rgba(37, 99, 235, 0.6);
+}
+
+.youpata-product-card-purchase:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.75);
+}
+
+.youpata-product-card-purchase:active {
+  transform: scale(0.985);
+}
+
+.youpata-product-card-purchase:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.25),
+    0 4px 14px -6px rgba(37, 99, 235, 0.6);
+}
+
+/* ── Mobile header reflow so the badge never crowds ──── */
+@media (max-width: 480px) {
+  .youpata-product-card-wrap .product-card__header {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .youpata-product-card-wrap .product-card__business {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .youpata-product-card-wrap .youpata-badge {
+    margin-left: auto;
+  }
+
+  .youpata-product-card-actions {
+    padding: 4px 16px 14px;
+  }
+
+  .youpata-product-card-purchase {
+    padding: 11px 16px;
+    font-size: 0.96rem;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .youpata-product-card-purchase {
+    transition: none !important;
+  }
+}

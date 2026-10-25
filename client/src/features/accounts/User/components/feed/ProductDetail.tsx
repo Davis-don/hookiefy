@@ -57,6 +57,9 @@ export type ProductDetailData = {
 
   created_at: string;
   updated_at: string;
+
+  /** True if this product is managed directly by Youpata. */
+  is_youpata_managed?: boolean;
 };
 
 async function fetchProduct(id: number): Promise<ProductDetailData> {
@@ -277,12 +280,18 @@ type ProductDetailProps = {
   productId: number;
   onBack: () => void;
   onOpenBusiness: (businessId: number) => void;
+  /** True when this product is Youpata-managed — shows the purchase bar. */
+  isYoupataManaged?: boolean;
+  /** Fires when the "Purchase now" button is pressed. */
+  onPurchase?: (productId: number) => void;
 };
 
 function ProductDetailPage({
   productId,
   onBack,
   onOpenBusiness,
+  isYoupataManaged,
+  onPurchase,
 }: ProductDetailProps) {
   const { data, isLoading, isError, error } = useQuery<
     ProductDetailData,
@@ -352,6 +361,14 @@ function ProductDetailPage({
     const idx = galleryImages.findIndex((img) => img.id === imageId);
     setLightboxIndex(idx >= 0 ? idx : 0);
   };
+
+  // Whether to show the purchase bar. Trust the prop from the caller
+  // (which knows the item was managed from the feed payload); fall
+  // back to the fetched `is_youpata_managed` flag if present, so a
+  // direct-link open of a managed product still gets the bar.
+  const showPurchaseBar =
+    (isYoupataManaged ?? data.is_youpata_managed ?? false) &&
+    typeof onPurchase === 'function';
 
   return (
     <article className="product-detail">
@@ -450,13 +467,25 @@ function ProductDetailPage({
         )}
       </div>
 
-      <footer className="product-detail__meta">
-        <span>{data.views} views</span>
-        <span>·</span>
+      {/* ── Analytics row — above the purchase bar ──── */}
+      <div className="product-detail__stats">
         <span>{data.likes_count} likes</span>
         <span>·</span>
         <span>{data.follows_count} follows</span>
-      </footer>
+      </div>
+
+      {/* ── Youpata-managed purchase bar ────────────── */}
+      {showPurchaseBar && (
+        <div className="product-detail__purchase">
+          <button
+            type="button"
+            className="product-detail__purchase-btn"
+            onClick={() => onPurchase?.(data.id)}
+          >
+            Purchase now
+          </button>
+        </div>
+      )}
 
       <Lightbox
         images={galleryImages}

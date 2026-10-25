@@ -56,6 +56,9 @@ class FeedItemSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField()
     views = serializers.IntegerField()
 
+    # Youpata-managed flag — applies to BOTH posts and products
+    is_youpata_managed = serializers.BooleanField(default=False)
+
     # Post-only
     title = serializers.CharField(required=False, allow_blank=True)
     body = serializers.CharField(required=False, allow_blank=True)
@@ -151,6 +154,7 @@ def _post_item(post):
         "created_at": post.created_at,
         "updated_at": post.updated_at,
         "views": post.views,
+        "is_youpata_managed": post.is_youpata_managed,
         "title": post.title,
         "body": post.body,
         "image_url": post.image_url,
@@ -182,6 +186,7 @@ def _product_item(product):
         "created_at": product.created_at,
         "updated_at": product.updated_at,
         "views": product.views,
+        "is_youpata_managed": product.is_youpata_managed,
         "name": product.name,
         "description": product.description,
         "price": product.price,

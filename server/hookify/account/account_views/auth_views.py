@@ -159,6 +159,11 @@ FORBIDDEN_CREATE_KEYS = (
     # server-controlled status
     "status",
 
+    # Youpata-managed flag is server-controlled: it is set
+    # automatically based on whether the request is made by
+    # an authenticated superadmin. Clients must never set it.
+    "is_youpata_managed",
+
     # images
     "profile_image_url",
     "profile_image_public_id",
@@ -195,23 +200,31 @@ def generate_tokens(user):
 @permission_classes([AllowAny])
 def create_user(request):
     """
-    Create a normal user account using first name, last name,
-    email and password.
+    Create an account using first name, last name, email and password.
 
-    gender and phone_number are optional and validated if present.
+    Two modes, decided purely by who is making the request:
 
-    Public registration always creates:
-        role = user
-        auth_provider = local
+      1. Anonymous (public signup)
+         → role = "user", is_youpata_managed = False
 
-    Superadmins cannot be created through this endpoint.
+      2. Authenticated superadmin (super admin dashboard)
+         → role = "user", is_youpata_managed = True
+
+    In BOTH cases the client can never influence role,
+    auth_provider, is_staff, is_superuser, or is_youpata_managed —
+    those are all set server-side.
 
     Registration requires a plan marked as the default.
-
-    Refusals:
-        - 503 if no plans exist at all.
-        - 503 if plans exist but none is marked as default.
     """
+
+    # ── 0. Who is calling? ───────────────────────────────────
+    # Permission is AllowAny so public signup still works.
+    # We only treat the caller as a superadmin if the request
+    # is authenticated *and* their role is superadmin.
+    requesting_user = request.user if request.user.is_authenticated else None
+    caller_is_superadmin = bool(
+        requesting_user and requesting_user.is_superadmin
+    )
 
     # ── 1. Plans must exist ──────────────────────────────────
     if not Plan.objects.exists():
@@ -243,13 +256,17 @@ def create_user(request):
     # ── 3. Sanitise the payload ──────────────────────────────
     data = request.data.copy()
 
-    # Server-set values
+    # Server-set values (role/provider are always "user"/"local";
+    # superadmins are only ever created via createsuperuser).
     data["role"] = "user"
     data["auth_provider"] = "local"
 
+    # The Youpata-managed flag is fully derived from the caller.
+    # Client-supplied values are stripped below regardless.
+    data["is_youpata_managed"] = caller_is_superadmin
+
     # Strip every key the client must never set — including
-    # `status`, which is not a model field but we drop it anyway
-    # so a rogue payload can never be smuggled in.
+    # `is_youpata_managed`, `status`, etc.
     for key in FORBIDDEN_CREATE_KEYS:
         # Keep `password` and `password2` — they ARE allowed on create.
         if key in ("password", "password2"):
@@ -291,6 +308,15 @@ def create_user(request):
     try:
         with transaction.atomic():
             user = serializer.save()
+
+            # Belt-and-braces: even if the serializer's field list
+            # ever changes, force the flag here too so the DB
+            # constraint can never be violated and the intended
+            # value can never be silently dropped.
+            user.is_youpata_managed = caller_is_superadmin
+            user.role = "user"
+            user.save(update_fields=["is_youpata_managed", "role"])
+
             subscribe(
                 user,
                 default_plan,
@@ -403,6 +429,75 @@ def auth_check(request):
         {
             "authenticated": True,
             "user": UserSerializer(request.user).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+# ============================================================
+# YOUPATA-MANAGED ACCOUNTS (superadmin only)
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def youpata_managed_accounts(request):
+    """
+    List all accounts that are flagged is_youpata_managed=True.
+
+    Access is restricted to authenticated superadmins. Any other
+    authenticated user (regular user, staff-but-not-superadmin)
+    gets 403. Anonymous callers get 401 from the permission class.
+
+    Query params:
+        ?search=<text>   case-insensitive filter on email / first / last name
+        ?ordering=<field> one of: date_joined, email, first_name, last_name
+                          (prefix with - for descending)
+
+    Default ordering: -date_joined
+    """
+
+    # ── 1. Superadmin check ──────────────────────────────────
+    if not getattr(request.user, "is_superadmin", False):
+        return Response(
+            {"message": "Only superadmins can view this list."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 2. Base queryset ─────────────────────────────────────
+    queryset = Accounts.objects.filter(
+        is_youpata_managed=True
+    ).order_by("-date_joined")
+
+    # ── 3. Optional search ───────────────────────────────────
+    search = (request.query_params.get("search") or "").strip()
+    if search:
+        queryset = queryset.filter(
+            models.Q(email__icontains=search)
+            | models.Q(first_name__icontains=search)
+            | models.Q(last_name__icontains=search)
+        )
+
+    # ── 4. Optional ordering ─────────────────────────────────
+    ordering = (request.query_params.get("ordering") or "").strip()
+    allowed_ordering = {
+        "date_joined",
+        "-date_joined",
+        "email",
+        "-email",
+        "first_name",
+        "-first_name",
+        "last_name",
+        "-last_name",
+    }
+    if ordering in allowed_ordering:
+        queryset = queryset.order_by(ordering)
+
+    # ── 5. Serialize ─────────────────────────────────────────
+    serializer = UserSerializer(queryset, many=True)
+
+    return Response(
+        {
+            "count": queryset.count(),
+            "results": serializer.data,
         },
         status=status.HTTP_200_OK,
     )

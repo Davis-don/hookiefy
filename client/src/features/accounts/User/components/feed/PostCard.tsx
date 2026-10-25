@@ -16,11 +16,18 @@ type PostCardProps = {
   item: FeedItem;
   onOpenBusiness: (businessId: number) => void;
   onOpenPost: (postId: number) => void;
+  /** Optional slot rendered in the header, after the business name. */
+  badge?: React.ReactNode;
 };
 
 const CLAMP_LINES = 2;
 
-function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
+function PostCard({
+  item,
+  onOpenBusiness,
+  onOpenPost,
+  badge,
+}: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   /* ── Image loading state ────────────────────────── */
@@ -98,6 +105,11 @@ function PostCard({ item, onOpenBusiness, onOpenPost }: PostCardProps) {
         >
           {item.business.business_name}
         </button>
+
+        {/* Optional badge slot — inserted between the business
+            name and the follow button. Renders nothing when
+            no badge is passed. */}
+        {badge}
 
         <FollowButton
           businessId={item.business.id}

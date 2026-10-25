@@ -16,6 +16,8 @@ type ProductCardProps = {
   item: FeedItem;
   onOpenBusiness: (businessId: number) => void;
   onOpenProduct: (productId: number) => void;
+  /** Optional slot rendered in the header, after the business name. */
+  badge?: React.ReactNode;
 };
 
 const CLAMP_LINES = 2;
@@ -31,6 +33,7 @@ function ProductCard({
   item,
   onOpenBusiness,
   onOpenProduct,
+  badge,
 }: ProductCardProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -111,6 +114,9 @@ function ProductCard({
           {item.business.business_name}
         </button>
 
+        {/* Optional badge slot — between business name and follow */}
+        {badge}
+
         <FollowButton
           businessId={item.business.id}
           businessName={item.business.business_name}
@@ -137,7 +143,6 @@ function ProductCard({
             }
           }}
         >
-          {/* Skeleton + spinner — visible until image loads */}
           {showSkeleton && (
             <div className="product-card__cover-skeleton" aria-hidden="true">
               <div className="product-card__cover-shimmer" />
@@ -147,7 +152,6 @@ function ProductCard({
             </div>
           )}
 
-          {/* Image fades in after load */}
           {!imageError && (
             <img
               src={item.image_url ?? ''}
@@ -162,7 +166,6 @@ function ProductCard({
             />
           )}
 
-          {/* Fallback if image fails */}
           {imageError && (
             <div className="product-card__cover-error" aria-hidden="true">
               <svg

@@ -42,6 +42,7 @@ class AccountsManager(UserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("role", "superadmin")
+        extra_fields.setdefault("is_youpata_managed", False)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError(
@@ -180,6 +181,21 @@ class Accounts(AbstractUser):
     )
 
     # --------------------------------------------------------
+    # YOUPATA MANAGED
+    # --------------------------------------------------------
+    #
+    # Only non-superadmin users may be flagged as Youpata-managed.
+    # The constraint below enforces this at the DB level; the
+    # clean() method gives a friendlier admin/form error.
+    # --------------------------------------------------------
+
+    is_youpata_managed = models.BooleanField(
+        default=False,
+        help_text="True if this account is managed by Youpata directly. "
+                  "Not allowed for superadmin accounts.",
+    )
+
+    # --------------------------------------------------------
     # DJANGO AUTHENTICATION
     # --------------------------------------------------------
 
@@ -192,6 +208,21 @@ class Accounts(AbstractUser):
     # --------------------------------------------------------
 
     objects = AccountsManager()
+
+    # --------------------------------------------------------
+    # META
+    # --------------------------------------------------------
+
+    class Meta:
+        constraints = (
+            models.CheckConstraint(
+                condition=(
+                    models.Q(is_youpata_managed=False)
+                    | ~models.Q(role="superadmin")
+                ),
+                name="superadmin_not_youpata_managed",
+            ),
+        )
 
     # ========================================================
     # METHODS / PROPERTIES
@@ -210,6 +241,24 @@ class Accounts(AbstractUser):
             if name
             else self.email
         )
+
+    # --------------------------------------------------------
+    # VALIDATION
+    # --------------------------------------------------------
+
+    def clean(self):
+        """
+        Disallow flagging superadmins as Youpata-managed.
+        """
+        super().clean()
+
+        if self.role == "superadmin" and self.is_youpata_managed:
+            from django.core.exceptions import ValidationError
+            raise ValidationError({
+                "is_youpata_managed": (
+                    "Superadmin accounts cannot be marked as Youpata-managed."
+                ),
+            })
 
     # --------------------------------------------------------
     # FULL NAME
@@ -250,6 +299,25 @@ class Accounts(AbstractUser):
         """
 
         return self.auth_provider == "google"
+
+    # --------------------------------------------------------
+    # SUPERAADMIN / YOUPATA-MANAGED HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def is_superadmin(self):
+        """
+        True if this account has the superadmin role.
+        """
+        return self.role == "superadmin"
+
+    @property
+    def can_be_youpata_managed(self):
+        """
+        True if this account is allowed to carry the
+        Youpata-managed flag (i.e. not a superadmin).
+        """
+        return not self.is_superadmin
 
     # ========================================================
     # SUBSCRIPTION HELPERS

@@ -1,0 +1,34 @@
+/* src/components/feed/youpataManagedPostCard.css
+   ─────────────────────────────────────────────────────────
+   Wrapper around PostCard that injects the Youpata-managed
+   badge into the card's header. The wrapper itself adds no
+   visual chrome — the badge component owns its own styling,
+   and PostCard owns everything else.
+   ───────────────────────────────────────────────────────── */
+
+.youpata-post-card-wrap {
+  width: 100%;
+  display: block;
+}
+
+/*
+   When the badge is in the header row alongside the business
+   name and the follow button, give the row a bit of breathing
+   room on narrow screens so the badge never squeezes the
+   business name into an ellipsis.
+   */
+@media (max-width: 480px) {
+  .youpata-post-card-wrap .post-card__header {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .youpata-post-card-wrap .post-card__business {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .youpata-post-card-wrap .youpata-badge {
+    margin-left: auto;
+  }
+}

@@ -32,6 +32,12 @@ export type FeedItem = {
   updated_at: string;
   views: number;
 
+  /**
+   * True if this item is managed directly by Youpata.
+   * Present on BOTH post and product items.
+   */
+  is_youpata_managed: boolean;
+
   // Shared
   image_url: string | null;
   business: FeedBusinessMini;

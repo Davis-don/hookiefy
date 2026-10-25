@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import UserHeader from '../components/UserHeader';
-import HomeTab from '../components/Home';
+import Home from '../components/Home';
 import StoriesTab from '../components/StoriesTab';
 import MyBusiness from '../../../businesses/components/MyBusiness';
 import ProfileTab from '../components/Profile';
@@ -17,6 +17,7 @@ import type { SearchScope } from '../../../search/components/SearchBar';
 import BusinessDetails from '../../../businesses/components/BusinessDetails';
 import PostDetailPage from '../components/feed/PostDetail';
 import ProductDetailPage from '../components/feed/ProductDetail';
+import ProductPayment from '../components/feed/ProductPayment';
 import StoryDetail from '../../../stories/components/StoryDetail';
 
 import './useraccount.css';
@@ -30,7 +31,8 @@ type TabKey = 'home' | 'stories' | 'business' | 'profile' | 'billing';
 type OpenView =
   | { kind: 'business'; id: number }
   | { kind: 'post'; id: number }
-  | { kind: 'product'; id: number }
+  | { kind: 'product'; id: number; youpata?: boolean }
+  | { kind: 'product-payment'; id: number }
   | { kind: 'story'; id: number }
   | null;
 
@@ -107,17 +109,34 @@ function Useraccount() {
 
   const renderTab = () => {
     switch (active) {
-      case 'home':     return <HomeTab />;
+      case 'home':
+        // Home owns its own feed-scope detail routing.
+        // The only thing it needs from the parent is the
+        // payment callback, so payment can be a page-level view.
+        return (
+          <Home
+            onOpenPayment={(productId) =>
+              setOpenView({ kind: 'product-payment', id: productId })
+            }
+          />
+        );
       case 'stories':  return <StoriesTab onGoToProfile={goToProfile} />;
       case 'business': return <MyBusiness onGoToProfile={goToProfile} />;
       case 'profile':  return <ProfileTab />;
       case 'billing':  return <BillingTab />;
-      default:         return <HomeTab />;
+      default:
+        return (
+          <Home
+            onOpenPayment={(productId) =>
+              setOpenView({ kind: 'product-payment', id: productId })
+            }
+          />
+        );
     }
   };
 
   const renderContent = (): React.ReactNode => {
-    /* ── 1. Detail view takes over ────────────────── */
+    /* ── 1. Detail / payment view takes over ──────── */
     if (openView) {
       switch (openView.kind) {
         case 'business':
@@ -142,6 +161,21 @@ function Useraccount() {
         case 'product':
           return (
             <ProductDetailPage
+              productId={openView.id}
+              isYoupataManaged={openView.youpata}
+              onPurchase={(id) =>
+                setOpenView({ kind: 'product-payment', id })
+              }
+              onBack={() => setOpenView(null)}
+              onOpenBusiness={(id) =>
+                setOpenView({ kind: 'business', id })
+              }
+            />
+          );
+
+        case 'product-payment':
+          return (
+            <ProductPayment
               productId={openView.id}
               onBack={() => setOpenView(null)}
               onOpenBusiness={(id) =>
@@ -191,7 +225,6 @@ function Useraccount() {
      ============================================================ */
   return (
     <div className="ua-shell">
-      {/* ── Sidebar ──────────────────────────────────── */}
       <aside className="ua-sidebar">
         <div className="ua-sidebar-logo">
           <span className="ua-logo-you">You</span>
@@ -223,7 +256,6 @@ function Useraccount() {
         </nav>
       </aside>
 
-      {/* ── Main ─────────────────────────────────────── */}
       <div className="ua-main">
         <UserHeader
           onOpenProfile={goToProfile}
@@ -234,7 +266,6 @@ function Useraccount() {
         <div className="ua-content">{renderContent()}</div>
       </div>
 
-      {/* ── Bottom nav (mobile) ──────────────────────── */}
       <nav className="ua-bottom-nav">
         {navItems.map((item) => (
           <button

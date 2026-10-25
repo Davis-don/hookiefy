@@ -496,3 +496,63 @@
     padding: 5px 12px;
   }
 }
+/* ─────────────────────────────────────────────────────────
+   Purchase bar — only renders for Youpata-managed products
+   ───────────────────────────────────────────────────────── */
+
+.product-detail__purchase {
+  margin-top: 4px;
+  padding: 0;
+}
+
+.product-detail__purchase-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 14px -6px rgba(37, 99, 235, 0.6);
+}
+
+.product-detail__purchase-btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.75);
+}
+
+.product-detail__purchase-btn:active {
+  transform: scale(0.985);
+}
+
+.product-detail__purchase-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.25),
+    0 4px 14px -6px rgba(37, 99, 235, 0.6);
+}
+
+@media (max-width: 640px) {
+  .product-detail__purchase-btn {
+    padding: 13px 18px;
+    font-size: 0.98rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-detail__purchase-btn {
+    transition: none !important;
+  }
+}

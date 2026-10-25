@@ -1,0 +1,351 @@
+/* src/pages/accounts/components/NewAccount.css
+   ─────────────────────────────────────────────────────────
+   NEW ACCOUNT — two-step form. Full-bleed, no card, no outer
+   padding or margin. Inherits parent background. Responsive
+   from 320px to 1920px+.
+   ───────────────────────────────────────────────────────── */
+
+/* ── Page wrapper — fill parent, no chrome ───────────── */
+.sa-form-page {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+  background: transparent;
+}
+
+/* ── Form — full width, no card ──────────────────────── */
+.sa-form-card {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.sa-form-head {
+  margin: 0 0 14px;
+}
+
+.sa-form-head-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 4px;
+  letter-spacing: -0.2px;
+}
+
+.sa-form-head-sub {
+  font-size: 0.92rem;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.sa-form-head-sub code {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: #F1F5F9;
+  color: #0F172A;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+/* ── Step dots ───────────────────────────────────────── */
+.sa-register-steps {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0 20px;
+}
+
+.sa-register-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.sa-register-step-dot.is-active {
+  background: #2563EB;
+  transform: scale(1.25);
+}
+
+.sa-register-step-dot.is-done {
+  background: #10B981;
+}
+
+/* ── Form grid ───────────────────────────────────────── */
+.sa-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px 18px;
+  width: 100%;
+}
+
+@media (min-width: 720px) {
+  .sa-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.sa-field-wide {
+  grid-column: 1 / -1;
+}
+
+/* ── Field with leading icon ─────────────────────────── */
+.sa-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.sa-field input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 12px 42px 12px 42px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sa-field input::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.sa-field input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sa-field input:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.sa-register-icon {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.sa-register-eye {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.16s ease, background 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sa-register-eye:hover:not(:disabled) {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+.sa-register-eye:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Password rules list ─────────────────────────────── */
+.sa-password-rules {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 6px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  font-size: 0.84rem;
+  color: #94A3B8;
+}
+
+@media (min-width: 720px) {
+  .sa-password-rules {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 18px;
+  }
+}
+
+.sa-password-rules li {
+  position: relative;
+  padding-left: 20px;
+  line-height: 1.4;
+  transition: color 0.16s ease;
+}
+
+.sa-password-rules li::before {
+  content: '✕';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #CBD5E1;
+}
+
+.sa-password-rules li.is-ok {
+  color: #047857;
+}
+
+.sa-password-rules li.is-ok::before {
+  content: '✓';
+  color: #10B981;
+}
+
+/* ── Form actions ────────────────────────────────────── */
+.sa-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.sa-btn {
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sa-btn-primary {
+  background: #2563EB;
+  color: #FFFFFF;
+}
+
+.sa-btn-primary:hover:not(:disabled) { background: #1D4ED8; }
+
+.sa-btn-ghost {
+  background: transparent;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+.sa-btn-ghost:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.sa-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Alerts ──────────────────────────────────────────── */
+.sa-alert {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.sa-alert-error {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.sa-alert-success {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
+
+@media (min-width: 1280px) {
+  .sa-form-head-title { font-size: 1.3rem; }
+  .sa-form-grid { gap: 16px 22px; }
+}
+
+@media (max-width: 640px) {
+  .sa-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .sa-form-actions .sa-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .sa-field input { padding: 11px 38px 11px 38px; font-size: 0.96rem; }
+  .sa-register-icon { left: 10px; bottom: 11px; }
+  .sa-register-eye { right: 8px; bottom: 7px; }
+}
+/* ── Select (gender) — mirrors .sa-field input ───────── */
+.sa-select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 12px 42px 12px 42px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748B' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sa-select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sa-select:disabled {
+  background-color: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+.sa-field input[type="tel"] {
+  padding-right: 14px;
+}

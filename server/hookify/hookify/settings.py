@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     "system_stats", 
     "perfomance_tests",
     "search",
+    "product_payment",
     "assignments",
     "userpreference",
     "administration",

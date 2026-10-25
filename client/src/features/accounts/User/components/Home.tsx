@@ -9,18 +9,25 @@ import PostCard from './feed/PostCard';
 import ProductCard from './feed/ProductCard';
 import PostDetail from './feed/PostDetail';
 import ProductDetail from './feed/ProductDetail';
+import YoupataManagedPostCard from './YoupataManagedPostCard';
+import YoupataManagedProductCard from './YoupataManagedProductCard';
 import './home.css';
+
+type HomeProps = {
+  /** Fires when a card's "Purchase now" or the detail's purchase bar
+   *  is pressed. The parent swaps to the payment view. */
+  onOpenPayment: (productId: number) => void;
+};
 
 type OpenView =
   | { kind: 'business'; id: number }
   | { kind: 'post'; id: number }
-  | { kind: 'product'; id: number }
+  | { kind: 'product'; id: number; youpata?: boolean }
   | null;
 
-/* Distance from bottom (px) at which we auto-load the next page. */
 const SCROLL_TRIGGER_PX = 400;
 
-function Home() {
+function Home({ onOpenPayment }: HomeProps) {
   const access = useAuthStore((s) => s.access);
   const [openView, setOpenView] = useState<OpenView>(null);
 
@@ -37,12 +44,6 @@ function Home() {
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  /* ── Auto-load on scroll ──────────────────────────
-     Watches a sentinel div rendered below the list.
-     When it enters the viewport (or comes within
-     SCROLL_TRIGGER_PX of it), fires loadMore().
-     loadMore() is idempotent — rapid scroll events
-     cannot double-fire. */
   useEffect(() => {
     if (!data?.has_more) return;
     if (isFetchingMore) return;
@@ -96,6 +97,8 @@ function Home() {
     return (
       <ProductDetail
         productId={openView.id}
+        isYoupataManaged={openView.youpata}
+        onPurchase={(id) => onOpenPayment(id)}
         onBack={() => setOpenView(null)}
         onOpenBusiness={(businessId) =>
           setOpenView({ kind: 'business', id: businessId })
@@ -115,7 +118,6 @@ function Home() {
     );
   }
 
-  /* ── First load ────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="home-state">
@@ -124,7 +126,6 @@ function Home() {
     );
   }
 
-  /* ── Error ─────────────────────────────────────── */
   if (isError && !data) {
     const retrying = isFetching && !isFetchingMore;
 
@@ -145,7 +146,6 @@ function Home() {
 
   const items = data?.results ?? [];
 
-  /* ── Empty feed ────────────────────────────────── */
   if (items.length === 0) {
     return (
       <div className="home-state home-state-empty">
@@ -157,48 +157,71 @@ function Home() {
     );
   }
 
-  /* ── Feed ──────────────────────────────────────── */
   return (
     <div className="home-shell">
       <ul className="home-list">
-        {items.map((item) => (
-          <li key={`${item.kind}-${item.id}`} className="home-list-item">
-            {item.kind === 'post' ? (
-              <PostCard
-                item={item}
-                onOpenBusiness={(businessId) =>
-                  setOpenView({ kind: 'business', id: businessId })
-                }
-                onOpenPost={(postId) =>
-                  setOpenView({ kind: 'post', id: postId })
-                }
-              />
-            ) : (
-              <ProductCard
-                item={item}
-                onOpenBusiness={(businessId) =>
-                  setOpenView({ kind: 'business', id: businessId })
-                }
-                onOpenProduct={(productId) =>
-                  setOpenView({ kind: 'product', id: productId })
-                }
-              />
-            )}
-          </li>
-        ))}
+        {items.map((item) => {
+          const youpata = item.is_youpata_managed;
+
+          return (
+            <li key={`${item.kind}-${item.id}`} className="home-list-item">
+              {item.kind === 'post' ? (
+                youpata ? (
+                  <YoupataManagedPostCard
+                    item={item}
+                    onOpenBusiness={(id) =>
+                      setOpenView({ kind: 'business', id })
+                    }
+                    onOpenPost={(id) =>
+                      setOpenView({ kind: 'post', id })
+                    }
+                  />
+                ) : (
+                  <PostCard
+                    item={item}
+                    onOpenBusiness={(id) =>
+                      setOpenView({ kind: 'business', id })
+                    }
+                    onOpenPost={(id) =>
+                      setOpenView({ kind: 'post', id })
+                    }
+                  />
+                )
+              ) : youpata ? (
+                <YoupataManagedProductCard
+                  item={item}
+                  onOpenBusiness={(id) =>
+                    setOpenView({ kind: 'business', id })
+                  }
+                  onOpenProduct={(id) =>
+                    setOpenView({ kind: 'product', id, youpata: true })
+                  }
+                  onPurchase={(id) => onOpenPayment(id)}
+                />
+              ) : (
+                <ProductCard
+                  item={item}
+                  onOpenBusiness={(id) =>
+                    setOpenView({ kind: 'business', id })
+                  }
+                  onOpenProduct={(id) =>
+                    setOpenView({ kind: 'product', id })
+                  }
+                />
+              )}
+            </li>
+          );
+        })}
       </ul>
 
-      {/* Sentinel — when this scrolls near the viewport, loadMore fires */}
       <div ref={sentinelRef} className="home-sentinel" aria-hidden="true" />
 
-      {/* Loading row while fetching the next page */}
       {isFetchingMore && (
         <div className="home-loading-row">
           <Spinner size={18} color="#64748B" label="Loading more…" />
         </div>
       )}
 
-      {/* End-of-feed state */}
       {!data?.has_more && items.length > 0 && (
         <div className="home-end">
           <div className="home-end-icon" aria-hidden="true">
@@ -222,10 +245,6 @@ function Home() {
         </div>
       )}
 
-      {/* Manual fallback — appears when has_more and no page is
-          currently being fetched. Auto-scroll fires first in normal
-          use; this button catches the rare case where the sentinel
-          was missed (Safari quirks, programmatic jumps, etc.). */}
       {data?.has_more && !isFetchingMore && (
         <button
           type="button"

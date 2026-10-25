@@ -1,0 +1,266 @@
+/* src/components/feed/productPayment.css
+   ─────────────────────────────────────────────────────────
+   Product payment page — full-page inline view, visually
+   parallel to BillingPaymentModal but not modal-scoped.
+   ───────────────────────────────────────────────────────── */
+
+.product-payment {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 24px 32px;
+  background: #FFFFFF;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #0F172A;
+  min-height: 380px;
+}
+
+.product-payment--center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── Back button ─────────────────────────────────────── */
+.product-payment__back {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #2563EB;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.16s ease;
+}
+
+.product-payment__back:hover:not(:disabled) {
+  color: #1D4ED8;
+}
+
+.product-payment__back:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Head ────────────────────────────────────────────── */
+.product-payment__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-payment__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.product-payment__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  word-break: break-word;
+}
+
+/* ── Price summary ───────────────────────────────────── */
+.product-payment__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+}
+
+.product-payment__amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #047857;
+  letter-spacing: -0.2px;
+}
+
+.product-payment__qty {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* ── Form ────────────────────────────────────────────── */
+.product-payment__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-payment__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.product-payment__field input {
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.product-payment__field input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.product-payment__field input:disabled {
+  background: #F1F5F9;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.product-payment__optional {
+  text-transform: none;
+  letter-spacing: normal;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.product-payment__hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* ── Error ───────────────────────────────────────────── */
+.product-payment__error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+  margin: 0;
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+.product-payment__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.product-payment__btn {
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease,
+              color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.product-payment__btn--primary {
+  flex: 1;
+  background: linear-gradient(135deg, #2563EB 0%, #10B981 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px -6px rgba(37, 99, 235, 0.6);
+}
+
+.product-payment__btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.75);
+}
+
+.product-payment__btn--ghost {
+  background: transparent;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+.product-payment__btn--ghost:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.product-payment__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.product-payment__btn-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Terms hint ──────────────────────────────────────── */
+.product-payment__terms {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #94A3B8;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .product-payment {
+    padding: 16px 16px 28px;
+    gap: 16px;
+  }
+
+  .product-payment__title {
+    font-size: 1.3rem;
+  }
+
+  .product-payment__amount {
+    font-size: 1.25rem;
+  }
+
+  .product-payment__actions {
+    flex-direction: column-reverse;
+  }
+
+  .product-payment__btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-payment__back,
+  .product-payment__btn,
+  .product-payment__field input {
+    transition: none !important;
+  }
+}

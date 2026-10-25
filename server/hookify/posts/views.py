@@ -1,6 +1,7 @@
 # posts/views.py
 
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -196,7 +197,7 @@ def _check_post_limit(user, business):
 
 
 # ────────────────────────────────────────────────────────────
-# NEW: subscription expiry check
+# Subscription expiry check
 # ────────────────────────────────────────────────────────────
 
 def _check_subscription_current(user):
@@ -207,12 +208,6 @@ def _check_subscription_current(user):
     subscription (active/trialing and not expired by date).
     Returns (False, {...}) with a ready-to-send error payload
     when the user has no subscription or it has expired.
-
-    The Subscription model's `is_current` property already
-    encapsulates:
-        - status ∈ {active, trialing}
-        - end_date is null OR end_date > now
-        - start_date < end_date (not an inverted window)
     """
     from subscription.models import Subscription
 
@@ -284,6 +279,28 @@ def _check_subscription_current(user):
     )
 
 
+# ────────────────────────────────────────────────────────────
+# Youpata-managed post flag
+# ────────────────────────────────────────────────────────────
+
+def _caller_creates_youpata_managed_posts(user):
+    """
+    True if posts created by this user should be flagged
+    is_youpata_managed=True.
+
+    Rules (mirror account / product creation):
+        • superadmin caller              → True
+        • is_youpata_managed=True caller → True
+        • everyone else                  → False
+
+    The client can never set the flag directly — it is always
+    derived from who is making the request.
+    """
+    if getattr(user, "is_superadmin", False):
+        return True
+    return bool(getattr(user, "is_youpata_managed", False))
+
+
 # ============================================================
 # LIST POSTS OF A BUSINESS
 # GET /posts/business/<business_id>/
@@ -333,8 +350,6 @@ def create_post(request, business_id):
         )
 
     # ── 0. Subscription must be current (not expired) ───────
-    #     Runs BEFORE plan-limit so an expired user gets the
-    #     clearer "renew" message instead of "plan limit".
     sub_ok, sub_error = _check_subscription_current(request.user)
     if not sub_ok:
         return Response(
@@ -407,12 +422,26 @@ def create_post(request, business_id):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
+    # ── 6. Decide the Youpata-managed flag ──────────────────
+    #
+    # Derived from the caller, never from the request body:
+    #
+    #   • superadmin caller              → True
+    #   • is_youpata_managed=True caller → True
+    #   • everyone else                  → False
+    #
+    youpata_managed = _caller_creates_youpata_managed_posts(
+        request.user
+    )
+
+    # ── 7. Persist ──────────────────────────────────────────
     post = Posts.objects.create(
         business=business,
         title=serializer.validated_data["title"].strip(),
         body=(serializer.validated_data.get("body") or "").strip(),
         image_url=upload_result["url"],
         image_public_id=upload_result["public_id"],
+        is_youpata_managed=youpata_managed,
     )
 
     used_after = used + 1
