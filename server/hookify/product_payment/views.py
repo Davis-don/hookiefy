@@ -1,10 +1,8 @@
-# product_payment/views.py
+# deliveries/views.py
 
 import logging
-import uuid
 
-from django.conf import settings
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
@@ -12,17 +10,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import ProductPayment
-
+from .models import Deliveries
 from .serializers import (
-    InitiateProductPaymentSerializer,
-    ProductPaymentSerializer,
-)
-from .controllers.submit_order_request import submit_the_order
-from .controllers.product_amount import Product_Amount
-from .controllers.services import (
-    get_active_pesapal_config,
-    record_pending_payment,
+    DeliverySerializer,
+    DeliveryStatusUpdateSerializer,
 )
 
 
@@ -30,36 +21,415 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# INITIATE PAYMENT
-# POST /product_payments/initiate/
+# HELPERS
+# ============================================================
+
+def _own_delivery_or_404(user, delivery_id):
+    """
+    Return the delivery if it belongs to `user` in any
+    capacity (as the client, the recipient, or the courier).
+    Otherwise None.
+
+    A user is allowed to see a delivery when:
+      • they placed the order (`client`)
+      • it's addressed to them (`delivered_to`)
+      • they're the courier handling it (`delivered_by`)
+    """
+    return (
+        Deliveries.objects
+        .select_related(
+            "payment",
+            "client",
+            "product",
+            "delivered_by",
+            "delivered_to",
+        )
+        .filter(id=delivery_id)
+        .filter(
+            models.Q(client=user)
+            | models.Q(delivered_to=user)
+            | models.Q(delivered_by=user)
+        )
+        .first()
+    )
+
+
+# ============================================================
+# LIST — MY DELIVERIES
+# GET /deliveries/
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_deliveries(request):
+    """
+    Return deliveries where the requesting user is any of:
+    client, recipient, or courier.
+
+    Query params:
+        role   — 'client' | 'courier' | 'recipient'
+                 (default: all three)
+        status — 'pending' | 'delivered' | 'cancelled' | 'failed'
+        town   — filter by town (case-insensitive)
+    """
+
+    from django.db import models
+
+    user = request.user
+
+    role = (request.query_params.get("role") or "").lower()
+    status_filter = (request.query_params.get("status") or "").lower()
+    town = (request.query_params.get("town") or "").strip()
+
+    if role == "client":
+        qs = Deliveries.objects.filter(client=user)
+    elif role == "courier":
+        qs = Deliveries.objects.filter(delivered_by=user)
+    elif role == "recipient":
+        qs = Deliveries.objects.filter(delivered_to=user)
+    else:
+        qs = Deliveries.objects.filter(
+            models.Q(client=user)
+            | models.Q(delivered_by=user)
+            | models.Q(delivered_to=user)
+        )
+
+    if status_filter in (
+        Deliveries.STATUS_PENDING,
+        Deliveries.STATUS_DELIVERED,
+        Deliveries.STATUS_CANCELLED,
+        Deliveries.STATUS_FAILED,
+    ):
+        qs = qs.filter(status=status_filter)
+
+    if town:
+        qs = qs.filter(town__iexact=town)
+
+    qs = (
+        qs.select_related(
+            "payment",
+            "client",
+            "product",
+            "delivered_by",
+            "delivered_to",
+        )
+        .order_by("-created_at")
+    )
+
+    serializer = DeliverySerializer(qs, many=True, context={"request": request})
+
+    return Response(
+        {
+            "count": qs.count(),
+            "results": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# RETRIEVE — A SINGLE DELIVERY
+# GET /deliveries/<delivery_id>/
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def retrieve_delivery(request, delivery_id):
+    """
+    Return a single delivery row, if the requesting user is
+    allowed to see it (client, recipient, or courier).
+    """
+
+    delivery = _own_delivery_or_404(request.user, delivery_id)
+
+    if delivery is None:
+        return Response(
+            {"message": "Delivery not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    serializer = DeliverySerializer(delivery, context={"request": request})
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ============================================================
+# LIST — COURIER QUEUE
+# GET /deliveries/assigned/
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def assigned_deliveries(request):
+    """
+    Return deliveries where the requesting user is the courier
+    (`delivered_by`). Defaults to pending only — the natural
+    "what do I need to deliver?" view for a courier app.
+
+    Query params:
+        status — 'pending' (default) | 'delivered' | 'all'
+        town   — filter by town
+    """
+
+    user = request.user
+
+    status_filter = (request.query_params.get("status") or "pending").lower()
+    town = (request.query_params.get("town") or "").strip()
+
+    qs = Deliveries.objects.filter(delivered_by=user)
+
+    if status_filter == "all":
+        pass
+    elif status_filter in (
+        Deliveries.STATUS_PENDING,
+        Deliveries.STATUS_DELIVERED,
+        Deliveries.STATUS_CANCELLED,
+        Deliveries.STATUS_FAILED,
+    ):
+        qs = qs.filter(status=status_filter)
+    else:
+        qs = qs.filter(status=Deliveries.STATUS_PENDING)
+
+    if town:
+        qs = qs.filter(town__iexact=town)
+
+    qs = (
+        qs.select_related(
+            "payment",
+            "client",
+            "product",
+            "delivered_by",
+            "delivered_to",
+        )
+        .order_by("-created_at")
+    )
+
+    serializer = DeliverySerializer(qs, many=True, context={"request": request})
+
+    return Response(
+        {
+            "count": qs.count(),
+            "results": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# LIST — UNASSIGNED QUEUE
+# GET /deliveries/unassigned/
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def unassigned_deliveries(request):
+    """
+    Return pending deliveries with no courier assigned.
+
+    Intended for a dispatcher / admin app where someone picks
+    deliveries off the queue and assigns them. A regular user
+    without an ops role would just see an empty list — the
+    filter is not role-gated here because the model itself
+    doesn't distinguish roles; if you want to restrict this
+    to staff, add a `if not request.user.is_staff` guard at
+    the top.
+
+    Query params:
+        town — filter by town
+    """
+
+    town = (request.query_params.get("town") or "").strip()
+
+    qs = Deliveries.objects.filter(
+        status=Deliveries.STATUS_PENDING,
+        delivered_by__isnull=True,
+    )
+
+    if town:
+        qs = qs.filter(town__iexact=town)
+
+    qs = (
+        qs.select_related(
+            "payment",
+            "client",
+            "product",
+            "delivered_by",
+            "delivered_to",
+        )
+        .order_by("-created_at")
+    )
+
+    serializer = DeliverySerializer(qs, many=True, context={"request": request})
+
+    return Response(
+        {
+            "count": qs.count(),
+            "results": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# CLAIM — COURIER TAKES AN UNASSIGNED DELIVERY
+# POST /deliveries/<delivery_id>/claim/
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def initiate_payment(request):
+def claim_delivery(request, delivery_id):
     """
-    Start a PesaPal payment for a product purchase.
+    Assign the requesting user as the courier for a pending,
+    unassigned delivery.
 
-    Stock enforcement:
-
-      • The product must have at least `quantity` units
-        available. Otherwise the request is rejected with
-        `insufficient_stock` before ever reaching PesaPal.
-
-      • The atomic decrement of `Products.quantity` happens
-        later, in `sync_product_payment_from_pesapal`, when
-        the payment transitions to `completed` — so an
-        abandoned checkout doesn't lock inventory forever.
-
-      • Between initiate and sync, the stock shown on the
-        product is the *pre-purchase* value. That's the
-        correct UX: a user shouldn't see "out of stock"
-        because they (or someone else) once started a
-        checkout and walked away.
+    Idempotent: if the delivery is already assigned to the
+    requester, returns success. If assigned to someone else,
+    returns 409 Conflict.
     """
 
-    # ── 1. Validate input ──────────────────────────────
-    serializer = InitiateProductPaymentSerializer(data=request.data)
+    delivery = Deliveries.objects.filter(id=delivery_id).first()
+
+    if delivery is None:
+        return Response(
+            {"message": "Delivery not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if delivery.status != Deliveries.STATUS_PENDING:
+        return Response(
+            {
+                "message": (
+                    f"Delivery cannot be claimed — status is "
+                    f"{delivery.status!r}."
+                ),
+                "code": "not_claimable",
+                "status": delivery.status,
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    if delivery.delivered_by_id == request.user.id:
+        # Already claimed by this courier — treat as success.
+        serializer = DeliverySerializer(
+            delivery, context={"request": request}
+        )
+        return Response(
+            {
+                "message": "Delivery is already assigned to you.",
+                "delivery": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    if delivery.delivered_by_id is not None:
+        return Response(
+            {
+                "message": "This delivery has already been claimed.",
+                "code": "already_claimed",
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    delivery.delivered_by = request.user
+    delivery.save(update_fields=["delivered_by", "updated_at"])
+
+    logger.info(
+        "Delivery claimed | delivery_id=%s | courier=%s",
+        delivery.id,
+        request.user.email,
+    )
+
+    serializer = DeliverySerializer(delivery, context={"request": request})
+
+    return Response(
+        {
+            "message": "Delivery claimed.",
+            "delivery": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# UNCLAIM — COURIER RELEASES A DELIVERY
+# POST /deliveries/<delivery_id>/unclaim/
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unclaim_delivery(request, delivery_id):
+    """
+    Release a delivery the requesting user is currently
+    assigned to. Returns 409 if the delivery is already
+    delivered / cancelled / failed (i.e. terminal).
+    """
+
+    delivery = Deliveries.objects.filter(id=delivery_id).first()
+
+    if delivery is None:
+        return Response(
+            {"message": "Delivery not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if delivery.delivered_by_id != request.user.id:
+        return Response(
+            {
+                "message": "You are not assigned to this delivery.",
+                "code": "not_assigned",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if delivery.is_terminal:
+        return Response(
+            {
+                "message": (
+                    f"Delivery cannot be released — status is "
+                    f"{delivery.status!r}."
+                ),
+                "code": "terminal_status",
+                "status": delivery.status,
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    delivery.delivered_by = None
+    delivery.save(update_fields=["delivered_by", "updated_at"])
+
+    serializer = DeliverySerializer(delivery, context={"request": request})
+
+    return Response(
+        {
+            "message": "Delivery released.",
+            "delivery": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# UPDATE STATUS — MARK DELIVERED / CANCELLED / FAILED
+# POST /deliveries/<delivery_id>/status/
+# ============================================================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def update_delivery_status(request, delivery_id):
+    """
+    Transition a delivery's status. Only the assigned courier
+    (or the client, for cancellation) may call this.
+
+    Allowed transitions:
+        pending   → delivered  (courier only)
+        pending   → failed     (courier only)
+        pending   → cancelled  (client only, before pickup)
+        any       → terminal   rejected once terminal
+
+    Request body: { "status": "delivered" | "cancelled" | "failed" }
+    """
+
+    serializer = DeliveryStatusUpdateSerializer(data=request.data)
 
     if not serializer.is_valid():
         return Response(
@@ -67,316 +437,209 @@ def initiate_payment(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    product = serializer.product
-    quantity = serializer.validated_data.get("quantity", 1)
-    phone = serializer.validated_data.get("phone", "")
-    user = request.user
+    new_status = serializer.validated_data["status"]
 
-    # ── 2. Ensure an active PesaPal config exists ─────
-    try:
-        config = get_active_pesapal_config()
-    except Exception as e:
-        logger.error("PesaPal config error: %s", e)
+    delivery = Deliveries.objects.filter(id=delivery_id).first()
+
+    if delivery is None:
         return Response(
-            {"message": str(e)},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE,
-        )
-
-    # ── 3. Compute total (must be > 0) ────────────────
-    amount = Product_Amount(product.id, quantity)
-
-    if amount == 0:
-        return Response(
-            {
-                "message": (
-                    "This product cannot be purchased right now. "
-                    "It may have no price set, or the seller has "
-                    "removed it."
-                ),
-                "code": "product_not_purchasable",
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # ── 4. Reject self-purchase ───────────────────────
-    if (
-        product.business_id
-        and product.business.owner_id == user.id
-    ):
-        return Response(
-            {
-                "message": "You cannot purchase your own product.",
-                "code": "self_purchase_not_allowed",
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # ── 5. Stock pre-check ────────────────────────────
-    #
-    # This is UX, not the real guarantee. The real guarantee
-    # is the atomic F()-expression decrement that runs when
-    # the payment completes (inside sync_product_payment_from_pesapal).
-    #
-    # Here, we just prevent the user from landing on the
-    # PesaPal checkout page with a request that will fail
-    # anyway. If two buyers race between this check and
-    # payment, both can be allowed through — the atomic
-    # decrement clamps quantity to zero instead of allowing
-    # negatives, and the second buyer's purchase is still
-    # recorded. That's the standard overselling trade-off
-    # (never lose a real payment), not a bug.
-    #
-    if product.quantity < quantity:
-        return Response(
-            {
-                "message": (
-                    f"Only {product.quantity} unit(s) available. "
-                    f"You requested {quantity}."
-                ),
-                "code": "insufficient_stock",
-                "available": product.quantity,
-                "requested": quantity,
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # ── 6. Build the merchant reference ───────────────
-    merchant_reference = (
-        f"PROD-{product.id}-{uuid.uuid4().hex[:12].upper()}"
-    )
-
-    # ── 7. Submit the order to PesaPal ────────────────
-    order_payload = {
-        "merchant_reference": merchant_reference,
-        "amount": str(amount),
-        "description": f"Purchase of {product.name}",
-        "notification_id": config.ipn_id,
-        "email": user.email,
-        "phone": phone or getattr(user, "phone_number", "") or "",
-        "first_name": getattr(user, "first_name", "") or "",
-        "last_name": getattr(user, "last_name", "") or "",
-    }
-
-    try:
-        result = submit_the_order(order_payload)
-    except Exception as e:
-        logger.exception(
-            "PesaPal SubmitOrderRequest failed for user=%s product=%s",
-            user.email,
-            product.id,
-        )
-        return Response(
-            {
-                "message": (
-                    "Could not start the payment. "
-                    "Please try again in a moment."
-                ),
-                "code": "gateway_error",
-                "detail": str(e),
-            },
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
-
-    redirect_url = result.get("redirect_url")
-    order_tracking_id = result.get("order_tracking_id")
-
-    if not redirect_url or not order_tracking_id:
-        logger.error(
-            "PesaPal returned an incomplete response: %s",
-            result,
-        )
-        return Response(
-            {
-                "message": (
-                    "The payment gateway returned an incomplete "
-                    "response. Please try again."
-                ),
-                "code": "gateway_incomplete",
-                "detail": result,
-            },
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
-
-    # ── 8. Persist the pending payment row ────────────
-    try:
-        payment = record_pending_payment(
-            user=user,
-            product=product,
-            merchant_reference=merchant_reference,
-            order_tracking_id=order_tracking_id,
-            amount=amount,
-            quantity=quantity,
-            phone_number=phone or None,
-            email=user.email,
-            gateway="pesapal",
-            submit_response=result,
-        )
-    except Exception as e:
-        logger.exception(
-            "Failed to record pending product payment for ref=%s",
-            merchant_reference,
-        )
-        return Response(
-            {
-                "message": (
-                    "The payment was started but could not be "
-                    "recorded locally. Please contact support."
-                ),
-                "code": "record_failed",
-                "detail": str(e),
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    # ── 9. Respond with the redirect URL + stock context ──
-    #
-    # `remaining_stock` is what the product's quantity *will*
-    # be once this purchase completes. Because the decrement
-    # happens on completion (in sync), not on initiate, the
-    # value here is `product.quantity - quantity`, clamped to 0.
-    #
-    # The frontend can use it to grey out the card right away
-    # without waiting for the IPN to land — but it should still
-    # refetch on callback to get the authoritative value.
-    #
-    remaining_stock = max(0, product.quantity - quantity)
-
-    return Response(
-        {
-            "message": "Payment initialised. Redirecting…",
-            "payment": ProductPaymentSerializer(payment).data,
-            "redirect_url": redirect_url,
-
-            # Convenience fields — the frontend gets everything
-            # it needs to render the pending state without a
-            # second product fetch.
-            "quantity": quantity,
-            "amount": str(amount),
-            "currency": payment.currency,
-            "remaining_stock": remaining_stock,
-            "product": {
-                "id": product.id,
-                "name": product.name,
-                "quantity": product.quantity,            # current, pre-purchase
-                "in_stock": product.quantity > 0,
-            },
-        },
-        status=status.HTTP_201_CREATED,
-    )
-
-
-# ============================================================
-# PAYMENT STATUS
-# GET /product_payments/<merchant_reference>/status/
-# ============================================================
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def payment_status(request, merchant_reference):
-    """
-    Poll the local product-payment row for its latest status.
-    """
-
-    payment = (
-        ProductPayment.objects
-        .select_related("product", "business")
-        .filter(
-            merchant_reference=merchant_reference,
-            user=request.user,
-        )
-        .first()
-    )
-
-    if not payment:
-        return Response(
-            {"message": "Payment not found."},
+            {"message": "Delivery not found."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # ── Already terminal — nothing to do ────────────────
+    if delivery.is_terminal:
+        return Response(
+            {
+                "message": (
+                    f"Delivery is already {delivery.status!r}."
+                ),
+                "code": "already_terminal",
+                "status": delivery.status,
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    # ── Permissions ──────────────────────────────────────
+    is_courier = delivery.delivered_by_id == request.user.id
+    is_client = delivery.client_id == request.user.id
+
+    if new_status in (
+        Deliveries.STATUS_DELIVERED,
+        Deliveries.STATUS_FAILED,
+    ):
+        if not is_courier:
+            return Response(
+                {
+                    "message": (
+                        "Only the assigned courier can mark this "
+                        "delivery as delivered or failed."
+                    ),
+                    "code": "not_courier",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    elif new_status == Deliveries.STATUS_CANCELLED:
+        if not is_client:
+            return Response(
+                {
+                    "message": (
+                        "Only the client who ordered this "
+                        "delivery can cancel it."
+                    ),
+                    "code": "not_client",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    # ── Apply the transition ────────────────────────────
+    delivery.status = new_status
+
+    if new_status == Deliveries.STATUS_DELIVERED:
+        delivery.delivered_at = timezone.now()
+
+    delivery.save(update_fields=["status", "delivered_at", "updated_at"])
+
+    logger.info(
+        "Delivery status updated | delivery_id=%s | new=%s | by=%s",
+        delivery.id,
+        new_status,
+        request.user.email,
+    )
+
+    serializer = DeliverySerializer(delivery, context={"request": request})
+
     return Response(
-        ProductPaymentSerializer(payment).data,
+        {
+            "message": f"Delivery marked as {new_status}.",
+            "delivery": serializer.data,
+        },
         status=status.HTTP_200_OK,
     )
 
 
 # ============================================================
-# SYNC
-# POST /product_payments/<merchant_reference>/sync/
+# ASSIGN COURIER — DISPATCHER ACTION
+# POST /deliveries/<delivery_id>/assign/
 # ============================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def sync_payment(request, merchant_reference):
+def assign_courier(request, delivery_id):
     """
-    Force a sync of this product-payment row against PesaPal,
-    then return the updated row.
+    Assign a courier to a delivery. Intended for a dispatcher
+    or admin role.
+
+    Request body: { "courier_id": <int> }
+
+    A delivery can be assigned any number of times before
+    it's delivered — reassignment is allowed if the original
+    courier can't make it.
     """
 
-    from .controllers.services import sync_product_payment_from_pesapal
+    from account.models import Accounts
 
-    payment = (
-        ProductPayment.objects
-        .select_related("product", "business")
-        .filter(
-            merchant_reference=merchant_reference,
-            user=request.user,
-        )
-        .first()
-    )
+    courier_id = request.data.get("courier_id")
 
-    if not payment:
+    if not courier_id:
         return Response(
-            {"message": "Payment not found."},
+            {"courier_id": ["This field is required."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    courier = Accounts.objects.filter(id=courier_id).first()
+
+    if courier is None:
+        return Response(
+            {"courier_id": ["Courier not found."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    delivery = Deliveries.objects.filter(id=delivery_id).first()
+
+    if delivery is None:
+        return Response(
+            {"message": "Delivery not found."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    try:
-        sync_product_payment_from_pesapal(merchant_reference)
-    except Exception as e:
-        logger.exception(
-            "Sync failed on user request ref=%s",
-            merchant_reference,
-        )
-        payment.refresh_from_db()
+    if delivery.is_terminal:
         return Response(
             {
-                "message": "Could not refresh from the gateway.",
-                "detail": str(e),
-                "payment": ProductPaymentSerializer(payment).data,
+                "message": (
+                    f"Delivery is already {delivery.status!r} — "
+                    f"cannot reassign."
+                ),
+                "code": "already_terminal",
+                "status": delivery.status,
             },
-            status=status.HTTP_200_OK,
+            status=status.HTTP_409_CONFLICT,
         )
 
-    payment.refresh_from_db()
+    delivery.delivered_by = courier
+    delivery.save(update_fields=["delivered_by", "updated_at"])
+
+    logger.info(
+        "Delivery assigned | delivery_id=%s | courier=%s | by=%s",
+        delivery.id,
+        courier.email,
+        request.user.email,
+    )
+
+    serializer = DeliverySerializer(delivery, context={"request": request})
 
     return Response(
         {
-            "message": "Payment status refreshed.",
-            "payment": ProductPaymentSerializer(payment).data,
+            "message": f"Delivery assigned to {courier.email}.",
+            "delivery": serializer.data,
         },
         status=status.HTTP_200_OK,
     )
 
 
 # ============================================================
-# CALLBACK — browser redirect from PesaPal
-# GET /subscription_payments/payment-success/
-#
-# Shared with subscription payments — the callback URL is set
-# once in settings (PESAPAL_CALLBACK_URL) and used by both
-# verticals. This view exists in product_payment mainly to
-# document that it must dispatch by prefix; the actual handler
-# lives in subscription_payment.views and is the one you
-# should extend.
+# MY DELIVERIES — DASHBOARD SUMMARY
+# GET /deliveries/summary/
 # ============================================================
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def delivery_summary(request):
+    """
+    Return count totals for the requesting user across
+    client / courier / recipient roles. Useful for a
+    dashboard card without fetching the full list.
+    """
 
-# ============================================================
-# IPN — server-to-server
-# POST /subscription_payments/ipn/
-#
-# Same story: shared endpoint, dispatch by merchant_reference
-# prefix. The authoritative handler lives in subscription
-# payment (see `subscription_payment/views.py::payment_ipn`),
-# extended with product dispatch.
-# ============================================================
+    from django.db import models
+
+    user = request.user
+
+    as_client_qs = Deliveries.objects.filter(client=user)
+    as_courier_qs = Deliveries.objects.filter(delivered_by=user)
+    as_recipient_qs = Deliveries.objects.filter(delivered_to=user)
+
+    def _counts(qs):
+        return {
+            "total": qs.count(),
+            "pending": qs.filter(status=Deliveries.STATUS_PENDING).count(),
+            "delivered": qs.filter(
+                status=Deliveries.STATUS_DELIVERED
+            ).count(),
+            "cancelled": qs.filter(
+                status=Deliveries.STATUS_CANCELLED
+            ).count(),
+            "failed": qs.filter(
+                status=Deliveries.STATUS_FAILED
+            ).count(),
+        }
+
+    return Response(
+        {
+            "as_client": _counts(as_client_qs),
+            "as_courier": _counts(as_courier_qs),
+            "as_recipient": _counts(as_recipient_qs),
+        },
+        status=status.HTTP_200_OK,
+    )

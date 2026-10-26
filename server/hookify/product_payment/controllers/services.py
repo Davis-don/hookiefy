@@ -64,6 +64,7 @@ def record_pending_payment(
     order_tracking_id,
     amount,
     quantity=1,
+    town=None,
     phone_number=None,
     email=None,
     gateway="pesapal",
@@ -76,12 +77,17 @@ def record_pending_payment(
     owning business is derived from it so the row is
     denormalised for later accounting / payouts and doesn't
     depend on the product row surviving a future delete.
+
+    `town` is the only client-supplied field — the delivery
+    destination frozen at checkout. It's read back by
+    `_create_delivery_for_payment` when the payment completes.
     """
     payment = ProductPayment.objects.create(
         user=user,
         product=product,
         business=product.business if product else None,
         quantity=quantity,
+        town=town,
         merchant_reference=merchant_reference,
         order_tracking_id=order_tracking_id,
         amount=amount,
@@ -95,11 +101,12 @@ def record_pending_payment(
 
     logger.info(
         "Pending product payment recorded | ref=%s | tracking=%s | "
-        "user=%s | product=%s | amount=%s",
+        "user=%s | product=%s | town=%s | amount=%s",
         payment.merchant_reference,
         payment.order_tracking_id,
         user.email if user else None,
         product.name if product else "—",
+        payment.town,
         payment.amount,
     )
 
@@ -167,13 +174,18 @@ def _notify_payment_completed(payment):
 
         product_name = payment.product.name if payment.product else "your item"
 
+        town_hint = (
+            f" It will be delivered to {payment.town}."
+            if payment.town else ""
+        )
+
         notify(
             recipient=recipient,
             title="Payment received",
             body=(
                 f"We've received your payment of "
                 f"{payment.currency} {payment.amount} for "
-                f"{product_name}. Your order is confirmed."
+                f"{product_name}.{town_hint} Your order is confirmed."
             ),
             category=Notification.CATEGORY_PAYMENT,
             severity=Notification.SEVERITY_SUCCESS,
@@ -186,6 +198,7 @@ def _notify_payment_completed(payment):
                 "payment_method": payment.payment_method,
                 "product_id": payment.product_id,
                 "business_id": payment.business_id,
+                "town": payment.town,
                 "amount": str(payment.amount),
                 "currency": payment.currency,
                 "status": payment.status,
@@ -268,19 +281,20 @@ def sync_product_payment_from_pesapal(merchant_reference):
     Ask PesaPal for the latest status of `merchant_reference`
     and update the local ProductPayment row.
 
-    On a completed payment:
-      - marks the payment completed
-      - decrements product stock (atomic)
-      - notifies the seller
-      - credits the SystemBalance
+    On a completed payment (all inside one atomic block):
+        - marks the payment completed
+        - decrements product stock
+        - creates the Deliveries row
+        - notifies the seller
+        - credits the SystemBalance
 
-    All four steps run inside one transaction.atomic() block
-    so a completed payment can never be persisted without the
-    stock and balance reflecting it.
+    Any failure in the block rolls everything back — a
+    completed payment can never be persisted without the
+    stock decrement, delivery, and balance reflecting it.
 
     On a terminal failure:
-      - updates the payment status
-      - sends a failure notification
+        - updates the payment status
+        - sends a failure notification
 
     Returns the PesaPal response dict.
     """
@@ -352,6 +366,9 @@ def sync_product_payment_from_pesapal(merchant_reference):
             # ── Decrement stock + notify seller ───────────
             _mark_product_purchased(payment)
 
+            # ── Create the delivery record ────────────────
+            _create_delivery_for_payment(payment)
+
             # ── Credit the platform balance in the same tx ──
             _credit_system_balance_for_payment(payment)
 
@@ -406,9 +423,9 @@ def _credit_system_balance_for_payment(payment):
     - Uses select_for_update so concurrent payments can't race.
     - If the credit fails, we RAISE — which rolls back the
       whole atomic block (payment status change, stock
-      decrement, purchase confirmation). A payment row can
-      never be marked completed without the platform balance
-      reflecting it.
+      decrement, delivery creation, purchase confirmation).
+      A payment row can never be marked completed without the
+      platform balance reflecting it.
     """
 
     from system_balance.services import credit_system_balance
@@ -438,9 +455,6 @@ def _credit_system_balance_for_payment(payment):
 #     only committed if SystemBalance credit also succeeds;
 #   • a failure in any of these rolls the payment back to
 #     `pending`, letting the IPN retry or the user re-sync.
-#
-# Extend here when the domain grows (order rows, download
-# tokens, shipping, digital delivery, etc.).
 # ============================================================
 
 def _mark_product_purchased(payment):
@@ -549,3 +563,120 @@ def _mark_product_purchased(payment):
         payment.email,
         payment.amount,
     )
+
+
+# ============================================================
+# CREATE DELIVERY FOR PAYMENT
+# ============================================================
+#
+# Only runs when the payment transitions to `completed`.
+# Creates a Deliveries row representing the physical handoff
+# of the purchased product to the buyer.
+#
+# Everything on the Deliveries row is derived from the
+# ProductPayment row — no fresh user input is consulted:
+#
+#   payment      ← payment               (1-to-1 link)
+#   client       ← payment.user          (the buyer)
+#   product      ← payment.product
+#   quantity     ← 1                     (one physical handoff)
+#   town         ← payment.town          (frozen at checkout)
+#   delivered_to ← payment.user          (default recipient)
+#   delivered_by ← None                  (unassigned; courier fills)
+#   status       ← "pending"             (model default)
+# ============================================================
+
+def _create_delivery_for_payment(payment):
+    """
+    Create a Deliveries row for a completed product payment.
+
+    Two-layer protection:
+
+      1. Runtime guard — refuses to run unless the payment is
+         genuinely completed. Closes the door on a future
+         backfill script, test fixture, or admin action that
+         might try to call this helper on a non-completed
+         payment.
+
+      2. DB constraint — the OneToOneField on
+         Deliveries.payment means a duplicate insert raises
+         IntegrityError, which this function catches and
+         treats as "already exists". Safe to call from a
+         retried IPN where PesaPal fires the notification
+         twice.
+    """
+    from django.db import IntegrityError
+    from deliveries.models import Deliveries
+
+    # ── 1. Runtime guard: payment must be completed ───────
+    if payment.status != payment.STATUS_COMPLETED:
+        logger.warning(
+            "Refusing to create delivery for non-completed "
+            "payment | ref=%s | status=%s",
+            payment.merchant_reference,
+            payment.status,
+        )
+        return None
+
+    # ── 2. Product must still exist ───────────────────────
+    if payment.product_id is None:
+        logger.warning(
+            "Skipping delivery creation for ref=%s — product "
+            "row is missing (was it deleted?).",
+            payment.merchant_reference,
+        )
+        return None
+
+    # ── 3. Derive the delivery destination ────────────────
+    town = (payment.town or "").strip()
+    if not town and payment.user_id:
+        # Fallback for very old payments created before the
+        # `town` field existed. Prefer the user's profile
+        # town if available, otherwise there's nowhere to
+        # deliver.
+        town = (
+            getattr(payment.user, "town", None)
+            or getattr(payment.user, "city_town", None)
+            or ""
+        ).strip()
+
+    if not town:
+        logger.warning(
+            "Skipping delivery creation for ref=%s — no town "
+            "on payment row and none on user profile.",
+            payment.merchant_reference,
+        )
+        return None
+
+    # ── 4. Create — idempotent against retried IPNs ───────
+    try:
+        delivery = Deliveries.objects.create(
+            payment=payment,
+            client=payment.user,
+            product=payment.product,
+            quantity=1,
+            town=town,
+            delivered_by=None,
+            delivered_to=payment.user,
+        )
+    except IntegrityError:
+        # A delivery already exists for this payment.
+        delivery = Deliveries.objects.get(payment=payment)
+        logger.info(
+            "Delivery already exists for ref=%s | delivery_id=%s",
+            payment.merchant_reference,
+            delivery.id,
+        )
+        return delivery
+
+    logger.info(
+        "Delivery created from product payment | ref=%s | "
+        "delivery_id=%s | product_id=%s | town=%s | client=%s",
+        payment.merchant_reference,
+        delivery.id,
+        payment.product_id,
+        delivery.town,
+        payment.user.email if payment.user_id else "—",
+    )
+
+    return delivery

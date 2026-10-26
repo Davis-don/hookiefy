@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     "perfomance_tests",
     "search",
     "product_payment",
+    "deliveries",
     "assignments",
     "userpreference",
     "administration",

@@ -14,18 +14,32 @@ class InitiateProductPaymentSerializer(serializers.Serializer):
     """
     Input for POST /product_payments/initiate/
 
-    - product_id: which product is being purchased
-    - quantity:   how many units (default 1)
-    - phone:      optional, for the PesaPal billing block
+    The client supplies only two pieces of information:
+
+      - product_id: reference to the product they tapped.
+                    Sent in the request body, but the value
+                    itself was selected in-app — not typed.
+      - town:       delivery destination. The only field the
+                    client literally types into a form.
+
+    Everything else (user, quantity, amount, seller, email,
+    phone) is derived by the view from `request.user` and
+    `product_id`.
+
+    `quantity` is deliberately NOT a serializer field —
+    every product in the catalogue is treated as one heavy
+    item, delivered one at a time, so the quantity is
+    hardcoded to 1 in the view. If a future product type
+    needs bulk purchases, that's a new flow, not a field
+    on this serializer.
     """
 
     product_id = serializers.IntegerField(min_value=1)
 
-    quantity = serializers.IntegerField(
-        min_value=1,
-        max_value=100,
-        required=False,
-        default=1,
+    town = serializers.CharField(
+        max_length=200,
+        required=True,
+        allow_blank=False,
     )
 
     phone = serializers.CharField(
@@ -46,6 +60,18 @@ class InitiateProductPaymentSerializer(serializers.Serializer):
         self._product = product
         return value
 
+    def validate_town(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError(
+                "Delivery town is required."
+            )
+        if len(value) > 200:
+            raise serializers.ValidationError(
+                "Delivery town cannot exceed 200 characters."
+            )
+        return value
+
     def validate(self, attrs):
         product = getattr(self, "_product", None)
 
@@ -61,6 +87,20 @@ class InitiateProductPaymentSerializer(serializers.Serializer):
                     "product_id": [
                         "This product has no price set and cannot "
                         "be purchased."
+                    ]
+                }
+            )
+
+        # Out-of-stock products can't be purchased. The view
+        # also checks this with the same message; the
+        # serializer check exists so a direct serializer
+        # validation (tests, admin) doesn't have to reach
+        # through a view for the answer.
+        if product.quantity < 1:
+            raise serializers.ValidationError(
+                {
+                    "product_id": [
+                        "This product is currently out of stock."
                     ]
                 }
             )
@@ -109,6 +149,7 @@ class ProductPaymentSerializer(serializers.ModelSerializer):
             "currency",
 
             "quantity",
+            "town",                     # ← added
 
             "product",
             "product_name",
@@ -138,6 +179,14 @@ class ProductPaymentSerializer(serializers.ModelSerializer):
 class InitiateProductPaymentResponseSerializer(serializers.Serializer):
     """
     Response returned by the initiate endpoint.
+
+    Documents the full response shape the view builds —
+    kept as a serializer for consistency with the rest of
+    the codebase, even though the view constructs the dict
+    inline. If you ever switch the view to use
+    `InitiateProductPaymentResponseSerializer(data).data`
+    instead of a hand-rolled dict, this is the shape it
+    will produce.
     """
 
     message = serializers.CharField()
