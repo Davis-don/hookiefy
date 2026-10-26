@@ -15,25 +15,40 @@ import './productPayment.css';
 
 type ProductPaymentProps = {
   productId: number;
-  quantity?: number;
   /** If the caller already has the product name and price,
       pass them in to skip the extra product fetch. */
   productName?: string;
   priceDisplay?: string;
+  /** Optional default town — usually the user's profile town. */
+  defaultTown?: string;
   onBack: () => void;
   onOpenBusiness?: (businessId: number) => void;
 };
 
 function ProductPayment({
   productId,
-  quantity = 1,
   productName: productNameProp,
   priceDisplay: priceDisplayProp,
+  defaultTown,
   onBack,
 }: ProductPaymentProps) {
   const access = useAuthStore((s) => s.access);
   const user = useAuthStore((s) => s.user);
 
+  // ── The two fields the client supplies ────────────────
+  //
+  // town is required — the only typed input.
+  // phone is optional — a contact override for PesaPal.
+  //
+  // Pre-fill both from the user's profile where possible,
+  // so the client only *changes* them if this order is
+  // going somewhere else or the profile phone is wrong.
+  const [town, setTown] = useState(
+    defaultTown ||
+    (user as any)?.city_town ||
+    (user as any)?.town ||
+    '',
+  );
   const [phone, setPhone] = useState(
     (user as any)?.phone_number ?? '',
   );
@@ -62,8 +77,8 @@ function ProductPayment({
 
     const unit = Number(productInfo.price);
     if (Number.isNaN(unit)) return null;
-    const total = unit * quantity;
-    return `KES ${total.toLocaleString(undefined, {
+    // Quantity is always 1 — a single heavy item per purchase.
+    return `KES ${unit.toLocaleString(undefined, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     })}`;
@@ -71,8 +86,8 @@ function ProductPayment({
 
   /* ── Initiate payment ───────────────────────────── */
   const initiateMutation = useMutation({
-    mutationFn: (phoneNumber: string) =>
-      initiateProductPayment(access, productId, quantity, phoneNumber),
+    mutationFn: (payload: { town: string; phone: string }) =>
+      initiateProductPayment(access, productId, payload),
     onSuccess: (res) => {
       if (!res.redirect_url) {
         setError('The payment gateway did not return a redirect URL.');
@@ -88,21 +103,39 @@ function ProductPayment({
   /* ── Reset when product changes ────────────────── */
   useEffect(() => {
     setError('');
+    setTown(
+      defaultTown ||
+      (user as any)?.city_town ||
+      (user as any)?.town ||
+      '',
+    );
     setPhone((user as any)?.phone_number ?? '');
-  }, [productId, user]);
+  }, [productId, user, defaultTown]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const trimmed = phone.trim();
+    const townTrimmed = town.trim();
+    if (!townTrimmed) {
+      setError('Please enter the delivery town.');
+      return;
+    }
+    if (townTrimmed.length > 200) {
+      setError('Delivery town cannot exceed 200 characters.');
+      return;
+    }
 
-    if (trimmed && !/^[+]?[0-9\s-]{7,20}$/.test(trimmed)) {
+    const phoneTrimmed = phone.trim();
+    if (phoneTrimmed && !/^[+]?[0-9\s-]{7,20}$/.test(phoneTrimmed)) {
       setError('Please enter a valid phone number.');
       return;
     }
 
-    initiateMutation.mutate(trimmed);
+    initiateMutation.mutate({
+      town: townTrimmed,
+      phone: phoneTrimmed,
+    });
   };
 
   const saving = initiateMutation.isPending;
@@ -172,11 +205,6 @@ function ProductPayment({
 
       <div className="product-payment__summary">
         <span className="product-payment__amount">{priceDisplay}</span>
-        {quantity > 1 && (
-          <span className="product-payment__qty">
-            {quantity} × units
-          </span>
-        )}
       </div>
 
       <form
@@ -199,6 +227,27 @@ function ProductPayment({
             </span>
           </div>
         )}
+
+        {/* ── Town — required, the only field the client types ── */}
+        <div className="product-payment__field">
+          <label htmlFor="pp-town">
+            Deliver to
+            <span className="product-payment__required"> *</span>
+          </label>
+          <input
+            id="pp-town"
+            type="text"
+            autoComplete="address-level2"
+            placeholder="e.g. Nairobi"
+            value={town}
+            onChange={(e) => setTown(e.target.value)}
+            disabled={saving}
+            required
+          />
+          <span className="product-payment__hint">
+            The town or city where this item should be delivered.
+          </span>
+        </div>
 
         <div className="product-payment__field">
           <label htmlFor="pp-phone">

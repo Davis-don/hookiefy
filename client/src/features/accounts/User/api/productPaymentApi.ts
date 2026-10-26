@@ -23,6 +23,7 @@ export type ProductPayment = {
   amount_display: string;
   currency: string;
   quantity: number;
+  town: string | null;            // ← added
   product: number | null;
   product_name: string | null;
   business: number | null;
@@ -42,6 +43,23 @@ export type InitiateProductPaymentResponse = {
   message: string;
   payment: ProductPayment;
   redirect_url: string;
+};
+
+/* ============================================================
+   INPUT — INITIATE PAYLOAD
+   ============================================================ */
+
+/**
+ * The two fields the client supplies to initiate a product
+ * payment. Everything else (product, user, price, quantity)
+ * is derived by the backend.
+ *
+ *  - town:  required, delivery destination
+ *  - phone: optional, contact override for PesaPal
+ */
+export type InitiateProductPaymentPayload = {
+  town: string;
+  phone?: string;
 };
 
 /* ============================================================
@@ -83,16 +101,15 @@ function authHeaders(token: string | null): Record<string, string> {
 export async function initiateProductPayment(
   token: string | null,
   productId: number,
-  quantity: number,
-  phone?: string,
+  payload: InitiateProductPaymentPayload,
 ): Promise<InitiateProductPaymentResponse> {
   const res = await fetch(`${API_BASE}/product_payments/initiate/`, {
     method: 'POST',
     headers: authHeaders(token),
     body: JSON.stringify({
       product_id: productId,
-      quantity,
-      phone: phone || '',
+      town: payload.town,
+      phone: payload.phone || '',
     }),
   });
 
