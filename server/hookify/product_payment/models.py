@@ -26,6 +26,9 @@ class ProductPayment(models.Model):
                               product at checkout so payouts /
                               accounting survive a product or
                               business deletion)
+        • where it goes    → town (frozen at checkout, copied
+                              into the Deliveries row created
+                              when the payment completes)
 
     Lifecycle:
         pending   → gateway accepted the order, awaiting payment
@@ -114,12 +117,28 @@ class ProductPayment(models.Model):
     )
 
     # --------------------------------------------------------
-    # QUANTITY
+    # QUANTITY & DESTINATION
     # --------------------------------------------------------
 
     quantity = models.PositiveIntegerField(
         default=1,
         help_text="Number of units purchased. Amount = unit_price * quantity.",
+    )
+
+    town = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text=(
+            "Delivery destination provided by the buyer at "
+            "checkout. Copied into the Deliveries row created "
+            "on payment completion. Kept on the payment row "
+            "because the delivery is created server-side, "
+            "inside the IPN handler, long after the client has "
+            "left the checkout screen — the payment row is the "
+            "only place the town can live between 'client typed "
+            "it' and 'server creates the delivery'."
+        ),
     )
 
     # --------------------------------------------------------
