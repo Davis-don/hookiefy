@@ -30,6 +30,47 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# SHARED SYNC DISPATCH
+# ============================================================
+#
+# Same helper as subscription_payment/views.py. When called
+# from a product-payment context, PROD-… references route to
+# product_payment's own sync, and SUB-… references route to
+# subscription_payment's sync. That symmetry means the shared
+# callback and IPN handlers (owned by subscription_payment)
+# can call the same dispatcher without caring which view
+# invoked them.
+#
+# Both branches import lazily to avoid the circular import
+# between subscription_payment and product_payment at module
+# load time.
+# ============================================================
+
+def _sync_by_reference(merchant_reference):
+    """
+    Sync the payment row matching `merchant_reference`, whether
+    it's a subscription payment or a product payment.
+    """
+    if merchant_reference.startswith("SUB-"):
+        from subscription_payment.controllers.services import (
+            sync_payment_from_pesapal,
+        )
+        sync_payment_from_pesapal(merchant_reference)
+        return
+
+    if merchant_reference.startswith("PROD-"):
+        from .controllers.services import (
+            sync_product_payment_from_pesapal,
+        )
+        sync_product_payment_from_pesapal(merchant_reference)
+        return
+
+    raise Exception(
+        f"Unrecognised merchant_reference prefix: {merchant_reference}"
+    )
+
+
+# ============================================================
 # INITIATE PAYMENT
 # POST /product_payments/initiate/
 # ============================================================
@@ -323,9 +364,16 @@ def sync_payment(request, merchant_reference):
     """
     Force a sync of this product-payment row against PesaPal,
     then return the updated row.
-    """
 
-    from .controllers.services import sync_product_payment_from_pesapal
+    The frontend calls this after the user returns from
+    PesaPal — it guarantees the row is fresh regardless of
+    whether the IPN has arrived yet.
+
+    Uses `_sync_by_reference` rather than calling the
+    product-specific sync directly: the shared dispatcher
+    routes by prefix, so even if a SUB-… reference somehow
+    lands on this endpoint, it still syncs correctly.
+    """
 
     payment = (
         ProductPayment.objects
@@ -344,7 +392,7 @@ def sync_payment(request, merchant_reference):
         )
 
     try:
-        sync_product_payment_from_pesapal(merchant_reference)
+        _sync_by_reference(merchant_reference)
     except Exception as e:
         logger.exception(
             "Sync failed on user request ref=%s",
@@ -375,12 +423,12 @@ def sync_payment(request, merchant_reference):
 # CALLBACK — browser redirect from PesaPal
 # GET /subscription_payments/payment-success/
 #
-# Shared with subscription payments — the callback URL is set
-# once in settings (PESAPAL_CALLBACK_URL) and used by both
-# verticals. This view exists in product_payment mainly to
-# document that it must dispatch by prefix; the actual handler
-# lives in subscription_payment.views and is the one you
-# should extend.
+# Shared with subscription payments — the browser callback URL
+# is set once in settings (PESAPAL_CALLBACK_URL) and served by
+# subscription_payment.views.payment_success_callback, which
+# dispatches by merchant_reference prefix. Nothing to
+# implement here — this module simply documents that the
+# product vertical is covered by the shared handler.
 # ============================================================
 
 
@@ -388,8 +436,9 @@ def sync_payment(request, merchant_reference):
 # IPN — server-to-server
 # POST /subscription_payments/ipn/
 #
-# Same story: shared endpoint, dispatch by merchant_reference
+# Same story. Shared endpoint, dispatch by merchant_reference
 # prefix. The authoritative handler lives in subscription
-# payment (see `subscription_payment/views.py::payment_ipn`),
-# extended with product dispatch.
+# payment (subscription_payment.views.payment_ipn) and is
+# already extended with product dispatch — nothing to
+# implement here.
 # ============================================================
