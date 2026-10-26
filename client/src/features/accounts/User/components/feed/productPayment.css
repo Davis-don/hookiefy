@@ -264,3 +264,67 @@
     transition: none !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+   Required-field marker
+   ───────────────────────────────────────────────────────── */
+
+.product-payment__required {
+  color: #B91C1C;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Delivery guidance notice
+   ─────────────────────────────────────────────────────────
+   Sits between the price summary and the form. A soft blue
+   info card that reads as friendly guidance — not a warning
+   or an error. Uses a leading icon, a short line of copy,
+   and the same rounded corner / border language as the
+   price summary block above it.
+   ───────────────────────────────────────────────────────── */
+
+.product-payment__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.product-payment__notice-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: #2563EB;
+}
+
+.product-payment__notice-text {
+  margin: 0;
+  font-weight: 500;
+  color: #1E3A8A;
+}
+
+@media (max-width: 480px) {
+  .product-payment__notice {
+    padding: 10px 12px;
+    font-size: 0.86rem;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-payment__notice {
+    transition: none !important;
+  }
+}

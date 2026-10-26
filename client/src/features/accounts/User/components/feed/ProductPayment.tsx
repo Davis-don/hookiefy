@@ -207,6 +207,30 @@ function ProductPayment({
         <span className="product-payment__amount">{priceDisplay}</span>
       </div>
 
+      {/* ── Delivery guidance notice ────────────────── */}
+      <div className="product-payment__notice" role="note">
+        <span className="product-payment__notice-icon" aria-hidden="true">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="12.5" />
+            <circle cx="12" cy="16" r="0.8" fill="currentColor" />
+          </svg>
+        </span>
+        <p className="product-payment__notice-text">
+          Add the nearest town close to you and expect a
+          call from us for more details.
+        </p>
+      </div>
+
       <form
         className="product-payment__form"
         onSubmit={handleSubmit}
