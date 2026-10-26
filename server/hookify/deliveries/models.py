@@ -106,7 +106,12 @@ class Deliveries(models.Model):
         related_name="deliveries_handled",
         help_text=(
             "The account responsible for carrying out the "
-            "delivery. May be null while unassigned."
+            "delivery. Defaults to the business owner — the "
+            "person who posted the product — because they're "
+            "the seller shipping their own item. Can be "
+            "reassigned later (to a courier, staff member, or "
+            "third party) via the assign endpoint; null means "
+            "explicitly unassigned."
         ),
     )
 

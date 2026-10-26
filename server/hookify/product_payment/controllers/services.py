@@ -284,7 +284,8 @@ def sync_product_payment_from_pesapal(merchant_reference):
     On a completed payment (all inside one atomic block):
         - marks the payment completed
         - decrements product stock
-        - creates the Deliveries row
+        - creates the Deliveries row (with delivered_by =
+          business owner)
         - notifies the seller
         - credits the SystemBalance
 
@@ -315,7 +316,6 @@ def sync_product_payment_from_pesapal(merchant_reference):
             f"No product payment with reference {merchant_reference}"
         )
 
-    # Already terminal — return cached.
     if payment.status in (
         "completed", "failed", "reversed", "invalid", "cancelled"
     ):
@@ -447,15 +447,6 @@ def _credit_system_balance_for_payment(payment):
 # ============================================================
 # MARK PRODUCT PURCHASED
 # ============================================================
-#
-# Product-side equivalent of activate_subscription(). Runs
-# inside sync_product_payment_from_pesapal's atomic block, so:
-#
-#   • a successful stock decrement + seller notification is
-#     only committed if SystemBalance credit also succeeds;
-#   • a failure in any of these rolls the payment back to
-#     `pending`, letting the IPN retry or the user re-sync.
-# ============================================================
 
 def _mark_product_purchased(payment):
     """
@@ -487,22 +478,6 @@ def _mark_product_purchased(payment):
         return
 
     # ── 1. Decrement stock atomically ─────────────────────
-    #
-    # Using Products.objects.filter(...).update(...) rather
-    # than loading, subtracting, and saving:
-    #
-    #   • avoids the read-modify-write race — two purchases
-    #     completing at the same time each subtract from the
-    #     live DB value, not from a stale in-memory copy;
-    #   • doesn't trigger ProductImage.save() side-effects
-    #     or run any model save() hooks.
-    #
-    # Then clamp to zero for the race where quantity started
-    # at 1 and two buyers both got through the pre-check.
-    # The second buyer's payment still succeeds — we never
-    # reject a real payment to protect inventory — but stock
-    # never goes negative.
-    #
     if product is not None:
         Products.objects.filter(id=product.id).update(
             quantity=F("quantity") - payment.quantity
@@ -581,8 +556,10 @@ def _mark_product_purchased(payment):
 #   product      ← payment.product
 #   quantity     ← 1                     (one physical handoff)
 #   town         ← payment.town          (frozen at checkout)
+#   delivered_by ← payment.business.owner (the seller —
+#                                        they posted the
+#                                        product, they ship it)
 #   delivered_to ← payment.user          (default recipient)
-#   delivered_by ← None                  (unassigned; courier fills)
 #   status       ← "pending"             (model default)
 # ============================================================
 
@@ -602,8 +579,13 @@ def _create_delivery_for_payment(payment):
          Deliveries.payment means a duplicate insert raises
          IntegrityError, which this function catches and
          treats as "already exists". Safe to call from a
-         retried IPN where PesaPal fires the notification
-         twice.
+         retried IPN.
+
+    Defaults `delivered_by` to the business owner — the
+    account that posted the product is the natural shipper.
+    A dispatcher can reassign the courier later via
+    `POST /deliveries/<id>/assign/` if someone else fulfills
+    the order (staff, third-party courier, etc.).
     """
     from django.db import IntegrityError
     from deliveries.models import Deliveries
@@ -630,10 +612,6 @@ def _create_delivery_for_payment(payment):
     # ── 3. Derive the delivery destination ────────────────
     town = (payment.town or "").strip()
     if not town and payment.user_id:
-        # Fallback for very old payments created before the
-        # `town` field existed. Prefer the user's profile
-        # town if available, otherwise there's nowhere to
-        # deliver.
         town = (
             getattr(payment.user, "town", None)
             or getattr(payment.user, "city_town", None)
@@ -648,7 +626,23 @@ def _create_delivery_for_payment(payment):
         )
         return None
 
-    # ── 4. Create — idempotent against retried IPNs ───────
+    # ── 4. Default courier = the business owner ───────────
+    #
+    # The business owner is the natural shipper: they
+    # posted the product, they own the inventory, they're
+    # the one physically packaging and dispatching. If the
+    # business has no owner (rare — orphaned rows), fall
+    # back to None and let a dispatcher assign manually.
+    #
+    default_courier = None
+    if (
+        payment.business_id
+        and payment.business is not None
+        and payment.business.owner_id is not None
+    ):
+        default_courier = payment.business.owner
+
+    # ── 5. Create — idempotent against retried IPNs ───────
     try:
         delivery = Deliveries.objects.create(
             payment=payment,
@@ -656,7 +650,7 @@ def _create_delivery_for_payment(payment):
             product=payment.product,
             quantity=1,
             town=town,
-            delivered_by=None,
+            delivered_by=default_courier,
             delivered_to=payment.user,
         )
     except IntegrityError:
@@ -671,12 +665,14 @@ def _create_delivery_for_payment(payment):
 
     logger.info(
         "Delivery created from product payment | ref=%s | "
-        "delivery_id=%s | product_id=%s | town=%s | client=%s",
+        "delivery_id=%s | product_id=%s | town=%s | client=%s | "
+        "courier=%s",
         payment.merchant_reference,
         delivery.id,
         payment.product_id,
         delivery.town,
         payment.user.email if payment.user_id else "—",
+        default_courier.email if default_courier else "—",
     )
 
     return delivery
