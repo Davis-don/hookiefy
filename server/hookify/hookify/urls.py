@@ -117,6 +117,25 @@ urlpatterns = [
 
 
     # ============================================================
+    # DELIVERIES
+    #
+    #   GET /deliveries/             → deliveries involving the
+    #                                   current user (client,
+    #                                   courier, or recipient)
+    #
+    # Query params:
+    #   ?role=client|courier|recipient
+    #   ?status=pending|delivered|cancelled|failed
+    #   ?town=<name>
+    # ============================================================
+
+    path(
+        "deliveries/",
+        include("deliveries.urls"),
+    ),
+
+
+    # ============================================================
     # USER PREFERENCE
     # ============================================================
 

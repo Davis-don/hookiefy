@@ -1,0 +1,10 @@
+/* deliveriesTab.css — wrapper state only */
+
+.dlv-tab-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #64748B;
+  font-size: 0.95rem;
+}

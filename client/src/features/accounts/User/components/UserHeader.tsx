@@ -6,12 +6,14 @@ import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import NotificationBell from './NotificationBell';
 import NotificationsPanel from './NotificationsPanel';
+import DeliveriesIcon from './DeliveriesIcon';
 import SearchBar, { type SearchScope } from '../../../search/components/SearchBar';
 
 import './UserHeader.css';
 
 type UserHeaderProps = {
   onOpenProfile?: () => void;
+  onOpenDeliveries?: () => void;        // ← new
   onSearch?: (query: string, scope: SearchScope) => void;
   scope: SearchScope;
   onScopeChange: (scope: SearchScope) => void;
@@ -19,6 +21,7 @@ type UserHeaderProps = {
 
 function UserHeader({
   onOpenProfile,
+  onOpenDeliveries,
   onSearch,
   scope,
   onScopeChange,
@@ -44,6 +47,17 @@ function UserHeader({
         </div>
 
         <div className="ua-header-right">
+          {onOpenDeliveries && (
+            <button
+              type="button"
+              className="ua-header-icon-btn"
+              onClick={onOpenDeliveries}
+              aria-label="Deliveries"
+              title="Deliveries"
+            >
+              <DeliveriesIcon size={22} />
+            </button>
+          )}
           <NotificationBell onClick={() => setPanelOpen(true)} />
           <Avatar size="md" onClick={onOpenProfile} />
         </div>

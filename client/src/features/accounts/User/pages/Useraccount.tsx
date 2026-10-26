@@ -8,6 +8,8 @@ import StoriesTab from '../components/StoriesTab';
 import MyBusiness from '../../../businesses/components/MyBusiness';
 import ProfileTab from '../components/Profile';
 import BillingTab from '../components/Billing';
+import DeliveriesTab from '../components/DeliveriesTab';
+import DeliveriesIcon from '../components/DeliveriesIcon';
 import Logout from '../components/Logout';
 import SubscriptionGuard from '../components/SubscriptionGuard';
 
@@ -26,7 +28,13 @@ import './useraccount.css';
    TYPES
    ============================================================ */
 
-type TabKey = 'home' | 'stories' | 'business' | 'profile' | 'billing';
+type TabKey =
+  | 'home'
+  | 'stories'
+  | 'business'
+  | 'deliveries'
+  | 'profile'
+  | 'billing';
 
 type OpenView =
   | { kind: 'business'; id: number }
@@ -41,6 +49,13 @@ type NavItem = {
   label: string;
   icon: React.ReactNode;
   primary?: boolean;
+  /**
+   * Whether this tab appears in the mobile bottom nav.
+   * Defaults to true. Set to false for tabs that should
+   * only be reachable from the sidebar (desktop) and the
+   * header icon (mobile), like Deliveries.
+   */
+  bottomNav?: boolean;
 };
 
 /* ============================================================
@@ -96,23 +111,31 @@ function Useraccount() {
   const [openView, setOpenView] = useState<OpenView>(null);
 
   const navItems: NavItem[] = [
-    { key: 'home',     label: 'Home',     icon: <HomeIcon /> },
-    { key: 'stories',  label: 'Stories',  icon: <StoriesIcon /> },
-    { key: 'business', label: 'Business', icon: <BusinessIcon />, primary: true },
-    { key: 'billing',  label: 'Billing',  icon: <BillingIcon /> },
+    { key: 'home',       label: 'Home',       icon: <HomeIcon /> },
+    { key: 'stories',    label: 'Stories',    icon: <StoriesIcon /> },
+    { key: 'business',   label: 'Business',   icon: <BusinessIcon />, primary: true },
+    {
+      key: 'deliveries',
+      label: 'Deliveries',
+      icon: <DeliveriesIcon />,
+      bottomNav: false,   // ← header-only on mobile
+    },
+    { key: 'billing',    label: 'Billing',    icon: <BillingIcon /> },
   ];
 
   const goToProfile = () => setActive('profile');
   const goToBilling = () => setActive('billing');
+  const goToDeliveries = () => {
+    setActive('deliveries');
+    setSearchQuery('');
+    setOpenView(null);
+  };
 
   const handleSearch = (q: string) => setSearchQuery(q);
 
   const renderTab = () => {
     switch (active) {
       case 'home':
-        // Home owns its own feed-scope detail routing.
-        // The only thing it needs from the parent is the
-        // payment callback, so payment can be a page-level view.
         return (
           <Home
             onOpenPayment={(productId) =>
@@ -120,10 +143,11 @@ function Useraccount() {
             }
           />
         );
-      case 'stories':  return <StoriesTab onGoToProfile={goToProfile} />;
-      case 'business': return <MyBusiness onGoToProfile={goToProfile} />;
-      case 'profile':  return <ProfileTab />;
-      case 'billing':  return <BillingTab />;
+      case 'stories':    return <StoriesTab onGoToProfile={goToProfile} />;
+      case 'business':   return <MyBusiness onGoToProfile={goToProfile} />;
+      case 'deliveries': return <DeliveriesTab />;
+      case 'profile':    return <ProfileTab />;
+      case 'billing':    return <BillingTab />;
       default:
         return (
           <Home
@@ -136,7 +160,6 @@ function Useraccount() {
   };
 
   const renderContent = (): React.ReactNode => {
-    /* ── 1. Detail / payment view takes over ──────── */
     if (openView) {
       switch (openView.kind) {
         case 'business':
@@ -194,7 +217,6 @@ function Useraccount() {
       }
     }
 
-    /* ── 2. Search results ────────────────────────── */
     if (searchQuery) {
       return (
         <SearchResults
@@ -209,10 +231,8 @@ function Useraccount() {
       );
     }
 
-    /* ── 3. Billing tab (no guard) ────────────────── */
     if (active === 'billing') return renderTab();
 
-    /* ── 4. Everything else under the guard ───────── */
     return (
       <SubscriptionGuard onUpgrade={goToBilling}>
         {renderTab()}
@@ -220,9 +240,15 @@ function Useraccount() {
     );
   };
 
-  /* ============================================================
-     SHELL RENDER
-     ============================================================ */
+  // Bottom nav shows every tab that hasn't opted out via
+  // `bottomNav: false`. Currently: home, stories, business,
+  // billing. Deliveries stays in the sidebar (desktop) and
+  // the header icon (mobile) but is hidden from the bottom
+  // nav so the four thumb-reachable slots stay evenly spaced.
+  const bottomNavItems = navItems.filter(
+    (item) => item.bottomNav !== false
+  );
+
   return (
     <div className="ua-shell">
       <aside className="ua-sidebar">
@@ -259,6 +285,7 @@ function Useraccount() {
       <div className="ua-main">
         <UserHeader
           onOpenProfile={goToProfile}
+          onOpenDeliveries={goToDeliveries}
           onSearch={handleSearch}
           scope={searchScope}
           onScopeChange={setSearchScope}
@@ -267,7 +294,7 @@ function Useraccount() {
       </div>
 
       <nav className="ua-bottom-nav">
-        {navItems.map((item) => (
+        {bottomNavItems.map((item) => (
           <button
             key={item.key}
             type="button"
