@@ -11,12 +11,18 @@ import PostDetail from './feed/PostDetail';
 import ProductDetail from './feed/ProductDetail';
 import YoupataManagedPostCard from './YoupataManagedPostCard';
 import YoupataManagedProductCard from './YoupataManagedProductCard';
+
+import { useProfileStatus } from '../../../../features/accounts/hooks/useProfileStatus';
+import Confirmprofilecomplete from '../../User/components/Confirmprofilecomplete';
+
 import './home.css';
 
 type HomeProps = {
   /** Fires when a card's "Purchase now" or the detail's purchase bar
    *  is pressed. The parent swaps to the payment view. */
   onOpenPayment: (productId: number) => void;
+  /** Called when the user clicks "Complete now" on the profile banner. */
+  onGoToProfile?: () => void;
 };
 
 type OpenView =
@@ -27,7 +33,7 @@ type OpenView =
 
 const SCROLL_TRIGGER_PX = 400;
 
-function Home({ onOpenPayment }: HomeProps) {
+function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
   const access = useAuthStore((s) => s.access);
   const [openView, setOpenView] = useState<OpenView>(null);
 
@@ -41,6 +47,11 @@ function Home({ onOpenPayment }: HomeProps) {
     refetch,
     loadMore,
   } = useBusinessFeed({ limit: 10, kind: 'all' });
+
+  const {
+    data: profileStatus,
+    isLoading: profileLoading,
+  } = useProfileStatus();
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -114,6 +125,28 @@ function Home({ onOpenPayment }: HomeProps) {
         <p className="home-empty-sub">
           Posts and products from other businesses will appear here.
         </p>
+      </div>
+    );
+  }
+
+  /* ── Profile gate ──────────────────────────────── */
+  // Same layout as MyBusiness's locked state: wrapper with
+  // max-width, anchored near the top, centered horizontally.
+  const requiredMissing =
+    !profileLoading &&
+    profileStatus !== undefined &&
+    profileStatus.is_complete === false;
+
+  if (requiredMissing) {
+    return (
+      <div className="home-state-locked">
+        <div className="home-locked-wrap">
+          <Confirmprofilecomplete
+            missingLabels={profileStatus.missing_labels}
+            completionPercent={profileStatus.completion_percent}
+            onComplete={() => onGoToProfile?.()}
+          />
+        </div>
       </div>
     );
   }
@@ -259,3 +292,6 @@ function Home({ onOpenPayment }: HomeProps) {
 }
 
 export default Home;
+
+
+

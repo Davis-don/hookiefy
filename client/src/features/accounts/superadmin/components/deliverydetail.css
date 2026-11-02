@@ -1,0 +1,259 @@
+/* ─────────────────────────────────────────────────────────
+   DELIVERY DETAIL — self-contained panel
+   All classes prefixed .add-
+   ───────────────────────────────────────────────────────── */
+
+.add-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.add-state {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.add-error {
+  color: #B91C1C;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── People grid ──────────────────────────────────────── */
+.add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* ── Section ──────────────────────────────────────────── */
+.add-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #64748B;
+  margin: 0 0 4px;
+}
+
+/* ── Key / value row ──────────────────────────────────── */
+.add-kv {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.add-kv-label {
+  flex: 0 0 62px;
+  color: #94A3B8;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.add-kv-value {
+  color: #0F172A;
+  word-break: break-word;
+}
+
+.add-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.84rem;
+  color: #334155;
+}
+
+.add-muted {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+.add-badge {
+  background: #EEF2FF;
+  color: #2563EB;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+/* ── Status pill ──────────────────────────────────────── */
+.add-status {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.add-status--pending {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.add-status--delivered {
+  background: #D1FAE5;
+  color: #065F46;
+}
+.add-status--cancelled {
+  background: #E2E8F0;
+  color: #334155;
+}
+.add-status--failed {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+/* ── Product block ────────────────────────────────────── */
+.add-product {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  background: #F8FAFC;
+}
+
+.add-product-media {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.add-product-fallback {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #64748B;
+}
+
+.add-product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.add-product-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-product-meta {
+  font-size: 0.84rem;
+  color: #64748B;
+  margin: 0;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  .add-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .add-kv-label {
+    flex-basis: 54px;
+    font-size: 0.72rem;
+  }
+  .add-kv-value {
+    font-size: 0.86rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-product { transition: none !important; }
+}
+/* ── Status action buttons ───────────────────────────── */
+.add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-action {
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease,
+              border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.add-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.add-action--delivered {
+  background: #D1FAE5;
+  color: #065F46;
+  border-color: #A7F3D0;
+}
+.add-action--delivered:hover:not(:disabled) {
+  background: #A7F3D0;
+}
+
+.add-action--cancelled {
+  background: #E2E8F0;
+  color: #334155;
+  border-color: #CBD5E1;
+}
+.add-action--cancelled:hover:not(:disabled) {
+  background: #CBD5E1;
+}
+
+.add-action--failed {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-color: #FECACA;
+}
+.add-action--failed:hover:not(:disabled) {
+  background: #FECACA;
+}
+
+.add-action--pending {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+.add-action--pending:hover:not(:disabled) {
+  background: #FDE68A;
+}

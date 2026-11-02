@@ -29,6 +29,15 @@ export type Delivery = {
 
   delivered_by_id: number | null;
   delivered_by_email: string | null;
+  /**
+   * True when the courier account is Youpata-managed.
+   * Null when no courier is assigned yet.
+   *
+   * When this is true, the backend also suppresses
+   * `delivered_by_email` (returns null) so the internal
+   * address never reaches the client.
+   */
+  delivered_by_is_youpata_managed: boolean | null;
 
   delivered_to_id: number | null;
   delivered_to_email: string | null;

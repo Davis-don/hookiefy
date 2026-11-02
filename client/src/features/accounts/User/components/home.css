@@ -1,43 +1,128 @@
 /* ─────────────────────────────────────────────────────────
-   HOME — feed shell only
-   Card styles live in postcard.css / productcard.css
+   YOUPATA — HOME / FEED
+   Page feed + states + profile-incomplete locked state.
+   All classes prefixed .home-.
    ───────────────────────────────────────────────────────── */
 
 .home-shell {
+  position: relative;
   width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 18px;
+  padding: 20px 16px 48px;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+/* ── List ─────────────────────────────────────────────── */
 .home-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;                 /* thin separator between posts */
-  background: #F1F5F9;
+  gap: 16px;
 }
 
 .home-list-item {
-  min-width: 0;
-  background: #FFFFFF;
+  list-style: none;
 }
 
-/* ── States ─────────────────────────────────────────── */
+/* ── Sentinel / loading / end ─────────────────────────── */
+.home-sentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.home-loading-row {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.home-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 12px 12px;
+  text-align: center;
+}
+
+.home-end-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ECFDF5;
+  color: #10B981;
+  margin-bottom: 6px;
+}
+
+.home-end-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.home-end-sub {
+  font-size: 0.9rem;
+  color: #64748B;
+  margin: 0;
+  max-width: 340px;
+  line-height: 1.5;
+}
+
+.home-loadmore {
+  align-self: center;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #0F172A;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.home-loadmore:hover {
+  background: #F8FAFC;
+}
+
+/* ── Generic state block ──────────────────────────────── */
 .home-state {
+  min-height: 50vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 56px 20px;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.home-state-empty {
+  color: #0F172A;
+}
+
+.home-empty-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.home-empty-sub {
+  font-size: 0.94rem;
   color: #64748B;
-  font-size: 0.96rem;
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.55;
 }
 
 .home-state-error {
@@ -45,169 +130,101 @@
 }
 
 .home-retry-btn {
-  margin-top: 4px;
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 1.5px solid #FECACA;
-  background: #FFFFFF;
-  color: #B91C1C;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #B91C1C;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease;
+  transition: background 0.15s ease;
 }
 
 .home-retry-btn:hover:not(:disabled) {
-  background: #FEF2F2;
-  border-color: #EF4444;
+  background: #FEE2E2;
 }
 
-.home-retry-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.home-empty-title {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #0F172A;
-}
-
-.home-empty-sub {
-  margin: 0;
-  font-size: 0.92rem;
-  color: #64748B;
-  max-width: 340px;
-  text-align: center;
-  line-height: 1.55;
-}
-
-/* ── Load more ──────────────────────────────────────── */
-.home-loadmore {
-  align-self: center;
-  margin: 16px 0 24px;
-  padding: 12px 28px;
-  border-radius: 999px;
-  border: 1.5px solid #E2E8F0;
-  background: #FFFFFF;
-  color: #0F172A;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease,
-              transform 0.15s ease;
-}
-
-.home-loadmore:hover:not(:disabled) {
-  border-color: #2563EB;
-  color: #2563EB;
-  background: #F8FAFF;
-  transform: translateY(-1px);
-}
-
-.home-loadmore:disabled { opacity: 0.6; cursor: not-allowed; }
-
-@media (max-width: 640px) {
-  .home-shell { max-width: 100%; }
-}
-/* ── Sentinel (invisible trigger for infinite scroll) ── */
-.home-sentinel {
-  height: 1px;
-  width: 100%;
-  pointer-events: none;
-  /* Keep it inside the flow so IntersectionObserver sees it */
-}
-
-/* ── Loading row (appears at the bottom while fetching) ── */
-.home-loading-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px;
-  background: #FFFFFF;
-}
-
-/* ── End-of-feed card ───────────────────────────────── */
-.home-end {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  padding: 40px 24px 48px;
-  background: #FFFFFF;
-  border-top: 1px solid #F1F5F9;
-
-  text-align: center;
-}
-
-.home-end-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-
-  background: #ECFDF5;
-  color: #10B981;
-
-  margin-bottom: 4px;
-}
-
-.home-end-title {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #0F172A;
-  letter-spacing: -0.2px;
-}
-
-.home-end-sub {
-  margin: 0;
-  font-size: 0.92rem;
-  color: #64748B;
-  max-width: 320px;
-  line-height: 1.55;
-}
-
-/* ── Load more button (fallback) ────────────────────── */
-.home-loadmore {
-  align-self: center;
-  margin: 20px 0 32px;
-  padding: 11px 24px;
-  border-radius: 999px;
-  border: 1.5px solid #E2E8F0;
-  background: #FFFFFF;
-  color: #0F172A;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.15s ease;
-}
-
-.home-loadmore:hover:not(:disabled) {
-  border-color: #2563EB;
-  color: #2563EB;
-  background: #F8FAFF;
-  transform: translateY(-1px);
-}
-
-.home-loadmore:disabled {
+.home-retry-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ── Responsive ────────────────────────────────────── */
+/* ── Locked state — profile incomplete ───────────────── */
+/* Mirrors MyBusiness's .mb-shell-locked / .mb-locked-wrap
+   so both tabs show the same card, width, and anchoring. */
+.home-state-locked {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  background: #F8FAFC;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 20px 48px;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.home-locked-wrap {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-locked-wrap > * {
+  width: 100%;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .home-shell { padding: 18px 14px 40px; gap: 16px; }
+
+  .home-state-locked {
+    min-height: calc(100vh - 110px);
+    padding: 28px 18px 40px;
+  }
+  .home-locked-wrap {
+    max-width: 600px;
+  }
+}
+
 @media (max-width: 640px) {
-  .home-shell { max-width: 100%; }
-  .home-end { padding: 32px 20px 40px; }
-  .home-end-title { font-size: 1rem; }
-  .home-end-sub { font-size: 0.88rem; }
+  .home-shell { padding: 16px 12px 32px; gap: 14px; }
+
+  .home-state-locked {
+    min-height: calc(100vh - 100px);
+    padding: 20px 14px 36px;
+  }
+  .home-locked-wrap {
+    max-width: 100%;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .home-shell { padding: 14px 10px 28px; gap: 12px; }
+
+  .home-state-locked {
+    padding: 16px 12px 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .home-state-locked {
+    padding: 48px 32px 64px;
+  }
+  .home-locked-wrap {
+    max-width: 720px;
+    gap: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-loadmore,
+  .home-retry-btn {
+    transition: none !important;
+  }
 }

@@ -137,11 +137,31 @@ function DeliveriesList() {
    CARD — clean bordered row, Jumia-style
    ============================================================ */
 
+/**
+ * Human label for the courier on a delivery.
+ *
+ *   • Youpata-managed account → "Youpata"
+ *   • Normal courier          → their email
+ *   • No courier assigned     → null (Courier row hidden)
+ *
+ * The backend already suppresses `delivered_by_email` for
+ * Youpata-managed couriers, so the boolean is the single
+ * source of truth — we never fall back to the email when
+ * the flag is true.
+ */
+function courierLabel(delivery: Delivery): string | null {
+  if (!delivery.delivered_by_id) return null;
+  if (delivery.delivered_by_is_youpata_managed) return 'Youpata';
+  return delivery.delivered_by_email;
+}
+
 type DeliveryCardProps = {
   delivery: Delivery;
 };
 
 function DeliveryCard({ delivery }: DeliveryCardProps) {
+  const courier = courierLabel(delivery);
+
   return (
     <article className="dlv-card">
       {/* Top row: image + main info + status pill */}
@@ -184,10 +204,10 @@ function DeliveryCard({ delivery }: DeliveryCardProps) {
           <span className="dlv-mono">{delivery.payment_reference}</span>
         </p>
 
-        {delivery.delivered_by_email && (
+        {courier && (
           <p className="dlv-card-meta">
             <span className="dlv-card-meta-label">Courier</span>
-            <span>{delivery.delivered_by_email}</span>
+            <span>{courier}</span>
           </p>
         )}
       </div>

@@ -7,6 +7,7 @@ import HomeTab from '../components/HomeTab';
 import BusinessesTab from '../components/BusinessesTab';
 import UsersTab from '../components/UsersTab';
 import AccountsTab from '../components/AccountsTab';
+import DeliveriesTab from '../components/DeliveriesTab';
 import PlansTab from '../components/PlansTab';
 import SettingsTab from '../components/SettingsTab';
 import SuperProfile from '../components/SuperProfile';
@@ -18,6 +19,7 @@ type TabKey =
   | 'businesses'
   | 'users'
   | 'accounts'
+  | 'deliveries'
   | 'plans'
   | 'settings'
   | 'profile';
@@ -72,19 +74,27 @@ const AccountsIcon = () => (
   </svg>
 );
 
+const DeliveriesIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7l9-4 9 4" />
+    <path d="M3 7v10l9 4 9-4V7" />
+    <path d="M12 21V11" />
+    <path d="M7.5 5l9 4" />
+  </svg>
+);
+
 /* ── Component ───────────────────────────────────────── */
 
 function Superaccount() {
   const [active, setActive] = useState<TabKey>('home');
 
-  // Primary destinations live in the sidebar / bottom nav.
-  // Plans, Settings, and Profile are reached through the
-  // header menu (and the avatar).
   const navItems: NavItem[] = [
     { key: 'home',       label: 'Home',       icon: <HomeIcon /> },
     { key: 'businesses', label: 'Businesses', icon: <BusinessesIcon /> },
     { key: 'users',      label: 'Users',      icon: <UsersIcon /> },
     { key: 'accounts',   label: 'Accounts',   icon: <AccountsIcon /> },
+    { key: 'deliveries', label: 'Deliveries', icon: <DeliveriesIcon /> },
   ];
 
   const renderTab = () => {
@@ -93,6 +103,7 @@ function Superaccount() {
       case 'businesses': return <BusinessesTab />;
       case 'users':      return <UsersTab />;
       case 'accounts':   return <AccountsTab />;
+      case 'deliveries': return <DeliveriesTab />;
       case 'plans':      return <PlansTab />;
       case 'settings':   return <SettingsTab />;
       case 'profile':    return <SuperProfile />;
@@ -128,7 +139,6 @@ function Superaccount() {
       </aside>
 
       <div className="sa-main">
-        {/* Header handles: menu dropdown + profile avatar. */}
         <SuperHeader
           onOpenProfile={() => setActive('profile')}
           onOpenPlans={() => setActive('plans')}

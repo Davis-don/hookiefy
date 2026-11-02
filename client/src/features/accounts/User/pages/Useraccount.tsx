@@ -22,6 +22,9 @@ import ProductDetailPage from '../components/feed/ProductDetail';
 import ProductPayment from '../components/feed/ProductPayment';
 import StoryDetail from '../../../stories/components/StoryDetail';
 
+import { useProfileStatus } from '../../../accounts/hooks/useProfileStatus';
+import Confirmprofilecomplete from '../../User/components/Confirmprofilecomplete';
+
 import './useraccount.css';
 
 /* ============================================================
@@ -49,12 +52,6 @@ type NavItem = {
   label: string;
   icon: React.ReactNode;
   primary?: boolean;
-  /**
-   * Whether this tab appears in the mobile bottom nav.
-   * Defaults to true. Set to false for tabs that should
-   * only be reachable from the sidebar (desktop) and the
-   * header icon (mobile), like Deliveries.
-   */
   bottomNav?: boolean;
 };
 
@@ -110,6 +107,17 @@ function Useraccount() {
   const [searchScope, setSearchScope] = useState<SearchScope>('all');
   const [openView, setOpenView] = useState<OpenView>(null);
 
+  // Profile completeness drives the global gate.
+  const {
+    data: profileStatus,
+    isLoading: profileLoading,
+  } = useProfileStatus();
+
+  const profileIncomplete =
+    !profileLoading &&
+    profileStatus !== undefined &&
+    profileStatus.is_complete === false;
+
   const navItems: NavItem[] = [
     { key: 'home',       label: 'Home',       icon: <HomeIcon /> },
     { key: 'stories',    label: 'Stories',    icon: <StoriesIcon /> },
@@ -118,12 +126,16 @@ function Useraccount() {
       key: 'deliveries',
       label: 'Deliveries',
       icon: <DeliveriesIcon />,
-      bottomNav: false,   // ← header-only on mobile
+      bottomNav: false,
     },
     { key: 'billing',    label: 'Billing',    icon: <BillingIcon /> },
   ];
 
-  const goToProfile = () => setActive('profile');
+  const goToProfile = () => {
+    setActive('profile');
+    setSearchQuery('');
+    setOpenView(null);
+  };
   const goToBilling = () => setActive('billing');
   const goToDeliveries = () => {
     setActive('deliveries');
@@ -141,6 +153,7 @@ function Useraccount() {
             onOpenPayment={(productId) =>
               setOpenView({ kind: 'product-payment', id: productId })
             }
+            onGoToProfile={goToProfile}
           />
         );
       case 'stories':    return <StoriesTab onGoToProfile={goToProfile} />;
@@ -154,12 +167,36 @@ function Useraccount() {
             onOpenPayment={(productId) =>
               setOpenView({ kind: 'product-payment', id: productId })
             }
+            onGoToProfile={goToProfile}
           />
         );
     }
   };
 
   const renderContent = (): React.ReactNode => {
+    // ── Global profile gate ────────────────────────────────
+    // While the profile is incomplete, the ONLY thing the
+    // user can see is the profile editor. Everything else —
+    // home feed, stories, business, deliveries, billing,
+    // search results, and any open detail view — is hidden.
+    //
+    // We explicitly exclude the 'profile' tab from the gate
+    // so the CTA ("Complete my profile") can navigate there
+    // and let the user actually fill in the missing fields.
+    if (profileIncomplete && active !== 'profile') {
+      return (
+        <div className="home-state-locked">
+          <div className="home-locked-wrap">
+            <Confirmprofilecomplete
+              missingLabels={profileStatus.missing_labels}
+              completionPercent={profileStatus.completion_percent}
+              onComplete={goToProfile}
+            />
+          </div>
+        </div>
+      );
+    }
+
     if (openView) {
       switch (openView.kind) {
         case 'business':
@@ -240,11 +277,6 @@ function Useraccount() {
     );
   };
 
-  // Bottom nav shows every tab that hasn't opted out via
-  // `bottomNav: false`. Currently: home, stories, business,
-  // billing. Deliveries stays in the sidebar (desktop) and
-  // the header icon (mobile) but is hidden from the bottom
-  // nav so the four thumb-reachable slots stay evenly spaced.
   const bottomNavItems = navItems.filter(
     (item) => item.bottomNav !== false
   );
