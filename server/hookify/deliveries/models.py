@@ -24,7 +24,6 @@ class Deliveries(models.Model):
         pending    → created when the payment completes,
                      awaiting dispatch
         delivered  → handed over to the recipient
-        cancelled  → cancelled before dispatch (retained for audit)
         failed     → delivery attempt failed / returned
 
     The payment's status stays `completed` for the entire
@@ -143,13 +142,11 @@ class Deliveries(models.Model):
 
     STATUS_PENDING = "pending"
     STATUS_DELIVERED = "delivered"
-    STATUS_CANCELLED = "cancelled"
     STATUS_FAILED = "failed"
 
     STATUS_CHOICES = (
         (STATUS_PENDING, "Pending"),
         (STATUS_DELIVERED, "Delivered"),
-        (STATUS_CANCELLED, "Cancelled"),
         (STATUS_FAILED, "Failed"),
     )
 
@@ -209,7 +206,6 @@ class Deliveries(models.Model):
         """True when no further state change is expected."""
         return self.status in (
             self.STATUS_DELIVERED,
-            self.STATUS_CANCELLED,
             self.STATUS_FAILED,
         )
 

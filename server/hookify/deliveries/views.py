@@ -181,7 +181,6 @@ def my_deliveries(request):
     if status_filter in (
         Deliveries.STATUS_PENDING,
         Deliveries.STATUS_DELIVERED,
-        Deliveries.STATUS_CANCELLED,
         Deliveries.STATUS_FAILED,
     ):
         qs = qs.filter(status=status_filter)
@@ -237,7 +236,6 @@ def all_deliveries(request):
     if status_filter in (
         Deliveries.STATUS_PENDING,
         Deliveries.STATUS_DELIVERED,
-        Deliveries.STATUS_CANCELLED,
         Deliveries.STATUS_FAILED,
     ):
         qs = qs.filter(status=status_filter)
@@ -321,7 +319,7 @@ def all_delivery_update_status(request, pk):
     Update the status of one delivery. Superadmin only.
 
     Body:
-        { "status": "pending" | "delivered" | "cancelled" | "failed" }
+        { "status": "pending" | "delivered" | "failed" }
 
     Transition rules are enforced by
     `DeliveryAdminStatusUpdateSerializer`.

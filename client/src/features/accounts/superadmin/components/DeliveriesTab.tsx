@@ -24,7 +24,6 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'pending',   label: 'Pending' },
   { key: 'delivered', label: 'Delivered' },
   { key: 'cancelled', label: 'Cancelled' },
-  { key: 'failed',    label: 'Failed' },
 ];
 
 /* ── Main tab ─────────────────────────────────────────── */

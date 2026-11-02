@@ -272,41 +272,42 @@ class DeliveryAdminDetailSerializer(DeliverySerializer):
 # WRITE — STATUS TRANSITION
 # ============================================================
 #
-# Accepts only the three values a client can trigger from the
+# Accepts only the two values a client can trigger from the
 # /deliveries/<id>/status/ endpoint. `pending` is excluded on
 # purpose — deliveries start pending and never return to it,
 # so the endpoint can't be used to "un-deliver" a delivery.
+# `cancelled` has been removed from the status model.
 # ============================================================
 
 class DeliveryStatusUpdateSerializer(serializers.Serializer):
     """
     Input for POST /deliveries/<id>/status/
 
-    Only the three terminal statuses a caller can trigger.
+    Only the two terminal statuses a caller can trigger.
     """
 
     status = serializers.ChoiceField(
         choices=(
             Deliveries.STATUS_DELIVERED,
-            Deliveries.STATUS_CANCELLED,
             Deliveries.STATUS_FAILED,
         ),
     )
+
+
 # ============================================================
 # WRITE — SUPERADMIN STATUS UPDATE
 # ============================================================
 #
 # PATCH /deliveries/all/<id>/status/
 #
-# Superadmins can move a delivery to any of the four states.
-# The transitions below are the only ones we allow — anything
-# else returns 400 with a human-readable message, so an admin
-# can't accidentally un-deliver a delivered row.
+# Superadmins can move a delivery to any of the remaining
+# states. The transitions below are the only ones we allow —
+# anything else returns 400 with a human-readable message, so
+# an admin can't accidentally un-deliver a delivered row.
 #
 # Transition rules:
-#   pending   → delivered | cancelled | failed
+#   pending   → delivered | failed
 #   delivered → (terminal — no moves)
-#   cancelled → pending
 #   failed    → pending
 # ============================================================
 
@@ -319,7 +320,6 @@ class DeliveryAdminStatusUpdateSerializer(serializers.Serializer):
         choices=(
             Deliveries.STATUS_PENDING,
             Deliveries.STATUS_DELIVERED,
-            Deliveries.STATUS_CANCELLED,
             Deliveries.STATUS_FAILED,
         ),
     )
@@ -328,11 +328,9 @@ class DeliveryAdminStatusUpdateSerializer(serializers.Serializer):
     _ALLOWED = {
         Deliveries.STATUS_PENDING: {
             Deliveries.STATUS_DELIVERED,
-            Deliveries.STATUS_CANCELLED,
             Deliveries.STATUS_FAILED,
         },
         Deliveries.STATUS_DELIVERED: set(),          # terminal
-        Deliveries.STATUS_CANCELLED: {Deliveries.STATUS_PENDING},
         Deliveries.STATUS_FAILED:    {Deliveries.STATUS_PENDING},
     }
 
