@@ -1,10 +1,10 @@
-# account/auth_views.py
+# account/account_views/auth_views.py
 
 from django.contrib.auth import authenticate
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -433,6 +433,7 @@ def auth_check(request):
         status=status.HTTP_200_OK,
     )
 
+
 # ============================================================
 # YOUPATA-MANAGED ACCOUNTS (superadmin only)
 # ============================================================
@@ -498,6 +499,89 @@ def youpata_managed_accounts(request):
         {
             "count": queryset.count(),
             "results": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# ============================================================
+# USER LOOKUP BY EMAIL (superadmin only)
+# ============================================================
+#
+# GET /account/users/by-email/?email=foo@bar.com
+#
+# Powers the admin "Add order" wizard on the Orders tab —
+# after the admin types a buyer's email, the wizard needs
+# enough detail to render a verification card ("these are
+# the account details, confirm they're correct") without
+# pulling the whole user row.
+#
+# Why IsAdminUser and not a custom "role == superadmin"
+# permission:
+#   - The wizard is only reachable from the super-admin
+#     shell, and the sibling `manual_payment` view already
+#     gates on IsAdminUser. Keeping both on the same
+#     permission boundary means "who can record a manual
+#     payment" and "who can look up the buyer they're
+#     recording it for" stay in lockstep.
+#   - The response carries no secrets — email, name, phone,
+#     joined date, and active/staff flags — all fields a
+#     staff user with any business reading user records
+#     would already have access to elsewhere.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def lookup_user_by_email(request):
+    """
+    Look up a user by email for the superadmin Add-order wizard.
+
+    Query params:
+        ?email=<string>     (required, case-insensitive match)
+
+    Responses:
+        200 — user found, returns the verification-card payload
+        400 — email missing
+        404 — no account with that email
+
+    The 404 (rather than 200 with null) is deliberate: "the
+    email you typed doesn't exist" is the common answer for
+    this endpoint, and surfacing it as an error lets the
+    frontend render a clear message instead of an empty card.
+    """
+
+    email = (request.query_params.get("email") or "").strip()
+
+    if not email:
+        return Response(
+            {"detail": "Email is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = Accounts.objects.filter(email__iexact=email).first()
+
+    if not user:
+        return Response(
+            {"detail": "No account with that email."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    return Response(
+        {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name or "",
+            "last_name": user.last_name or "",
+            "full_name": (
+                f"{user.first_name} {user.last_name}".strip()
+                or user.email
+            ),
+            "phone_number": user.phone_number,
+            "profile_image_url": user.profile_image_url,
+            "is_active": user.is_active,
+            "is_staff": user.is_staff,
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
         },
         status=status.HTTP_200_OK,
     )

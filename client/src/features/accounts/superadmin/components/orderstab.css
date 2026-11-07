@@ -1,0 +1,492 @@
+/* src/pages/accounts/components/orderstab.css */
+
+/* ============================================================
+   ORDERS TAB — LIST VIEW
+   ============================================================
+   Namespaced under `.orders-tab__*` so nothing here collides
+   with the modal shell (`.om-*`) or the step components
+   (`vu-*`, `vp-*`, `pd-*`, `rv-*`, `dn-*`).
+   ============================================================ */
+
+.orders-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 24px;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.orders-tab__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.orders-tab__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.orders-tab__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.orders-tab__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+
+.orders-tab__filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px 180px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.orders-tab__input,
+.orders-tab__select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.orders-tab__input:focus,
+.orders-tab__select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.orders-tab__select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.orders-tab__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.05s ease;
+}
+
+.orders-tab__btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.orders-tab__btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.orders-tab__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Ghost — the "Reset" and per-row "Add delivery" buttons */
+.orders-tab__btn--ghost {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.orders-tab__btn--ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Primary — the "+ Add order" button */
+.orders-tab__btn--primary {
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: #ffffff;
+}
+
+.orders-tab__btn--primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* Default (no modifier) — used by Retry in the error state */
+.orders-tab__btn:not(.orders-tab__btn--ghost):not(.orders-tab__btn--primary) {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.orders-tab__btn:not(.orders-tab__btn--ghost):not(.orders-tab__btn--primary):hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+
+/* ============================================================
+   STATES — loading / error / empty
+   ============================================================ */
+
+.orders-tab__state {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+  border: 1px dashed #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.orders-tab__state--error {
+  border-style: solid;
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.orders-tab__state--error p {
+  margin: 0 0 12px;
+}
+
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+
+.orders-tab__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.orders-tab__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.orders-tab__table thead {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.orders-tab__table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.orders-tab__table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.12s ease;
+}
+
+.orders-tab__table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.orders-tab__table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.orders-tab__table td {
+  padding: 12px 14px;
+  vertical-align: top;
+  color: #0f172a;
+}
+
+
+/* ============================================================
+   CELLS
+   ============================================================ */
+
+/* Reference cell — the merchant_reference + manual chip */
+.orders-tab__ref {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.orders-tab__ref-main {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+/* Product cell — name above, id + qty beneath */
+.orders-tab__product {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 220px;
+}
+
+.orders-tab__product > span:first-child {
+  font-weight: 600;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Buyer cell — email above, phone beneath */
+.orders-tab__buyer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 220px;
+}
+
+.orders-tab__buyer > span:first-child {
+  font-weight: 500;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Amount — right-aligned, monospace figures */
+.orders-tab__amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+/* Gateway — small caps look */
+.orders-tab__gateway {
+  font-size: 0.82rem;
+  color: #475569;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+/* Per-row action cluster */
+.orders-tab__row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.orders-tab__row-actions .orders-tab__btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+}
+
+
+/* ============================================================
+   MUTED HELPER TEXT
+   ============================================================ */
+
+.orders-tab__muted {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+
+/* ============================================================
+   MANUAL CHIP
+   ============================================================ */
+
+.orders-tab__chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.orders-tab__chip--manual {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+
+/* ============================================================
+   STATUS PILLS
+   ============================================================ */
+
+.orders-tab__status {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: capitalize;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.orders-tab__status--completed {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.orders-tab__status--pending {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.orders-tab__status--failed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.orders-tab__status--reversed {
+  background: #faf5ff;
+  color: #7e22ce;
+}
+
+.orders-tab__status--invalid {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.orders-tab__status--cancelled {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+
+.orders-tab__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.orders-tab__pagination .orders-tab__muted {
+  font-size: 0.85rem;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .orders-tab__filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .orders-tab__filters .orders-tab__input {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .orders-tab__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .orders-tab__actions .orders-tab__btn {
+    width: 100%;
+  }
+
+  .orders-tab__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-tab__filters .orders-tab__input {
+    grid-column: auto;
+  }
+
+  /* Hide the Created column on very small screens —
+     the row keeps enough identity without it. */
+  .orders-tab__table th:nth-child(7),
+  .orders-tab__table td:nth-child(7) {
+    display: none;
+  }
+
+  /* Hide Gateway too — status is more useful. */
+  .orders-tab__table th:nth-child(6),
+  .orders-tab__table td:nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-tab__table th,
+  .orders-tab__table td {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+
+  .orders-tab__product,
+  .orders-tab__buyer {
+    max-width: 140px;
+  }
+
+  .orders-tab__row-actions .orders-tab__btn {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+}

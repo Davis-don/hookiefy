@@ -58,6 +58,21 @@ urlpatterns = [
     ),
 
     # ========================================================
+    # USER LOOKUP BY EMAIL (superadmin only)
+    #
+    #   GET /account/users/by-email/?email=foo@bar.com
+    #
+    # Used by the admin Add-order wizard on the Orders tab.
+    # Returns the small verification-card payload (name,
+    # phone, joined, active) — never the full user row.
+    # ========================================================
+    path(
+        "users/by-email/",
+        views.lookup_user_by_email,
+        name="lookup_user_by_email",
+    ),
+
+    # ========================================================
     # PROFILE — READ
     # ========================================================
     path(

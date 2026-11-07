@@ -1,9 +1,12 @@
+# account/views.py
+
 from .account_views.auth_views import (
     create_user,
     login_view,
     logout_view,
     auth_check,
-    youpata_managed_accounts,  
+    youpata_managed_accounts,
+    lookup_user_by_email,             # ← NEW
 )
 
 from .account_views.google_views import (
@@ -15,7 +18,7 @@ from .account_views.profile_views import (
     upload_profile_image,
     update_user,
     update_password,
-    current_user,               # ← NEW
+    current_user,
 )
 
 from .account_views.profile_status_views import (

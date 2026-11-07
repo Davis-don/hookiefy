@@ -1,0 +1,46 @@
+/* src/pages/accounts/components/orders/paymentDetailsStep.css */
+
+.pd-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pd-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pd-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.pd-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.pd-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+@media (max-width: 480px) {
+  .pd-grid-2 { grid-template-columns: 1fr; }
+}

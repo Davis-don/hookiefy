@@ -135,9 +135,13 @@ class DeliveriesAdmin(admin.ModelAdmin):
     )
 
     # ── Bulk actions ──────────────────────────────────────
+    #
+    # Only two actions now — the model has no cancelled
+    # state. A "delivery" is either in progress (pending),
+    # succeeded (delivered), or failed. Cancellation of the
+    # *order* is handled at the payment layer, not here.
     actions = (
         "mark_delivered",
-        "mark_cancelled",
         "mark_failed",
     )
 
@@ -171,11 +175,17 @@ class DeliveriesAdmin(admin.ModelAdmin):
 
     @admin.display(description="Status")
     def status_badge(self, obj):
-        """Colour-coded status pill."""
+        """
+        Colour-coded status pill.
+
+        The three statuses the model actually defines:
+            pending   → slate (in flight)
+            delivered → green (success)
+            failed    → red (terminal failure)
+        """
         colors = {
             Deliveries.STATUS_PENDING:   ("#F1F5F9", "#334155"),
             Deliveries.STATUS_DELIVERED: ("#ECFDF5", "#047857"),
-            Deliveries.STATUS_CANCELLED: ("#F3F4F6", "#4B5563"),
             Deliveries.STATUS_FAILED:    ("#FEF2F2", "#B91C1C"),
         }
         bg, fg = colors.get(obj.status, ("#F1F5F9", "#334155"))
@@ -192,12 +202,12 @@ class DeliveriesAdmin(admin.ModelAdmin):
 
     # ── Bulk actions ──────────────────────────────────────
     #
-    # All three exclude rows that are already in a terminal
-    # state, so a mixed batch of pending + delivered rows
+    # Both exclude rows already in a terminal state, so a
+    # mixed batch of pending + delivered + failed rows
     # only updates the pending ones. That matches what an
     # operator would expect: "mark selected as delivered"
-    # shouldn't silently rewrite rows that were already
-    # delivered (or cancelled, or failed).
+    # shouldn't silently rewrite rows that already reached
+    # a terminal outcome.
     # ───────────────────────────────────────────────────────
 
     @admin.action(description="Mark selected deliveries as delivered")
@@ -206,7 +216,6 @@ class DeliveriesAdmin(admin.ModelAdmin):
         updated = queryset.exclude(
             status__in=[
                 Deliveries.STATUS_DELIVERED,
-                Deliveries.STATUS_CANCELLED,
                 Deliveries.STATUS_FAILED,
             ]
         ).update(
@@ -218,26 +227,11 @@ class DeliveriesAdmin(admin.ModelAdmin):
             f"{updated} delivery(ies) marked as delivered.",
         )
 
-    @admin.action(description="Mark selected deliveries as cancelled")
-    def mark_cancelled(self, request, queryset):
-        updated = queryset.exclude(
-            status__in=[
-                Deliveries.STATUS_DELIVERED,
-                Deliveries.STATUS_CANCELLED,
-                Deliveries.STATUS_FAILED,
-            ]
-        ).update(status=Deliveries.STATUS_CANCELLED)
-        self.message_user(
-            request,
-            f"{updated} delivery(ies) marked as cancelled.",
-        )
-
     @admin.action(description="Mark selected deliveries as failed")
     def mark_failed(self, request, queryset):
         updated = queryset.exclude(
             status__in=[
                 Deliveries.STATUS_DELIVERED,
-                Deliveries.STATUS_CANCELLED,
                 Deliveries.STATUS_FAILED,
             ]
         ).update(status=Deliveries.STATUS_FAILED)

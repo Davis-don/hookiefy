@@ -552,3 +552,96 @@ def manual_payment(request):
         },
         status=status.HTTP_201_CREATED,
     )
+
+# product_payment/views.py  (append at the bottom)
+
+from rest_framework.pagination import PageNumberPagination
+
+
+class _OrdersPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+# ============================================================
+# LIST ORDERS
+# GET /product_payments/
+# ============================================================
+#
+# Query params (all optional):
+#   ?status=completed|pending|failed|…     filter by status
+#   ?gateway=pesapal|manual_cash|…         filter by gateway
+#   ?manual=1                              manual rows only
+#   ?search=<text>                         matches merchant_reference,
+#                                          email, phone, product name
+#   ?product=<id>                          filter to one product
+#   ?user=<id>                             filter to one buyer
+#   ?page=<n>                              pagination (default 20)
+#   ?page_size=<n>                         page size (max 100)
+#
+# Response: { count, next, previous, results: [ProductPaymentSerializer] }
+#
+# Permissions:
+#   - superadmin (is_staff=True) sees ALL rows
+#   - a normal authenticated user sees only rows they bought
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_product_payments(request):
+    """
+    Paginated, filterable list of product payments.
+
+    Superadmins see every row; regular authenticated users
+    see only their own rows. The response shape is the same
+    either way, so a future "my purchases" view can reuse
+    this endpoint.
+    """
+
+    qs = (
+        ProductPayment.objects
+        .select_related("user", "product", "business")
+        .order_by("-created_at")
+    )
+
+    # Scoping — non-superadmins only see their own
+    if not request.user.is_staff:
+        qs = qs.filter(user=request.user)
+
+    # ── Filters ────────────────────────────────────────
+    status_filter = request.query_params.get("status")
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+
+    gateway_filter = request.query_params.get("gateway")
+    if gateway_filter:
+        qs = qs.filter(gateway=gateway_filter)
+
+    if request.query_params.get("manual") in ("1", "true", "True"):
+        qs = qs.filter(merchant_reference__endswith=".MAN")
+
+    product_filter = request.query_params.get("product")
+    if product_filter:
+        qs = qs.filter(product_id=product_filter)
+
+    user_filter = request.query_params.get("user")
+    if user_filter:
+        qs = qs.filter(user_id=user_filter)
+
+    search = (request.query_params.get("search") or "").strip()
+    if search:
+        from django.db.models import Q
+        qs = qs.filter(
+            Q(merchant_reference__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone_number__icontains=search)
+            | Q(product__name__icontains=search)
+        )
+
+    # ── Paginate ───────────────────────────────────────
+    paginator = _OrdersPagination()
+    page = paginator.paginate_queryset(qs, request)
+
+    data = ProductPaymentSerializer(page, many=True).data
+    return paginator.get_paginated_response(data)

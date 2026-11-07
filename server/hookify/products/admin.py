@@ -74,7 +74,15 @@ class StockStatusFilter(admin.SimpleListFilter):
 class ProductsAdmin(admin.ModelAdmin):
 
     # ── List view ─────────────────────────────────────────
+    #
+    # `product_id` comes first so admins can scan the numeric
+    # id straight off the changelist — the same id the Add-
+    # order wizard asks for, the same id shown on the product
+    # detail page's "Product ID" block, and the same id the
+    # WhatsApp seller message embeds.
+    #
     list_display = (
+        "product_id",
         "name",
         "business",
         "price",
@@ -86,17 +94,26 @@ class ProductsAdmin(admin.ModelAdmin):
         "created_at",
     )
 
+    # Only `name` remains a link — `product_id` is plain text
+    # so a user can select it with a double-click to copy.
     list_display_links = ("name",)
 
     # ── Filters ───────────────────────────────────────────
     list_filter = (
         "is_youpata_managed",
-        StockStatusFilter,          # ← added
+        StockStatusFilter,
         "created_at",
     )
 
     # ── Search ────────────────────────────────────────────
+    #
+    # `id` is included so pasting a numeric id into the search
+    # box jumps straight to the product. Without it, typing
+    # "42" would only match names/descriptions that contain
+    # the digits "42" — not the product whose id is 42.
+    #
     search_fields = (
+        "id",
         "name",
         "description",
         "property_items__name",
@@ -109,6 +126,7 @@ class ProductsAdmin(admin.ModelAdmin):
     list_select_related = ("business",)
     raw_id_fields = ("business",)
     readonly_fields = (
+        "id",                       # ← visible on the change form
         "created_at",
         "updated_at",
         "likes_count",
@@ -124,6 +142,9 @@ class ProductsAdmin(admin.ModelAdmin):
 
     # ── Detail page layout ────────────────────────────────
     fieldsets = (
+        ("Identity", {
+            "fields": ("id",),
+        }),
         ("Business", {
             "fields": ("business",),
         }),
@@ -132,7 +153,7 @@ class ProductsAdmin(admin.ModelAdmin):
                 "name",
                 "description",
                 "price",
-                "quantity",         # ← added
+                "quantity",
                 "is_youpata_managed",
             ),
         }),
@@ -151,13 +172,29 @@ class ProductsAdmin(admin.ModelAdmin):
 
     # ── Computed columns ──────────────────────────────────
 
+    @admin.display(
+        description="ID",
+        ordering="id",
+    )
+    def product_id(self, obj):
+        """
+        Plain numeric id, rendered monospace so it visually
+        matches the "Product ID" block on the storefront and
+        is easy to select/copy.
+        """
+        return format_html(
+            '<span style="font-family:ui-monospace,SFMono-Regular,'
+            'Menlo,Consolas,monospace;font-weight:700;">#{}</span>',
+            obj.id,
+        )
+
     @admin.display(boolean=True, description="Images")
     def has_images(self, obj):
         return obj.images.exists()
 
     @admin.display(
         description="Stock",
-        ordering="quantity",           # sortable
+        ordering="quantity",
     )
     def stock_badge(self, obj):
         """

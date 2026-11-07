@@ -1,9 +1,8 @@
 # product_payment/controllers/services.py
 
 import logging
-from decimal import Decimal
 
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import F
 from django.utils import timezone
 
@@ -17,15 +16,8 @@ from .get_transaction_status import get_transaction_status
 logger = logging.getLogger(__name__)
 
 
-
 # ============================================================
 # ACTIVE PAYMENT CONFIGURATION
-# ============================================================
-#
-# Same table as subscription payments — PesaPal credentials
-# are per-gateway, not per-vertical. The single active
-# `gateway_name="pesapal"` row is shared by both products and
-# subscriptions, including its `ipn_id`.
 # ============================================================
 
 def get_active_pesapal_config():
@@ -128,9 +120,11 @@ def _notify_payment_pending(payment):
     try:
         recipient = _payment_recipient(payment)
         if recipient is None:
-            logger.warning(
-                "No recipient for pending product-payment notification | ref=%s",
+            logger.info(
+                "Skipping payment-pending notification — no user "
+                "account on payment | ref=%s | email=%s",
                 payment.merchant_reference,
+                payment.email or "—",
             )
             return
 
@@ -171,6 +165,12 @@ def _notify_payment_completed(payment):
     try:
         recipient = _payment_recipient(payment)
         if recipient is None:
+            logger.info(
+                "Skipping payment-completed notification — no user "
+                "account on payment | ref=%s | email=%s",
+                payment.merchant_reference,
+                payment.email or "—",
+            )
             return
 
         product_name = payment.product.name if payment.product else "your item"
@@ -273,6 +273,60 @@ def _notify_payment_failed(payment, terminal_status):
         )
 
 
+def _notify_seller_of_sale(payment):
+    """
+    Notify the seller that a sale completed.
+
+    Shared by the gateway completion path (via
+    `_mark_product_purchased`) and the manual-payment path
+    (via `complete_manual_payment`), so a manual payment
+    produces exactly the same seller notification a
+    gateway payment does.
+
+    Best-effort: the caller is always inside a transaction,
+    so a `notify()` hiccup must never roll back the payment
+    row or the stock decrement.
+    """
+    business = payment.business
+    if business is None or not business.owner_id:
+        logger.info(
+            "Skipping seller-sale notification — business has "
+            "no owner | ref=%s | business_id=%s",
+            payment.merchant_reference,
+            payment.business_id,
+        )
+        return
+
+    try:
+        product_name = payment.product.name if payment.product else "an item"
+
+        notify(
+            recipient=business.owner,
+            title="New sale",
+            body=(
+                f"You sold {product_name} "
+                f"for {payment.currency} {payment.amount}."
+            ),
+            category=Notification.CATEGORY_PAYMENT,
+            severity=Notification.SEVERITY_SUCCESS,
+            action_label="View business",
+            action_url="/useraccount/business",
+            metadata={
+                "payment_id": str(payment.id),
+                "merchant_reference": payment.merchant_reference,
+                "product_id": payment.product_id,
+                "buyer_email": payment.email,
+                "amount": str(payment.amount),
+                "currency": payment.currency,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Failed to notify seller for product payment | ref=%s",
+            payment.merchant_reference,
+        )
+
+
 # ============================================================
 # SYNC PRODUCT PAYMENT FROM PESAPAL
 # ============================================================
@@ -364,13 +418,8 @@ def sync_product_payment_from_pesapal(merchant_reference):
                 ]
             )
 
-            # ── Decrement stock + notify seller ───────────
             _mark_product_purchased(payment)
-
-            # ── Create the delivery record ────────────────
             _create_delivery_for_payment(payment)
-
-            # ── Credit the platform balance in the same tx ──
             _credit_system_balance_for_payment(payment)
 
             became_completed = True
@@ -419,16 +468,10 @@ def _credit_system_balance_for_payment(payment):
     Credit the platform's SystemBalance with the amount that
     just landed.
 
-    - Ensures the singleton row exists (creates at 0.00 KES if
-      missing).
-    - Uses select_for_update so concurrent payments can't race.
-    - If the credit fails, we RAISE — which rolls back the
-      whole atomic block (payment status change, stock
-      decrement, delivery creation, purchase confirmation).
-      A payment row can never be marked completed without the
-      platform balance reflecting it.
+    If the credit fails, we RAISE — which rolls back the whole
+    atomic block. A payment row can never be marked completed
+    without the platform balance reflecting it.
     """
-
     from system_balance.services import credit_system_balance
 
     new_balance = credit_system_balance(
@@ -501,34 +544,7 @@ def _mark_product_purchased(payment):
         )
 
     # ── 2. Notify the seller ──────────────────────────────
-    try:
-        recipient = business.owner if business.owner_id else None
-        if recipient is not None:
-            notify(
-                recipient=recipient,
-                title="New sale",
-                body=(
-                    f"You sold {product.name if product else 'an item'} "
-                    f"for {payment.currency} {payment.amount}."
-                ),
-                category=Notification.CATEGORY_PAYMENT,
-                severity=Notification.SEVERITY_SUCCESS,
-                action_label="View business",
-                action_url="/useraccount/business",
-                metadata={
-                    "payment_id": str(payment.id),
-                    "merchant_reference": payment.merchant_reference,
-                    "product_id": payment.product_id,
-                    "buyer_email": payment.email,
-                    "amount": str(payment.amount),
-                    "currency": payment.currency,
-                },
-            )
-    except Exception:
-        logger.exception(
-            "Failed to notify seller for product payment | ref=%s",
-            payment.merchant_reference,
-        )
+    _notify_seller_of_sale(payment)
 
     logger.info(
         "Product purchased | ref=%s | product_id=%s | "
@@ -544,25 +560,6 @@ def _mark_product_purchased(payment):
 # ============================================================
 # CREATE DELIVERY FOR PAYMENT
 # ============================================================
-#
-# Only runs when the payment transitions to `completed`.
-# Creates a Deliveries row representing the physical handoff
-# of the purchased product to the buyer.
-#
-# Everything on the Deliveries row is derived from the
-# ProductPayment row — no fresh user input is consulted:
-#
-#   payment      ← payment               (1-to-1 link)
-#   client       ← payment.user          (the buyer)
-#   product      ← payment.product
-#   quantity     ← 1                     (one physical handoff)
-#   town         ← payment.town          (frozen at checkout)
-#   delivered_by ← payment.business.owner (the seller —
-#                                        they posted the
-#                                        product, they ship it)
-#   delivered_to ← payment.user          (default recipient)
-#   status       ← "pending"             (model default)
-# ============================================================
 
 def _create_delivery_for_payment(payment):
     """
@@ -571,10 +568,7 @@ def _create_delivery_for_payment(payment):
     Two-layer protection:
 
       1. Runtime guard — refuses to run unless the payment is
-         genuinely completed. Closes the door on a future
-         backfill script, test fixture, or admin action that
-         might try to call this helper on a non-completed
-         payment.
+         genuinely completed.
 
       2. DB constraint — the OneToOneField on
          Deliveries.payment means a duplicate insert raises
@@ -586,7 +580,7 @@ def _create_delivery_for_payment(payment):
     account that posted the product is the natural shipper.
     A dispatcher can reassign the courier later via
     `POST /deliveries/<id>/assign/` if someone else fulfills
-    the order (staff, third-party courier, etc.).
+    the order.
     """
     from django.db import IntegrityError
     from deliveries.models import Deliveries
@@ -628,13 +622,6 @@ def _create_delivery_for_payment(payment):
         return None
 
     # ── 4. Default courier = the business owner ───────────
-    #
-    # The business owner is the natural shipper: they
-    # posted the product, they own the inventory, they're
-    # the one physically packaging and dispatching. If the
-    # business has no owner (rare — orphaned rows), fall
-    # back to None and let a dispatcher assign manually.
-    #
     default_courier = None
     if (
         payment.business_id
@@ -655,7 +642,6 @@ def _create_delivery_for_payment(payment):
             delivered_to=payment.user,
         )
     except IntegrityError:
-        # A delivery already exists for this payment.
         delivery = Deliveries.objects.get(payment=payment)
         logger.info(
             "Delivery already exists for ref=%s | delivery_id=%s",
@@ -679,9 +665,9 @@ def _create_delivery_for_payment(payment):
     return delivery
 
 
-
-
-
+# ============================================================
+# COMPLETE MANUAL PAYMENT
+# ============================================================
 
 @transaction.atomic
 def complete_manual_payment(
@@ -697,6 +683,7 @@ def complete_manual_payment(
     email,
     gateway,
     note,
+    currency="KES",
 ):
     """
     Create a ProductPayment row for a manually-recorded payment
@@ -706,13 +693,20 @@ def complete_manual_payment(
         1. persist the ProductPayment row in `completed`
         2. atomically decrement product stock (clamped to 0)
         3. create the Deliveries row
+        4. notify the buyer ("Payment received")
+        5. notify the seller ("New sale")
 
     Returns the created ProductPayment.
 
-    Kept in `controllers/services.py` next to
-    `record_pending_payment` and `sync_product_payment_from_pesapal`
-    so all three write-paths for a product payment live in one
-    module.
+    `currency` defaults to "KES" so any older call site that
+    doesn't pass it keeps working unchanged. New callers (the
+    manual-payment view) pass the admin's chosen currency.
+
+    Notifications run AFTER the DB writes so that a notify()
+    failure can't prevent the payment row from being persisted.
+    Both notify helpers already wrap their own bodies in
+    try/except and only log on failure — nothing here can
+    raise past the atomic block boundary.
     """
 
     from product_payment.models import ProductPayment
@@ -730,7 +724,7 @@ def complete_manual_payment(
         gateway=gateway,
         status=ProductPayment.STATUS_COMPLETED,
         amount=amount,
-        currency="KES",
+        currency=currency,
         email=email,
         phone_number=phone_number,
         confirmation_code=f"MANUAL-{merchant_reference[-8:]}",
@@ -744,12 +738,11 @@ def complete_manual_payment(
         },
     )
 
-    # ── 2. Decrement stock atomically (clamped to 0) ─
+    # ── 2. Decrement stock atomically (clamped to 0) ──
     #
     # Same guarantee as the gateway path: never negative.
     # If quantity requested > available, stock lands on 0
     # rather than going below — the sale is still recorded.
-    from django.db.models import F
     Products.objects.filter(id=product.id).update(
         quantity=models.functions.Greatest(
             F("quantity") - quantity,
@@ -757,36 +750,44 @@ def complete_manual_payment(
         )
     )
 
-    # ── 3. Create the Deliveries row ─────────────────
+    # ── 3. Create the Deliveries row via the shared helper ──
     #
-    # Reuse whatever the gateway path uses. If your
-    # `sync_product_payment_from_pesapal` calls a helper
-    # like `_create_delivery_for_payment(payment)`, call
-    # the same helper here. The snippet below assumes the
-    # helper exists (adapt the import to your actual module).
-    try:
-        from product_payment.controllers.services import (  # noqa: F811
-            _create_delivery_for_payment,
-        )
-        _create_delivery_for_payment(payment)
-    except ImportError:
-        # If you don't have a shared helper yet, inline the
-        # Deliveries creation here. The model is
-        # `deliveries.Deliveries` in most of these codebases.
-        from deliveries.models import Deliveries
-        Deliveries.objects.create(
-            user=user,
-            product=product,
-            business=payment.business,
-            town=town,
-            quantity=quantity,
-            status="pending",
-            payment_reference=merchant_reference,
-        )
+    # `_create_delivery_for_payment` handles the completed
+    # guard, the missing-product guard, the town fallback,
+    # the courier default, and the OneToOne idempotency —
+    # so the manual path inherits everything the gateway
+    # path does with zero duplication.
+    _create_delivery_for_payment(payment)
+
+    # ── 4. Notify the buyer ───────────────────────────
+    #
+    # Mirrors what the gateway flow fires when PesaPal
+    # confirms a payment. Same title, same body, same
+    # action link — the buyer can't tell whether the sale
+    # was recorded automatically or by an admin.
+    #
+    # `_notify_payment_completed` already short-circuits
+    # cleanly if `payment.user_id` is None (walk-in buyer),
+    # logging the skip rather than raising.
+    _notify_payment_completed(payment)
+
+    # ── 5. Notify the seller ──────────────────────────
+    #
+    # Mirrors the inline notify in `_mark_product_purchased`.
+    # We can't call `_mark_product_purchased` itself because
+    # it also decrements stock — which we already did above
+    # — so we call the extracted notify helper directly.
+    _notify_seller_of_sale(payment)
 
     logger.info(
-        "Manual product payment recorded ref=%s product=%s qty=%s amount=%s gateway=%s",
-        merchant_reference, product.id, quantity, amount, gateway,
+        "Manual product payment recorded | ref=%s | product=%s | "
+        "qty=%s | amount=%s %s | gateway=%s | by_superadmin",
+        merchant_reference,
+        product.id,
+        quantity,
+        amount,
+        currency,
+        gateway,
     )
 
     return payment

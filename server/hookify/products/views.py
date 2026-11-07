@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -1019,6 +1019,86 @@ def product_usage(request, business_id):
                 "in_stock": in_stock_count,
                 "out_of_stock": out_of_stock_count,
             },
+        },
+        status=status.HTTP_200_OK,
+    )
+
+# products/views.py  (append at the bottom)
+
+# ============================================================
+# ADMIN LOOKUP — GET /products/<product_id>/lookup/
+# ============================================================
+#
+# Superadmin-only minimal payload for the Add-order wizard's
+# product verification step. Returns only what the frontend's
+# verification card renders — no images array, no properties,
+# no engagement counts. That keeps the payload small and the
+# contract narrow (a change to the storefront's product shape
+# can't silently break the admin wizard).
+#
+# Permissions:
+#   IsAdminUser — same boundary as product_payment's manual
+#   endpoint and account's users-by-email lookup. If those
+#   ever move to a custom superadmin-role permission, this
+#   should move in lockstep.
+# ============================================================
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def lookup_product_for_admin(request, product_id):
+    """
+    Look up a product by id for the superadmin Add-order wizard.
+
+    Path param:
+        product_id   (int, required)
+
+    Responses:
+        200 — product found, returns verification-card payload
+        404 — no product with that id
+    """
+    product = (
+        Products.objects
+        .select_related("business", "business__owner")
+        .prefetch_related("images")
+        .filter(pk=product_id)
+        .first()
+    )
+
+    if product is None:
+        return Response(
+            {"detail": "Product not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    primary = None
+    try:
+        primary = product.primary_image
+    except Exception:
+        primary = None
+
+    return Response(
+        {
+            "id": product.id,
+            "name": product.name,
+            "price": (
+                str(product.price)
+                if product.price is not None else None
+            ),
+            "quantity": product.quantity,
+            "in_stock": product.quantity > 0,
+            "business": product.business_id,
+            "business_name": (
+                product.business.business_name
+                if product.business_id else ""
+            ),
+            "owner_email": (
+                product.business.owner.email
+                if product.business_id
+                and product.business.owner_id else None
+            ),
+            "primary_image_url": (
+                primary.image_url if primary else None
+            ),
         },
         status=status.HTTP_200_OK,
     )

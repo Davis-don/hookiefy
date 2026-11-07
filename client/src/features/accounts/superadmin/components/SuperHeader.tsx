@@ -17,6 +17,8 @@ type SuperHeaderProps = {
   onOpenPlans?: () => void;
   /** Fired when the Settings item is clicked. */
   onOpenSettings?: () => void;
+  /** Fired when the Orders item is clicked. */
+  onOpenOrders?: () => void;                               // ← new
 };
 
 /* ── Timing ──────────────────────────────────────────── */
@@ -36,6 +38,16 @@ const MenuIcon = () => (
     <circle cx="12" cy="5"  r="1.6" />
     <circle cx="12" cy="12" r="1.6" />
     <circle cx="12" cy="19" r="1.6" />
+  </svg>
+);
+
+const OrdersIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+    <path d="M9 8h6" />
+    <path d="M9 12h6" />
+    <path d="M9 16h3" />
   </svg>
 );
 
@@ -80,6 +92,7 @@ function SuperHeader({
   onOpenProfile,
   onOpenPlans,
   onOpenSettings,
+  onOpenOrders,                                            // ← new
 }: SuperHeaderProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -132,10 +145,8 @@ function SuperHeader({
     setOpen(false);
     setLoggingOut(true);
 
-    // 1. Immediate toast — queued even before navigation tears us down.
     toast.success('Logging you out…');
 
-    // 2. Kick off the request and the minimum-duration timer in parallel.
     const minDelay = delay(MIN_BUSY_MS);
 
     const request = (async () => {
@@ -159,13 +170,10 @@ function SuperHeader({
 
     await Promise.all([request, minDelay]);
 
-    // 3. Clear local auth.
     clearAuth?.();
 
-    // 4. Success toast.
     toast.success('You have been logged out.');
 
-    // 5. Give the toast a frame to mount before unmounting the shell.
     await delay(60);
 
     navigate('/login', { replace: true });
@@ -222,6 +230,23 @@ function SuperHeader({
 
           {open && (
             <div className="sh-header-dropdown" role="menu">
+              {/* ── Orders — first because it's the most-
+                     used admin shortcut. ─────────────── */}
+              <button
+                type="button"
+                role="menuitem"
+                className="sh-header-dropdown-item"
+                onClick={() => {
+                  setOpen(false);
+                  onOpenOrders?.();
+                }}
+              >
+                <span className="sh-header-dropdown-icon">
+                  <OrdersIcon />
+                </span>
+                <span className="sh-header-dropdown-label">Orders</span>
+              </button>
+
               <button
                 type="button"
                 role="menuitem"

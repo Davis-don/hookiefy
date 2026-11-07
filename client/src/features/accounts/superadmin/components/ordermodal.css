@@ -1,0 +1,441 @@
+/* src/features/accounts/superadmin/components/ordermodal.css */
+
+/* ============================================================
+   ORDERS MODALS — SHARED SHELL
+   ============================================================
+   Covers:
+     • AddOrderWizard      (shell + step-bar + footer + error)
+     • ManualDeliveryModal (shell + form fields + verify card)
+
+   Step-specific styles:
+     • verifyUserStep.css
+     • verifyProductStep.css
+     • paymentDetailsStep.css
+     • reviewStep.css
+     • doneStep.css
+   ============================================================ */
+
+
+/* ============================================================
+   BACKDROP
+   ============================================================ */
+
+.om-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+
+/* ============================================================
+   MODAL SHELL
+   ============================================================ */
+
+.om-modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+
+.om-modal--wide {
+  max-width: 640px;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.om-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.om-modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.om-step-hint {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.om-modal__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.om-modal__close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.om-modal__close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.om-modal__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* ============================================================
+   STEP BAR (AddOrderWizard)
+   ============================================================ */
+
+.om-step-bar {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 12px;
+}
+
+.om-step-bar__dot {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  transition: background 0.2s ease;
+}
+
+.om-step-bar__dot.is-done {
+  background: #16a34a;
+}
+
+.om-step-bar__dot.is-active {
+  background: #2563eb;
+}
+
+
+/* ============================================================
+   BODY
+   ============================================================ */
+
+.om-modal__body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.om-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.om-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.05s ease;
+}
+
+.om-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.om-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.om-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.om-btn--ghost {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.om-btn--ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.om-btn--primary {
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: #ffffff;
+}
+
+.om-btn--primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.om-btn--primary:disabled {
+  background: #93c5fd;
+  border-color: #93c5fd;
+}
+
+
+/* ============================================================
+   ERROR BANNER
+   ============================================================ */
+
+.om-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   FORM PRIMITIVES  (ManualDeliveryModal still uses these)
+   ============================================================ */
+
+.om-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.om-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.om-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+  line-height: 1.2;
+}
+
+.om-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.om-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.om-input:disabled {
+  background: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.om-input--textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.om-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+
+/* ============================================================
+   HINTS
+   ============================================================ */
+
+.om-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.om-hint--warn {
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   VERIFY CARD (ManualDeliveryModal — read-only order summary)
+   ============================================================ */
+
+.om-verify-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.om-verify-card--static {
+  background: #f1f5f9;
+}
+
+.om-verify-card__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.om-verify-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.om-verify-card__row .om-label {
+  color: #64748b;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  padding-top: 2px;
+}
+
+.om-verify-card__row .om-value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+
+/* ============================================================
+   MISC
+   ============================================================ */
+
+.om-muted {
+  color: #64748b;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .om-modal-backdrop {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .om-modal {
+    max-height: calc(100vh - 16px);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .om-modal__header {
+    padding: 14px 16px 10px;
+  }
+
+  .om-modal__body {
+    padding: 14px 16px;
+  }
+
+  .om-step-bar {
+    padding: 0 16px 10px;
+  }
+
+  .om-modal__footer {
+    padding: 12px 16px 16px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .om-modal__footer .om-btn {
+    width: 100%;
+  }
+
+  .om-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,6 +8,7 @@ import BusinessesTab from '../components/BusinessesTab';
 import UsersTab from '../components/UsersTab';
 import AccountsTab from '../components/AccountsTab';
 import DeliveriesTab from '../components/DeliveriesTab';
+import OrdersTab from '../components/OrdersTab';
 import PlansTab from '../components/PlansTab';
 import SettingsTab from '../components/SettingsTab';
 import SuperProfile from '../components/SuperProfile';
@@ -20,6 +21,7 @@ type TabKey =
   | 'users'
   | 'accounts'
   | 'deliveries'
+  | 'orders'
   | 'plans'
   | 'settings'
   | 'profile';
@@ -84,18 +86,49 @@ const DeliveriesIcon = () => (
   </svg>
 );
 
+const OrdersIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+    <path d="M9 8h6" />
+    <path d="M9 12h6" />
+    <path d="M9 16h3" />
+  </svg>
+);
+
 /* ── Component ───────────────────────────────────────── */
 
 function Superaccount() {
   const [active, setActive] = useState<TabKey>('home');
 
-  const navItems: NavItem[] = [
+  /*
+   * Sidebar (desktop/tablet) — all six items.
+   *
+   * The sidebar has room for every section, and Orders is
+   * one of the more-used admin shortcuts, so it belongs
+   * here next to Deliveries.
+   */
+  const sidebarItems: NavItem[] = [
     { key: 'home',       label: 'Home',       icon: <HomeIcon /> },
     { key: 'businesses', label: 'Businesses', icon: <BusinessesIcon /> },
     { key: 'users',      label: 'Users',      icon: <UsersIcon /> },
     { key: 'accounts',   label: 'Accounts',   icon: <AccountsIcon /> },
     { key: 'deliveries', label: 'Deliveries', icon: <DeliveriesIcon /> },
+    { key: 'orders',     label: 'Orders',     icon: <OrdersIcon /> },
   ];
+
+  /*
+   * Bottom bar (mobile) — Orders omitted.
+   *
+   * Five items already crowd the bar on narrow phones
+   * (each tap target needs ~56px). Six would compress
+   * them below the recommended minimum. Orders stays
+   * reachable on mobile via the header's overflow menu
+   * (`onOpenOrders`) — same destination, one extra tap.
+   */
+  const bottomItems: NavItem[] = sidebarItems.filter(
+    (item) => item.key !== 'orders',
+  );
 
   const renderTab = () => {
     switch (active) {
@@ -104,6 +137,7 @@ function Superaccount() {
       case 'users':      return <UsersTab />;
       case 'accounts':   return <AccountsTab />;
       case 'deliveries': return <DeliveriesTab />;
+      case 'orders':     return <OrdersTab />;
       case 'plans':      return <PlansTab />;
       case 'settings':   return <SettingsTab />;
       case 'profile':    return <SuperProfile />;
@@ -122,7 +156,7 @@ function Superaccount() {
         </div>
 
         <nav className="sa-sidebar-nav">
-          {navItems.map((item) => (
+          {sidebarItems.map((item) => (
             <button
               key={item.key}
               type="button"
@@ -143,13 +177,14 @@ function Superaccount() {
           onOpenProfile={() => setActive('profile')}
           onOpenPlans={() => setActive('plans')}
           onOpenSettings={() => setActive('settings')}
+          onOpenOrders={() => setActive('orders')}
         />
 
         <div className="sa-content">{renderTab()}</div>
       </div>
 
       <nav className="sa-bottom-nav">
-        {navItems.map((item) => (
+        {bottomItems.map((item) => (
           <button
             key={item.key}
             type="button"
