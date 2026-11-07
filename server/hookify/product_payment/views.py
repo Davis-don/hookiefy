@@ -8,7 +8,10 @@ from django.shortcuts import redirect
 from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAdminUser,
+)
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -17,12 +20,14 @@ from .models import ProductPayment
 from .serializers import (
     InitiateProductPaymentSerializer,
     ProductPaymentSerializer,
+    ManualProductPaymentSerializer,
 )
 from .controllers.submit_order_request import submit_the_order
 from .controllers.product_amount import Product_Amount
 from .controllers.services import (
     get_active_pesapal_config,
     record_pending_payment,
+    complete_manual_payment,
 )
 
 
@@ -373,6 +378,12 @@ def sync_payment(request, merchant_reference):
     product-specific sync directly: the shared dispatcher
     routes by prefix, so even if a SUB-… reference somehow
     lands on this endpoint, it still syncs correctly.
+
+    Manual rows (`…MAN`) are terminal on creation — they
+    are already `completed` and have no gateway to poll.
+    For those, the sync is a no-op: we short-circuit
+    before dispatching so we don't burn a PesaPal call
+    on a reference the gateway has never heard of.
     """
 
     payment = (
@@ -389,6 +400,17 @@ def sync_payment(request, merchant_reference):
         return Response(
             {"message": "Payment not found."},
             status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Manual rows have no gateway counterpart — nothing to
+    # sync against. Return the row as-is.
+    if payment.merchant_reference.endswith(".MAN"):
+        return Response(
+            {
+                "message": "Manual payment — no gateway sync required.",
+                "payment": ProductPaymentSerializer(payment).data,
+            },
+            status=status.HTTP_200_OK,
         )
 
     try:
@@ -420,25 +442,113 @@ def sync_payment(request, merchant_reference):
 
 
 # ============================================================
-# CALLBACK — browser redirect from PesaPal
-# GET /subscription_payments/payment-success/
-#
-# Shared with subscription payments — the browser callback URL
-# is set once in settings (PESAPAL_CALLBACK_URL) and served by
-# subscription_payment.views.payment_success_callback, which
-# dispatches by merchant_reference prefix. Nothing to
-# implement here — this module simply documents that the
-# product vertical is covered by the shared handler.
+# MANUAL PAYMENT — superadmin only
+# POST /product_payments/manual/
 # ============================================================
 
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def manual_payment(request):
+    """
+    Record a product payment that did NOT go through a
+    gateway — cheque, cash, bank transfer confirmed by
+    finance, etc. Superadmin only.
 
-# ============================================================
-# IPN — server-to-server
-# POST /subscription_payments/ipn/
-#
-# Same story. Shared endpoint, dispatch by merchant_reference
-# prefix. The authoritative handler lives in subscription
-# payment (subscription_payment.views.payment_ipn) and is
-# already extended with product dispatch — nothing to
-# implement here.
-# ============================================================
+    The row is created directly in `completed` status (the
+    money is already in hand — that's why it's being
+    recorded manually), and the same post-payment side
+    effects that run on a gateway completion are applied:
+    stock is decremented and a Deliveries row is created.
+
+    Unlike the client initiate endpoint, this view does
+    NOT hit PesaPal. There is no `redirect_url`, no
+    `submit_response` from a gateway — instead the row's
+    `submit_response` carries a small structured note for
+    audit ("recorded by superadmin", the free-text note).
+
+    `IsAdminUser` grants access to `is_staff=True` accounts.
+    If you want superadmin-role-only (narrower than
+    is_staff), replace it with a custom permission class
+    that checks `request.user.role == "superadmin"`.
+    """
+
+    serializer = ManualProductPaymentSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    product = serializer.product
+    user = serializer.resolved_user          # may be None
+    email = serializer.resolved_email        # may be None
+    stock_warning = serializer.stock_warning
+
+    v = serializer.validated_data
+    quantity = v["quantity"]
+    amount = v["amount"]
+    town = v["town"]
+    gateway = v["gateway"]
+    currency = v["currency"]
+    phone = (v.get("phone_number") or "").strip() or None
+    note = (v.get("note") or "").strip()
+
+    # ── Build a reference that follows the PROD- convention ──
+    #
+    # Same shape as the client flow so the row is routed
+    # correctly by `_sync_by_reference` if anyone ever
+    # POSTs it to the sync endpoint — though `sync_payment`
+    # short-circuits on `.MAN` refs before dispatching, so
+    # that path never actually reaches PesaPal.
+    #
+    # The ".MAN" suffix makes manual rows instantly
+    # filterable for reporting, and the matching
+    # `MAN-…` order_tracking_id satisfies the model's
+    # `unique=True` on that field without any risk of
+    # colliding with a real gateway tracking ID (those
+    # are alphanumeric-only and never start with "MAN-").
+    #
+    manual_suffix = uuid.uuid4().hex[:10].upper()
+    merchant_reference = (
+        f"PROD-{product.id}-{manual_suffix}.MAN"
+    )
+    order_tracking_id = f"MAN-{manual_suffix}"
+
+    try:
+        payment = complete_manual_payment(
+            user=user,
+            product=product,
+            merchant_reference=merchant_reference,
+            order_tracking_id=order_tracking_id,
+            amount=amount,
+            quantity=quantity,
+            town=town,
+            phone_number=phone,
+            email=email,
+            gateway=gateway,
+            note=note,
+            currency=currency,
+        )
+    except Exception as e:
+        logger.exception(
+            "Manual product payment failed product=%s amount=%s",
+            product.id, amount,
+        )
+        return Response(
+            {
+                "message": "Could not record the manual payment.",
+                "code": "record_failed",
+                "detail": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(
+        {
+            "message": "Manual payment recorded.",
+            "payment": ProductPaymentSerializer(payment).data,
+            "stock_warning": stock_warning,
+        },
+        status=status.HTTP_201_CREATED,
+    )

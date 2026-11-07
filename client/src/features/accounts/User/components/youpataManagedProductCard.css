@@ -118,3 +118,54 @@
 .youpata-product-card-purchase.is-sold-out {
   transition: none;
 }
+/* ── Secondary actions: Call / WhatsApp ──────────────── */
+
+.youpata-product-card-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.youpata-product-card-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  color: #fff;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.youpata-product-card-contact-btn:hover {
+  filter: brightness(1.08);
+}
+
+.youpata-product-card-contact-btn:active {
+  transform: translateY(1px);
+}
+
+.youpata-product-card-contact-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.youpata-product-card-contact-btn.is-call {
+  background: #16a34a;   /* emerald-600 */
+}
+
+.youpata-product-card-contact-btn.is-whatsapp {
+  background: #25d366;   /* official WhatsApp green */
+  color: #0b141a;        /* dark text on bright green */
+}
+
+.youpata-product-card-contact-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}

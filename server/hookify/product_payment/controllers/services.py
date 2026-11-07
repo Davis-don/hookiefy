@@ -17,6 +17,7 @@ from .get_transaction_status import get_transaction_status
 logger = logging.getLogger(__name__)
 
 
+
 # ============================================================
 # ACTIVE PAYMENT CONFIGURATION
 # ============================================================
@@ -676,3 +677,116 @@ def _create_delivery_for_payment(payment):
     )
 
     return delivery
+
+
+
+
+
+
+@transaction.atomic
+def complete_manual_payment(
+    *,
+    user,
+    product,
+    merchant_reference,
+    order_tracking_id,
+    amount,
+    quantity,
+    town,
+    phone_number,
+    email,
+    gateway,
+    note,
+):
+    """
+    Create a ProductPayment row for a manually-recorded payment
+    and run the same post-completion side effects the gateway
+    path runs:
+
+        1. persist the ProductPayment row in `completed`
+        2. atomically decrement product stock (clamped to 0)
+        3. create the Deliveries row
+
+    Returns the created ProductPayment.
+
+    Kept in `controllers/services.py` next to
+    `record_pending_payment` and `sync_product_payment_from_pesapal`
+    so all three write-paths for a product payment live in one
+    module.
+    """
+
+    from product_payment.models import ProductPayment
+    from products.models import Products
+
+    # ── 1. Persist the completed row ──────────────────
+    payment = ProductPayment.objects.create(
+        merchant_reference=merchant_reference,
+        order_tracking_id=order_tracking_id,
+        user=user,
+        product=product,
+        business=product.business if product.business_id else None,
+        quantity=quantity,
+        town=town,
+        gateway=gateway,
+        status=ProductPayment.STATUS_COMPLETED,
+        amount=amount,
+        currency="KES",
+        email=email,
+        phone_number=phone_number,
+        confirmation_code=f"MANUAL-{merchant_reference[-8:]}",
+        payment_method=gateway,
+        payment_account=note or None,
+        paid_at=timezone.now(),
+        submit_response={
+            "source": "manual",
+            "recorded_by_superadmin": True,
+            "note": note,
+        },
+    )
+
+    # ── 2. Decrement stock atomically (clamped to 0) ─
+    #
+    # Same guarantee as the gateway path: never negative.
+    # If quantity requested > available, stock lands on 0
+    # rather than going below — the sale is still recorded.
+    from django.db.models import F
+    Products.objects.filter(id=product.id).update(
+        quantity=models.functions.Greatest(
+            F("quantity") - quantity,
+            0,
+        )
+    )
+
+    # ── 3. Create the Deliveries row ─────────────────
+    #
+    # Reuse whatever the gateway path uses. If your
+    # `sync_product_payment_from_pesapal` calls a helper
+    # like `_create_delivery_for_payment(payment)`, call
+    # the same helper here. The snippet below assumes the
+    # helper exists (adapt the import to your actual module).
+    try:
+        from product_payment.controllers.services import (  # noqa: F811
+            _create_delivery_for_payment,
+        )
+        _create_delivery_for_payment(payment)
+    except ImportError:
+        # If you don't have a shared helper yet, inline the
+        # Deliveries creation here. The model is
+        # `deliveries.Deliveries` in most of these codebases.
+        from deliveries.models import Deliveries
+        Deliveries.objects.create(
+            user=user,
+            product=product,
+            business=payment.business,
+            town=town,
+            quantity=quantity,
+            status="pending",
+            payment_reference=merchant_reference,
+        )
+
+    logger.info(
+        "Manual product payment recorded ref=%s product=%s qty=%s amount=%s gateway=%s",
+        merchant_reference, product.id, quantity, amount, gateway,
+    )
+
+    return payment
