@@ -1,6 +1,6 @@
 // src/pages/Home.tsx
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAuthStore } from '../../../../store/authStore';
 import { useProfileStatus } from '../../../../features/accounts/hooks/useProfileStatus';
@@ -32,6 +32,16 @@ type OpenView =
 type HomeProps = {
   onOpenPayment: (productId: number) => void;
   onGoToProfile?: () => void;
+
+  /**
+   * Whether the parent's scroll listener considers the
+   * account header visible. When `false`, the Home nav
+   * slides up out of view too — the two bars move together.
+   *
+   * Defaults to `true` so `Home` works standalone (any page
+   * that doesn't provide a scroll observer).
+   */
+  navVisible?: boolean;
 };
 
 const TABS: { key: FeedTab; label: string }[] = [
@@ -42,10 +52,60 @@ const TABS: { key: FeedTab; label: string }[] = [
 ];
 
 /* ============================================================
+   HEADER OFFSET — where the fixed nav should sit
+   ============================================================
+   Reads the actual rendered height of `.ua-header-wrap` if
+   it exists in the DOM (i.e. we're inside Useraccount), and
+   uses it as the nav's fixed `top`. If no header exists
+   (marketing Home, standalone, test page), the nav sits at
+   `top: 0` — flush with the top of the viewport.
+
+   Uses ResizeObserver so the offset updates if the header
+   changes height (mobile vs desktop, avatar size, etc.).
+   ============================================================ */
+
+function useHeaderOffset() {
+  const [top, setTop] = useState(0);
+
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.ua-header-wrap');
+    if (!header) {
+      setTop(0);
+      return;
+    }
+
+    const apply = () => {
+      const h = header.getBoundingClientRect().height;
+      setTop(Math.max(0, Math.round(h)));
+    };
+
+    apply();
+
+    const ro = new ResizeObserver(apply);
+    ro.observe(header);
+
+    // Re-measure on viewport changes too — width changes can
+    // change the header's height (line wrapping, etc.).
+    window.addEventListener('resize', apply);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', apply);
+    };
+  }, []);
+
+  return top;
+}
+
+/* ============================================================
    MAIN COMPONENT
    ============================================================ */
 
-function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
+function Home({
+  onOpenPayment,
+  onGoToProfile,
+  navVisible = true,
+}: HomeProps) {
   const access = useAuthStore((s) => s.access);
 
   const [activeTab, setActiveTab] = useState<FeedTab>('all');
@@ -55,6 +115,11 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     data: profileStatus,
     isLoading: profileLoading,
   } = useProfileStatus();
+
+  // How far down from the top of the viewport the nav should
+  // sit — the height of the fixed account header above it,
+  // or 0 if there is no header.
+  const navTop = useHeaderOffset();
 
   /* ── Detail views take over the whole page ─────────── */
   if (openView?.kind === 'business') {
@@ -134,8 +199,21 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
 
   /* ── Render ───────────────────────────────────────── */
   return (
-    <div className="home-shell">
-      <nav className="home-nav" aria-label="Feed filters">
+    <div
+      className="home-shell"
+      style={{
+        // Reserve space for the fixed nav: its top offset +
+        // its own height (~44px) + a small gap.
+        paddingTop: `${navTop + 64}px`,
+      }}
+    >
+      <nav
+        className={
+          'home-nav' + (navVisible ? '' : ' is-hidden')
+        }
+        style={{ top: `${navTop}px` }}
+        aria-label="Feed filters"
+      >
         {TABS.map((tab) => (
           <button
             key={tab.key}

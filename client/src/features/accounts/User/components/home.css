@@ -5,22 +5,21 @@
    ─────────────────────────────────────────────────────────
    STRUCTURE:
      .home-shell           outer column
-     .home-nav             sticky filter tabs
+     .home-nav             fixed filter tabs
      .home-list            responsive grid of cards
      .home-state           generic loading / error / empty
 
    NAV BEHAVIOUR:
-     • The tab strip sticks to the top of the viewport,
-       offset by `--ua-header-height` (set by
-       Useraccount.tsx from a ResizeObserver on the
-       actual rendered UserHeader) so it stops right
-       below the account header instead of under it.
-     • Feed cards scroll beneath it.
-     • z-index: 15 — below UserHeader's z-index: 20,
-       above feed content (which uses no z-index).
-     • If the parent page doesn't set --ua-header-height,
-       the fallback (0px) makes it stick at viewport top,
-       which is the old-but-safe behaviour.
+     • Position: fixed. Its `top` is set inline by Home.tsx
+       based on the actual rendered height of
+       `.ua-header-wrap` when that element exists in the
+       DOM (i.e. on Useraccount), or 0 otherwise.
+     • Slides UP (hidden) when the user scrolls DOWN.
+     • Slides DOWN (visible) when the user scrolls UP.
+     • Same scroll gesture as the account header — driven
+       by the same `navVisible` prop.
+     • `.home-shell` reserves space for the fixed nav via
+       inline `paddingTop` set by Home.tsx.
 
    GRID BREAKPOINTS:
      ≤ 640px    → 1 column, edge-to-edge
@@ -30,39 +29,41 @@
    ───────────────────────────────────────────────────────── */
 
 .home-shell {
-  /* The nav's sticky top. Useraccount.tsx sets
-     --ua-header-height on .ua-main; it cascades here
-     through .ua-content. Fallback 0px for safety. */
-  --home-nav-offset: var(--ua-header-height, 0px);
-
   position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 0 48px;
+
+  /* Horizontal padding only. Top padding is inline (set by
+     Home.tsx based on the measured header height). */
+  padding: 0 0 48px;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   max-width: 100%;
   margin: 0 auto;
 }
 
 /* ─────────────────────────────────────────────────────────
-   NAV — sticky tab strip
+   NAV — fixed filter tabs
    ─────────────────────────────────────────────────────────
-   Sticks at `top: var(--home-nav-offset)` — exactly where
-   the account header ends. Content scrolls beneath.
+   `top` is set inline by Home.tsx so it always matches
+   the real header height (or 0 when there's no header).
+   No hardcoded breakpoint offsets — the measured value
+   is always correct.
    ───────────────────────────────────────────────────────── */
 
 .home-nav {
-  position: sticky;
-  top: var(--home-nav-offset);
+  position: fixed;
+  /* top: set inline by Home.tsx */
+  left: 0;
+  right: 0;
   z-index: 15;
 
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 0 16px;
-  margin: 0 0 4px;
+  margin: 0;
 
   background: #FFFFFF;
   border-bottom: 1px solid #E2E8F0;
@@ -70,10 +71,19 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  will-change: transform;
 }
 
 .home-nav::-webkit-scrollbar {
   display: none;
+}
+
+.home-nav.is-hidden {
+  transform: translateY(-140%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .home-nav__tab {
@@ -302,8 +312,10 @@
 
 @media (max-width: 640px) {
   .home-shell {
-    padding: 16px 0 32px;
     gap: 14px;
+    padding: 0 0 32px;
+    /* top padding inline — 57 + 44 + 20 = 121px
+       (measured header + nav height + gap) */
   }
 
   .home-nav {
@@ -337,8 +349,8 @@
 
 @media (max-width: 380px) {
   .home-shell {
-    padding: 14px 0 28px;
     gap: 12px;
+    padding: 0 0 28px;
   }
 
   .home-nav {
@@ -367,7 +379,7 @@
 
 @media (min-width: 641px) {
   .home-shell {
-    padding: 22px 16px 48px;
+    padding: 0 16px 48px;
     max-width: 960px;
   }
 
@@ -383,7 +395,7 @@
 
 @media (min-width: 1024px) {
   .home-shell {
-    padding: 24px 24px 56px;
+    padding: 0 24px 56px;
     max-width: 1280px;
   }
 
@@ -409,7 +421,7 @@
 
 @media (min-width: 1440px) {
   .home-shell {
-    padding: 32px 32px 64px;
+    padding: 0 32px 64px;
     max-width: 1600px;
   }
 
@@ -436,7 +448,8 @@
 @media (prefers-reduced-motion: reduce) {
   .home-loadmore,
   .home-retry-btn,
-  .home-nav__tab {
+  .home-nav__tab,
+  .home-nav {
     transition: none !important;
   }
 }

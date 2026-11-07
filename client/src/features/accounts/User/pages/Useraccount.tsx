@@ -1,6 +1,6 @@
 // src/features/accounts/User/pages/Useraccount.tsx
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import UserHeader from '../components/UserHeader';
 import Home from '../components/Home';
@@ -56,6 +56,80 @@ type NavItem = {
 };
 
 /* ============================================================
+   SCROLL-DIRECTION HOOK
+   ============================================================
+   Watches `.ua-content`'s scroll and returns BOTH:
+     • `showHeader` — false when scrolling DOWN, true when
+                      scrolling UP (or at top).
+     • `showBottom` — false when scrolling UP,   true when
+                      scrolling DOWN (or at top).
+
+   That's the "hide the bar you're moving toward" pattern:
+     scroll down → you move away from the top → hide the
+                   top bar so you can read further down.
+     scroll up   → you move away from the bottom → hide the
+                   bottom bar so nothing's in the way when
+                   thumb-swiping.
+
+   Both are forced visible at the very top of the scroll
+   area (y <= 8) so the initial state is always fully
+   visible, no matter how the last gesture ended.
+
+   `requestAnimationFrame` throttles the read so it doesn't
+   compete with momentum scrolling. 8px dead-zone absorbs
+   trackpad jitter and iOS rubber-banding.
+   ============================================================ */
+
+function useScrollBars(
+  targetRef: React.RefObject<HTMLElement | null>,
+) {
+  const [showHeader, setShowHeader] = useState(true);
+  const [showBottom, setShowBottom] = useState(true);
+
+  const lastY = useRef(0);
+  const ticking = useRef(false);
+
+  useEffect(() => {
+    const node = targetRef.current;
+    if (!node) return;
+
+    lastY.current = node.scrollTop;
+
+    const onScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+
+      requestAnimationFrame(() => {
+        const y = Math.max(0, node.scrollTop);
+        const delta = y - lastY.current;
+
+        if (y <= 8) {
+          // At the top of the scroll area — both bars visible.
+          setShowHeader(true);
+          setShowBottom(true);
+        } else if (delta > 8) {
+          // Moving down — hide header, show bottom.
+          setShowHeader(false);
+          setShowBottom(true);
+        } else if (delta < -8) {
+          // Moving up — hide bottom, show header.
+          setShowHeader(true);
+          setShowBottom(false);
+        }
+
+        lastY.current = y;
+        ticking.current = false;
+      });
+    };
+
+    node.addEventListener('scroll', onScroll, { passive: true });
+    return () => node.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return { showHeader, showBottom };
+}
+
+/* ============================================================
    ICONS
    ============================================================ */
 
@@ -107,7 +181,9 @@ function Useraccount() {
   const [searchScope, setSearchScope] = useState<SearchScope>('all');
   const [openView, setOpenView] = useState<OpenView>(null);
 
-  // Profile completeness drives the global gate.
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const { showHeader, showBottom } = useScrollBars(contentRef);
+
   const {
     data: profileStatus,
     isLoading: profileLoading,
@@ -174,15 +250,6 @@ function Useraccount() {
   };
 
   const renderContent = (): React.ReactNode => {
-    // ── Global profile gate ────────────────────────────────
-    // While the profile is incomplete, the ONLY thing the
-    // user can see is the profile editor. Everything else —
-    // home feed, stories, business, deliveries, billing,
-    // search results, and any open detail view — is hidden.
-    //
-    // We explicitly exclude the 'profile' tab from the gate
-    // so the CTA ("Complete my profile") can navigate there
-    // and let the user actually fill in the missing fields.
     if (profileIncomplete && active !== 'profile') {
       return (
         <div className="home-state-locked">
@@ -315,17 +382,41 @@ function Useraccount() {
       </aside>
 
       <div className="ua-main">
-        <UserHeader
-          onOpenProfile={goToProfile}
-          onOpenDeliveries={goToDeliveries}
-          onSearch={handleSearch}
-          scope={searchScope}
-          onScopeChange={setSearchScope}
-        />
-        <div className="ua-content">{renderContent()}</div>
+        {/* ── Header — fixed at the top, slides UP when
+               scrolling down, slides back when scrolling
+               up. Its wrapper reserves space via padding
+               on .ua-content so content flows below it. */}
+        <div
+          className={
+            'ua-header-wrap' + (showHeader ? '' : ' is-hidden')
+          }
+        >
+          <UserHeader
+            onOpenProfile={goToProfile}
+            onOpenDeliveries={goToDeliveries}
+            onSearch={handleSearch}
+            scope={searchScope}
+            onScopeChange={setSearchScope}
+          />
+        </div>
+
+        {/* ── Scroll container — the only element that
+               scrolls. It pads itself so the fixed header
+               and fixed bottom nav don't cover content. */}
+        <div className="ua-content" ref={contentRef}>
+          {renderContent()}
+        </div>
       </div>
 
-      <nav className="ua-bottom-nav">
+      {/* ── Bottom nav — fixed at the bottom, slides
+             DOWN when scrolling up, back when scrolling
+             down. Rendered on all viewports for
+             simplicity; hidden by CSS above 640px. */}
+      <nav
+        className={
+          'ua-bottom-nav' + (showBottom ? '' : ' is-hidden')
+        }
+      >
         {bottomNavItems.map((item) => (
           <button
             key={item.key}
