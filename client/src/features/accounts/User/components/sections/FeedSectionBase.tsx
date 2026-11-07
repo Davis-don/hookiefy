@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 
-import { Spinner } from '../../../../../components/spinner/Spinner';
 import type { FeedItem } from '../../api/feedApi';
 
 const SCROLL_TRIGGER_PX = 400;
@@ -11,16 +10,6 @@ const SCROLL_TRIGGER_PX = 400;
    TYPES
    ============================================================ */
 
-/**
- * The shape `useBusinessFeed` returns for `data`.
- *
- * Deliberately NOT `FeedResponse`. Once pagination has been
- * flattened by the hook there's no single `count` anymore —
- * the total is distributed across pages, and "count" would
- * mean page count, flattened count, or server total
- * depending on which layer it's read from. The three fields
- * below are all the section needs to render.
- */
 export type FeedSectionData = {
   results: FeedItem[];
   has_more: boolean;
@@ -40,6 +29,49 @@ export type FeedSectionBaseProps = {
   emptyTitle: string;
   emptySub: string;
 };
+
+/* ============================================================
+   SKELETON GRID
+   ============================================================
+   A grid of placeholder cards that mirror the real card
+   layout: image block on top, text lines below, small
+   footer row. Each placeholder is a solid grey block that
+   carries the .sk-shimmer class — a diagonal light wave
+   sweeps across it in a continuous loop.
+   ============================================================ */
+
+function SkeletonCard() {
+  return (
+    <div className="feed-skeleton-card" aria-hidden="true">
+      {/* Cover image area */}
+      <div className="feed-skeleton-card__cover sk-shimmer" />
+
+      {/* Text block */}
+      <div className="feed-skeleton-card__body">
+        <div className="feed-skeleton-card__line sk-shimmer" style={{ width: '72%' }} />
+        <div className="feed-skeleton-card__line sk-shimmer" style={{ width: '46%', height: '1.4rem' }} />
+        <div className="feed-skeleton-card__line sk-shimmer" style={{ width: '92%' }} />
+        <div className="feed-skeleton-card__line sk-shimmer" style={{ width: '84%' }} />
+      </div>
+
+      {/* Footer meta */}
+      <div className="feed-skeleton-card__footer">
+        <div className="feed-skeleton-card__chip sk-shimmer" />
+        <div className="feed-skeleton-card__chip sk-shimmer" />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid({ count = 6 }: { count?: number }) {
+  return (
+    <div className="feed-skeleton-grid" aria-busy="true" aria-live="polite">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  );
+}
 
 /* ============================================================
    COMPONENT
@@ -85,14 +117,12 @@ function FeedSectionBase({
     return () => observer.disconnect();
   }, [data?.has_more, isFetchingMore, loadMore]);
 
+  /* ── First load: skeleton grid, no spinner ─────────── */
   if (isLoading) {
-    return (
-      <div className="home-state">
-        <Spinner size={22} color="#2563EB" label="Loading feed…" />
-      </div>
-    );
+    return <SkeletonGrid count={6} />;
   }
 
+  /* ── Error (only when we have nothing to show) ─────── */
   if (isError && !data) {
     const retrying = isFetching && !isFetchingMore;
     return (
@@ -110,6 +140,7 @@ function FeedSectionBase({
     );
   }
 
+  /* ── Empty (loaded but nothing there) ──────────────── */
   const items = data?.results ?? [];
 
   if (items.length === 0) {
@@ -121,9 +152,10 @@ function FeedSectionBase({
     );
   }
 
+  /* ── Loaded grid ───────────────────────────────────── */
   return (
     <>
-      <ul className="home-list">
+      <ul className="home-list feed-loaded-fade">
         {items.map((item) => (
           <li key={`${item.kind}-${item.id}`} className="home-list-item">
             {renderItem(item)}
@@ -133,11 +165,16 @@ function FeedSectionBase({
 
       <div ref={sentinelRef} className="home-sentinel" aria-hidden="true" />
 
-      {isFetchingMore && (
-        <div className="home-loading-row">
-          <Spinner size={18} color="#64748B" label="Loading more…" />
-        </div>
-      )}
+      {/*
+        ── Loading more ──────────────────────────────
+        When the user scrolls to the bottom and more
+        pages are being fetched, render a few more
+        skeleton cards below the loaded grid. Same
+        shimmer wave as the initial load — no spinner,
+        no blank space, no "Loading more…" text. The
+        new cards cross-fade in when they arrive.
+      */}
+      {isFetchingMore && <SkeletonGrid count={3} />}
 
       {!data?.has_more && items.length > 0 && (
         <div className="home-end">
