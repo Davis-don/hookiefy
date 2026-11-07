@@ -31,16 +31,8 @@ function formatPrice(price: string | null | undefined): string | null {
 
 /**
  * Normalise a Kenyan number to the E.164 form wa.me expects.
- *
- * Accepts any of:
- *   0758420860    → 254758420860
- *   758420860     → 254758420860
- *   254758420860  → 254758420860
- *   +254758420860 → 254758420860
- *
  * Returns null if the value doesn't look like a valid
- * Kenyan mobile number — the caller then hides the
- * Call / WhatsApp buttons rather than render dead links.
+ * Kenyan mobile number.
  */
 function normaliseKenyanPhone(raw: string | null | undefined): string | null {
   if (!raw) return null;
@@ -131,12 +123,7 @@ function ProductCard({
   const hasImage = !!item.image_url;
   const showSkeleton = hasImage && !imageLoaded && !imageError;
 
-  /* ── Seller contact ────────────────────────────────────
-     Only render the Call / WhatsApp row when the seller
-     actually has a valid Kenyan phone on file. If the
-     number is missing or malformed, the row is skipped
-     entirely — no dead links, no fallback to a platform
-     support number. */
+  /* ── Seller contact ──────────────────────────────────── */
   const sellerPhone = normaliseKenyanPhone(item.phone_number);
   const hasPhone = !!sellerPhone;
   const phoneDisplay = sellerPhone ? displayPhone(sellerPhone) : '';
@@ -217,12 +204,18 @@ function ProductCard({
             }
           }}
         >
+          {/* ── Loading skeleton — a shimmering block with
+                 a diagonal wave of light sweeping across.
+                 No spinner, no ring, no text. The block
+                 itself communicates "content coming". The
+                 same base grey as the card body, with a
+                 moving sheen so it doesn't look static. */}
           {showSkeleton && (
-            <div className="product-card__cover-skeleton" aria-hidden="true">
+            <div
+              className="product-card__cover-skeleton"
+              aria-hidden="true"
+            >
               <div className="product-card__cover-shimmer" />
-              <div className="product-card__cover-spinner">
-                <span className="product-card__spinner-ring" />
-              </div>
             </div>
           )}
 
@@ -319,7 +312,6 @@ function ProductCard({
         )}
       </div>
 
-      {/* ── Seller contact — only when a real seller phone exists ── */}
       {hasPhone && (
         <div className="product-card__contact">
           <a

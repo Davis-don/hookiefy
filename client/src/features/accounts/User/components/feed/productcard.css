@@ -16,6 +16,15 @@
          - property chips clamp to a single row
          - footer is pinned to the bottom via
            `margin-top: auto`
+
+   Loading state:
+     The cover image starts hidden, with a neutral grey
+     placeholder underneath. A diagonal wave of light
+     (the "shimmer") sweeps across the placeholder on an
+     infinite loop, communicating "image on its way"
+     without a spinner, ring, or any circular affordance.
+     When the image resolves it fades in over 300ms,
+     covering the shimmer.
    ───────────────────────────────────────────────────────── */
 
 .product-card {
@@ -134,59 +143,43 @@
   transform: scale(1.02);
 }
 
-/* ── Skeleton overlay ─────────────────────────────────── */
+/* ── Cover skeleton — shimmering grey block ──────────── */
+/* No spinner, no ring, no text. Just a neutral grey
+   rectangle with a diagonal wave of light sweeping
+   across from left to right. Same technique used by
+   Instagram, Pinterest, X, and the feed-level skeleton
+   in home.css, so the loading language is consistent
+   across the app. */
+
 .product-card__cover-skeleton {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F1F5F9;
+  background: #E2E8F0;
   pointer-events: none;
   z-index: 1;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .product-card__cover-shimmer {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    90deg,
-    #F1F5F9 0%,
-    #E2E8F0 40%,
-    #F1F5F9 80%
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.55) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.55) 60%,
+    rgba(255, 255, 255, 0) 80%
   );
-  background-size: 200% 100%;
-  animation: product-card-shimmer 1.6s ease-in-out infinite;
+  transform: translateX(-100%);
+  animation: product-card-shimmer-wave 1.4s ease-in-out infinite;
 }
 
-@keyframes product-card-shimmer {
-  0%   { background-position: -100% 0; }
-  100% { background-position:  200% 0; }
-}
-
-/* ── Centered spinner ────────────────────────────────── */
-.product-card__cover-spinner {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.product-card__spinner-ring {
-  display: block;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid rgba(37, 99, 235, 0.18);
-  border-top-color: #2563EB;
-  animation: product-card-spin 0.75s linear infinite;
-}
-
-@keyframes product-card-spin {
-  to { transform: rotate(360deg); }
+@keyframes product-card-shimmer-wave {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* ── Cover error fallback ────────────────────────────── */
@@ -504,12 +497,13 @@
 
 /* ── Reduced motion ──────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  /* Static placeholder — no wave. Still clearly "loading"
+     because it's a solid grey block where the image will
+     be, but without the animation. */
   .product-card__cover-shimmer {
     animation: none;
-    background: #E2E8F0;
-  }
-  .product-card__spinner-ring {
-    animation: product-card-spin 1.4s linear infinite;
+    transform: translateX(0);
+    background: rgba(255, 255, 255, 0.35);
   }
   .product-card__cover-img {
     transition: opacity 0.2s ease;
