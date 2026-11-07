@@ -30,6 +30,13 @@
      (the feed reserves its own via inline style) AND
      paints the container white so it matches the
      surface every other tab renders on.
+
+     IMPORTANT — the padding on .ua-content is declared
+     with LONGHANDS (padding-top / padding-right / etc.)
+     not the shorthand, so the `--flush` modifier can
+     cleanly override just `padding-top` without the
+     shorthand resetting it back. See the comment on
+     `.ua-content--flush` below.
    ───────────────────────────────────────────────────────── */
 
 .ua-shell {
@@ -148,9 +155,6 @@
   pointer-events: none;
 }
 
-/* The header inside the wrap — the wrapper handles
-   positioning and animation, the header just lays out
-   its own contents. */
 .ua-header {
   padding: 14px 32px;
   display: flex;
@@ -166,6 +170,13 @@
 }
 
 /* ── Content — the ONLY scroll container ─────────────── */
+/* Padding is declared with LONGHANDS so that the
+   `--flush` modifier below can override just the top
+   value. Using the shorthand (`padding: 80px 0 100px`)
+   would reset padding-top back to 80px whenever the
+   shorthand wins the cascade against the flush rule,
+   which produced a large empty band above the first
+   card on the Home tab. */
 
 .ua-content {
   flex: 1 1 auto;
@@ -173,12 +184,11 @@
   overflow-y: auto;
   overflow-x: hidden;
 
-  /* Top padding = header height (~61px + a bit). Bottom
-     padding = space for the mobile bottom nav + safe
-     area. These are the "reserved" pixels — the bars
-     themselves are position: fixed and don't consume
-     space in flow. */
-  padding: 80px 0 100px;
+  padding-top: 80px;
+  padding-right: 0;
+  padding-bottom: 100px;
+  padding-left: 0;
+
   margin: 0;
   width: 100%;
 
@@ -188,13 +198,18 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* When the feed is what's rendered, the container switches
-   to white and drops its own top padding — the feed's
-   inline paddingTop already reserves the header + nav
-   space. Feed content therefore starts exactly at the
-   bottom of the fixed bars, on a white surface that
-   matches every other tab. */
-.ua-content--flush {
+/* When the feed is the rendered content, drop the top
+   padding — the feed reserves its own space via inline
+   `paddingTop` in Home.tsx (measured header height + nav
+   height). Keeping the base 80px here double-counts and
+   leaves a big blank band above the first card.
+
+   The selector is `.ua-content.ua-content--flush` (two
+   classes deep) so it always wins against the base
+   `.ua-content` rule regardless of file load order. The
+   white background makes the feed surface match every
+   other tab. */
+.ua-content.ua-content--flush {
   padding-top: 0;
   background: #FFFFFF;
 }
@@ -276,16 +291,19 @@
   .ua-shell { grid-template-columns: 1fr; }
   .ua-sidebar { display: none; }
 
-  /* Header spans the full width on mobile — no sidebar
-     to clear. */
   .ua-header-wrap {
     left: 0;
   }
   .ua-header { padding: 12px 16px; }
 
-  /* Content padding: header + bottom nav. */
+  /* Content padding — LONGHANDS again, so the base value
+     overrides cleanly at mobile and the `--flush`
+     modifier keeps zeroing only the top. */
   .ua-content {
-    padding: 72px 0 90px;
+    padding-top: 72px;
+    padding-right: 0;
+    padding-bottom: 90px;
+    padding-left: 0;
   }
 
   .ua-tab { padding: 16px 16px 8px; }
@@ -365,7 +383,12 @@
 }
 
 @media (max-width: 480px) {
-  .ua-content { padding: 70px 0 90px; }
+  .ua-content {
+    padding-top: 70px;
+    padding-right: 0;
+    padding-bottom: 90px;
+    padding-left: 0;
+  }
   .ua-tab { padding: 14px 14px 8px; }
   .ua-bottom-link { width: 44px; height: 44px; }
 
@@ -377,7 +400,12 @@
 }
 
 @media (max-width: 380px) {
-  .ua-content { padding: 66px 0 86px; }
+  .ua-content {
+    padding-top: 66px;
+    padding-right: 0;
+    padding-bottom: 86px;
+    padding-left: 0;
+  }
   .ua-tab { padding: 12px 12px 8px; }
   .ua-bottom-link { width: 42px; height: 42px; }
 

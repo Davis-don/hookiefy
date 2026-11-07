@@ -123,20 +123,15 @@ function Home({
      the nav is always at `top: 0`. */
   const navTop = navVisible ? headerHeight : 0;
 
-  /* Reserved space above the first card.
-     Exactly the two fixed bars that can be on top:
-       headerHeight  ← fixed UserHeader (0 if absent)
-     + navHeight     ← fixed Home nav (its own height
-                        PLUS its 12px bottom margin, which
-                        reserves breathing room between the
-                        tab strip and the first card).
-
-     No extra `+20` was added here: the 12px bottom margin
-     on .home-nav (see home.css) is now the sole source of
-     visual breathing room, so padding, flex gap, and
-     margin aren't all stacking. */
-  const navHeight = 56;          // tab strip height + 12px bottom margin
-  const contentTop = headerHeight + navHeight;
+  /* The content needs enough padding to clear the nav at
+     whichever position it's currently occupying. When the
+     header is visible, the nav sits at headerHeight, so
+     content starts at headerHeight + navHeight. When the
+     header is hidden, the nav is at 0, so content can
+     start at navHeight. Both cases use the same constant
+     calculation to avoid re-layout on toggle. */
+  const navHeight = 44; // approximate tab strip height, see home.css
+  const contentTop = headerHeight + navHeight + 20;
 
   /* ── Detail views take over the whole page ─────────── */
   if (openView?.kind === 'business') {
