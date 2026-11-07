@@ -381,3 +381,13 @@
     transition: none !important;
   }
 }
+/* When the feed itself is being rendered (Home tab, no
+   detail view, no search, no profile lock), remove the
+   top padding — the feed's own inline paddingTop already
+   reserves space for the fixed header + nav. Keeping both
+   produced a ~80px gap between the fixed bars and the
+   first card. The bottom padding is kept so the mobile
+   bottom nav never covers the last row. */
+.ua-content--flush {
+  padding-top: 0;
+}

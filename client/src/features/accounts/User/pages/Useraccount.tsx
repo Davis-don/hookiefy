@@ -326,6 +326,21 @@ function Useraccount() {
     (item) => item.bottomNav !== false
   );
 
+  /* ── When is the feed the actual content? ─────────────
+     The Home nav is a fixed bar that visually occupies
+     space at the top of the screen — but it lives inside
+     the feed, not inside `.ua-content`'s own padding. To
+     avoid a double-padding gap between the fixed bars and
+     the first card, we remove `.ua-content`'s own top
+     padding when the feed itself is what's being rendered.
+     Detail views, search results, and the profile lock
+     screen all keep their normal padding. */
+  const isFeedVisible =
+    active === 'home' &&
+    !openView &&
+    !searchQuery &&
+    !profileIncomplete;
+
   return (
     <div className="ua-shell">
       <aside className="ua-sidebar">
@@ -374,7 +389,12 @@ function Useraccount() {
           />
         </div>
 
-        <div className="ua-content" ref={contentRef}>
+        <div
+          className={
+            'ua-content' + (isFeedVisible ? ' ua-content--flush' : '')
+          }
+          ref={contentRef}
+        >
           {renderContent()}
         </div>
       </div>
