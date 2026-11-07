@@ -1,6 +1,15 @@
 /* ─────────────────────────────────────────────────────────
    PostCard — full styles (gesture-based like, footer counts,
-   skeleton loader for cover image)
+   shimmer skeleton for cover image)
+   ─────────────────────────────────────────────────────────
+   Loading state:
+     The cover image starts hidden, with a neutral grey
+     placeholder underneath. A diagonal wave of light
+     (the "shimmer") sweeps across the placeholder on an
+     infinite loop, communicating "image on its way"
+     without a spinner, ring, or circular affordance.
+     When the image resolves it fades in over 300ms,
+     covering the shimmer.
    ───────────────────────────────────────────────────────── */
 
 .post-card {
@@ -117,60 +126,42 @@
   transform: scale(1.02);
 }
 
-/* ── Skeleton overlay (visible while image loads) ───── */
+/* ── Cover skeleton — shimmering grey block ──────────── */
+/* No spinner, no ring, no text. Just a neutral grey
+   rectangle with a diagonal wave of light sweeping
+   across from left to right. Same technique used by
+   ProductCard and the feed-level skeleton, so the
+   loading language is consistent across the app. */
+
 .post-card__cover-skeleton {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F1F5F9;
+  background: #E2E8F0;
   pointer-events: none;
   z-index: 1;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-/* Shimmer — a horizontal light band that sweeps across */
 .post-card__cover-shimmer {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    90deg,
-    #F1F5F9 0%,
-    #E2E8F0 40%,
-    #F1F5F9 80%
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.55) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.55) 60%,
+    rgba(255, 255, 255, 0) 80%
   );
-  background-size: 200% 100%;
-  animation: post-card-shimmer 1.6s ease-in-out infinite;
+  transform: translateX(-100%);
+  animation: post-card-shimmer-wave 1.4s ease-in-out infinite;
 }
 
-@keyframes post-card-shimmer {
-  0%   { background-position: -100% 0; }
-  100% { background-position:  200% 0; }
-}
-
-/* ── Centered spinner ────────────────────────────────── */
-.post-card__cover-spinner {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.post-card__spinner-ring {
-  display: block;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid rgba(37, 99, 235, 0.18);
-  border-top-color: #2563EB;
-  animation: post-card-spin 0.75s linear infinite;
-}
-
-@keyframes post-card-spin {
-  to { transform: rotate(360deg); }
+@keyframes post-card-shimmer-wave {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* ── Fallback when image fails to load ───────────────── */
@@ -302,12 +293,13 @@
 
 /* ── Reduced motion ──────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  /* Static placeholder — no wave. Still clearly "loading"
+     because it's a solid grey block where the image will
+     be, but without the animation. */
   .post-card__cover-shimmer {
     animation: none;
-    background: #E2E8F0;
-  }
-  .post-card__spinner-ring {
-    animation: post-card-spin 1.4s linear infinite;
+    transform: translateX(0);
+    background: rgba(255, 255, 255, 0.35);
   }
   .post-card__cover-img {
     transition: opacity 0.2s ease;

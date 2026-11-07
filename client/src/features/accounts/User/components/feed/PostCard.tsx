@@ -106,9 +106,6 @@ function PostCard({
           {item.business.business_name}
         </button>
 
-        {/* Optional badge slot — inserted between the business
-            name and the follow button. Renders nothing when
-            no badge is passed. */}
         {badge}
 
         <FollowButton
@@ -136,13 +133,14 @@ function PostCard({
           }
         }}
       >
-        {/* Skeleton + spinner — visible until image loads */}
+        {/* ── Loading skeleton — grey block with a
+               diagonal wave of light sweeping across.
+               No spinner, no ring, no text. Same
+               shimmer language as ProductCard and the
+               feed-level placeholder. */}
         {showSkeleton && (
           <div className="post-card__cover-skeleton" aria-hidden="true">
             <div className="post-card__cover-shimmer" />
-            <div className="post-card__cover-spinner">
-              <span className="post-card__spinner-ring" />
-            </div>
           </div>
         )}
 
