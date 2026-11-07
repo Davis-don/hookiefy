@@ -34,12 +34,17 @@ type HomeProps = {
   onGoToProfile?: () => void;
 
   /**
-   * Whether the parent's scroll listener considers the
-   * account header visible. When `false`, the Home nav
-   * slides up out of view too — the two bars move together.
+   * Whether the account header is currently visible.
    *
-   * Defaults to `true` so `Home` works standalone (any page
-   * that doesn't provide a scroll observer).
+   * When true  → the Home nav sits just below the header
+   *              (at `top: headerHeight`).
+   * When false → the header has slid up out of view; the
+   *              Home nav slides up too and takes the
+   *              header's place at `top: 0`.
+   *
+   * Either way the nav is always visible at the topmost
+   * occupied slot — it never leaves an empty gap where
+   * the header used to be.
    */
   navVisible?: boolean;
 };
@@ -52,40 +57,33 @@ const TABS: { key: FeedTab; label: string }[] = [
 ];
 
 /* ============================================================
-   HEADER OFFSET — where the fixed nav should sit
+   HEADER HEIGHT MEASUREMENT
    ============================================================
    Reads the actual rendered height of `.ua-header-wrap` if
-   it exists in the DOM (i.e. we're inside Useraccount), and
-   uses it as the nav's fixed `top`. If no header exists
-   (marketing Home, standalone, test page), the nav sits at
-   `top: 0` — flush with the top of the viewport.
-
-   Uses ResizeObserver so the offset updates if the header
-   changes height (mobile vs desktop, avatar size, etc.).
+   it exists (Useraccount context), or 0 if there's no
+   header above us (standalone Home). The nav uses this to
+   decide where to sit while the header is visible.
    ============================================================ */
 
-function useHeaderOffset() {
-  const [top, setTop] = useState(0);
+function useHeaderHeight() {
+  const [height, setHeight] = useState(0);
 
   useEffect(() => {
     const header = document.querySelector<HTMLElement>('.ua-header-wrap');
     if (!header) {
-      setTop(0);
+      setHeight(0);
       return;
     }
 
     const apply = () => {
       const h = header.getBoundingClientRect().height;
-      setTop(Math.max(0, Math.round(h)));
+      setHeight(Math.max(0, Math.round(h)));
     };
 
     apply();
 
     const ro = new ResizeObserver(apply);
     ro.observe(header);
-
-    // Re-measure on viewport changes too — width changes can
-    // change the header's height (line wrapping, etc.).
     window.addEventListener('resize', apply);
 
     return () => {
@@ -94,7 +92,7 @@ function useHeaderOffset() {
     };
   }, []);
 
-  return top;
+  return height;
 }
 
 /* ============================================================
@@ -116,10 +114,24 @@ function Home({
     isLoading: profileLoading,
   } = useProfileStatus();
 
-  // How far down from the top of the viewport the nav should
-  // sit — the height of the fixed account header above it,
-  // or 0 if there is no header.
-  const navTop = useHeaderOffset();
+  const headerHeight = useHeaderHeight();
+
+  /* ── The nav's fixed `top`:
+     - header visible  → top = headerHeight  (sits below header)
+     - header hidden   → top = 0             (takes its place)
+     When there's no header at all (`headerHeight === 0`),
+     the nav is always at `top: 0`. */
+  const navTop = navVisible ? headerHeight : 0;
+
+  /* The content needs enough padding to clear the nav at
+     whichever position it's currently occupying. When the
+     header is visible, the nav sits at headerHeight, so
+     content starts at headerHeight + navHeight. When the
+     header is hidden, the nav is at 0, so content can
+     start at navHeight. Both cases use the same constant
+     calculation to avoid re-layout on toggle. */
+  const navHeight = 44; // approximate tab strip height, see home.css
+  const contentTop = headerHeight + navHeight + 20;
 
   /* ── Detail views take over the whole page ─────────── */
   if (openView?.kind === 'business') {
@@ -201,16 +213,10 @@ function Home({
   return (
     <div
       className="home-shell"
-      style={{
-        // Reserve space for the fixed nav: its top offset +
-        // its own height (~44px) + a small gap.
-        paddingTop: `${navTop + 64}px`,
-      }}
+      style={{ paddingTop: `${contentTop}px` }}
     >
       <nav
-        className={
-          'home-nav' + (navVisible ? '' : ' is-hidden')
-        }
+        className="home-nav"
         style={{ top: `${navTop}px` }}
         aria-label="Feed filters"
       >

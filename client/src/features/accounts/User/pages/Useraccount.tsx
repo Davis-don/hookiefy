@@ -57,27 +57,6 @@ type NavItem = {
 
 /* ============================================================
    SCROLL-DIRECTION HOOK
-   ============================================================
-   Watches `.ua-content`'s scroll and returns BOTH:
-     • `showHeader` — false when scrolling DOWN, true when
-                      scrolling UP (or at top).
-     • `showBottom` — false when scrolling UP,   true when
-                      scrolling DOWN (or at top).
-
-   That's the "hide the bar you're moving toward" pattern:
-     scroll down → you move away from the top → hide the
-                   top bar so you can read further down.
-     scroll up   → you move away from the bottom → hide the
-                   bottom bar so nothing's in the way when
-                   thumb-swiping.
-
-   Both are forced visible at the very top of the scroll
-   area (y <= 8) so the initial state is always fully
-   visible, no matter how the last gesture ended.
-
-   `requestAnimationFrame` throttles the read so it doesn't
-   compete with momentum scrolling. 8px dead-zone absorbs
-   trackpad jitter and iOS rubber-banding.
    ============================================================ */
 
 function useScrollBars(
@@ -104,15 +83,12 @@ function useScrollBars(
         const delta = y - lastY.current;
 
         if (y <= 8) {
-          // At the top of the scroll area — both bars visible.
           setShowHeader(true);
           setShowBottom(true);
         } else if (delta > 8) {
-          // Moving down — hide header, show bottom.
           setShowHeader(false);
           setShowBottom(true);
         } else if (delta < -8) {
-          // Moving up — hide bottom, show header.
           setShowHeader(true);
           setShowBottom(false);
         }
@@ -230,6 +206,7 @@ function Useraccount() {
               setOpenView({ kind: 'product-payment', id: productId })
             }
             onGoToProfile={goToProfile}
+            navVisible={showHeader}
           />
         );
       case 'stories':    return <StoriesTab onGoToProfile={goToProfile} />;
@@ -244,6 +221,7 @@ function Useraccount() {
               setOpenView({ kind: 'product-payment', id: productId })
             }
             onGoToProfile={goToProfile}
+            navVisible={showHeader}
           />
         );
     }
@@ -382,10 +360,6 @@ function Useraccount() {
       </aside>
 
       <div className="ua-main">
-        {/* ── Header — fixed at the top, slides UP when
-               scrolling down, slides back when scrolling
-               up. Its wrapper reserves space via padding
-               on .ua-content so content flows below it. */}
         <div
           className={
             'ua-header-wrap' + (showHeader ? '' : ' is-hidden')
@@ -400,18 +374,11 @@ function Useraccount() {
           />
         </div>
 
-        {/* ── Scroll container — the only element that
-               scrolls. It pads itself so the fixed header
-               and fixed bottom nav don't cover content. */}
         <div className="ua-content" ref={contentRef}>
           {renderContent()}
         </div>
       </div>
 
-      {/* ── Bottom nav — fixed at the bottom, slides
-             DOWN when scrolling up, back when scrolling
-             down. Rendered on all viewports for
-             simplicity; hidden by CSS above 640px. */}
       <nav
         className={
           'ua-bottom-nav' + (showBottom ? '' : ' is-hidden')
