@@ -11,6 +11,32 @@ import './productdetail.css';
 const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+/* ── Seller contact (mirrors YoupataManagedProductCard) ──
+   Keep these two constants in sync with the card component.
+   If you later move the number to the product / business
+   record, replace both constants with
+   `data.business_phone` (or wherever it lives). */
+
+const SELLER_PHONE_E164 = '254758420860';        // for wa.me
+const SELLER_PHONE_DISPLAY = '+254 758 420 860'; // for tel:
+
+function buildWhatsAppUrl(
+  productId: number | string,
+  productName?: string,
+): string {
+  const label = (productName ?? '').trim();
+  const text = encodeURIComponent(
+    label
+      ? `Hi, I'm interested in "${label}" (product #${productId}) on Youpata.`
+      : `Hi, I'm interested in product #${productId} on Youpata.`,
+  );
+  return `https://wa.me/${SELLER_PHONE_E164}?text=${text}`;
+}
+
+function buildCallUrl(): string {
+  return `tel:+${SELLER_PHONE_E164}`;
+}
+
 /* ── Types ───────────────────────────────────────────── */
 
 export type ProductImage = {
@@ -122,26 +148,6 @@ async function copyToClipboard(text: string): Promise<boolean> {
 
 /* ============================================================
    COPYABLE PRODUCT ID — full-width, clearly visible row
-   ============================================================
-   Deliberately LARGE and obvious:
-
-     ┌──────────────────────────────────────────────────┐
-     │  PRODUCT ID                                       │
-     │  #12345                       [ Copy ]  ←button   │
-     │  Share this ID with the seller or support.        │
-     └──────────────────────────────────────────────────┘
-
-   - Label ("Product ID") so the user knows what it is.
-   - The id itself rendered big, monospace, tabular-nums.
-   - A real "Copy" button with text + icon (not just an
-     icon) — hit target ≥ 44×44 per touch guidelines.
-   - One-line hint underneath explaining what to do with
-     it, so a first-time user understands the value.
-
-   Feedback: on success the button turns green and the
-   text swaps to "Copied!" for ~1.6s; on failure it turns
-   red and says "Try again". A visually-hidden live region
-   announces the result for screen-reader users.
    ============================================================ */
 
 type ProductIdBlockProps = {
@@ -464,7 +470,7 @@ type ProductDetailProps = {
   onOpenBusiness: (businessId: number) => void;
   /** True when this product is Youpata-managed — shows the purchase bar. */
   isYoupataManaged?: boolean;
-  /** Fires when the "Purchase now" button is pressed. */
+  /** Fires when the "Pay via M-Pesa" button is pressed. */
   onPurchase?: (productId: number) => void;
 };
 
@@ -550,6 +556,13 @@ function ProductDetailPage({
     (isYoupataManaged ?? data.is_youpata_managed ?? false) &&
     typeof onPurchase === 'function';
 
+  // Contact links — built once from the loaded product so
+  // both anchors share the same URL and the same traceable
+  // product id, regardless of how often the component
+  // re-renders.
+  const whatsappUrl = buildWhatsAppUrl(data.id, data.name);
+  const callUrl = buildCallUrl();
+
   return (
     <article
       className={
@@ -624,7 +637,6 @@ function ProductDetailPage({
       <div className="product-detail__body">
         <h1 className="product-detail__name">{data.name}</h1>
 
-        {/* ── Prominent copyable product ID ──────────── */}
         <ProductIdBlock productId={data.id} />
 
         {priceLabel && (
@@ -676,6 +688,12 @@ function ProductDetailPage({
         <span>{data.follows_count} follows</span>
       </div>
 
+      {/* ── Purchase + seller contact ───────────────────
+          Purchase bar (Youpata-managed only) followed by
+          Call / WhatsApp anchors. The contact anchors are
+          rendered even when the product is sold out — the
+          buyer still needs to reach the seller to ask
+          about restock or a pre-order. */}
       {showPurchaseBar && (
         <div className="product-detail__purchase">
           {soldOut ? (
@@ -694,9 +712,53 @@ function ProductDetailPage({
               className="product-detail__purchase-btn"
               onClick={() => onPurchase?.(data.id)}
             >
-              Purchase now
+              Pay via M-Pesa
             </button>
           )}
+
+          <div className="product-detail__contact">
+            <a
+              className="product-detail__contact-btn is-call"
+              href={callUrl}
+              data-product-id={data.id}
+              aria-label={`Call seller at ${SELLER_PHONE_DISPLAY} about product ${data.id}`}
+            >
+              <svg
+                className="product-detail__contact-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"
+                  fill="currentColor"
+                />
+              </svg>
+              Call seller
+            </a>
+
+            <a
+              className="product-detail__contact-btn is-whatsapp"
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-product-id={data.id}
+              aria-label={`Chat with seller on WhatsApp at ${SELLER_PHONE_DISPLAY} about product ${data.id}`}
+            >
+              <svg
+                className="product-detail__contact-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.26-8.24zm-3.6 4.1c-.17 0-.45.06-.68.31-.23.25-.9.88-.9 2.14s.92 2.48 1.05 2.65c.13.17 1.79 2.73 4.34 3.83.6.26 1.07.42 1.44.54.6.19 1.15.16 1.58.1.48-.07 1.48-.6 1.69-1.19.21-.59.21-1.09.15-1.19-.06-.1-.23-.16-.48-.28-.25-.13-1.48-.73-1.71-.81-.23-.09-.4-.13-.56.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.25-1.49-1.4-1.74-.15-.25-.02-.38.11-.51.11-.11.25-.29.38-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.36-.77-1.86-.2-.48-.41-.42-.56-.42-.15 0-.31-.02-.48-.02z"
+                  fill="currentColor"
+                />
+              </svg>
+              WhatsApp
+            </a>
+          </div>
         </div>
       )}
 

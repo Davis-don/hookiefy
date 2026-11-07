@@ -776,3 +776,87 @@
     margin-top: 4px;
   }
 }
+/* ── Purchase + seller contact ──────────────────────── */
+
+.product-detail__purchase {
+  /* Stacked column: purchase button on top, contact
+     row beneath. Matches the order the buyer reads the
+     actions in. */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  width: 100%;
+  margin-top: 12px;
+  padding-bottom: 16px;
+}
+
+/* Existing purchase button — just width-normalised so it
+   fills the column above the contact row. */
+.product-detail__purchase-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+/* ── Call / WhatsApp row ────────────────────────────── */
+
+.product-detail__contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.product-detail__contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 48px;
+  padding: 0 14px;
+
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  color: #ffffff;
+
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.product-detail__contact-btn:hover {
+  filter: brightness(1.08);
+}
+
+.product-detail__contact-btn:active {
+  transform: translateY(1px);
+}
+
+.product-detail__contact-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
+}
+
+.product-detail__contact-btn.is-call {
+  background: #16a34a;   /* emerald-600 */
+}
+
+.product-detail__contact-btn.is-whatsapp {
+  background: #25d366;   /* official WhatsApp green */
+  color: #0b141a;
+}
+
+.product-detail__contact-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Narrow screens — let the contact buttons share the
+   row but stack if the text can't fit. */
+@media (max-width: 420px) {
+  .product-detail__contact {
+    grid-template-columns: 1fr;
+  }
+}
