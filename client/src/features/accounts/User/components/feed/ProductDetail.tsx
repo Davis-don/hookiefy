@@ -93,6 +93,183 @@ function formatPrice(price: string | null | undefined): string | null {
   return `KES ${n.toLocaleString()}`;
 }
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through to the legacy path
+  }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    ta.style.pointerEvents = 'none';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/* ============================================================
+   COPYABLE PRODUCT ID — full-width, clearly visible row
+   ============================================================
+   Deliberately LARGE and obvious:
+
+     ┌──────────────────────────────────────────────────┐
+     │  PRODUCT ID                                       │
+     │  #12345                       [ Copy ]  ←button   │
+     │  Share this ID with the seller or support.        │
+     └──────────────────────────────────────────────────┘
+
+   - Label ("Product ID") so the user knows what it is.
+   - The id itself rendered big, monospace, tabular-nums.
+   - A real "Copy" button with text + icon (not just an
+     icon) — hit target ≥ 44×44 per touch guidelines.
+   - One-line hint underneath explaining what to do with
+     it, so a first-time user understands the value.
+
+   Feedback: on success the button turns green and the
+   text swaps to "Copied!" for ~1.6s; on failure it turns
+   red and says "Try again". A visually-hidden live region
+   announces the result for screen-reader users.
+   ============================================================ */
+
+type ProductIdBlockProps = {
+  productId: number;
+};
+
+function ProductIdBlock({ productId }: ProductIdBlockProps) {
+  const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+
+  useEffect(() => {
+    setCopied(false);
+    setCopyFailed(false);
+  }, [productId]);
+
+  useEffect(() => {
+    if (!copied && !copyFailed) return;
+    const t = window.setTimeout(() => {
+      setCopied(false);
+      setCopyFailed(false);
+    }, 1600);
+    return () => window.clearTimeout(t);
+  }, [copied, copyFailed]);
+
+  const handleCopy = useCallback(async () => {
+    const ok = await copyToClipboard(String(productId));
+    if (ok) {
+      setCopied(true);
+      setCopyFailed(false);
+    } else {
+      setCopied(false);
+      setCopyFailed(true);
+    }
+  }, [productId]);
+
+  return (
+    <div className="product-detail__id-block">
+      <div className="product-detail__id-text">
+        <span className="product-detail__id-label">Product ID</span>
+        <span className="product-detail__id-value">#{productId}</span>
+      </div>
+
+      <button
+        type="button"
+        className={
+          'product-detail__id-copy' +
+          (copied ? ' is-copied' : '') +
+          (copyFailed ? ' is-error' : '')
+        }
+        onClick={handleCopy}
+        aria-label={
+          copied
+            ? 'Product ID copied'
+            : copyFailed
+              ? 'Copy failed, try again'
+              : 'Copy product ID to clipboard'
+        }
+      >
+        {copied ? (
+          <svg
+            className="product-detail__id-copy-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <polyline
+              points="20 6 9 17 4 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : copyFailed ? (
+          <svg
+            className="product-detail__id-copy-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <line
+              x1="12" y1="8" x2="12" y2="13"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+            />
+            <circle cx="12" cy="17" r="1.3" fill="currentColor" />
+          </svg>
+        ) : (
+          <svg
+            className="product-detail__id-copy-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect
+              x="9" y="9" width="11" height="11" rx="2"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M5 15V5a2 2 0 0 1 2-2h10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+        <span className="product-detail__id-copy-text">
+          {copied ? 'Copied!' : copyFailed ? 'Try again' : 'Copy'}
+        </span>
+      </button>
+
+      <p className="product-detail__id-hint">
+        Share this ID with the seller or support to reference this product.
+      </p>
+
+      <span className="product-detail__id-sr" role="status" aria-live="polite">
+        {copied ? 'Product ID copied to clipboard' : ''}
+        {copyFailed ? 'Could not copy product ID' : ''}
+      </span>
+    </div>
+  );
+}
+
 /* ============================================================
    LIGHTBOX
    ============================================================ */
@@ -339,10 +516,6 @@ function ProductDetailPage({
 
   const priceLabel = formatPrice(data.price);
 
-  // Sold out when the backend explicitly says in_stock is false.
-  // `undefined` — older cached payloads, or the flag not yet
-  // rolled out — is treated as available so we never silently
-  // hide the CTA on a product that's actually buyable.
   const soldOut = data.in_stock === false;
 
   const galleryImages: ProductImage[] = [];
@@ -373,10 +546,6 @@ function ProductDetailPage({
     setLightboxIndex(idx >= 0 ? idx : 0);
   };
 
-  // Whether to show the purchase bar. Trust the prop from the caller
-  // (which knows the item was managed from the feed payload); fall
-  // back to the fetched `is_youpata_managed` flag if present, so a
-  // direct-link open of a managed product still gets the bar.
   const showPurchaseBar =
     (isYoupataManaged ?? data.is_youpata_managed ?? false) &&
     typeof onPurchase === 'function';
@@ -433,7 +602,6 @@ function ProductDetailPage({
         >
           <img src={primary.image_url} alt={data.name} />
 
-          {/* ── Sold-out pill ───────────────────────── */}
           {soldOut && (
             <span
               className="product-detail__sold-out"
@@ -455,6 +623,9 @@ function ProductDetailPage({
 
       <div className="product-detail__body">
         <h1 className="product-detail__name">{data.name}</h1>
+
+        {/* ── Prominent copyable product ID ──────────── */}
+        <ProductIdBlock productId={data.id} />
 
         {priceLabel && (
           <span
@@ -499,14 +670,12 @@ function ProductDetailPage({
         )}
       </div>
 
-      {/* ── Analytics row — above the purchase bar ──── */}
       <div className="product-detail__stats">
         <span>{data.likes_count} likes</span>
         <span>·</span>
         <span>{data.follows_count} follows</span>
       </div>
 
-      {/* ── Youpata-managed purchase bar ────────────── */}
       {showPurchaseBar && (
         <div className="product-detail__purchase">
           {soldOut ? (

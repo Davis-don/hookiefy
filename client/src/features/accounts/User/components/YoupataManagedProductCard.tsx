@@ -23,23 +23,30 @@ const SELLER_PHONE_DISPLAY = '+254 758 420 860'; // for tel:
 /**
  * WhatsApp deep link. `wa.me` opens the WhatsApp app on
  * mobile and WhatsApp Web on desktop, and pre-fills a
- * chat with the seller. We pass the product name in the
- * `text` param so the seller knows which listing the
- * buyer is asking about before the buyer has typed a
- * single word.
+ * chat with the seller.
+ *
+ * Both the product name AND the product id are embedded
+ * in the pre-filled message so the seller can trace
+ * exactly which listing the buyer tapped — the name alone
+ * is not unique (two listings can share a name, or the
+ * name can change between the buyer tapping and the
+ * seller reading). The id is stable and unique.
  *
  * `productName` is optional because `FeedItem.name` is
  * typed as `string | undefined` upstream. When the name
- * is missing we fall back to a generic message — a card
- * with an unnamed item should still let the buyer reach
- * the seller, not blow up rendering.
+ * is missing we fall back to a message that still carries
+ * the id, so the seller can look up the product even if
+ * the buyer's card rendered without a name.
  */
-function buildWhatsAppUrl(productName?: string): string {
+function buildWhatsAppUrl(
+  productId: number | string,
+  productName?: string,
+): string {
   const label = (productName ?? '').trim();
   const text = encodeURIComponent(
     label
-      ? `Hi, I'm interested in "${label}" on Youpata.`
-      : `Hi, I'm interested in a product on Youpata.`,
+      ? `Hi, I'm interested in "${label}" (product #${productId}) on Youpata.`
+      : `Hi, I'm interested in product #${productId} on Youpata.`,
   );
   return `https://wa.me/${SELLER_PHONE_E164}?text=${text}`;
 }
@@ -63,9 +70,14 @@ function YoupataManagedProductCard({
   // purchase button can never disagree.
   const soldOut = cardProps.item.in_stock === false;
 
+  // Product id is the trace key for both contact actions —
+  // pulled once here so every action below uses the same
+  // value even if `cardProps.item` is mutated upstream.
+  const productId = cardProps.item.id;
+
   // `FeedItem.name` is `string | undefined` — the helper
   // accepts the optional type and handles the empty case.
-  const whatsappUrl = buildWhatsAppUrl(cardProps.item.name);
+  const whatsappUrl = buildWhatsAppUrl(productId, cardProps.item.name);
   const callUrl = buildCallUrl();
 
   return (
@@ -93,7 +105,7 @@ function YoupataManagedProductCard({
           <button
             type="button"
             className="youpata-product-card-purchase"
-            onClick={() => onPurchase(cardProps.item.id)}
+            onClick={() => onPurchase(productId)}
           >
             Pay via M-Pesa
           </button>
@@ -102,12 +114,18 @@ function YoupataManagedProductCard({
         {/* Secondary actions — contact the seller directly.
             Kept available even when sold out: a buyer who
             sees "Sold out" should still be able to ask the
-            seller when it's back, or arrange a pre-order. */}
+            seller when it's back, or arrange a pre-order.
+
+            Both anchors carry `data-product-id` so click
+            handlers, analytics, or any future wrapper can
+            trace the tap back to the listing without
+            re-deriving it from the URL. */}
         <div className="youpata-product-card-contact">
           <a
             className="youpata-product-card-contact-btn is-call"
             href={callUrl}
-            aria-label={`Call seller at ${SELLER_PHONE_DISPLAY}`}
+            data-product-id={productId}
+            aria-label={`Call seller at ${SELLER_PHONE_DISPLAY} about product ${productId}`}
           >
             {/* Simple inline phone glyph — kept as inline SVG so
                 no icon-font / extra dependency is needed. */}
@@ -130,7 +148,8 @@ function YoupataManagedProductCard({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`Chat with seller on WhatsApp at ${SELLER_PHONE_DISPLAY}`}
+            data-product-id={productId}
+            aria-label={`Chat with seller on WhatsApp at ${SELLER_PHONE_DISPLAY} about product ${productId}`}
           >
             {/* WhatsApp glyph — same inline-SVG approach. */}
             <svg

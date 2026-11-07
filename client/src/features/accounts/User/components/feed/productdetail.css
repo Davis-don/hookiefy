@@ -636,3 +636,143 @@
     transition: none !important;
   }
 }
+/* ── Prominent copyable product ID ──────────────────── */
+
+.product-detail__id-block {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 16px;
+
+  width: 100%;
+  margin: 12px 0 16px;
+  padding: 14px 16px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+/* Left column — label above the actual id */
+
+.product-detail__id-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.product-detail__id-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.product-detail__id-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.25rem;            /* ← big and readable */
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-all;         /* long ids don't overflow */
+}
+
+/* Right column — the actual copy button */
+
+.product-detail__id-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-width: 120px;
+  min-height: 48px;              /* ← touch-target friendly */
+  padding: 0 18px;
+
+  border: 1.5px solid #2563eb;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 1rem;               /* ← readable, not tiny */
+  font-weight: 700;
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.05s ease;
+}
+
+.product-detail__id-copy:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.product-detail__id-copy:active {
+  transform: translateY(1px);
+}
+
+.product-detail__id-copy:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
+}
+
+.product-detail__id-copy.is-copied {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.product-detail__id-copy.is-error {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.product-detail__id-copy-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.product-detail__id-copy-text {
+  white-space: nowrap;
+}
+
+/* Hint spans both columns beneath the button row */
+
+.product-detail__id-hint {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+/* Screen-reader-only live region */
+
+.product-detail__id-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Narrow screens — stack label+id above the button */
+
+@media (max-width: 480px) {
+  .product-detail__id-block {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail__id-copy {
+    width: 100%;
+    margin-top: 4px;
+  }
+}
