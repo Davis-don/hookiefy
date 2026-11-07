@@ -44,22 +44,12 @@ export type FeedItem = {
   owner: FeedOwnerMini | null;
 
   /**
-   * Seller's contact phone in whatever shape the backend
-   * returns it (typically the business owner's
-   * `Accounts.phone_number` — e.g. `"0758420860"`,
-   * `"254758420860"`, or `"+254758420860"`).
+   * Seller's contact phone — the business owner's
+   * `Accounts.phone_number`. Present on BOTH post and
+   * product items.
    *
-   * Present on BOTH post and product items. The frontend
-   * card normalises it with `normaliseKenyanPhone` before
-   * building `tel:` / `wa.me` links.
-   *
-   * `undefined` and `null` are equivalent: the card treats
-   * them the same way — the Call / WhatsApp buttons still
-   * render, but they point at the platform support number
-   * (see `FALLBACK_PHONE_E164` in `ProductCard.tsx`)
-   * instead of a specific seller. This keeps the buttons
-   * always visible on every card while never producing a
-   * dead link to a mistyped or missing number.
+   * `undefined` and `null` are equivalent: when missing,
+   * the card hides the Call / WhatsApp row entirely.
    */
   phone_number?: string | null;
 
@@ -72,15 +62,7 @@ export type FeedItem = {
   name?: string;
   description?: string;
   price?: string | null;
-  /**
-   * Units in stock. Only meaningful for products.
-   * Omitted or 0 for posts.
-   */
   quantity?: number;
-  /**
-   * True when quantity > 0. Only meaningful for products.
-   * Omitted for posts (or true by default).
-   */
   in_stock?: boolean;
   extra_images?: string[];
   properties?: FeedProperty[];
@@ -99,7 +81,16 @@ export type FetchFeedOptions = {
   before?: string | null;
   status?: 'active' | 'paused' | 'draft' | 'closed' | 'suspended' | 'all';
   category?: 'goods' | 'services';
+  county?: string;
+  region?: string;
 };
+
+/**
+ * The four feed tabs exposed by the UI. Each maps to its
+ * own dedicated backend endpoint, so switching tabs hits a
+ * different URL and pagination is naturally per-tab.
+ */
+export type FeedTab = 'all' | 'youpata' | 'products' | 'posts';
 
 // ============================================================
 // HELPERS
@@ -128,6 +119,114 @@ async function parseError(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
+/** Build the shared query-string from options. */
+function buildQuery(options: FetchFeedOptions): string {
+  const p = new URLSearchParams();
+  if (options.kind) p.set('kind', options.kind);
+  if (options.limit) p.set('limit', String(options.limit));
+  if (options.before) p.set('before', options.before);
+  if (options.status) p.set('status', options.status);
+  if (options.category) p.set('category', options.category);
+  if (options.county) p.set('county', options.county);
+  if (options.region) p.set('region', options.region);
+  const qs = p.toString();
+  return qs ? `?${qs}` : '';
+}
+
+async function publicGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(await parseError(res, 'Could not load the feed.'));
+  }
+  return (await res.json()) as T;
+}
+
+async function authGet<T>(path: string, token: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(await parseError(res, 'Could not load the feed.'));
+  }
+  return (await res.json()) as T;
+}
+
+// ============================================================
+// TAB FEEDS — dedicated endpoint per tab
+// ============================================================
+//
+// Each tab maps to its own backend route so a single "which
+// URL does this tab hit" table is the source of truth. If
+// the backend ever changes a path, only this map changes.
+// ============================================================
+
+const TAB_PATHS: Record<FeedTab, string> = {
+  all:      '/feed/businesses/all/',
+  youpata:  '/feed/businesses/youpata/',
+  products: '/feed/businesses/products/',
+  posts:    '/feed/businesses/posts/',
+};
+
+/**
+ * Fetch the feed for a given tab.
+ *
+ *   fetchTabFeed('all',      { limit: 10 })  → /feed/businesses/all/
+ *   fetchTabFeed('youpata',  { limit: 10 })  → /feed/businesses/youpata/
+ *   fetchTabFeed('products', { limit: 10 })  → /feed/businesses/products/
+ *   fetchTabFeed('posts',    { limit: 10 })  → /feed/businesses/posts/
+ *
+ * Each call hits a different URL, so React Query (or any
+ * other cache keyed on `[tab, ...]`) will treat them as
+ * separate queries — switching tabs fetches fresh data,
+ * scrolling position and pagination are naturally per-tab.
+ */
+export async function fetchTabFeed(
+  tab: FeedTab,
+  options: FetchFeedOptions = {},
+): Promise<FeedResponse> {
+  const path = `${TAB_PATHS[tab]}${buildQuery(options)}`;
+  return publicGet<FeedResponse>(path);
+}
+
+// ============================================================
+// PER-TAB SHORTHANDS
+// ============================================================
+//
+// If you'd rather call `fetchAllFeed(...)` directly than
+// `fetchTabFeed('all', ...)`, these are one-line wrappers
+// around the same URLs. Optional — use whatever reads
+// better in the calling component.
+// ============================================================
+
+export async function fetchAllFeed(
+  options: FetchFeedOptions = {},
+): Promise<FeedResponse> {
+  return fetchTabFeed('all', options);
+}
+
+export async function fetchYoupataFeed(
+  options: FetchFeedOptions = {},
+): Promise<FeedResponse> {
+  return fetchTabFeed('youpata', options);
+}
+
+export async function fetchProductsFeed(
+  options: FetchFeedOptions = {},
+): Promise<FeedResponse> {
+  return fetchTabFeed('products', options);
+}
+
+export async function fetchPostsFeed(
+  options: FetchFeedOptions = {},
+): Promise<FeedResponse> {
+  return fetchTabFeed('posts', options);
+}
+
 // ============================================================
 // MY FEED — GET /feed/businesses/mine/
 // ============================================================
@@ -137,56 +236,25 @@ export async function fetchMyFeed(
   options: FetchFeedOptions = {},
 ): Promise<FeedResponse> {
   if (!token) throw new Error('Not authenticated.');
-
-  const params = new URLSearchParams();
-
-  if (options.kind) params.set('kind', options.kind);
-  if (options.limit) params.set('limit', String(options.limit));
-  if (options.before) params.set('before', options.before);
-  if (options.status) params.set('status', options.status);
-  if (options.category) params.set('category', options.category);
-
-  const qs = params.toString();
-  const url = `${API_BASE}/feed/businesses/mine/${qs ? `?${qs}` : ''}`;
-
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(await parseError(res, 'Could not load your feed.'));
-  }
-
-  return (await res.json()) as FeedResponse;
+  return authGet<FeedResponse>(
+    `/feed/businesses/mine/${buildQuery(options)}`,
+    token,
+  );
 }
 
 // ============================================================
-// PUBLIC FEED — GET /feed/businesses/
+// LEGACY PUBLIC FEED — GET /feed/businesses/
+// ============================================================
+//
+// Kept so existing call sites that use `fetchPublicFeed`
+// keep working. Prefer `fetchTabFeed` in new code — it
+// hits a dedicated endpoint so each tab is unambiguous.
 // ============================================================
 
 export async function fetchPublicFeed(
   options: FetchFeedOptions = {},
 ): Promise<FeedResponse> {
-  const params = new URLSearchParams();
-
-  if (options.kind) params.set('kind', options.kind);
-  if (options.limit) params.set('limit', String(options.limit));
-  if (options.before) params.set('before', options.before);
-  if (options.category) params.set('category', options.category);
-
-  const qs = params.toString();
-  const url = `${API_BASE}/feed/businesses/${qs ? `?${qs}` : ''}`;
-
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!res.ok) {
-    throw new Error(await parseError(res, 'Could not load the feed.'));
-  }
-
-  return (await res.json()) as FeedResponse;
+  return publicGet<FeedResponse>(
+    `/feed/businesses/${buildQuery(options)}`,
+  );
 }

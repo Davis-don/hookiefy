@@ -7,8 +7,10 @@ import {
 
 import {
   fetchMyFeed,
+  fetchTabFeed,
   type FeedItem,
   type FeedResponse,
+  type FeedTab,
   type FetchFeedOptions,
 } from '../api/feedApi';
 import { useAuthStore } from '../../../../store/authStore';
@@ -21,22 +23,75 @@ const STALE_TIME = 60_000;         // 60 s — instant on nav back
 const GC_TIME    = 10 * 60_000;    // 10 min — survives page changes
 
 /* ============================================================
+   OPTIONS
+   ============================================================ */
+
+export type UseBusinessFeedOptions = FetchFeedOptions & {
+  /**
+   * Which feed tab to render. Each tab hits its own
+   * dedicated backend endpoint:
+   *
+   *   'all'      → GET /feed/businesses/all/
+   *   'youpata'  → GET /feed/businesses/youpata/
+   *   'products' → GET /feed/businesses/products/
+   *   'posts'    → GET /feed/businesses/posts/
+   *
+   * Defaults to 'all'. The `mine` flag switches to the
+   * authenticated personalised feed instead.
+   */
+  tab?: FeedTab;
+
+  /**
+   * When true, fetch the user's personalised feed from
+   * `/feed/businesses/mine/` and ignore `tab`. Used by any
+   * page that shows "your feed" rather than a public feed.
+   *
+   * Requires auth — the hook auto-disables when no token
+   * is present.
+   */
+  mine?: boolean;
+};
+
+/* ============================================================
    QUERY KEY
    ============================================================ */
 
 function feedQueryKey(
   access: string | null,
-  options: FetchFeedOptions,
+  options: UseBusinessFeedOptions,
 ) {
   return [
     'business-feed',
-    'mine',
+    options.mine ? 'mine' : (options.tab ?? 'all'),
     options.kind ?? 'all',
     options.limit ?? 10,
     options.status ?? 'active',
     options.category ?? 'all',
+    options.county ?? '',
+    options.region ?? '',
     access ?? 'anon',
   ] as const;
+}
+
+/* ============================================================
+   FETCH DISPATCH
+   ============================================================ */
+
+function fetchForOptions(
+  access: string | null,
+  options: UseBusinessFeedOptions,
+  before: string | null,
+) {
+  const merged: FetchFeedOptions = { ...options, before };
+
+  if (options.mine) {
+    // Personalised feed — requires auth.
+    return fetchMyFeed(access, merged);
+  }
+
+  // Public tab feed — hits its own dedicated endpoint.
+  // `fetchTabFeed` does not require auth.
+  return fetchTabFeed(options.tab ?? 'all', merged);
 }
 
 /* ============================================================
@@ -67,7 +122,7 @@ export type UseBusinessFeedResult = {
    ============================================================ */
 
 export function useBusinessFeed(
-  options: FetchFeedOptions = {},
+  options: UseBusinessFeedOptions = {},
 ): UseBusinessFeedResult {
   const access = useAuthStore((s) => s.access);
 
@@ -81,14 +136,18 @@ export function useBusinessFeed(
     queryKey: feedQueryKey(access, options),
 
     queryFn: ({ pageParam }) =>
-      fetchMyFeed(access, { ...options, before: pageParam }),
+      fetchForOptions(access, options, pageParam),
 
     initialPageParam: null,
 
     getNextPageParam: (lastPage) =>
       lastPage.has_more ? lastPage.next_cursor : undefined,
 
-    enabled: !!access,
+    // The personalised (`mine`) feed needs a token; the
+    // public tab feeds don't. Only gate on auth when the
+    // caller asked for `mine`.
+    enabled: options.mine ? !!access : true,
+
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
     refetchOnWindowFocus: false,

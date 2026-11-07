@@ -1,29 +1,27 @@
 // src/pages/Home.tsx
 
-import { useEffect, useRef, useState } from 'react';
-import { useBusinessFeed } from '../hooks/useBusinessFeed';
-import { useAuthStore } from '../../../../store/authStore';
-import { Spinner } from '../../../../components/spinner/Spinner';
-import BusinessDetails from '../../../businesses/components/BusinessDetails';
-import PostCard from './feed/PostCard';
-import ProductCard from './feed/ProductCard';
-import PostDetail from './feed/PostDetail';
-import ProductDetail from './feed/ProductDetail';
-import YoupataManagedPostCard from './YoupataManagedPostCard';
-import YoupataManagedProductCard from './YoupataManagedProductCard';
+import { useState } from 'react';
 
+import { useAuthStore } from '../../../../store/authStore';
 import { useProfileStatus } from '../../../../features/accounts/hooks/useProfileStatus';
 import Confirmprofilecomplete from '../../User/components/Confirmprofilecomplete';
 
+import AllFeedSection from './sections/AllFeedSection';
+import YoupataFeedSection from './sections/YoupataFeedSection';
+import ProductsFeedSection from './sections/ProductsFeedSection';
+import PostsFeedSection from './sections/PostsFeedSection';
+
+import BusinessDetails from '../../../businesses/components/BusinessDetails';
+import PostDetail from './feed/PostDetail';
+import ProductDetail from './feed/ProductDetail';
+
 import './home.css';
 
-type HomeProps = {
-  /** Fires when a card's "Purchase now" or the detail's purchase bar
-   *  is pressed. The parent swaps to the payment view. */
-  onOpenPayment: (productId: number) => void;
-  /** Called when the user clicks "Complete now" on the profile banner. */
-  onGoToProfile?: () => void;
-};
+/* ============================================================
+   TYPES
+   ============================================================ */
+
+type FeedTab = 'all' | 'youpata' | 'products' | 'posts';
 
 type OpenView =
   | { kind: 'business'; id: number }
@@ -31,56 +29,34 @@ type OpenView =
   | { kind: 'product'; id: number; youpata?: boolean }
   | null;
 
-const SCROLL_TRIGGER_PX = 400;
+type HomeProps = {
+  onOpenPayment: (productId: number) => void;
+  onGoToProfile?: () => void;
+};
+
+const TABS: { key: FeedTab; label: string }[] = [
+  { key: 'all',      label: 'All' },
+  { key: 'youpata',  label: 'Youpata managed' },
+  { key: 'products', label: 'Products' },
+  { key: 'posts',    label: 'Posts' },
+];
+
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
 
 function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
   const access = useAuthStore((s) => s.access);
-  const [openView, setOpenView] = useState<OpenView>(null);
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isFetchingMore,
-    isError,
-    error,
-    refetch,
-    loadMore,
-  } = useBusinessFeed({ limit: 10, kind: 'all' });
+  const [activeTab, setActiveTab] = useState<FeedTab>('all');
+  const [openView, setOpenView] = useState<OpenView>(null);
 
   const {
     data: profileStatus,
     isLoading: profileLoading,
   } = useProfileStatus();
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!data?.has_more) return;
-    if (isFetchingMore) return;
-
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            loadMore();
-          }
-        }
-      },
-      {
-        rootMargin: `0px 0px ${SCROLL_TRIGGER_PX}px 0px`,
-        threshold: 0,
-      },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [data?.has_more, isFetchingMore, loadMore]);
-
-  /* ── Business details ──────────────────────────── */
+  /* ── Detail views take over the whole page ─────────── */
   if (openView?.kind === 'business') {
     return (
       <BusinessDetails
@@ -90,7 +66,6 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     );
   }
 
-  /* ── Post detail ───────────────────────────────── */
   if (openView?.kind === 'post') {
     return (
       <PostDetail
@@ -103,7 +78,6 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     );
   }
 
-  /* ── Product detail ────────────────────────────── */
   if (openView?.kind === 'product') {
     return (
       <ProductDetail
@@ -118,6 +92,7 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     );
   }
 
+  /* ── Unauthenticated ──────────────────────────────── */
   if (!access) {
     return (
       <div className="home-state home-state-empty">
@@ -129,9 +104,7 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     );
   }
 
-  /* ── Profile gate ──────────────────────────────── */
-  // Same layout as MyBusiness's locked state: wrapper with
-  // max-width, anchored near the top, centered horizontally.
+  /* ── Profile gate ─────────────────────────────────── */
   const requiredMissing =
     !profileLoading &&
     profileStatus !== undefined &&
@@ -151,147 +124,66 @@ function Home({ onOpenPayment, onGoToProfile }: HomeProps) {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="home-state">
-        <Spinner size={22} color="#2563EB" label="Loading feed…" />
-      </div>
-    );
-  }
+  /* ── Navigators passed to every section ───────────── */
+  const openBusiness = (id: number) =>
+    setOpenView({ kind: 'business', id });
+  const openPost = (id: number) =>
+    setOpenView({ kind: 'post', id });
+  const openProduct = (id: number, youpata?: boolean) =>
+    setOpenView({ kind: 'product', id, youpata });
 
-  if (isError && !data) {
-    const retrying = isFetching && !isFetchingMore;
-
-    return (
-      <div className="home-state home-state-error">
-        <p>{(error as Error)?.message || 'Could not load the feed.'}</p>
-        <button
-          type="button"
-          className="home-retry-btn"
-          onClick={() => refetch()}
-          disabled={retrying}
-        >
-          {retrying ? 'Retrying…' : 'Try again'}
-        </button>
-      </div>
-    );
-  }
-
-  const items = data?.results ?? [];
-
-  if (items.length === 0) {
-    return (
-      <div className="home-state home-state-empty">
-        <p className="home-empty-title">Nothing to show yet</p>
-        <p className="home-empty-sub">
-          When other businesses publish posts or products, they'll appear here.
-        </p>
-      </div>
-    );
-  }
-
+  /* ── Render ───────────────────────────────────────── */
   return (
     <div className="home-shell">
-      <ul className="home-list">
-        {items.map((item) => {
-          const youpata = item.is_youpata_managed;
+      <nav className="home-nav" aria-label="Feed filters">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={
+              'home-nav__tab' +
+              (activeTab === tab.key ? ' is-active' : '')
+            }
+            aria-selected={activeTab === tab.key}
+            role="tab"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-          return (
-            <li key={`${item.kind}-${item.id}`} className="home-list-item">
-              {item.kind === 'post' ? (
-                youpata ? (
-                  <YoupataManagedPostCard
-                    item={item}
-                    onOpenBusiness={(id) =>
-                      setOpenView({ kind: 'business', id })
-                    }
-                    onOpenPost={(id) =>
-                      setOpenView({ kind: 'post', id })
-                    }
-                  />
-                ) : (
-                  <PostCard
-                    item={item}
-                    onOpenBusiness={(id) =>
-                      setOpenView({ kind: 'business', id })
-                    }
-                    onOpenPost={(id) =>
-                      setOpenView({ kind: 'post', id })
-                    }
-                  />
-                )
-              ) : youpata ? (
-                <YoupataManagedProductCard
-                  item={item}
-                  onOpenBusiness={(id) =>
-                    setOpenView({ kind: 'business', id })
-                  }
-                  onOpenProduct={(id) =>
-                    setOpenView({ kind: 'product', id, youpata: true })
-                  }
-                  onPurchase={(id) => onOpenPayment(id)}
-                />
-              ) : (
-                <ProductCard
-                  item={item}
-                  onOpenBusiness={(id) =>
-                    setOpenView({ kind: 'business', id })
-                  }
-                  onOpenProduct={(id) =>
-                    setOpenView({ kind: 'product', id })
-                  }
-                />
-              )}
-            </li>
-          );
-        })}
-      </ul>
-
-      <div ref={sentinelRef} className="home-sentinel" aria-hidden="true" />
-
-      {isFetchingMore && (
-        <div className="home-loading-row">
-          <Spinner size={18} color="#64748B" label="Loading more…" />
-        </div>
+      {activeTab === 'all' && (
+        <AllFeedSection
+          onOpenBusiness={openBusiness}
+          onOpenPost={openPost}
+          onOpenProduct={openProduct}
+          onPurchase={onOpenPayment}
+        />
       )}
-
-      {!data?.has_more && items.length > 0 && (
-        <div className="home-end">
-          <div className="home-end-icon" aria-hidden="true">
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <p className="home-end-title">You're all caught up</p>
-          <p className="home-end-sub">
-            You've seen every post and product from your feed.
-          </p>
-        </div>
+      {activeTab === 'youpata' && (
+        <YoupataFeedSection
+          onOpenBusiness={openBusiness}
+          onOpenPost={openPost}
+          onOpenProduct={openProduct}
+          onPurchase={onOpenPayment}
+        />
       )}
-
-      {data?.has_more && !isFetchingMore && (
-        <button
-          type="button"
-          className="home-loadmore"
-          onClick={() => loadMore()}
-        >
-          Load more
-        </button>
+      {activeTab === 'products' && (
+        <ProductsFeedSection
+          onOpenBusiness={openBusiness}
+          onOpenProduct={openProduct}
+          onPurchase={onOpenPayment}
+        />
+      )}
+      {activeTab === 'posts' && (
+        <PostsFeedSection
+          onOpenBusiness={openBusiness}
+          onOpenPost={openPost}
+        />
       )}
     </div>
   );
 }
 
 export default Home;
-
-
-

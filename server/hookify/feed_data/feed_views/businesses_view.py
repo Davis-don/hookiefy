@@ -7,9 +7,14 @@
 # client passes `?before=<next_cursor>` to fetch the next
 # page. Page size defaults to 10, hard maximum 50.
 #
-# Two builders are exported:
+# Builders exported:
 #     build_feed_page(...)              ← public, no personalisation
 #     build_personalised_feed_page(...) ← personalised for one user
+#
+# Both accept a `youpata_only` kwarg. When True, only rows
+# where `is_youpata_managed=True` are returned. This lets the
+# per-tab endpoints (products / posts / youpata) share the
+# same pagination and serialisation code.
 # ============================================================
 
 from django.contrib.contenttypes.models import ContentType
@@ -92,8 +97,7 @@ class FeedItemSerializer(serializers.Serializer):
     # Seller contact — the business owner's phone number.
     # Populated for BOTH posts and products. The frontend
     # normalises it before building tel: / wa.me links and
-    # falls back to a platform support number when it's
-    # missing. Null / blank is a valid value.
+    # hides the row entirely when it's missing.
     phone_number = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -132,7 +136,7 @@ def _parse_before(value):
     if parsed is None:
         return None
     if timezone.is_naive(parsed):
-        parsed = timezone.make_aware(parsed, timezone=timezone.utc)
+        parsed = timezone.make_aware(parsed, timezone.utc)
     return parsed
 
 
@@ -162,17 +166,7 @@ def _owner_payload(business):
 def _phone_payload(business):
     """
     Seller phone — the business owner's `Accounts.phone_number`.
-
-    Both `_post_item` and `_product_item` fetch this. The
-    caller's querysets use `.select_related("business__owner")`,
-    so `business.owner` is already loaded and `.phone_number`
-    is a free attribute read.
-
-    Returns a stripped string, or `None` when the owner is
-    missing or has no phone on file. `None` is a legitimate
-    value: the frontend treats missing phone as "use the
-    platform support number" so the Call/WhatsApp buttons
-    always render.
+    Returns a stripped string or `None`.
     """
     if business is None:
         return None
@@ -200,7 +194,7 @@ def _post_item(post):
         "image_public_id": post.image_public_id,
         "business": _business_payload(business),
         "owner": _owner_payload(business),
-        "phone_number": _phone_payload(business),   # ← new
+        "phone_number": _phone_payload(business),
     }
 
 
@@ -230,21 +224,14 @@ def _product_item(product):
         "name": product.name,
         "description": product.description,
         "price": product.price,
-
-        # ── Stock ─────────────────────────────────────────
-        # quantity = raw stock on hand
-        # in_stock = model property (quantity > 0) — kept as
-        #   its own field so the frontend doesn't have to know
-        #   the derivation rule; matches ProductSerializer.
         "quantity": product.quantity,
         "in_stock": product.in_stock,
-
         "image_url": primary.image_url if primary else None,
         "extra_images": extra_images,
         "properties": properties,
         "business": _business_payload(business),
         "owner": _owner_payload(business),
-        "phone_number": _phone_payload(business),   # ← new
+        "phone_number": _phone_payload(business),
     }
 
 
@@ -256,19 +243,7 @@ def _paginate(items, limit, kind):
     """
     Given a list of ranked/sorted items (each a dict with
     `kind`, `created_at`, plus either a Post or Product obj),
-    return:
-
-        {
-            "count": ...,
-            "next_cursor": ...,
-            "has_more": ...,
-            "results": [...]
-        }
-
-    The cursor is the `created_at` of the OLDEST item on the
-    page — not the last-ranked item — so pagination never
-    skips or repeats rows. The next request asks for
-    everything strictly older than that timestamp.
+    return the standard feed envelope.
     """
     has_more = len(items) > limit
     page = items[:limit]
@@ -279,9 +254,6 @@ def _paginate(items, limit, kind):
         oldest = min(row["created_at"] for row in page)
         next_cursor = oldest.isoformat()
 
-    # Rebuild the items in the order the caller wanted (ranked
-    # or by recency) — the cursor computation above does NOT
-    # reorder, it just picks a timestamp.
     payload = [
         _post_item(row["obj"]) if row["kind"] == "post"
         else _product_item(row["obj"])
@@ -300,17 +272,12 @@ def _paginate(items, limit, kind):
 # PUBLIC FEED BUILDER
 # ============================================================
 
-def build_feed_page(base_q, kind, limit, before):
+def build_feed_page(base_q, kind, limit, before, youpata_only=False):
     """
     Newest-first feed — no personalisation.
 
-    Pagination contract:
-        - `before` is an ISO datetime (the `next_cursor` from
-          the previous page). First page: omit it.
-        - Returns at most `limit` items.
-        - `next_cursor` is the oldest `created_at` in the
-          returned page; the client echoes it as `?before=`
-          to fetch the next page.
+    `youpata_only=True` restricts to rows where
+    `is_youpata_managed=True`. Used by the Youpata tab.
     """
     limit = _parse_limit(limit)
     before_dt = _parse_before(before)
@@ -326,6 +293,10 @@ def build_feed_page(base_q, kind, limit, before):
         .select_related("business", "business__owner")
         .prefetch_related("images", "property_items")
     )
+
+    if youpata_only:
+        posts_qs = posts_qs.filter(is_youpata_managed=True)
+        products_qs = products_qs.filter(is_youpata_managed=True)
 
     if before_dt:
         posts_qs = posts_qs.filter(created_at__lt=before_dt)
@@ -480,31 +451,27 @@ def _score_item(item, business, signals):
     return score
 
 
-def build_personalised_feed_page(user, base_q, kind, limit, before):
+def build_personalised_feed_page(
+    user,
+    base_q,
+    kind,
+    limit,
+    before,
+    youpata_only=False,
+):
     """
     Personalised variant of build_feed_page.
 
-    Ranking:
-        1. Businesses the user already likes/follows
-        2. Same region → city → county
-        3. Same category / business type
-        4. Popularity tie-breaker
-        5. Recency within the same score tier
-
-    Pagination:
-        - `before` is the ISO cursor.
-        - We rank only the *candidates strictly older than
-          `before`* (when provided), then take the top `limit`.
-        - `next_cursor` = oldest `created_at` in this page,
-          so the next request can safely ask for `<next_cursor`.
+    `youpata_only=True` restricts to rows where
+    `is_youpata_managed=True` — the /feed/businesses/mine/
+    endpoint passes `False`, but the parameter exists so a
+    future `/mine/youpata/` route can use it.
     """
     limit = _parse_limit(limit)
     before_dt = _parse_before(before)
 
     signals = _collect_user_signals(user)
 
-    # Fetch a wider pool so ranking has material to work with,
-    # but only ever look at candidates older than `before`.
     pool_size = max(limit * 5, 60)
 
     posts_qs = (
@@ -518,6 +485,10 @@ def build_personalised_feed_page(user, base_q, kind, limit, before):
         .select_related("business", "business__owner")
         .prefetch_related("images", "property_items")
     )
+
+    if youpata_only:
+        posts_qs = posts_qs.filter(is_youpata_managed=True)
+        products_qs = products_qs.filter(is_youpata_managed=True)
 
     if before_dt:
         posts_qs = posts_qs.filter(created_at__lt=before_dt)

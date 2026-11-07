@@ -3,22 +3,38 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — HOME / FEED
    ─────────────────────────────────────────────────────────
-   Grid breakpoints:
+   STRUCTURE:
+     .home-shell           outer column
+     .home-nav             sticky filter tabs
+     .home-list            responsive grid of cards
+     .home-state           generic loading / error / empty
 
+   NAV BEHAVIOUR:
+     • The tab strip sticks to the top of the viewport,
+       offset by `--ua-header-height` (set by
+       Useraccount.tsx from a ResizeObserver on the
+       actual rendered UserHeader) so it stops right
+       below the account header instead of under it.
+     • Feed cards scroll beneath it.
+     • z-index: 15 — below UserHeader's z-index: 20,
+       above feed content (which uses no z-index).
+     • If the parent page doesn't set --ua-header-height,
+       the fallback (0px) makes it stick at viewport top,
+       which is the old-but-safe behaviour.
+
+   GRID BREAKPOINTS:
      ≤ 640px    → 1 column, edge-to-edge
      641–1023   → 2 columns, centered, 960px max
      1024–1439  → 3 columns, centered, 1280px max
      ≥ 1440     → 4 columns, centered, 1600px max
-
-   Every row stretches all cards to the tallest card
-   in that row, so a short-description card and a
-   long-description card end up the same height. The
-   card's internal clamps (name 2 lines, description
-   2 lines, one row of props) make that budget
-   constant, so this actually holds in practice.
    ───────────────────────────────────────────────────────── */
 
 .home-shell {
+  /* The nav's sticky top. Useraccount.tsx sets
+     --ua-header-height on .ua-main; it cascades here
+     through .ua-content. Fallback 0px for safety. */
+  --home-nav-offset: var(--ua-header-height, 0px);
+
   position: relative;
   width: 100%;
   display: flex;
@@ -30,27 +46,95 @@
   margin: 0 auto;
 }
 
-/* ── List — the responsive grid ───────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   NAV — sticky tab strip
+   ─────────────────────────────────────────────────────────
+   Sticks at `top: var(--home-nav-offset)` — exactly where
+   the account header ends. Content scrolls beneath.
+   ───────────────────────────────────────────────────────── */
+
+.home-nav {
+  position: sticky;
+  top: var(--home-nav-offset);
+  z-index: 15;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  margin: 0 0 4px;
+
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.home-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.home-nav__tab {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748B;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-nav__tab:hover {
+  color: #0F172A;
+}
+
+.home-nav__tab:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.home-nav__tab.is-active {
+  color: #0F172A;
+}
+
+.home-nav__tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -1px;
+  height: 2px;
+  background: #0F172A;
+  border-radius: 999px;
+}
+
+/* ── List — responsive grid ───────────────────────────── */
 
 .home-list {
   list-style: none;
   margin: 0;
   padding: 0;
   width: 100%;
-
   display: grid;
-  grid-template-columns: 1fr;   /* mobile default — single column */
+  grid-template-columns: 1fr;
   gap: 16px;
-
-  /* Every cell stretches to the tallest card in the row. */
   align-items: stretch;
 }
 
 .home-list-item {
   list-style: none;
   min-width: 0;
-
-  /* Fill the grid cell so the card can be height: 100% */
   height: 100%;
   display: flex;
 }
@@ -213,18 +297,27 @@
 }
 
 /* ─────────────────────────────────────────────────────────
-   RESPONSIVE — grid breakpoints
-   ─────────────────────────────────────────────────────────
-   Same breakpoints used across the rest of the app
-   (640 / 1024 / 1440) so the feed lines up with the
-   business, product, and admin pages.
+   RESPONSIVE
    ───────────────────────────────────────────────────────── */
 
-/* Mobile + tiny screens — single column, edge-to-edge */
 @media (max-width: 640px) {
   .home-shell {
     padding: 16px 0 32px;
     gap: 14px;
+  }
+
+  .home-nav {
+    padding: 0 12px;
+  }
+
+  .home-nav__tab {
+    padding: 10px 10px;
+    font-size: 0.72rem;
+  }
+
+  .home-nav__tab.is-active::after {
+    left: 10px;
+    right: 10px;
   }
 
   .home-list {
@@ -248,6 +341,20 @@
     gap: 12px;
   }
 
+  .home-nav {
+    padding: 0 10px;
+  }
+
+  .home-nav__tab {
+    padding: 10px 8px;
+    font-size: 0.68rem;
+  }
+
+  .home-nav__tab.is-active::after {
+    left: 8px;
+    right: 8px;
+  }
+
   .home-list {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -258,11 +365,14 @@
   }
 }
 
-/* Tablet — 2-column grid, centered */
 @media (min-width: 641px) {
   .home-shell {
     padding: 22px 16px 48px;
     max-width: 960px;
+  }
+
+  .home-nav {
+    padding: 0 16px;
   }
 
   .home-list {
@@ -271,11 +381,24 @@
   }
 }
 
-/* Desktop — 3-column grid, centered */
 @media (min-width: 1024px) {
   .home-shell {
     padding: 24px 24px 56px;
     max-width: 1280px;
+  }
+
+  .home-nav {
+    padding: 0 24px;
+  }
+
+  .home-nav__tab {
+    font-size: 0.8rem;
+    padding: 13px 16px;
+  }
+
+  .home-nav__tab.is-active::after {
+    left: 16px;
+    right: 16px;
   }
 
   .home-list {
@@ -284,11 +407,14 @@
   }
 }
 
-/* Wide desktop — 4-column grid, centered */
 @media (min-width: 1440px) {
   .home-shell {
     padding: 32px 32px 64px;
     max-width: 1600px;
+  }
+
+  .home-nav {
+    padding: 0 32px;
   }
 
   .home-list {
@@ -309,7 +435,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .home-loadmore,
-  .home-retry-btn {
+  .home-retry-btn,
+  .home-nav__tab {
     transition: none !important;
   }
 }

@@ -1,10 +1,21 @@
 /* ─────────────────────────────────────────────────────────
    YOUPATA — USER DASHBOARD
-   Sidebar + bottom nav. Home sits in the middle of the
-   bottom nav with an emphatic floating treatment.
+   ─────────────────────────────────────────────────────────
+   Layout intent:
+     • .ua-shell is a fixed-height grid (240px | 1fr).
+     • .ua-main is a flex column filling that height.
+     • UserHeader is a normal flex item at the top — it
+       occupies a fixed slot, never scrolls.
+     • .ua-content is the ONLY scroll container
+       (`overflow-y: auto`). Everything below the header
+       — including <Home>'s sticky tab nav — scrolls
+       inside it. That's what makes `position: sticky;
+       top: 0` work on the Home nav.
+     • Sidebar and bottom nav are unaffected.
    ───────────────────────────────────────────────────────── */
 
 .ua-shell {
+  height: 100vh;                  /* bounded, so children can scroll internally */
   min-height: 100vh;
   width: 100%;
   background: #F8FAFC;
@@ -12,6 +23,7 @@
   color: #0F172A;
   display: grid;
   grid-template-columns: 240px 1fr;
+  overflow: hidden;               /* outer shell never scrolls */
 }
 
 /* ── Sidebar ─────────────────────────────────────────── */
@@ -85,24 +97,42 @@
 
 .ua-sidebar-label { line-height: 1; }
 
-/* ── Main content ─────────────────────────────────────── */
+/* ── Main column ─────────────────────────────────────── */
+/* A bounded flex column: header on top (fixed), content
+   filling the rest (scrolls). `min-height: 0` is what lets
+   the flex child shrink below its content height and
+   enables overflow scrolling. */
 .ua-main {
   min-width: 0;
+  min-height: 0;                  /* ← required for scroll child */
+  height: 100vh;
+  overflow: hidden;               /* main itself never scrolls */
   display: flex;
   flex-direction: column;
 }
 
+/* ── Content — the ONLY scroll container ─────────────── */
 .ua-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;                  /* ← CRITICAL */
+  overflow-y: auto;               /* ← CRITICAL: the scroll surface */
+  overflow-x: hidden;
   padding: 0 0 100px;
   margin: 0;
   width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Header ──────────────────────────────────────────── */
+/* No longer `position: sticky` — its role is structural.
+   It sits at the top of .ua-main and stays because .ua-main
+   itself doesn't scroll; only .ua-content below it does. */
 .ua-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
   background: #FFFFFF;
   border-bottom: 1px solid #E2E8F0;
@@ -111,6 +141,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex: 0 0 auto;                 /* never grow / shrink */
 }
 
 .ua-header-greeting {
@@ -288,14 +319,4 @@
     margin-top: -14px;
   }
   .ua-bottom-link.is-primary svg { width: 22px; height: 22px; }
-}
-
-.ua-content {
-  flex: 1;
-  padding: 0 0 100px;
-  margin: 0;
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
 }
