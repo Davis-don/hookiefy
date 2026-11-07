@@ -22,6 +22,14 @@
    layout space. Content flows underneath them from the
    very first pixel; only the padding on .ua-content
    reserves the space they visually occupy.
+
+   Feed surface:
+     When the feed is the rendered content (Home tab,
+     no detail view, no search, no profile lock), the
+     `.ua-content--flush` modifier zeroes the top padding
+     (the feed reserves its own via inline style) AND
+     paints the container white so it matches the
+     surface every other tab renders on.
    ───────────────────────────────────────────────────────── */
 
 .ua-shell {
@@ -121,9 +129,7 @@
 }
 
 /* ── Header wrap — position: fixed at the top ─────────── */
-/* Sits OVER the content (position: fixed removes it from
-   flow). The padding-top on .ua-content is what keeps the
-   first card from being hidden underneath it. */
+
 .ua-header-wrap {
   position: fixed;
   top: 0;
@@ -160,9 +166,7 @@
 }
 
 /* ── Content — the ONLY scroll container ─────────────── */
-/* Padding reserves space so the fixed header (top) and
-   fixed bottom nav (bottom, mobile only) never cover the
-   actual content. Everything scrolls beneath both bars. */
+
 .ua-content {
   flex: 1 1 auto;
   min-height: 0;
@@ -170,9 +174,10 @@
   overflow-x: hidden;
 
   /* Top padding = header height (~61px + a bit). Bottom
-     padding = space for the mobile bottom nav + safe area.
-     These are the "reserved" pixels — the bars themselves
-     are position: fixed and don't consume space in flow. */
+     padding = space for the mobile bottom nav + safe
+     area. These are the "reserved" pixels — the bars
+     themselves are position: fixed and don't consume
+     space in flow. */
   padding: 80px 0 100px;
   margin: 0;
   width: 100%;
@@ -181,6 +186,17 @@
   flex-direction: column;
 
   -webkit-overflow-scrolling: touch;
+}
+
+/* When the feed is what's rendered, the container switches
+   to white and drops its own top padding — the feed's
+   inline paddingTop already reserves the header + nav
+   space. Feed content therefore starts exactly at the
+   bottom of the fixed bars, on a white surface that
+   matches every other tab. */
+.ua-content--flush {
+  padding-top: 0;
+  background: #FFFFFF;
 }
 
 /* ── Tab content shell ───────────────────────────────── */
@@ -380,14 +396,4 @@
   .ua-bottom-nav {
     transition: none !important;
   }
-}
-/* When the feed itself is being rendered (Home tab, no
-   detail view, no search, no profile lock), remove the
-   top padding — the feed's own inline paddingTop already
-   reserves space for the fixed header + nav. Keeping both
-   produced a ~80px gap between the fixed bars and the
-   first card. The bottom padding is kept so the mobile
-   bottom nav never covers the last row. */
-.ua-content--flush {
-  padding-top: 0;
 }
