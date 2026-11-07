@@ -89,6 +89,17 @@ class FeedItemSerializer(serializers.Serializer):
     business = BusinessMiniSerializer()
     owner = OwnerMiniSerializer(allow_null=True)
 
+    # Seller contact — the business owner's phone number.
+    # Populated for BOTH posts and products. The frontend
+    # normalises it before building tel: / wa.me links and
+    # falls back to a platform support number when it's
+    # missing. Null / blank is a valid value.
+    phone_number = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+
 
 # ============================================================
 # QUERY-PARAM PARSING
@@ -148,6 +159,32 @@ def _owner_payload(business):
     }
 
 
+def _phone_payload(business):
+    """
+    Seller phone — the business owner's `Accounts.phone_number`.
+
+    Both `_post_item` and `_product_item` fetch this. The
+    caller's querysets use `.select_related("business__owner")`,
+    so `business.owner` is already loaded and `.phone_number`
+    is a free attribute read.
+
+    Returns a stripped string, or `None` when the owner is
+    missing or has no phone on file. `None` is a legitimate
+    value: the frontend treats missing phone as "use the
+    platform support number" so the Call/WhatsApp buttons
+    always render.
+    """
+    if business is None:
+        return None
+    owner = getattr(business, "owner", None)
+    if owner is None:
+        return None
+    raw = owner.phone_number
+    if not raw:
+        return None
+    return str(raw).strip() or None
+
+
 def _post_item(post):
     business = post.business
     return {
@@ -163,6 +200,7 @@ def _post_item(post):
         "image_public_id": post.image_public_id,
         "business": _business_payload(business),
         "owner": _owner_payload(business),
+        "phone_number": _phone_payload(business),   # ← new
     }
 
 
@@ -206,6 +244,7 @@ def _product_item(product):
         "properties": properties,
         "business": _business_payload(business),
         "owner": _owner_payload(business),
+        "phone_number": _phone_payload(business),   # ← new
     }
 
 
