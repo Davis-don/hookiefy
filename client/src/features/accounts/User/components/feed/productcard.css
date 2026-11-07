@@ -1,6 +1,21 @@
 /* ─────────────────────────────────────────────────────────
-   ProductCard — full styles (gesture-based like, footer counts,
-   skeleton loader for cover image)
+   ProductCard — full styles
+   ─────────────────────────────────────────────────────────
+   Layout intent:
+     • Everything is edge-to-edge — header, cover, body,
+       contact row, footer all have ZERO horizontal padding.
+       Only vertical spacing.
+     • On mobile the card fills the viewport width, so every
+       element touches the screen edges.
+     • On larger screens the card sits inside a grid, and
+       every card is the SAME HEIGHT regardless of content:
+         - name clamps to 2 lines
+         - description clamps to 2 lines (with a fixed
+           min-height so short descriptions don't shrink
+           the card)
+         - property chips clamp to a single row
+         - footer is pinned to the bottom via
+           `margin-top: auto`
    ───────────────────────────────────────────────────────── */
 
 .product-card {
@@ -8,6 +23,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;                   /* ← fills the grid cell */
   background: #FFFFFF;
   border: none;
   border-radius: 0;
@@ -24,7 +40,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 18px 10px;
+  padding: 14px 0 10px;
+  flex: 0 0 auto;
 }
 
 .product-card__avatar {
@@ -96,9 +113,9 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  flex: 0 0 auto;                 /* fixed height, doesn't grow */
 }
 
-/* Image — hidden until loaded, then fades in */
 .product-card__cover-img {
   width: 100%;
   height: 100%;
@@ -117,7 +134,7 @@
   transform: scale(1.02);
 }
 
-/* ── Skeleton overlay (visible while image loads) ───── */
+/* ── Skeleton overlay ─────────────────────────────────── */
 .product-card__cover-skeleton {
   position: absolute;
   inset: 0;
@@ -129,7 +146,6 @@
   z-index: 1;
 }
 
-/* Shimmer — a horizontal light band that sweeps across */
 .product-card__cover-shimmer {
   position: absolute;
   inset: 0;
@@ -173,7 +189,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Fallback when image fails to load ───────────────── */
+/* ── Cover error fallback ────────────────────────────── */
 .product-card__cover-error {
   position: absolute;
   inset: 0;
@@ -193,16 +209,18 @@
   color: #CBD5E1;
 }
 
-/* ── Body — gesture surface ──────────────────────────── */
+/* ── Body — content budget (name + price + description + props) ── */
 .product-card__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 18px 8px;
+  gap: 8px;
+  padding: 12px 0 8px;
   cursor: pointer;
   touch-action: manipulation;
+  flex: 0 0 auto;                 /* do not grow */
 }
 
+/* Name — always 2 lines max */
 .product-card__name {
   margin: 0;
   font-size: 1.35rem;
@@ -211,40 +229,54 @@
   line-height: 1.3;
   letter-spacing: -0.3px;
   word-break: break-word;
-}
 
-.product-card__price {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #047857;
-  letter-spacing: -0.3px;
-}
-
-.product-card__desc {
-  margin: 0;
-  font-size: 1.1rem;
-  line-height: 1.65;
-  color: #334155;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.product-card__desc.is-clamped {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Price — single line, never wraps */
+.product-card__price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #047857;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Description — always 2 lines exactly (even if 1 line is set) */
+.product-card__desc {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: #334155;
+  word-break: break-word;
+  white-space: pre-wrap;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.1rem * 1.55 * 2);
+}
+
+/* Harmless legacy modifier — base rule already clamps */
+.product-card__desc.is-clamped {
+  /* no-op */
+}
+
 .product-card__toggle {
   align-self: flex-start;
-  margin-top: 2px;
+  margin-top: -2px;
   padding: 0;
   border: none;
   background: transparent;
   color: #2563EB;
   font-family: inherit;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -260,31 +292,38 @@
   outline: none;
 }
 
+/* Properties — clamp to ONE row of chips, hide overflow */
 .product-card__props {
   list-style: none;
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow: hidden;
+  max-height: 34px;
 }
 
 .product-card__prop {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 4px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: #F1F5F9;
   border: 1px solid #E2E8F0;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  flex: 0 1 auto;
+  min-width: 0;
   max-width: 100%;
+  white-space: nowrap;
 }
 
 .product-card__prop-name {
   font-weight: 700;
   color: #334155;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .product-card__prop-name::after {
@@ -298,16 +337,65 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
-/* ── Footer ──────────────────────────────────────────── */
+/* ── Contact row — Call / WhatsApp ───────────────────── */
+.product-card__contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 0 4px;
+  flex: 0 0 auto;
+}
+
+.product-card__contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.product-card__contact-btn:hover { filter: brightness(1.08); }
+.product-card__contact-btn:active { transform: translateY(1px); }
+.product-card__contact-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.product-card__contact-btn.is-call     { background: #16A34A; }
+.product-card__contact-btn.is-whatsapp {
+  background: #25D366;
+  color: #0B141A;
+}
+
+.product-card__contact-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Footer — pinned to the bottom of the card ───────── */
 .product-card__footer {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 18px 16px;
+  padding: 6px 0 16px;
   border-top: 1px solid #F1F5F9;
-  margin-top: 4px;
+  margin-top: auto;               /* ← pins footer to bottom */
+  flex: 0 0 auto;
 }
 
 .product-card__like-count,
@@ -324,59 +412,52 @@
   line-height: 1;
 }
 
-/* ── Responsive ──────────────────────────────────────── */
+/* ── Responsive — smaller type, same clamps ──────────── */
 @media (max-width: 640px) {
-  .product-card__header { padding: 12px 16px 8px; gap: 10px; }
+  .product-card__header { padding: 12px 0 8px; gap: 10px; }
   .product-card__avatar { width: 42px; height: 42px; }
   .product-card__business { font-size: 1.05rem; }
   .product-card__cover { aspect-ratio: 1 / 1; }
-  .product-card__body { padding: 10px 16px 6px; gap: 8px; }
-  .product-card__footer { padding: 6px 16px 14px; }
+  .product-card__body { padding: 10px 0 6px; gap: 6px; }
+  .product-card__footer { padding: 6px 0 14px; }
 
   .product-card__name { font-size: 1.2rem; }
   .product-card__price { font-size: 1.18rem; }
-  .product-card__desc { font-size: 1.02rem; }
-  .product-card__toggle { font-size: 0.98rem; }
-  .product-card__prop { font-size: 0.84rem; padding: 5px 10px; }
+  .product-card__desc {
+    font-size: 1.02rem;
+    min-height: calc(1.02rem * 1.55 * 2);
+  }
+  .product-card__toggle { font-size: 0.92rem; }
+  .product-card__prop { font-size: 0.78rem; padding: 4px 8px; }
   .product-card__like-count,
   .product-card__follow-count { font-size: 0.88rem; }
+  .product-card__contact-btn { min-height: 38px; font-size: 0.86rem; }
+  .product-card__sold-out {
+    top: 10px; left: 10px;
+    font-size: 0.68rem; padding: 4px 10px;
+  }
 }
 
 @media (max-width: 380px) {
   .product-card__business { font-size: 1rem; }
   .product-card__name { font-size: 1.1rem; }
   .product-card__price { font-size: 1.1rem; }
-  .product-card__desc { font-size: 0.96rem; }
-  .product-card__toggle { font-size: 0.92rem; }
-  .product-card__prop { font-size: 0.8rem; }
-}
-
-/* ── Reduced motion ──────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .product-card__cover-shimmer {
-    animation: none;
-    background: #E2E8F0;
+  .product-card__desc {
+    font-size: 0.96rem;
+    min-height: calc(0.96rem * 1.55 * 2);
   }
-  .product-card__spinner-ring {
-    animation: product-card-spin 1.4s linear infinite;
-  }
-  .product-card__cover-img {
-    transition: opacity 0.2s ease;
+  .product-card__toggle { font-size: 0.88rem; }
+  .product-card__prop { font-size: 0.74rem; }
+  .product-card__sold-out {
+    font-size: 0.64rem; padding: 3px 8px;
   }
 }
-/* ─────────────────────────────────────────────────────────
-   SOLD OUT STATE
-   ─────────────────────────────────────────────────────────
-   A card marked sold out:
-     • desaturates the cover image so it visually recedes
-     • renders a "Sold out" pill over the cover top-left
-     • mutes the price colour so it doesn't compete with
-       the "available" price of in-stock products
-   The click / gesture behaviour is unchanged — users can
-   still open the detail page to see what they missed.
-   ───────────────────────────────────────────────────────── */
 
-/* Cover — desaturate the image on sold-out cards */
+@media (max-width: 360px) {
+  .product-card__contact { grid-template-columns: 1fr; }
+}
+
+/* ── Sold out state ──────────────────────────────────── */
 .product-card__cover.is-sold-out .product-card__cover-img {
   filter: grayscale(0.7) brightness(0.94);
 }
@@ -385,7 +466,6 @@
   transform: none;
 }
 
-/* Sold-out pill — overlaid top-left of the cover */
 .product-card__sold-out {
   position: absolute;
   top: 12px;
@@ -415,7 +495,6 @@
   user-select: none;
 }
 
-/* Muted price — signals the product isn't purchasable */
 .product-card__price.is-sold-out {
   color: #94A3B8;
   text-decoration: line-through;
@@ -423,24 +502,18 @@
   text-decoration-color: #CBD5E1;
 }
 
-/* Responsive tweaks */
-@media (max-width: 640px) {
-  .product-card__sold-out {
-    top: 10px;
-    left: 10px;
-    font-size: 0.68rem;
-    padding: 4px 10px;
-  }
-}
-
-@media (max-width: 380px) {
-  .product-card__sold-out {
-    font-size: 0.64rem;
-    padding: 3px 8px;
-  }
-}
-
+/* ── Reduced motion ──────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .product-card__cover-shimmer {
+    animation: none;
+    background: #E2E8F0;
+  }
+  .product-card__spinner-ring {
+    animation: product-card-spin 1.4s linear infinite;
+  }
+  .product-card__cover-img {
+    transition: opacity 0.2s ease;
+  }
   .product-card__cover.is-sold-out .product-card__cover-img {
     transition: none !important;
   }

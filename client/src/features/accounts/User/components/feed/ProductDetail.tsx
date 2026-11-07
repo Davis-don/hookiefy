@@ -147,7 +147,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /* ============================================================
-   COPYABLE PRODUCT ID — full-width, clearly visible row
+   COPYABLE PRODUCT ID — only rendered on Youpata-managed
    ============================================================ */
 
 type ProductIdBlockProps = {
@@ -468,7 +468,7 @@ type ProductDetailProps = {
   productId: number;
   onBack: () => void;
   onOpenBusiness: (businessId: number) => void;
-  /** True when this product is Youpata-managed — shows the purchase bar. */
+  /** True when this product is Youpata-managed — shows purchase bar + ID block. */
   isYoupataManaged?: boolean;
   /** Fires when the "Pay via M-Pesa" button is pressed. */
   onPurchase?: (productId: number) => void;
@@ -552,14 +552,26 @@ function ProductDetailPage({
     setLightboxIndex(idx >= 0 ? idx : 0);
   };
 
-  const showPurchaseBar =
-    (isYoupataManaged ?? data.is_youpata_managed ?? false) &&
-    typeof onPurchase === 'function';
+  /*
+   * Everything Youpata-managed lives inside this one flag:
+   *   • the "Pay via M-Pesa" button
+   *   • the Call / WhatsApp seller row
+   *   • the copyable "Product ID" block
+   *
+   * For a normal (non-managed) product, the detail page
+   * shows just the images, name, price, description,
+   * properties, gallery, and stats — the same shape any
+   * other marketplace listing would have.
+   */
+  const youpataManaged =
+    isYoupataManaged ?? data.is_youpata_managed ?? false;
 
-  // Contact links — built once from the loaded product so
-  // both anchors share the same URL and the same traceable
-  // product id, regardless of how often the component
-  // re-renders.
+  const showPurchaseBar =
+    youpataManaged && typeof onPurchase === 'function';
+
+  // Contact links — only used when Youpata-managed, but
+  // building them unconditionally is cheap and keeps the
+  // JSX below flat.
   const whatsappUrl = buildWhatsAppUrl(data.id, data.name);
   const callUrl = buildCallUrl();
 
@@ -637,7 +649,8 @@ function ProductDetailPage({
       <div className="product-detail__body">
         <h1 className="product-detail__name">{data.name}</h1>
 
-        <ProductIdBlock productId={data.id} />
+        {/* ── Copyable product ID — Youpata-managed only ── */}
+        {youpataManaged && <ProductIdBlock productId={data.id} />}
 
         {priceLabel && (
           <span
@@ -688,12 +701,9 @@ function ProductDetailPage({
         <span>{data.follows_count} follows</span>
       </div>
 
-      {/* ── Purchase + seller contact ───────────────────
-          Purchase bar (Youpata-managed only) followed by
-          Call / WhatsApp anchors. The contact anchors are
-          rendered even when the product is sold out — the
-          buyer still needs to reach the seller to ask
-          about restock or a pre-order. */}
+      {/* ── Purchase + seller contact (Youpata-managed only) ──
+          Same gate as the ID block above — if the product
+          isn't managed, none of these controls render. */}
       {showPurchaseBar && (
         <div className="product-detail__purchase">
           {soldOut ? (

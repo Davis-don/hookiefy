@@ -22,11 +22,73 @@ type ProductCardProps = {
 
 const CLAMP_LINES = 2;
 
+/**
+ * Fallback contact number.
+ *
+ * When a card has no seller phone — because the owner hasn't
+ * filled one in, or it's malformed — the Call/WhatsApp
+ * buttons still need to do *something*. They fall back to
+ * this platform-wide support number instead of silently
+ * hiding. That keeps the buttons visible on every card
+ * (which is what you asked for) while never sending a buyer
+ * to a dead link.
+ *
+ * Change here when the support number moves.
+ */
+const FALLBACK_PHONE_E164 = '254758420860';
+const FALLBACK_PHONE_DISPLAY = '+254 758 420 860';
+
 function formatPrice(price: string | null | undefined): string | null {
   if (price === null || price === undefined || price === '') return null;
   const n = Number(price);
   if (Number.isNaN(n)) return null;
   return `KES ${n.toLocaleString()}`;
+}
+
+function normaliseKenyanPhone(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+
+  const digits = raw.replace(/[^\d]/g, '');
+  if (!digits) return null;
+
+  let local = digits;
+
+  if (local.startsWith('254') && local.length > 9) {
+    local = local.slice(3);
+  }
+  if (local.startsWith('0')) {
+    local = local.slice(1);
+  }
+
+  if (local.length !== 9) return null;
+  if (local[0] !== '7' && local[0] !== '1') return null;
+
+  return `254${local}`;
+}
+
+function displayPhone(e164: string): string {
+  if (e164.length !== 12) return e164;
+  return `+${e164.slice(0, 3)} ${e164.slice(3, 6)} ${e164.slice(6, 9)} ${e164.slice(9)}`;
+}
+
+function buildWhatsAppUrl(
+  e164: string,
+  productId: number,
+  productName: string | undefined,
+  toSeller: boolean,
+): string {
+  const label = (productName ?? '').trim();
+  // When the buyer is messaging the seller, include the
+  // product name + id so the seller knows the context.
+  // When the fallback (support) number is used, still
+  // include the product so support can route correctly.
+  const text = encodeURIComponent(
+    label
+      ? `Hi, I'm interested in "${label}" (product #${productId}) on Youpata.`
+      : `Hi, I'm interested in product #${productId} on Youpata.`,
+  );
+  void toSeller;
+  return `https://wa.me/${e164}?text=${text}`;
 }
 
 function ProductCard({
@@ -46,10 +108,6 @@ function ProductCard({
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
 
-  // Sold out when the backend explicitly says in_stock is false.
-  // `undefined` (older cached payloads, or posts masquerading
-  // as products) is treated as available — never hides the CTA
-  // on a product that's actually buyable.
   const soldOut = item.in_stock === false;
 
   const openBusiness = () => onOpenBusiness(item.business.id);
@@ -80,6 +138,34 @@ function ProductCard({
 
   const hasImage = !!item.image_url;
   const showSkeleton = hasImage && !imageLoaded && !imageError;
+
+  /*
+   * Seller contact — always render, with a fallback.
+   *
+   * Priority:
+   *   1. If the item carries a valid seller phone → use it.
+   *   2. Otherwise → fall back to the platform support
+   *      number so the buttons are still tappable and the
+   *      buyer can reach *someone* who can help.
+   *
+   * `usingFallback` lets the tooltip explain "call support"
+   * instead of "call seller" when the fallback is active.
+   */
+  const sellerPhone = normaliseKenyanPhone(item.phone_number);
+  const usingFallback = !sellerPhone;
+
+  const targetPhone = sellerPhone ?? FALLBACK_PHONE_E164;
+  const targetDisplay = usingFallback
+    ? FALLBACK_PHONE_DISPLAY
+    : displayPhone(targetPhone);
+
+  const callUrl = `tel:+${targetPhone}`;
+  const whatsappUrl = buildWhatsAppUrl(
+    targetPhone,
+    item.id,
+    item.name,
+    !usingFallback,
+  );
 
   return (
     <article
@@ -124,7 +210,6 @@ function ProductCard({
           {item.business.business_name}
         </button>
 
-        {/* Optional badge slot — between business name and follow */}
         {badge}
 
         <FollowButton
@@ -134,7 +219,6 @@ function ProductCard({
         />
       </header>
 
-      {/* ── Cover with skeleton loader ────────────────── */}
       {hasImage && (
         <div
           className={
@@ -198,7 +282,6 @@ function ProductCard({
             </div>
           )}
 
-          {/* ── Sold-out pill ─────────────────────────── */}
           {soldOut && (
             <span
               className="product-card__sold-out"
@@ -255,6 +338,78 @@ function ProductCard({
             ))}
           </ul>
         )}
+      </div>
+
+      {/* ── Seller contact — Call / WhatsApp ──────────
+          Always rendered. Seller phone when available,
+          platform support number as fallback so the buttons
+          are never hidden and never dead. */}
+      <div className="product-card__contact">
+        <a
+          className="product-card__contact-btn is-call"
+          href={callUrl}
+          data-product-id={item.id}
+          data-fallback={usingFallback ? '1' : undefined}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          title={
+            usingFallback
+              ? `Call support at ${targetDisplay}`
+              : `Call seller at ${targetDisplay}`
+          }
+          aria-label={
+            usingFallback
+              ? `Call support at ${targetDisplay} about ${item.name ?? 'this product'}`
+              : `Call seller at ${targetDisplay} about ${item.name ?? 'this product'}`
+          }
+        >
+          <svg
+            className="product-card__contact-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"
+              fill="currentColor"
+            />
+          </svg>
+          Call
+        </a>
+
+        <a
+          className="product-card__contact-btn is-whatsapp"
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-product-id={item.id}
+          data-fallback={usingFallback ? '1' : undefined}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          title={
+            usingFallback
+              ? `Chat with support on WhatsApp at ${targetDisplay}`
+              : `Chat with seller on WhatsApp at ${targetDisplay}`
+          }
+          aria-label={
+            usingFallback
+              ? `Chat with support on WhatsApp at ${targetDisplay} about ${item.name ?? 'this product'}`
+              : `Chat with seller on WhatsApp at ${targetDisplay} about ${item.name ?? 'this product'}`
+          }
+        >
+          <svg
+            className="product-card__contact-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.26-8.24zm-3.6 4.1c-.17 0-.45.06-.68.31-.23.25-.9.88-.9 2.14s.92 2.48 1.05 2.65c.13.17 1.79 2.73 4.34 3.83.6.26 1.07.42 1.44.54.6.19 1.15.16 1.58.1.48-.07 1.48-.6 1.69-1.19.21-.59.21-1.09.15-1.19-.06-.1-.23-.16-.48-.28-.25-.13-1.48-.73-1.71-.81-.23-.09-.4-.13-.56.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.25-1.49-1.4-1.74-.15-.25-.02-.38.11-.51.11-.11.25-.29.38-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.36-.77-1.86-.2-.48-.41-.42-.56-.42-.15 0-.31-.02-.48-.02z"
+              fill="currentColor"
+            />
+          </svg>
+          WhatsApp
+        </a>
       </div>
 
       <footer className="product-card__footer">

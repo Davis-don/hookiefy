@@ -1,7 +1,21 @@
+/* src/pages/Home/home.css */
+
 /* ─────────────────────────────────────────────────────────
    YOUPATA — HOME / FEED
-   Page feed + states + profile-incomplete locked state.
-   All classes prefixed .home-.
+   ─────────────────────────────────────────────────────────
+   Grid breakpoints:
+
+     ≤ 640px    → 1 column, edge-to-edge
+     641–1023   → 2 columns, centered, 960px max
+     1024–1439  → 3 columns, centered, 1280px max
+     ≥ 1440     → 4 columns, centered, 1600px max
+
+   Every row stretches all cards to the tallest card
+   in that row, so a short-description card and a
+   long-description card end up the same height. The
+   card's internal clamps (name 2 lines, description
+   2 lines, one row of props) make that budget
+   constant, so this actually holds in practice.
    ───────────────────────────────────────────────────────── */
 
 .home-shell {
@@ -10,25 +24,45 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 16px 48px;
+  padding: 20px 0 48px;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
-/* ── List ─────────────────────────────────────────────── */
+/* ── List — the responsive grid ───────────────────────── */
+
 .home-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 1fr;   /* mobile default — single column */
   gap: 16px;
+
+  /* Every cell stretches to the tallest card in the row. */
+  align-items: stretch;
 }
 
 .home-list-item {
   list-style: none;
+  min-width: 0;
+
+  /* Fill the grid cell so the card can be height: 100% */
+  height: 100%;
+  display: flex;
+}
+
+.home-list-item > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
 }
 
 /* ── Sentinel / loading / end ─────────────────────────── */
+
 .home-sentinel {
   width: 100%;
   height: 1px;
@@ -95,6 +129,7 @@
 }
 
 /* ── Generic state block ──────────────────────────────── */
+
 .home-state {
   min-height: 50vh;
   display: flex;
@@ -152,8 +187,7 @@
 }
 
 /* ── Locked state — profile incomplete ───────────────── */
-/* Mirrors MyBusiness's .mb-shell-locked / .mb-locked-wrap
-   so both tabs show the same card, width, and anchoring. */
+
 .home-state-locked {
   width: 100%;
   min-height: calc(100vh - 120px);
@@ -178,21 +212,25 @@
   width: 100%;
 }
 
-/* ── Responsive ──────────────────────────────────────── */
-@media (max-width: 900px) {
-  .home-shell { padding: 18px 14px 40px; gap: 16px; }
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE — grid breakpoints
+   ─────────────────────────────────────────────────────────
+   Same breakpoints used across the rest of the app
+   (640 / 1024 / 1440) so the feed lines up with the
+   business, product, and admin pages.
+   ───────────────────────────────────────────────────────── */
 
-  .home-state-locked {
-    min-height: calc(100vh - 110px);
-    padding: 28px 18px 40px;
-  }
-  .home-locked-wrap {
-    max-width: 600px;
-  }
-}
-
+/* Mobile + tiny screens — single column, edge-to-edge */
 @media (max-width: 640px) {
-  .home-shell { padding: 16px 12px 32px; gap: 14px; }
+  .home-shell {
+    padding: 16px 0 32px;
+    gap: 14px;
+  }
+
+  .home-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 
   .home-state-locked {
     min-height: calc(100vh - 100px);
@@ -205,14 +243,59 @@
 }
 
 @media (max-width: 380px) {
-  .home-shell { padding: 14px 10px 28px; gap: 12px; }
+  .home-shell {
+    padding: 14px 0 28px;
+    gap: 12px;
+  }
+
+  .home-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 
   .home-state-locked {
     padding: 16px 12px 32px;
   }
 }
 
+/* Tablet — 2-column grid, centered */
+@media (min-width: 641px) {
+  .home-shell {
+    padding: 22px 16px 48px;
+    max-width: 960px;
+  }
+
+  .home-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+/* Desktop — 3-column grid, centered */
+@media (min-width: 1024px) {
+  .home-shell {
+    padding: 24px 24px 56px;
+    max-width: 1280px;
+  }
+
+  .home-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+/* Wide desktop — 4-column grid, centered */
 @media (min-width: 1440px) {
+  .home-shell {
+    padding: 32px 32px 64px;
+    max-width: 1600px;
+  }
+
+  .home-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+  }
+
   .home-state-locked {
     padding: 48px 32px 64px;
   }
@@ -221,6 +304,8 @@
     gap: 20px;
   }
 }
+
+/* ── Reduced motion ──────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .home-loadmore,

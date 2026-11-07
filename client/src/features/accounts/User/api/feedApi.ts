@@ -43,6 +43,20 @@ export type FeedItem = {
   business: FeedBusinessMini;
   owner: FeedOwnerMini | null;
 
+  /**
+   * Seller's contact phone in whatever shape the backend
+   * returns it (typically the business owner's
+   * `Accounts.phone_number`, e.g. `"0758420860"` or
+   * `"+254758420860"`).
+   *
+   * Present on BOTH post and product items — the frontend
+   * card normalises it before building tel: / wa.me links,
+   * and hides the contact buttons entirely if the value is
+   * missing or malformed. `undefined` and `null` are both
+   * treated the same (no buttons).
+   */
+  phone_number?: string | null;
+
   // Post-only
   title?: string;
   body?: string;
