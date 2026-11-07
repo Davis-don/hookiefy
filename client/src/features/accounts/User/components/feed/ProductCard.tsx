@@ -22,11 +22,26 @@ type ProductCardProps = {
 
 const CLAMP_LINES = 2;
 
-function formatPrice(price: string | null | undefined): string | null {
+/**
+ * Format a raw price string into display form.
+ *
+ * Returns null when the price is missing so the caller
+ * can skip rendering the price chip entirely.
+ *
+ * When `withPrefix` is true, returns `"KES 1,500"` — for
+ * single-line contexts. When false, returns `"1,500"` with
+ * no prefix — for the price chip where the currency lives
+ * in its own span.
+ */
+function formatPrice(
+  price: string | null | undefined,
+  { withPrefix = true }: { withPrefix?: boolean } = {},
+): string | null {
   if (price === null || price === undefined || price === '') return null;
   const n = Number(price);
   if (Number.isNaN(n)) return null;
-  return `KES ${n.toLocaleString()}`;
+  const formatted = n.toLocaleString();
+  return withPrefix ? `KES ${formatted}` : formatted;
 }
 
 /**
@@ -87,7 +102,15 @@ function ProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Full "KES 1,500" form used for the aria-label and
+  // screen-reader announcement.
   const priceLabel = formatPrice(item.price);
+
+  // Split form for the visual price chip: the currency
+  // lives in its own span so it can be styled smaller
+  // and lighter than the number.
+  const priceNumber = formatPrice(item.price, { withPrefix: false });
+
   const description = item.description ?? '';
   const isLong = description.length > CLAMP_LINES * 60;
   const clampClass = !expanded && isLong ? ' is-clamped' : '';
@@ -204,12 +227,6 @@ function ProductCard({
             }
           }}
         >
-          {/* ── Loading skeleton — a shimmering block with
-                 a diagonal wave of light sweeping across.
-                 No spinner, no ring, no text. The block
-                 itself communicates "content coming". The
-                 same base grey as the card body, with a
-                 moving sheen so it doesn't look static. */}
           {showSkeleton && (
             <div
               className="product-card__cover-skeleton"
@@ -266,17 +283,29 @@ function ProductCard({
       )}
 
       <div className="product-card__body" {...gesture}>
-        {item.name && <h3 className="product-card__name">{item.name}</h3>}
-
-        {priceLabel && (
+        {/* Price chip — the currency code (KES) is a small
+            uppercase label on the left; the number is the
+            big bold figure. Together they read as a price
+            tag, not a line of text. The chip appears above
+            the title so it's the first thing the eye lands
+            on when scanning the card. */}
+        {priceNumber && (
           <span
             className={
               'product-card__price' + (soldOut ? ' is-sold-out' : '')
             }
+            aria-label={priceLabel ?? undefined}
           >
-            {priceLabel}
+            <span className="product-card__price-currency">
+              {item.price ? 'KES' : ''}
+            </span>
+            <span className="product-card__price-amount">
+              {priceNumber}
+            </span>
           </span>
         )}
+
+        {item.name && <h3 className="product-card__name">{item.name}</h3>}
 
         {description && (
           <>

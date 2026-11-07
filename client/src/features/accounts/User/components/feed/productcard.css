@@ -2,29 +2,25 @@
    ProductCard — full styles
    ─────────────────────────────────────────────────────────
    Layout intent:
-     • Everything is edge-to-edge — header, cover, body,
-       contact row, footer all have ZERO horizontal padding.
-       Only vertical spacing.
-     • On mobile the card fills the viewport width, so every
-       element touches the screen edges.
-     • On larger screens the card sits inside a grid, and
-       every card is the SAME HEIGHT regardless of content:
-         - name clamps to 2 lines
-         - description clamps to 2 lines (with a fixed
-           min-height so short descriptions don't shrink
-           the card)
-         - property chips clamp to a single row
-         - footer is pinned to the bottom via
-           `margin-top: auto`
+     • MOBILE (≤ 640px):   full-bleed, edge-to-edge.
+                           Zero horizontal padding on the
+                           card or any of its children. The
+                           image touches the screen's left
+                           and right edges. No rounded
+                           corners, no side gaps.
+     • TABLET / DESKTOP:   the card sits inside a grid with
+                           its own gutters, so it has a soft
+                           border and rounded corners — it
+                           reads as a distinct object.
+     • Every card in a grid row is the SAME HEIGHT.
 
-   Loading state:
-     The cover image starts hidden, with a neutral grey
-     placeholder underneath. A diagonal wave of light
-     (the "shimmer") sweeps across the placeholder on an
-     infinite loop, communicating "image on its way"
-     without a spinner, ring, or any circular affordance.
-     When the image resolves it fades in over 300ms,
-     covering the shimmer.
+   Visual emphasis:
+     • Title is THE focal element — big, heavy, tight.
+     • Price sits below as a prominent warm-toned pill.
+     • Description is generously readable, recedes in colour.
+     • Footer shows likes + follows as bold pill-shaped
+       stat chips with icons — visible and proud, not
+       muted afterthought text.
    ───────────────────────────────────────────────────────── */
 
 .product-card {
@@ -32,30 +28,34 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;                   /* ← fills the grid cell */
+  height: 100%;
+
   background: #FFFFFF;
   border: none;
   border-radius: 0;
+  margin: 0;
+
   overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
 }
 
 /* ── Header ──────────────────────────────────────────── */
 .product-card__header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 0 10px;
+  gap: 10px;
+  padding: 12px 0 10px;
   flex: 0 0 auto;
 }
 
 .product-card__avatar {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   overflow: hidden;
   background: #ECFDF5;
@@ -73,7 +73,7 @@
 }
 
 .product-card__avatar:hover {
-  transform: scale(1.04);
+  transform: scale(1.05);
   box-shadow: 0 4px 14px -6px rgba(4, 120, 87, 0.55);
 }
 
@@ -85,14 +85,14 @@
 }
 
 .product-card__avatar-fallback {
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 
 .product-card__business {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: #0F172A;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.15px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -112,7 +112,7 @@
   color: #2563EB;
 }
 
-/* ── Cover — gesture surface ─────────────────────────── */
+/* ── Cover ───────────────────────────────────────────── */
 .product-card__cover {
   position: relative;
   width: 100%;
@@ -122,7 +122,8 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  flex: 0 0 auto;                 /* fixed height, doesn't grow */
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .product-card__cover-img {
@@ -131,7 +132,7 @@
   object-fit: cover;
   display: block;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.4s ease;
   pointer-events: none;
 }
 
@@ -140,17 +141,10 @@
 }
 
 .product-card__cover:hover .product-card__cover-img.is-loaded {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
-/* ── Cover skeleton — shimmering grey block ──────────── */
-/* No spinner, no ring, no text. Just a neutral grey
-   rectangle with a diagonal wave of light sweeping
-   across from left to right. Same technique used by
-   Instagram, Pinterest, X, and the feed-level skeleton
-   in home.css, so the loading language is consistent
-   across the app. */
-
+/* ── Skeleton ────────────────────────────────────────── */
 .product-card__cover-skeleton {
   position: absolute;
   inset: 0;
@@ -182,7 +176,7 @@
   100% { transform: translateX(100%); }
 }
 
-/* ── Cover error fallback ────────────────────────────── */
+/* ── Cover error ─────────────────────────────────────── */
 .product-card__cover-error {
   position: absolute;
   inset: 0;
@@ -202,25 +196,26 @@
   color: #CBD5E1;
 }
 
-/* ── Body — content budget (name + price + description + props) ── */
+/* ── Body ────────────────────────────────────────────── */
 .product-card__body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 0 8px;
+  gap: 10px;
+  padding: 12px 0 10px;
   cursor: pointer;
   touch-action: manipulation;
-  flex: 0 0 auto;                 /* do not grow */
+  flex: 0 0 auto;
+  margin: 0;
 }
 
-/* Name — always 2 lines max */
+/* ── Title — dominant ────────────────────────────────── */
 .product-card__name {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.28rem;
   font-weight: 800;
   color: #0F172A;
-  line-height: 1.3;
-  letter-spacing: -0.3px;
+  line-height: 1.28;
+  letter-spacing: -0.4px;
   word-break: break-word;
 
   display: -webkit-box;
@@ -229,23 +224,58 @@
   overflow: hidden;
 }
 
-/* Price — single line, never wraps */
+/* ── Price chip ──────────────────────────────────────── */
 .product-card__price {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #047857;
-  letter-spacing: -0.3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #ECFDF5;
+  border: 1px solid #BBF7D0;
+  color: #065F46;
+  line-height: 1;
+  box-shadow: 0 4px 14px -10px rgba(4, 120, 87, 0.55);
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* Description — always 2 lines exactly (even if 1 line is set) */
+.product-card__price-currency {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.product-card__price-amount {
+  font-size: 1.32rem;
+  font-weight: 900;
+  letter-spacing: -0.45px;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-card__price.is-sold-out {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #94A3B8;
+  box-shadow: none;
+}
+
+.product-card__price.is-sold-out .product-card__price-amount {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #CBD5E1;
+}
+
+/* ── Description ─────────────────────────────────────── */
 .product-card__desc {
   margin: 0;
-  font-size: 1.1rem;
-  line-height: 1.55;
-  color: #334155;
+  font-size: 0.98rem;
+  line-height: 1.58;
+  color: #475569;
+  font-weight: 400;
   word-break: break-word;
   white-space: pre-wrap;
 
@@ -253,24 +283,24 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(1.1rem * 1.55 * 2);
+  min-height: calc(0.98rem * 1.58 * 2);
 }
 
-/* Harmless legacy modifier — base rule already clamps */
 .product-card__desc.is-clamped {
   /* no-op */
 }
 
 .product-card__toggle {
   align-self: flex-start;
-  margin-top: -2px;
+  margin-top: -4px;
   padding: 0;
   border: none;
   background: transparent;
   color: #2563EB;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.18s ease;
@@ -285,7 +315,7 @@
   outline: none;
 }
 
-/* Properties — clamp to ONE row of chips, hide overflow */
+/* ── Properties ──────────────────────────────────────── */
 .product-card__props {
   list-style: none;
   margin: 2px 0 0;
@@ -294,18 +324,19 @@
   flex-wrap: nowrap;
   gap: 6px;
   overflow: hidden;
-  max-height: 34px;
+  max-height: 30px;
 }
 
 .product-card__prop {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
+  padding: 4px 9px;
   border-radius: 999px;
-  background: #F1F5F9;
+  background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
+  font-weight: 500;
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
@@ -314,7 +345,7 @@
 
 .product-card__prop-name {
   font-weight: 700;
-  color: #334155;
+  color: #475569;
   white-space: nowrap;
   flex: 0 0 auto;
 }
@@ -334,115 +365,238 @@
   min-width: 0;
 }
 
-/* ── Contact row — Call / WhatsApp ───────────────────── */
+/* ── Contact row ─────────────────────────────────────── */
 .product-card__contact {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  padding: 4px 0 4px;
+  padding: 4px 0 10px;
   flex: 0 0 auto;
+  margin: 0;
 }
 
 .product-card__contact-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 40px;
+  gap: 7px;
+  min-height: 44px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   line-height: 1;
   text-decoration: none;
   color: #FFFFFF;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.05s ease;
+  border: none;
+  transition: filter 0.15s ease, transform 0.06s ease,
+    box-shadow 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.product-card__contact-btn:hover { filter: brightness(1.08); }
-.product-card__contact-btn:active { transform: translateY(1px); }
+.product-card__contact-btn:hover {
+  filter: brightness(1.06);
+}
+
+.product-card__contact-btn:active {
+  transform: translateY(1px);
+}
+
 .product-card__contact-btn:focus-visible {
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-.product-card__contact-btn.is-call     { background: #16A34A; }
+.product-card__contact-btn.is-call {
+  background: #16A34A;
+  box-shadow: 0 4px 14px -8px rgba(22, 163, 74, 0.9);
+}
+
+.product-card__contact-btn.is-call:hover {
+  box-shadow: 0 6px 20px -8px rgba(22, 163, 74, 0.9);
+}
+
 .product-card__contact-btn.is-whatsapp {
   background: #25D366;
   color: #0B141A;
+  box-shadow: 0 4px 14px -8px rgba(37, 211, 102, 0.9);
+}
+
+.product-card__contact-btn.is-whatsapp:hover {
+  box-shadow: 0 6px 20px -8px rgba(37, 211, 102, 0.9);
 }
 
 .product-card__contact-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
 }
 
-/* ── Footer — pinned to the bottom of the card ───────── */
+/* ─────────────────────────────────────────────────────────
+   FOOTER — bold, visible engagement stats
+   ─────────────────────────────────────────────────────────
+   Likes and follows are now shown as pill-shaped stat
+   chips with a heart / follow icon, on a soft grey
+   background. The number is big and bold, the label is
+   small and muted, so a glance reads "12 likes · 4
+   follows" as a stat pair rather than muted metadata.
+   ───────────────────────────────────────────────────────── */
+
 .product-card__footer {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 0 16px;
+  gap: 8px;
+  padding: 10px 0 14px;
   border-top: 1px solid #F1F5F9;
-  margin-top: auto;               /* ← pins footer to bottom */
+  margin-top: auto;
   flex: 0 0 auto;
+  flex-wrap: wrap;
 }
 
+/* Each counter is its own pill chip. LikeCount and
+   FollowCount components render the number inside; the
+   chip styling below applies to the wrapper we style
+   around the count. */
 .product-card__like-count,
 .product-card__follow-count {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 5px 12px;
+  border-radius: 999px;
+
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.1px;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+/* Pulse the like count's chip when the user likes (the
+   underlying like mutation animates the number; this
+   subtle background lift makes the whole chip react). */
+.product-card__like-count:hover,
+.product-card__follow-count:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+/* Hide the small dot divider on narrow screens when the
+   pills themselves provide separation. */
 .product-card__footer-dot {
   color: #CBD5E1;
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
-/* ── Responsive — smaller type, same clamps ──────────── */
-@media (max-width: 640px) {
-  .product-card__header { padding: 12px 0 8px; gap: 10px; }
-  .product-card__avatar { width: 42px; height: 42px; }
-  .product-card__business { font-size: 1.05rem; }
-  .product-card__cover { aspect-ratio: 1 / 1; }
-  .product-card__body { padding: 10px 0 6px; gap: 6px; }
-  .product-card__footer { padding: 6px 0 14px; }
+/* ── Sold-out pill ───────────────────────────────────── */
+.product-card__sold-out {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
 
-  .product-card__name { font-size: 1.2rem; }
-  .product-card__price { font-size: 1.18rem; }
-  .product-card__desc {
-    font-size: 1.02rem;
-    min-height: calc(1.02rem * 1.55 * 2);
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  color: #B91C1C;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #FECACA;
+
+  box-shadow:
+    0 2px 8px -2px rgba(15, 23, 42, 0.12),
+    0 6px 16px -8px rgba(185, 28, 28, 0.28);
+
+  pointer-events: none;
+  user-select: none;
+}
+
+.product-card__cover.is-sold-out .product-card__cover-img {
+  filter: grayscale(0.65) brightness(0.96);
+}
+
+.product-card__cover.is-sold-out:hover .product-card__cover-img.is-loaded {
+  transform: none;
+}
+
+/* ─────────────────────────────────────────────────────────
+   TABLET / DESKTOP — card gains a frame
+   ───────────────────────────────────────────────────────── */
+
+@media (min-width: 641px) {
+  .product-card {
+    border: 1px solid #EEF2F6;
+    border-radius: 14px;
   }
-  .product-card__toggle { font-size: 0.92rem; }
-  .product-card__prop { font-size: 0.78rem; padding: 4px 8px; }
-  .product-card__like-count,
-  .product-card__follow-count { font-size: 0.88rem; }
-  .product-card__contact-btn { min-height: 38px; font-size: 0.86rem; }
-  .product-card__sold-out {
-    top: 10px; left: 10px;
-    font-size: 0.68rem; padding: 4px 10px;
+
+  .product-card__header {
+    padding: 14px 14px 12px;
+  }
+
+  .product-card__body {
+    padding: 14px 14px 12px;
+    gap: 10px;
+  }
+
+  .product-card__contact {
+    padding: 4px 14px 14px;
+    gap: 8px;
+  }
+
+  .product-card__footer {
+    padding: 12px 14px 16px;
+  }
+
+  .product-card__cover {
+    aspect-ratio: 3 / 4;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .product-card:hover {
+      box-shadow:
+        0 4px 14px -6px rgba(15, 23, 42, 0.10),
+        0 12px 32px -16px rgba(15, 23, 42, 0.14);
+      transform: translateY(-1px);
+    }
   }
 }
 
+/* ── Narrow-screen overrides ─────────────────────────── */
 @media (max-width: 380px) {
-  .product-card__business { font-size: 1rem; }
-  .product-card__name { font-size: 1.1rem; }
-  .product-card__price { font-size: 1.1rem; }
+  .product-card__business { font-size: 0.86rem; }
+  .product-card__name { font-size: 1.15rem; }
+  .product-card__price { padding: 7px 12px; }
+  .product-card__price-amount { font-size: 1.18rem; }
+  .product-card__price-currency { font-size: 0.64rem; }
   .product-card__desc {
-    font-size: 0.96rem;
-    min-height: calc(0.96rem * 1.55 * 2);
+    font-size: 0.92rem;
+    min-height: calc(0.92rem * 1.58 * 2);
   }
-  .product-card__toggle { font-size: 0.88rem; }
-  .product-card__prop { font-size: 0.74rem; }
-  .product-card__sold-out {
-    font-size: 0.64rem; padding: 3px 8px;
+  .product-card__prop { font-size: 0.7rem; padding: 3px 7px; }
+  .product-card__contact-btn { font-size: 0.83rem; }
+  .product-card__like-count,
+  .product-card__follow-count {
+    font-size: 0.82rem;
+    padding: 4px 10px;
   }
 }
 
@@ -450,56 +604,11 @@
   .product-card__contact { grid-template-columns: 1fr; }
 }
 
-/* ── Sold out state ──────────────────────────────────── */
-.product-card__cover.is-sold-out .product-card__cover-img {
-  filter: grayscale(0.7) brightness(0.94);
-}
-
-.product-card__cover.is-sold-out:hover .product-card__cover-img.is-loaded {
-  transform: none;
-}
-
-.product-card__sold-out {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 3;
-
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 12px;
-  border-radius: 999px;
-
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-
-  color: #B91C1C;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid #FECACA;
-
-  box-shadow:
-    0 2px 6px -2px rgba(15, 23, 42, 0.1),
-    0 4px 12px -6px rgba(185, 28, 28, 0.25);
-
-  pointer-events: none;
-  user-select: none;
-}
-
-.product-card__price.is-sold-out {
-  color: #94A3B8;
-  text-decoration: line-through;
-  text-decoration-thickness: 1.5px;
-  text-decoration-color: #CBD5E1;
-}
-
 /* ── Reduced motion ──────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  /* Static placeholder — no wave. Still clearly "loading"
-     because it's a solid grey block where the image will
-     be, but without the animation. */
+  .product-card {
+    transition: none !important;
+  }
   .product-card__cover-shimmer {
     animation: none;
     transform: translateX(0);
@@ -509,6 +618,9 @@
     transition: opacity 0.2s ease;
   }
   .product-card__cover.is-sold-out .product-card__cover-img {
+    transition: none !important;
+  }
+  .product-card__contact-btn {
     transition: none !important;
   }
 }
