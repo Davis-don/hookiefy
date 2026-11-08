@@ -1,6 +1,7 @@
 # products/models.py
 
 from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.functions import Upper
 
@@ -10,6 +11,58 @@ from django.db.models.functions import Upper
 # ============================================================
 
 class Products(models.Model):
+
+    # --------------------------------------------------------
+    # DELIVERY SCOPE
+    # --------------------------------------------------------
+    #
+    # Every product records *how* it reaches the buyer. Three
+    # mutually exclusive states:
+    #
+    #   everywhere → seller ships to any town the buyer types
+    #   specific   → seller ships only to towns in delivery_towns
+    #   none       → product cannot be delivered (pickup-only,
+    #                digital, or temporarily out of service)
+    #
+    # `delivery_towns` is only meaningful when the scope is
+    # `specific`. It's a JSON list of free-text town names.
+    # Matching against the buyer's checkout town is
+    # case-insensitive (see `can_deliver_to`).
+    # --------------------------------------------------------
+
+    DELIVERY_EVERYWHERE = "everywhere"
+    DELIVERY_SPECIFIC   = "specific"
+    DELIVERY_NONE       = "none"
+
+    DELIVERY_CHOICES = (
+        (DELIVERY_EVERYWHERE, "Everywhere"),
+        (DELIVERY_SPECIFIC,   "Specific towns only"),
+        (DELIVERY_NONE,       "No delivery"),
+    )
+
+    delivery_scope = models.CharField(
+        max_length=20,
+        choices=DELIVERY_CHOICES,
+        default=DELIVERY_EVERYWHERE,
+        db_index=True,
+        help_text=(
+            "How this product is delivered. "
+            "'everywhere' = any town. "
+            "'specific' = only the towns listed in delivery_towns. "
+            "'none' = not deliverable."
+        ),
+    )
+
+    delivery_towns = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            "Town names this product can be delivered to. "
+            "Only used when delivery_scope = 'specific'. "
+            "Case-insensitive matching — 'Nairobi', 'nairobi', "
+            "and 'NAIROBI' are all treated as the same town."
+        ),
+    )
 
     business = models.ForeignKey(
         "businesses.Businesses",
@@ -69,8 +122,9 @@ class Products(models.Model):
         verbose_name_plural = "Products"
         ordering = ("-created_at",)
         indexes = (
-            models.Index(fields=("business",)),
+            models.Business_placeholder if False else models.Index(fields=("business",)),
             models.Index(fields=("created_at",)),
+            models.Index(fields=("delivery_scope",)),
 
             # Partial index — only indexes rows where the flag is True.
             models.Index(
@@ -88,6 +142,110 @@ class Products(models.Model):
                 OpClass(Upper("description"), name="gin_trgm_ops"),
                 name="prod_desc_trgm_idx",
             ),
+        )
+
+    # --------------------------------------------------------
+    # VALIDATION
+    # --------------------------------------------------------
+
+    def clean(self):
+        """
+        Enforce that `delivery_towns` is:
+          - a list of non-empty strings,
+          - required (and non-empty) when scope = 'specific',
+          - ignored (allowed to be empty) otherwise.
+        """
+        super().clean()
+
+        # Normalise to a list of strings regardless of input.
+        towns = self.delivery_towns
+
+        if towns is None:
+            towns = []
+
+        if not isinstance(towns, list):
+            raise ValidationError({
+                "delivery_towns": (
+                    "Must be a list of town names."
+                )
+            })
+
+        clean_towns = []
+        for t in towns:
+            if not isinstance(t, str):
+                raise ValidationError({
+                    "delivery_towns": (
+                        "Every town must be a string."
+                    )
+                })
+            t = t.strip()
+            if not t:
+                continue
+            if len(t) > 200:
+                raise ValidationError({
+                    "delivery_towns": (
+                        "Town names cannot exceed 200 characters."
+                    )
+                })
+            clean_towns.append(t)
+
+        # Deduplicate case-insensitively while preserving order.
+        seen = set()
+        deduped = []
+        for t in clean_towns:
+            key = t.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(t)
+
+        self.delivery_towns = deduped
+
+        if (
+            self.delivery_scope == self.DELIVERY_SPECIFIC
+            and not self.delivery_towns
+        ):
+            raise ValidationError({
+                "delivery_towns": (
+                    "At least one town is required when the "
+                    "delivery scope is 'Specific towns only'."
+                )
+            })
+
+    # --------------------------------------------------------
+    # HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def can_be_delivered(self):
+        """True when the product ships *anywhere*."""
+        return self.delivery_scope in (
+            self.DELIVERY_EVERYWHERE,
+            self.DELIVERY_SPECIFIC,
+        )
+
+    def can_deliver_to(self, town: str) -> bool:
+        """
+        Whether this product can be delivered to `town`.
+
+        - 'everywhere' → always True (any non-empty town)
+        - 'specific'   → True only if `town` (case-insensitive)
+                         is in delivery_towns
+        - 'none'       → always False
+        """
+        if not town or not town.strip():
+            return False
+
+        if self.delivery_scope == self.DELIVERY_EVERYWHERE:
+            return True
+
+        if self.delivery_scope == self.DELIVERY_NONE:
+            return False
+
+        wanted = town.strip().lower()
+        return any(
+            isinstance(t, str) and t.strip().lower() == wanted
+            for t in (self.delivery_towns or [])
         )
 
     def __str__(self):

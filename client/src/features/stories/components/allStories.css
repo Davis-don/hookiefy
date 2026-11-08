@@ -1,7 +1,7 @@
 /* src/components/allStories.css */
 
 /* ============================================================
-   STATE (loading / error / empty)
+   STATE (error)
    ============================================================ */
 
 .as-state {
@@ -78,6 +78,16 @@
   background: #ffffff;
 }
 
+/* ── Loaded feed — cross-fade in ─────────────────────── */
+.as-feed-loaded {
+  animation: as-fade-in 0.24s ease-out both;
+}
+
+@keyframes as-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Divider between stories — subtle, centered dot */
 .as-divider {
   height: 1px;
@@ -110,7 +120,6 @@
   gap: 1rem;
 }
 
-/* Meta row */
 .as-post-meta {
   display: flex;
   align-items: center;
@@ -134,7 +143,6 @@
   color: #9ca3af;
 }
 
-/* Title — big, editorial */
 .as-post-title {
   margin: 0;
   font-size: 2.15rem;
@@ -145,23 +153,20 @@
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-/* Body — the reading surface */
 .as-post-body {
   position: relative;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.2rem;              /* ~19px — comfortable reading */
+  font-size: 1.2rem;
   line-height: 1.78;
   color: #1f2937;
   overflow: hidden;
   transition: max-height 0.35s ease;
 }
 
-/* Collapsed state — clip long content */
 .as-post-body:not(.is-expanded) {
   max-height: 15.5rem;
 }
 
-/* Fade mask when collapsed */
 .as-post-body:not(.is-expanded)::after {
   content: '';
   position: absolute;
@@ -177,7 +182,6 @@
   pointer-events: none;
 }
 
-/* Typography inside injected HTML */
 .as-post-body p {
   margin: 0 0 1.15rem;
 }
@@ -308,7 +312,6 @@
   flex-shrink: 0;
 }
 
-/* Icon buttons */
 .as-icon-btn {
   appearance: none;
   width: 40px;
@@ -342,16 +345,156 @@
   background: #fef2f2;
 }
 
-/* ============================================================
-   EDITING WRAP — still needs a light frame for the form
-   ============================================================ */
-
 .as-editing-wrap {
   padding: 1.5rem 0;
 }
 
 /* ============================================================
-   RESPONSIVE — tighter on mobile, still edge-to-edge
+   SKELETON — shimmering story placeholders
+   ============================================================ */
+
+.as-skeleton-list {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.as-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0;
+}
+
+.as-skeleton__divider {
+  height: 1px;
+  background: #ececec;
+  margin: 2.5rem 0;
+}
+
+.as-skeleton__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.as-skeleton__pill {
+  display: inline-block;
+  width: 76px;
+  height: 1.15rem;
+  border-radius: 6px;
+  background: #E5E7EB;
+}
+
+.as-skeleton__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #D1D5DB;
+  flex-shrink: 0;
+}
+
+.as-skeleton__line {
+  display: inline-block;
+  height: 0.9rem;
+  border-radius: 6px;
+  background: #E5E7EB;
+}
+
+.as-skeleton__line--date  { width: 92px; }
+.as-skeleton__line--short { width: 150px; }
+
+.as-skeleton__title {
+  display: block;
+  width: 64%;
+  height: 2rem;
+  border-radius: 8px;
+  background: #E5E7EB;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.as-skeleton__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.as-skeleton__body .as-skeleton__line {
+  height: 1rem;
+}
+
+.as-skeleton__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.as-skeleton__action-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.as-skeleton__chip {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #E5E7EB;
+}
+
+/* ── Shimmer wave ────────────────────────────────────── */
+
+.as-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.as-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.6) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  transform: translateX(-100%);
+  animation: as-shimmer-wave 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes as-shimmer-wave {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.as-fetching-more {
+  margin-top: 0.75rem;
+}
+
+/* ============================================================
+   END-OF-FEED MARKER
+   ============================================================ */
+
+.as-end {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* ============================================================
+   RESPONSIVE
    ============================================================ */
 
 @media (max-width: 640px) {
@@ -364,7 +507,7 @@
   }
 
   .as-post-body {
-    font-size: 1.09rem;           /* ~17.5px — still large and readable */
+    font-size: 1.09rem;
     line-height: 1.72;
   }
 
@@ -391,6 +534,24 @@
   .as-post-more {
     font-size: 0.95rem;
   }
+
+  .as-skeleton-list {
+    padding: 0.75rem 1.15rem 3rem;
+  }
+
+  .as-skeleton__title {
+    height: 1.7rem;
+    width: 72%;
+  }
+
+  .as-skeleton__body .as-skeleton__line {
+    height: 0.92rem;
+  }
+
+  .as-skeleton__chip {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -405,10 +566,27 @@
   .as-post-body {
     font-size: 1.05rem;
   }
+
+  .as-skeleton-list {
+    padding: 0.5rem 1rem 3rem;
+  }
+
+  .as-skeleton__title {
+    height: 1.5rem;
+  }
+
+  .as-skeleton__body .as-skeleton__line {
+    height: 0.86rem;
+  }
 }
-.as-end {
-  text-align: center;
-  padding: 24px 0 8px;
-  font-size: 13px;
-  color: #94a3b8;
+
+@media (prefers-reduced-motion: reduce) {
+  .as-feed-loaded {
+    animation: none;
+  }
+  .as-shimmer::after {
+    animation: none;
+    transform: translateX(0);
+    background: rgba(255, 255, 255, 0.35);
+  }
 }

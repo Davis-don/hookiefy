@@ -1,13 +1,30 @@
 /* ─────────────────────────────────────────────────────────
    OtherStories — list of stories from everyone except me
    Class prefix: .os-
-   Larger typography pass
+   ─────────────────────────────────────────────────────────
+   Loading behaviour:
+     • First page load → 4 story skeletons (meta row,
+       title bar, 4 body lines, action chip), each with
+       a diagonal shimmer wave.
+     • Page-2+ fetching → 2 additional skeletons appended
+       at the bottom while the next page loads.
+     • Loaded feed cross-fades in over 240ms.
    ───────────────────────────────────────────────────────── */
 
 .os-feed {
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+/* ── Loaded feed — cross-fade in ─────────────────────── */
+.os-feed-loaded {
+  animation: os-fade-in 0.24s ease-out both;
+}
+
+@keyframes os-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Divider between stories ──────────────────────────── */
@@ -81,7 +98,6 @@
   color: #334155;
   word-break: break-word;
 
-  /* Collapsed by default — clamped to ~6 lines */
   display: -webkit-box;
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
@@ -91,7 +107,6 @@
   transition: -webkit-line-clamp 0.2s ease;
 }
 
-/* Subtle fade at the bottom when collapsed */
 .os-post-body:not(.is-expanded)::after {
   content: '';
   position: absolute;
@@ -107,14 +122,12 @@
   pointer-events: none;
 }
 
-/* When expanded, let the full content through */
 .os-post-body.is-expanded {
   -webkit-line-clamp: unset;
   display: block;
   overflow: visible;
 }
 
-/* ── Style inline HTML that came from the backend ───── */
 .os-post-body p {
   margin: 0 0 14px;
 }
@@ -210,10 +223,7 @@
   margin: 22px 0;
 }
 
-/* ─────────────────────────────────────────────────────
-   ACTIONS ROW — like + follow
-   ───────────────────────────────────────────────────── */
-
+/* ── Actions row — like + follow ─────────────────────── */
 .os-post-actions {
   display: flex;
   align-items: center;
@@ -279,9 +289,152 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
-/* ─────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────
+   SKELETON — shimmering story placeholders
+   ─────────────────────────────────────────────────────────
+   Each skeleton mirrors the real story's shape:
+     • meta row (author line · dot · category pill · dot · date)
+     • title (single wide bar)
+     • body (4 lines of varying width)
+     • action chip (small pill for the like button)
+   The whole column sits under the same 1.4s shimmer wave.
+   ───────────────────────────────────────────────────────── */
+
+.os-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.os-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.os-skeleton__divider {
+  height: 1px;
+  background: #EEF2F7;
+  margin: 4px 0 32px;
+}
+
+/* ── Meta row placeholder ────────────────────────────── */
+.os-skeleton__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.os-skeleton__line {
+  display: inline-block;
+  height: 0.9rem;
+  border-radius: 6px;
+  background: #E2E8F0;
+}
+
+.os-skeleton__line--author { width: 110px; }
+.os-skeleton__line--date   { width: 90px; }
+
+.os-skeleton__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  flex-shrink: 0;
+}
+
+.os-skeleton__pill {
+  display: inline-block;
+  width: 76px;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #E2E8F0;
+}
+
+/* ── Title placeholder ───────────────────────────────── */
+.os-skeleton__title {
+  display: block;
+  width: 68%;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: #E2E8F0;
+}
+
+/* ── Body placeholder ────────────────────────────────── */
+.os-skeleton__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.os-skeleton__body .os-skeleton__line {
+  height: 1rem;
+}
+
+/* ── Action chip placeholder ─────────────────────────── */
+.os-skeleton__actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.os-skeleton__chip {
+  display: inline-block;
+  width: 68px;
+  height: 32px;
+  border-radius: 999px;
+  background: #E2E8F0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SHIMMER WAVE — shared across every skeleton block
+   ─────────────────────────────────────────────────────────
+   A diagonal light band sweeps from left to right across
+   each `.os-shimmer` block every 1.4s. Same technique as
+   the product card cover, the feed-level skeleton, and the
+   story-skeleton — one visual language throughout the app.
+   ───────────────────────────────────────────────────────── */
+
+.os-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.os-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.6) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  transform: translateX(-100%);
+  animation: os-shimmer-wave 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes os-shimmer-wave {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Loading-more block at the bottom ────────────────── */
+.os-fetching-more {
+  margin-top: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────
    STATE — loading / error / empty
-   ───────────────────────────────────────────────────── */
+   ───────────────────────────────────────────────────────── */
 
 .os-state {
   display: flex;
@@ -297,7 +450,6 @@
   color: #B91C1C;
 }
 
-/* ── Empty ───────────────────────────────────────────── */
 .os-empty {
   display: flex;
   flex-direction: column;
@@ -335,9 +487,17 @@
   line-height: 1.6;
 }
 
-/* ─────────────────────────────────────────────────────
+/* ── End-of-feed marker ──────────────────────────────── */
+.os-end {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 0.85rem;
+  color: #94A3B8;
+}
+
+/* ─────────────────────────────────────────────────────────
    RESPONSIVE
-   ───────────────────────────────────────────────────── */
+   ───────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .os-divider {
@@ -394,6 +554,20 @@
   .os-empty-sub {
     font-size: 1rem;
   }
+
+  /* Skeleton — tighter on mobile */
+  .os-skeleton {
+    gap: 10px;
+  }
+
+  .os-skeleton__title {
+    height: 1.4rem;
+    width: 74%;
+  }
+
+  .os-skeleton__body .os-skeleton__line {
+    height: 0.92rem;
+  }
 }
 
 @media (max-width: 380px) {
@@ -408,11 +582,14 @@
   .os-post-meta {
     font-size: 0.88rem;
   }
+
+  .os-skeleton__title { height: 1.24rem; }
+  .os-skeleton__body .os-skeleton__line { height: 0.86rem; }
 }
 
-/* ─────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────
    REDUCED MOTION
-   ───────────────────────────────────────────────────── */
+   ───────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .os-post-body,
@@ -420,10 +597,14 @@
   .os-post-more svg {
     transition: none !important;
   }
-}
-.os-end {
-  text-align: center;
-  padding: 24px 0 8px;
-  font-size: 13px;
-  color: #94a3b8;
+
+  .os-feed-loaded {
+    animation: none;
+  }
+
+  .os-shimmer::after {
+    animation: none;
+    transform: translateX(0);
+    background: rgba(255, 255, 255, 0.35);
+  }
 }

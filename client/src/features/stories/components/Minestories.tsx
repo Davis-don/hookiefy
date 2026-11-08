@@ -1,4 +1,4 @@
-// src/components/AllStories.jsx
+// src/components/AllStories.tsx
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -9,7 +9,6 @@ import {
 
 import { useAuthStore } from '../../../store/authStore';
 import { useToast } from '../../../components/toast/ToastContext';
-import { Spinner } from '../../../components/spinner/Spinner';
 import {
   listMyStories,
   deleteStory,
@@ -24,6 +23,73 @@ const PAGE_SIZE = 10;
 /* ── Cache tuning ─────────────────────────────────────── */
 const STALE_TIME = 5 * 60_000;   // 5 min — fresh data
 const GC_TIME = 30 * 60_000;     // 30 min — keep in memory
+
+/* ============================================================
+   SKELETON — story placeholder
+   ============================================================
+   Mirrors the editorial layout of a real story: the meta
+   row (category pill + date), a title bar, several body
+   lines, and a footer action strip. Every block carries
+   the shimmer wave so the whole column reads as "content
+   on its way" without a spinner.
+   ============================================================ */
+
+type StorySkeletonProps = {
+  withDivider?: boolean;
+};
+
+function StorySkeleton({ withDivider }: StorySkeletonProps) {
+  return (
+    <div className="as-skeleton">
+      {withDivider && <div className="as-skeleton__divider" />}
+
+      {/* Meta row: category pill + dot + date */}
+      <div className="as-skeleton__meta">
+        <span className="as-skeleton__pill as-shimmer" />
+        <span className="as-skeleton__dot" aria-hidden="true" />
+        <span className="as-skeleton__line as-skeleton__line--date as-shimmer" />
+      </div>
+
+      {/* Title */}
+      <span className="as-skeleton__title as-shimmer" />
+
+      {/* Body lines */}
+      <div className="as-skeleton__body">
+        <span className="as-skeleton__line as-shimmer" style={{ width: '94%' }} />
+        <span className="as-skeleton__line as-shimmer" style={{ width: '100%' }} />
+        <span className="as-skeleton__line as-shimmer" style={{ width: '88%' }} />
+        <span className="as-skeleton__line as-shimmer" style={{ width: '72%' }} />
+      </div>
+
+      {/* Footer: read-more text + icon buttons */}
+      <div className="as-skeleton__footer">
+        <span className="as-skeleton__line as-skeleton__line--short as-shimmer" />
+        <div className="as-skeleton__action-chips">
+          <span className="as-skeleton__chip as-shimmer" />
+          <span className="as-skeleton__chip as-shimmer" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type StorySkeletonListProps = {
+  count?: number;
+};
+
+function StorySkeletonList({ count = 4 }: StorySkeletonListProps) {
+  return (
+    <div className="as-skeleton-list" aria-busy="true" aria-live="polite">
+      {Array.from({ length: count }).map((_, i) => (
+        <StorySkeleton key={i} withDivider={i > 0} />
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
 
 type AllStoriesProps = {
   onAdd?: () => void;
@@ -111,14 +177,10 @@ function MineStories({ onAdd }: AllStoriesProps) {
     },
   });
 
-  /* ── Loading ──────────────────────────────────────── */
+  /* ── Loading (first page): skeleton list ──────────── */
 
   if (isLoading) {
-    return (
-      <div className="as-state">
-        <Spinner size={20} color="#2563EB" label="Loading your stories…" />
-      </div>
-    );
+    return <StorySkeletonList count={4} />;
   }
 
   if (isError) {
@@ -160,132 +222,130 @@ function MineStories({ onAdd }: AllStoriesProps) {
 
   return (
     <div className="as-feed">
-      {stories.map((story, index) => {
-        const isEditing = editingId === story.id;
-        const isExpanded = expandedId === story.id;
+      <div className="as-feed-loaded">
+        {stories.map((story, index) => {
+          const isEditing = editingId === story.id;
+          const isExpanded = expandedId === story.id;
 
-        return (
-          <div key={story.id}>
-            {/* Divider between stories (not before the first) */}
-            {index > 0 && !isEditing && <div className="as-divider" />}
+          return (
+            <div key={story.id}>
+              {/* Divider between stories (not before the first) */}
+              {index > 0 && !isEditing && <div className="as-divider" />}
 
-            {isEditing ? (
-              <div className="as-editing-wrap">
-                <EditStory
-                  story={story}
-                  onCancel={() => setEditingId(null)}
-                  onSaved={() => setEditingId(null)}
-                />
-              </div>
-            ) : (
-              <article className="as-post">
-                {/* ── Meta row: category · date ──────── */}
-                <div className="as-post-meta">
-                  <span className="as-post-category">
-                    {story.category_display}
-                  </span>
-                  <span className="as-post-dot" aria-hidden="true">·</span>
-                  <time
-                    className="as-post-date"
-                    dateTime={story.created_at}
-                  >
-                    {new Date(story.created_at).toLocaleDateString(
-                      undefined,
-                      { day: 'numeric', month: 'long', year: 'numeric' }
-                    )}
-                  </time>
+              {isEditing ? (
+                <div className="as-editing-wrap">
+                  <EditStory
+                    story={story}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={() => setEditingId(null)}
+                  />
                 </div>
-
-                {/* ── Title ──────────────────────────── */}
-                <h2 className="as-post-title">{story.title}</h2>
-
-                {/* ── Body ───────────────────────────── */}
-                <div
-                  className={
-                    'as-post-body' + (isExpanded ? ' is-expanded' : '')
-                  }
-                  dangerouslySetInnerHTML={{ __html: story.content_html }}
-                />
-
-                {/* ── Footer: read more + actions ────── */}
-                <div className="as-post-footer">
-                  <button
-                    type="button"
-                    className="as-post-more"
-                    onClick={() =>
-                      setExpandedId(isExpanded ? null : story.id)
-                    }
-                  >
-                    {isExpanded ? 'Show less' : 'Continue reading'}
-                    <svg width="14" height="14" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" strokeWidth="2.4"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      aria-hidden="true"
-                      style={{
-                        transform: isExpanded
-                          ? 'rotate(180deg)'
-                          : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease',
-                      }}
+              ) : (
+                <article className="as-post">
+                  {/* ── Meta row: category · date ──────── */}
+                  <div className="as-post-meta">
+                    <span className="as-post-category">
+                      {story.category_display}
+                    </span>
+                    <span className="as-post-dot" aria-hidden="true">·</span>
+                    <time
+                      className="as-post-date"
+                      dateTime={story.created_at}
                     >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-
-                  <div className="as-post-actions">
-                    <button
-                      type="button"
-                      className="as-icon-btn as-icon-btn-edit"
-                      onClick={() => setEditingId(story.id)}
-                      aria-label="Edit story"
-                      title="Edit"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round"
-                        aria-hidden="true">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      </svg>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="as-icon-btn as-icon-btn-danger"
-                      onClick={() => setDeleteTarget(story)}
-                      aria-label="Delete story"
-                      title="Delete"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round"
-                        aria-hidden="true">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                      </svg>
-                    </button>
+                      {new Date(story.created_at).toLocaleDateString(
+                        undefined,
+                        { day: 'numeric', month: 'long', year: 'numeric' }
+                      )}
+                    </time>
                   </div>
-                </div>
-              </article>
-            )}
-          </div>
-        );
-      })}
+
+                  {/* ── Title ──────────────────────────── */}
+                  <h2 className="as-post-title">{story.title}</h2>
+
+                  {/* ── Body ───────────────────────────── */}
+                  <div
+                    className={
+                      'as-post-body' + (isExpanded ? ' is-expanded' : '')
+                    }
+                    dangerouslySetInnerHTML={{ __html: story.content_html }}
+                  />
+
+                  {/* ── Footer: read more + actions ────── */}
+                  <div className="as-post-footer">
+                    <button
+                      type="button"
+                      className="as-post-more"
+                      onClick={() =>
+                        setExpandedId(isExpanded ? null : story.id)
+                      }
+                    >
+                      {isExpanded ? 'Show less' : 'Continue reading'}
+                      <svg width="14" height="14" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2.4"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        aria-hidden="true"
+                        style={{
+                          transform: isExpanded
+                            ? 'rotate(180deg)'
+                            : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    <div className="as-post-actions">
+                      <button
+                        type="button"
+                        className="as-icon-btn as-icon-btn-edit"
+                        onClick={() => setEditingId(story.id)}
+                        aria-label="Edit story"
+                        title="Edit"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round"
+                          aria-hidden="true">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                        </svg>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="as-icon-btn as-icon-btn-danger"
+                        onClick={() => setDeleteTarget(story)}
+                        aria-label="Delete story"
+                        title="Delete"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round"
+                          aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* ── Infinite-scroll sentinel ────────────────── */}
       <div ref={sentinelRef} />
 
-      {/* ── Loading-more spinner ────────────────────── */}
+      {/* ── Loading more: skeleton items ────────────── */}
       {isFetchingNextPage && (
-        <div className="as-state" style={{ paddingTop: 12 }}>
-          <Spinner
-            size={20}
-            color="#2563EB"
-            label="Loading more stories…"
-          />
+        <div className="as-fetching-more">
+          <StorySkeletonList count={2} />
         </div>
       )}
 

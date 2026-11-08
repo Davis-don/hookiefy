@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '../../../store/authStore';
-import { Spinner } from '../../../components/spinner/Spinner';
 import LikeButton from '../../engagement/components/LikeButton';
 import { listAllStories, type Story } from '../api/storiesApi';
 import './otherStories.css';
@@ -14,6 +13,62 @@ const PAGE_SIZE = 10;
 /* ── Cache tuning ─────────────────────────────────────── */
 const STALE_TIME = 5 * 60_000;   // 5 min — fresh data
 const GC_TIME = 30 * 60_000;     // 30 min — keep in memory
+
+/* ============================================================
+   SKELETON — story placeholder
+   ============================================================
+   Mirrors the shape of a real story card: the meta row (a
+   small "author · category · date" cluster), the title, and
+   a multi-line body block. Every block carries the shimmer
+   wave so the whole column reads as "content on its way".
+   ============================================================ */
+
+function StorySkeleton({ withDivider }: { withDivider?: boolean }) {
+  return (
+    <div className="os-skeleton">
+      {withDivider && <div className="os-skeleton__divider" />}
+
+      {/* Meta row */}
+      <div className="os-skeleton__meta">
+        <span className="os-skeleton__line os-skeleton__line--author os-shimmer" />
+        <span className="os-skeleton__dot" aria-hidden="true" />
+        <span className="os-skeleton__pill os-shimmer" />
+        <span className="os-skeleton__dot" aria-hidden="true" />
+        <span className="os-skeleton__line os-skeleton__line--date os-shimmer" />
+      </div>
+
+      {/* Title */}
+      <span className="os-skeleton__title os-shimmer" />
+
+      {/* Body lines */}
+      <div className="os-skeleton__body">
+        <span className="os-skeleton__line os-shimmer" style={{ width: '96%' }} />
+        <span className="os-skeleton__line os-shimmer" style={{ width: '100%' }} />
+        <span className="os-skeleton__line os-shimmer" style={{ width: '88%' }} />
+        <span className="os-skeleton__line os-shimmer" style={{ width: '74%' }} />
+      </div>
+
+      {/* Action row */}
+      <div className="os-skeleton__actions">
+        <span className="os-skeleton__chip os-shimmer" />
+      </div>
+    </div>
+  );
+}
+
+function StorySkeletonList({ count = 4 }: { count?: number }) {
+  return (
+    <div className="os-skeleton-list" aria-busy="true" aria-live="polite">
+      {Array.from({ length: count }).map((_, i) => (
+        <StorySkeleton key={i} withDivider={i > 0} />
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
 
 function OtherStories() {
   const access = useAuthStore((s) => s.access);
@@ -39,9 +94,9 @@ function OtherStories() {
     /* ── Caching ──────────────────────────────────────── */
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
-    refetchOnWindowFocus: false,   // don't refetch when tab regains focus
-    refetchOnMount: false,         // use cached pages instantly on remount
-    refetchOnReconnect: true,      // still revalidate if network dropped
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
 
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
@@ -56,7 +111,7 @@ function OtherStories() {
     [data],
   );
 
-  /* Exclude the current user's own stories — this tab is "Other Stories" */
+  /* Exclude the current user's own stories */
   const stories = useMemo<Story[]>(
     () => allStories.filter((s) => s.user !== currentUserId),
     [allStories, currentUserId],
@@ -81,13 +136,9 @@ function OtherStories() {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  /* ── Loading ──────────────────────────────────────── */
+  /* ── Loading (first page): skeleton list ──────────── */
   if (isLoading) {
-    return (
-      <div className="os-state">
-        <Spinner size={20} color="#2563EB" label="Loading stories…" />
-      </div>
-    );
+    return <StorySkeletonList count={4} />;
   }
 
   /* ── Error ────────────────────────────────────────── */
@@ -130,102 +181,99 @@ function OtherStories() {
   /* ── Feed ────────────────────────────────────────── */
   return (
     <div className="os-feed">
-      {stories.map((story, index) => {
-        const isExpanded = expandedId === story.id;
+      <div className="os-feed-loaded">
+        {stories.map((story, index) => {
+          const isExpanded = expandedId === story.id;
 
-        return (
-          <div key={story.id}>
-            {index > 0 && <div className="os-divider" />}
+          return (
+            <div key={story.id}>
+              {index > 0 && <div className="os-divider" />}
 
-            <article className="os-post">
-              {/* ── Meta: author · category · date ───── */}
-              <div className="os-post-meta">
-                <span className="os-post-author">
-                  {story.author_full_name ||
-                    story.author_email ||
-                    'Anonymous'}
-                </span>
-                <span className="os-post-dot" aria-hidden="true">
-                  ·
-                </span>
-                <span className="os-post-category">
-                  {story.category_display}
-                </span>
-                <span className="os-post-dot" aria-hidden="true">
-                  ·
-                </span>
-                <time className="os-post-date" dateTime={story.created_at}>
-                  {new Date(story.created_at).toLocaleDateString(
-                    undefined,
-                    { day: 'numeric', month: 'long', year: 'numeric' },
-                  )}
-                </time>
-              </div>
+              <article className="os-post">
+                {/* ── Meta: author · category · date ───── */}
+                <div className="os-post-meta">
+                  <span className="os-post-author">
+                    {story.author_full_name ||
+                      story.author_email ||
+                      'Anonymous'}
+                  </span>
+                  <span className="os-post-dot" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="os-post-category">
+                    {story.category_display}
+                  </span>
+                  <span className="os-post-dot" aria-hidden="true">
+                    ·
+                  </span>
+                  <time className="os-post-date" dateTime={story.created_at}>
+                    {new Date(story.created_at).toLocaleDateString(
+                      undefined,
+                      { day: 'numeric', month: 'long', year: 'numeric' },
+                    )}
+                  </time>
+                </div>
 
-              {/* ── Title ──────────────────────────────── */}
-              <h2 className="os-post-title">{story.title}</h2>
+                {/* ── Title ──────────────────────────────── */}
+                <h2 className="os-post-title">{story.title}</h2>
 
-              {/* ── Body ───────────────────────────────── */}
-              <div
-                className={
-                  'os-post-body' + (isExpanded ? ' is-expanded' : '')
-                }
-                // backend bleached this HTML — safe to inject
-                dangerouslySetInnerHTML={{ __html: story.content_html }}
-              />
-
-              {/* ── Actions: like only ─────────────────── */}
-              <div className="os-post-actions">
-                <LikeButton targetKind="story" targetId={story.id} />
-              </div>
-
-              {/* ── Read more / less ───────────────────── */}
-              <div className="os-post-footer">
-                <button
-                  type="button"
-                  className="os-post-more"
-                  onClick={() =>
-                    setExpandedId(isExpanded ? null : story.id)
+                {/* ── Body ───────────────────────────────── */}
+                <div
+                  className={
+                    'os-post-body' + (isExpanded ? ' is-expanded' : '')
                   }
-                >
-                  {isExpanded ? 'Show less' : 'Continue reading'}
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    style={{
-                      transform: isExpanded
-                        ? 'rotate(180deg)'
-                        : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease',
-                    }}
+                  dangerouslySetInnerHTML={{ __html: story.content_html }}
+                />
+
+                {/* ── Actions: like only ─────────────────── */}
+                <div className="os-post-actions">
+                  <LikeButton targetKind="story" targetId={story.id} />
+                </div>
+
+                {/* ── Read more / less ───────────────────── */}
+                <div className="os-post-footer">
+                  <button
+                    type="button"
+                    className="os-post-more"
+                    onClick={() =>
+                      setExpandedId(isExpanded ? null : story.id)
+                    }
                   >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-              </div>
-            </article>
-          </div>
-        );
-      })}
+                    {isExpanded ? 'Show less' : 'Continue reading'}
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      style={{
+                        transform: isExpanded
+                          ? 'rotate(180deg)'
+                          : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                </div>
+              </article>
+            </div>
+          );
+        })}
+      </div>
 
       {/* ── Infinite-scroll sentinel ────────────────── */}
       <div ref={sentinelRef} />
 
-      {/* ── Loading-more spinner ────────────────────── */}
+      {/* ── Loading more: skeleton items ────────────── */}
       {isFetchingNextPage && (
-        <div className="os-state" style={{ paddingTop: 12 }}>
-          <Spinner
-            size={20}
-            color="#2563EB"
-            label="Loading more stories…"
-          />
+        <div className="os-fetching-more">
+          <StorySkeletonList count={2} />
         </div>
       )}
 

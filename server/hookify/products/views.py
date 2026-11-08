@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers as drf_serializers
 
 from businesses.models import Businesses
 from account.controllers.cloudinary_utils import (
@@ -25,6 +25,7 @@ from .serializers import (
     ProductSerializer,
     ProductCreateSerializer,
     ProductUpdateSerializer,
+    _check_delivery_scope,
 )
 
 
@@ -113,6 +114,24 @@ def _check_quantity(value):
             f"Quantity cannot exceed {PRODUCT_QUANTITY_MAX}.",
         )
     return (value, None)
+
+
+def _validate_delivery_pair(scope, towns):
+    """
+    Belt-and-braces delivery validation for the views.
+
+    The serializers already validate the (scope, towns) pair,
+    but the view keeps its own re-check so its contract is
+    self-contained — same pattern as `_check_text_field` and
+    `_check_quantity`.
+
+    Returns (clean_scope, clean_towns, error_dict_or_None).
+    """
+    try:
+        clean_scope, clean_towns = _check_delivery_scope(scope, towns)
+    except drf_serializers.ValidationError as e:
+        return (None, None, e.detail)
+    return (clean_scope, clean_towns, None)
 
 
 def _validate_product_image(image_file):
@@ -563,12 +582,6 @@ def create_product(request, business_id):
         )
 
     # ── 5. Quantity ─────────────────────────────────────────
-    #
-    # The serializer validates quantity when it's present.
-    # When it's absent, we fall back to the model default (1).
-    # The check here is a belt-and-braces guard so the view
-    # never writes an invalid value even if the serializer's
-    # validate_quantity is later relaxed.
     raw_qty = serializer.validated_data.get("quantity", None)
     if raw_qty is not None:
         qty, qty_err = _check_quantity(raw_qty)
@@ -579,6 +592,27 @@ def create_product(request, business_id):
             )
     else:
         qty = 1  # model default
+
+    # ── 5b. Delivery pair ───────────────────────────────────
+    #
+    # The serializer's `validate()` already normalised and
+    # checked the pair. We re-validate here so the view's
+    # contract is self-contained, mirroring the qty/name/desc
+    # re-checks above.
+    #
+    raw_scope = serializer.validated_data.get(
+        "delivery_scope", Products.DELIVERY_EVERYWHERE
+    )
+    raw_towns = serializer.validated_data.get("delivery_towns", [])
+
+    clean_scope, clean_towns, delivery_err = _validate_delivery_pair(
+        raw_scope, raw_towns
+    )
+    if delivery_err:
+        return Response(
+            delivery_err,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     # ── 6. Images ───────────────────────────────────────────
     image_files = _extract_images_from_request(request)
@@ -614,13 +648,6 @@ def create_product(request, business_id):
         )
 
     # ── 7. Decide the Youpata-managed flag ──────────────────
-    #
-    # Derived from the caller, never from the request body:
-    #
-    #   • superadmin caller              → True
-    #   • is_youpata_managed=True caller → True
-    #   • everyone else                  → False
-    #
     youpata_managed = _caller_creates_youpata_managed_products(
         request.user
     )
@@ -631,7 +658,9 @@ def create_product(request, business_id):
         name=name,
         description=description,
         price=serializer.validated_data.get("price"),
-        quantity=qty,                       # ← added
+        quantity=qty,
+        delivery_scope=clean_scope,
+        delivery_towns=clean_towns,
         is_youpata_managed=youpata_managed,
     )
 
@@ -759,11 +788,6 @@ def update_product(request, product_id):
             )
         validated["description"] = description
 
-    # ── Quantity — belt-and-braces re-check ─────────────────
-    #
-    # The serializer already validates quantity when present.
-    # This second check mirrors the view's other text-field
-    # re-checks, so the view's contract is self-contained.
     if "quantity" in validated and validated["quantity"] is not None:
         qty, qty_err = _check_quantity(validated["quantity"])
         if qty_err:
@@ -772,6 +796,32 @@ def update_product(request, product_id):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         validated["quantity"] = qty
+
+    # ── Delivery pair re-check (belt-and-braces) ────────────
+    #
+    # The serializer's validate() already merged the incoming
+    # pair with the instance's current values, so by the time
+    # we're here the two are consistent. This block re-checks
+    # against the merged result to keep the view's contract
+    # self-contained.
+    #
+    if "delivery_scope" in validated or "delivery_towns" in validated:
+        merged_scope = validated.get(
+            "delivery_scope", product.delivery_scope
+        )
+        merged_towns = validated.get(
+            "delivery_towns", product.delivery_towns
+        )
+        clean_scope, clean_towns, delivery_err = _validate_delivery_pair(
+            merged_scope, merged_towns
+        )
+        if delivery_err:
+            return Response(
+                delivery_err,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        validated["delivery_scope"] = clean_scope
+        validated["delivery_towns"] = clean_towns
 
     image_files = _extract_images_from_request(request)
     replace_images = str(
@@ -971,16 +1021,27 @@ def product_usage(request, business_id):
     used = qs.count()
 
     # ── Stock aggregates ────────────────────────────────────
-    #
-    # Small set of counts the seller's usage page can render
-    # to answer "how much of my catalogue is actually sellable
-    # right now?". A product counts as "in stock" only when it
-    # has quantity > 0 AND a price (an unpriced product can't
-    # be purchased regardless of stock).
     in_stock_count = qs.filter(
         quantity__gt=0, price__isnull=False
     ).count()
     out_of_stock_count = qs.filter(quantity=0).count()
+
+    # ── Delivery aggregates ─────────────────────────────────
+    #
+    # Small counts so the seller's usage page can show at a
+    # glance how many products are shippable and how many
+    # are pickup-only.
+    deliverable_count = qs.filter(
+        delivery_scope__in=[
+            Products.DELIVERY_EVERYWHERE,
+            Products.DELIVERY_SPECIFIC,
+        ],
+        quantity__gt=0,
+        price__isnull=False,
+    ).count()
+    no_delivery_count = qs.filter(
+        delivery_scope=Products.DELIVERY_NONE
+    ).count()
 
     if plan is None:
         return Response(
@@ -996,6 +1057,10 @@ def product_usage(request, business_id):
                 "stock": {
                     "in_stock": in_stock_count,
                     "out_of_stock": out_of_stock_count,
+                },
+                "delivery": {
+                    "deliverable": deliverable_count,
+                    "no_delivery": no_delivery_count,
                 },
             },
             status=status.HTTP_200_OK,
@@ -1019,11 +1084,14 @@ def product_usage(request, business_id):
                 "in_stock": in_stock_count,
                 "out_of_stock": out_of_stock_count,
             },
+            "delivery": {
+                "deliverable": deliverable_count,
+                "no_delivery": no_delivery_count,
+            },
         },
         status=status.HTTP_200_OK,
     )
 
-# products/views.py  (append at the bottom)
 
 # ============================================================
 # ADMIN LOOKUP — GET /products/<product_id>/lookup/
@@ -1099,6 +1167,13 @@ def lookup_product_for_admin(request, product_id):
             "primary_image_url": (
                 primary.image_url if primary else None
             ),
+
+            # Delivery context — lets the admin wizard show
+            # at a glance whether a manual sale is shippable.
+            "delivery_scope": product.delivery_scope,
+            "delivery_scope_display": product.get_delivery_scope_display(),
+            "delivery_towns": product.delivery_towns,
+            "can_be_delivered": product.can_be_delivered,
         },
         status=status.HTTP_200_OK,
     )

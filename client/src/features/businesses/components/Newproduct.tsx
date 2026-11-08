@@ -10,12 +10,12 @@ import {
   createProduct,
   type ProductPayload,
   type ProductProperty,
+  type DeliveryScope,
 } from '../api/productsApi';
 import './newproduct.css';
 
 // ============================================================
 // LIMITS — keep in sync with backend
-//   (products/serializers.py + products/views.py)
 // ============================================================
 
 const NAME_MIN_LENGTH        = 3;
@@ -26,9 +26,11 @@ const DESCRIPTION_MAX_LENGTH = 400;
 const PROPERTY_NAME_MAX_LENGTH  = 60;
 const PROPERTY_VALUE_MAX_LENGTH = 120;
 
-// Quantity — mirrors PRODUCT_QUANTITY_MAX in serializers/views
 const QUANTITY_MIN = 0;
 const QUANTITY_MAX = 1_000_000;
+
+const DELIVERY_TOWN_MAX_LENGTH  = 200;
+const DELIVERY_TOWNS_MAX_COUNT  = 200;
 
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -37,12 +39,10 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 const ALLOWED_IMAGE_LABEL = 'JPG, PNG, or WEBP';
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGES      = 20;
 
-// Mirror the backend URL detector so we can reject before submitting
 const URL_PATTERN = /https?:\/\/|\bwww\.|\b[a-z0-9-]+\.(?:com|net|org|io|co|ke|app|dev|me|info|biz|xyz|shop|store|site|online|link|click|tv|ly|to|gl)\b/i;
-
 const containsUrl = (value: string) => URL_PATTERN.test(value);
 
 // ============================================================
@@ -61,10 +61,12 @@ type FormState = {
   description: string;
   price: string;
   quantity: string;
+  deliveryScope: DeliveryScope;
+  deliveryTowns: string;   // textarea contents (one per line)
 };
 
 type EditableProperty = {
-  id: string;   // local React key only
+  id: string;
   name: string;
   value: string;
 };
@@ -74,6 +76,8 @@ const initialState: FormState = {
   description: '',
   price: '',
   quantity: '1',
+  deliveryScope: 'everywhere',
+  deliveryTowns: '',
 };
 
 let propertyKeyCounter = 0;
@@ -85,9 +89,33 @@ const makeEmptyProperty = (): EditableProperty => ({
   value: '',
 });
 
-/** Map a server error response → field-keyed messages. */
+/** Parse the towns textarea into a clean list. */
+function parseTowns(raw: string): string[] {
+  const lines = raw.split(/\r?\n/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const line of lines) {
+    const town = line.trim();
+    if (!town) continue;
+    const key = town.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(town);
+  }
+
+  return out;
+}
+
 type ServerFieldErrors = Partial<Record<
-  'name' | 'description' | 'price' | 'quantity' | 'properties' | 'image',
+  | 'name'
+  | 'description'
+  | 'price'
+  | 'quantity'
+  | 'properties'
+  | 'image'
+  | 'delivery_scope'
+  | 'delivery_towns',
   string
 >>;
 
@@ -106,13 +134,13 @@ function normaliseServerErrors(raw: any): ServerFieldErrors {
   pick('price');
   pick('quantity');
   pick('properties');
+  pick('delivery_scope');
+  pick('delivery_towns');
 
-  // Generic image / message errors from the view
   if (raw.message && typeof raw.message === 'string') {
     out.image = raw.message;
   }
 
-  // Fallback for something else
   if (!Object.keys(out).length && typeof raw === 'object') {
     for (const k of Object.keys(raw)) {
       if (k === 'code' || k === 'used' || k === 'limit') continue;
@@ -150,7 +178,6 @@ function Newproduct({
     makeEmptyProperty(),
   ]);
 
-  // Server field-level errors (shown inline under the field)
   const [serverErrors, setServerErrors] = useState<ServerFieldErrors>({});
 
   const clearServerError = (key: keyof ServerFieldErrors) => {
@@ -236,6 +263,12 @@ function Newproduct({
     });
   };
 
+  // ── Delivery towns parsed list (for validation + submit) ──
+  const parsedTowns = useMemo(
+    () => parseTowns(form.deliveryTowns),
+    [form.deliveryTowns],
+  );
+
   // ── Mutation ─────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: (payload: ProductPayload) =>
@@ -267,6 +300,8 @@ function Newproduct({
           fieldErrors.description ||
           fieldErrors.price ||
           fieldErrors.quantity ||
+          fieldErrors.delivery_scope ||
+          fieldErrors.delivery_towns ||
           fieldErrors.properties ||
           fieldErrors.image ||
           'Please fix the highlighted fields.';
@@ -316,7 +351,7 @@ function Newproduct({
           ? 'Description cannot contain links or URLs.'
           : null);
 
-  // Per-row property errors
+  // ── Property row errors ──────────────────────────────
   const propertyRowErrors = properties.map((p) => {
     const n = p.name.trim();
     const v = p.value.trim();
@@ -360,13 +395,6 @@ function Newproduct({
   }
 
   // ── Quantity ─────────────────────────────────────────
-  //
-  // Quantity is required (default '1'), must be a whole
-  // number between QUANTITY_MIN and QUANTITY_MAX.
-  // 0 is valid and means "out of stock" — the product
-  // appears in the catalogue but cannot be purchased until
-  // stock is added.
-  //
   let parsedQuantity: number | null = null;
   let quantityError: string | null = serverErrors.quantity ?? null;
 
@@ -388,6 +416,38 @@ function Newproduct({
     }
   }
 
+  // ── Delivery ─────────────────────────────────────────
+  //
+  // Three failure modes, mirrored from the backend:
+  //   - 'specific' with zero towns       → error
+  //   - a single town name too long      → error
+  //   - more than DELIVERY_TOWNS_MAX_COUNT → error
+  //
+  // 'everywhere' and 'none' never require towns.
+  //
+  let deliveryError: string | null =
+    serverErrors.delivery_scope || serverErrors.delivery_towns || null;
+
+  if (deliveryError === null) {
+    if (form.deliveryScope === 'specific') {
+      if (parsedTowns.length === 0) {
+        deliveryError =
+          'Add at least one town, or switch to “Everywhere”.';
+      } else if (parsedTowns.length > DELIVERY_TOWNS_MAX_COUNT) {
+        deliveryError =
+          `Cannot exceed ${DELIVERY_TOWNS_MAX_COUNT} towns.`;
+      } else {
+        const tooLong = parsedTowns.find(
+          (t) => t.length > DELIVERY_TOWN_MAX_LENGTH,
+        );
+        if (tooLong) {
+          deliveryError =
+            `“${tooLong}” is longer than ${DELIVERY_TOWN_MAX_LENGTH} characters.`;
+        }
+      }
+    }
+  }
+
   // ── Can submit? ─────────────────────────────────────
   const canSubmit =
     !mutation.isPending &&
@@ -401,6 +461,7 @@ function Newproduct({
     !priceError &&
     parsedQuantity !== null &&
     !quantityError &&
+    !deliveryError &&
     imageFiles.length > 0;
 
   // ── Submit ───────────────────────────────────────────
@@ -425,6 +486,8 @@ function Newproduct({
       return setError(quantityError || 'Please enter a quantity.');
     }
 
+    if (deliveryError) return setError(deliveryError);
+
     if (hasPropertyRowError) {
       return setError('Please fix the highlighted property fields.');
     }
@@ -438,6 +501,10 @@ function Newproduct({
       description: descriptionTrimmed,
       price: parsedPrice,
       quantity: parsedQuantity,
+      delivery_scope: form.deliveryScope,
+      // Only meaningful for 'specific' — send the parsed
+      // list; the API helper drops it for other scopes.
+      delivery_towns: parsedTowns,
       properties: cleanedProperties,
       imageFiles,
     });
@@ -609,6 +676,96 @@ function Newproduct({
               {quantityError || 'Set to 0 to mark as sold out.'}
             </span>
           </div>
+        </div>
+
+        {/* ── Delivery ──────────────────────────────── */}
+        <div className="npr-field">
+          <label className="npr-label">
+            Delivery <span className="npr-required">*</span>
+          </label>
+          <p className="npr-help">
+            How is this product delivered to buyers?
+          </p>
+
+          <div className="npr-delivery-options">
+            {(
+              [
+                {
+                  value: 'everywhere',
+                  title: 'Everywhere',
+                  desc: 'Ships to any town the buyer enters at checkout.',
+                },
+                {
+                  value: 'specific',
+                  title: 'Specific towns only',
+                  desc: 'Ships only to towns you list below.',
+                },
+                {
+                  value: 'none',
+                  title: 'No delivery',
+                  desc: 'Pickup only, digital, or temporarily unavailable.',
+                },
+              ] as const
+            ).map((opt) => {
+              const active = form.deliveryScope === opt.value;
+              return (
+                <label
+                  key={opt.value}
+                  className={
+                    'npr-delivery-option' +
+                    (active ? ' is-active' : '') +
+                    (busy ? ' is-disabled' : '')
+                  }
+                >
+                  <input
+                    type="radio"
+                    name="delivery_scope"
+                    value={opt.value}
+                    checked={active}
+                    onChange={() => update('deliveryScope', opt.value)}
+                    disabled={busy}
+                  />
+                  <span className="npr-delivery-body">
+                    <span className="npr-delivery-title">{opt.title}</span>
+                    <span className="npr-delivery-desc">{opt.desc}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Towns textarea — only meaningful for 'specific' */}
+          {form.deliveryScope === 'specific' && (
+            <div className="npr-delivery-towns-wrap">
+              <label
+                className="npr-label"
+                htmlFor="npr-delivery-towns"
+              >
+                Delivery towns <span className="npr-required">*</span>
+              </label>
+              <textarea
+                id="npr-delivery-towns"
+                className={
+                  'npr-input npr-textarea' +
+                  (deliveryError ? ' is-invalid' : '')
+                }
+                placeholder={'Nairobi\nMombasa\nKisumu'}
+                value={form.deliveryTowns}
+                onChange={(e) => update('deliveryTowns', e.target.value)}
+                rows={4}
+                disabled={busy}
+                aria-invalid={deliveryError ? true : undefined}
+              />
+              <div className="npr-field-foot">
+                <span className="npr-field-msg">
+                  {deliveryError ||
+                    `${parsedTowns.length} town${
+                      parsedTowns.length === 1 ? '' : 's'
+                    } — one per line, case-insensitive.`}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Properties ────────────────────────────── */}

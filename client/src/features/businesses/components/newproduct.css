@@ -526,3 +526,76 @@
   }
   .npr-counter { align-self: flex-end; }
 }
+
+/* ── Delivery options (radio cards) ──────────────────── */
+
+.npr-delivery-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.npr-delivery-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  padding: 12px 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  background: #FFFFFF;
+  cursor: pointer;
+
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.npr-delivery-option:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.npr-delivery-option.is-active {
+  border-color: #2563EB;
+  background: #EFF6FF;
+}
+
+.npr-delivery-option.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.npr-delivery-option > input[type="radio"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: #2563EB;
+  cursor: pointer;
+}
+
+.npr-delivery-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.npr-delivery-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.npr-delivery-desc {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #64748B;
+}
+
+/* ── Delivery towns textarea ────────────────────────── */
+
+.npr-delivery-towns-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}

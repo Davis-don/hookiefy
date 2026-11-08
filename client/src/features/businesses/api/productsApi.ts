@@ -4,6 +4,12 @@ const API_BASE =
   import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // ============================================================
+// DELIVERY TYPES
+// ============================================================
+
+export type DeliveryScope = 'everywhere' | 'specific' | 'none';
+
+// ============================================================
 // TYPES
 // ============================================================
 
@@ -32,9 +38,16 @@ export type Product = {
   price: number | null;
 
   /** Units currently in stock. 0 means "out of stock". */
-  quantity: number;                 // ← added
+  quantity: number;
   /** True when quantity > 0 — mirror of the model property. */
-  in_stock: boolean;                // ← added
+  in_stock: boolean;
+
+  // ── Delivery ────────────────────────────────────────
+  delivery_scope: DeliveryScope;
+  delivery_scope_display: string;
+  delivery_towns: string[];
+  /** True when scope is 'everywhere' or 'specific'. */
+  can_be_delivered: boolean;
 
   images: ProductImage[];
   primary_image: ProductImage | null;
@@ -54,11 +67,21 @@ export type ProductPayload = {
   price: number | null;
 
   /** Units in stock. Required by the serializer on create. */
-  quantity: number;                 // ← added
+  quantity: number;
 
-  properties?: ProductProperty[];     // unlimited named properties
-  imageFiles?: File[];                // multiple images
-  replaceImages?: boolean;            // update only — wipe old images first
+  // ── Delivery ────────────────────────────────────────
+  /** How the product is delivered. Defaults to 'everywhere'. */
+  delivery_scope: DeliveryScope;
+  /**
+   * Towns the product can be delivered to.
+   * Only sent/meaningful when `delivery_scope === 'specific'`;
+   * the backend drops it (or accepts an empty array) otherwise.
+   */
+  delivery_towns: string[];
+
+  properties?: ProductProperty[];
+  imageFiles?: File[];
+  replaceImages?: boolean;
 };
 
 export type ProductListResponse = {
@@ -154,12 +177,23 @@ export async function createProduct(
     formData.append('price', String(payload.price));
   }
 
-  // Quantity — required by the serializer on create.
-  // Send it explicitly even when the value is 0, so the
-  // backend never falls back to its default of 1.
-  formData.append('quantity', String(payload.quantity));   // ← added
+  formData.append('quantity', String(payload.quantity));
 
-  // Properties — parallel arrays, only send filled ones
+  // ── Delivery ────────────────────────────────────────
+  formData.append('delivery_scope', payload.delivery_scope);
+
+  // Only send towns when the scope actually uses them.
+  // The backend accepts an empty array, but sending the
+  // field when it isn't relevant would be noise. This
+  // also matches the admin form's UX where the towns
+  // textarea is only meaningful for 'specific'.
+  if (payload.delivery_scope === 'specific') {
+    formData.append(
+      'delivery_towns',
+      JSON.stringify(payload.delivery_towns),
+    );
+  }
+
   (payload.properties ?? []).forEach((p) => {
     if (p.name?.trim() && p.value?.trim()) {
       formData.append('property_name', p.name.trim());
@@ -167,7 +201,6 @@ export async function createProduct(
     }
   });
 
-  // Multiple images
   (payload.imageFiles ?? []).forEach((file) => {
     formData.append('images', file);
   });
@@ -213,14 +246,26 @@ export async function updateProduct(
     formData.append('price', String(payload.price));
   }
 
-  // Quantity — always send it explicitly when the form
-  // provides one, so an admin edit can lower stock to 0
-  // (mark as sold out) without ambiguity.
   if (payload.quantity !== undefined && payload.quantity !== null) {
-    formData.append('quantity', String(payload.quantity));  // ← added
+    formData.append('quantity', String(payload.quantity));
   }
 
-  // Properties — if provided, they replace ALL existing ones
+  // ── Delivery ────────────────────────────────────────
+  formData.append('delivery_scope', payload.delivery_scope);
+
+  if (payload.delivery_scope === 'specific') {
+    formData.append(
+      'delivery_towns',
+      JSON.stringify(payload.delivery_towns),
+    );
+  } else {
+    // Clear any previously-saved towns when the scope no
+    // longer uses them, so the row's data matches the
+    // visible state. An explicit empty list overrides
+    // whatever was on the row.
+    formData.append('delivery_towns', JSON.stringify([]));
+  }
+
   if (payload.properties) {
     payload.properties.forEach((p) => {
       if (p.name?.trim() && p.value?.trim()) {
@@ -230,7 +275,6 @@ export async function updateProduct(
     });
   }
 
-  // Images — appended by default, or replace if replaceImages is true
   if (payload.imageFiles && payload.imageFiles.length > 0) {
     payload.imageFiles.forEach((file) => {
       formData.append('images', file);

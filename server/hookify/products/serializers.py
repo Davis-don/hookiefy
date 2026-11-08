@@ -16,14 +16,18 @@ PRODUCT_NAME_MAX_LENGTH        = 80
 PRODUCT_DESCRIPTION_MIN_LENGTH = 10
 PRODUCT_DESCRIPTION_MAX_LENGTH = 400
 
-# Property name/value limits
 PROPERTY_NAME_MAX_LENGTH  = 60
 PROPERTY_VALUE_MAX_LENGTH = 120
 
-# Stock limits — keep absurd values out
 PRODUCT_QUANTITY_MAX = 1_000_000
 
-# Patterns that would let a user paste links into text fields
+# Delivery towns: at most this many per product, and each
+# name can't exceed this length. Keeps the JSON column
+# manageable and gives a friendly error long before the DB
+# complains.
+DELIVERY_TOWNS_MAX_COUNT  = 200
+DELIVERY_TOWN_MAX_LENGTH  = 200
+
 URL_PATTERNS = (
     re.compile(r"https?://", re.IGNORECASE),
     re.compile(r"\bwww\.", re.IGNORECASE),
@@ -42,59 +46,115 @@ def _has_url(value: str) -> bool:
 
 
 def _check_text_field(value, field_label, min_len, max_len):
-    """
-    Shared text validator:
-      - trims whitespace
-      - rejects empty
-      - rejects too short / too long
-      - rejects any URL / link
-    Returns the trimmed value or raises ValidationError.
-    """
     value = (value or "").strip()
 
     if not value:
         raise serializers.ValidationError(f"{field_label} is required.")
-
     if len(value) < min_len:
         raise serializers.ValidationError(
             f"{field_label} must be at least {min_len} characters."
         )
-
     if len(value) > max_len:
         raise serializers.ValidationError(
             f"{field_label} cannot exceed {max_len} characters."
         )
-
     if _has_url(value):
         raise serializers.ValidationError(
             f"{field_label} cannot contain links or URLs."
         )
-
     return value
 
 
 def _check_quantity(value):
-    """
-    Shared quantity validator:
-      - rejects negative
-      - rejects absurdly large (guards against typos like 1e9)
-    PositiveIntegerField already rejects negatives at DB level,
-    but the serializer should surface the error before we hit it.
-    """
     if value is None:
         return value
-
     if value < 0:
-        raise serializers.ValidationError(
-            "Quantity cannot be negative."
-        )
-
+        raise serializers.ValidationError("Quantity cannot be negative.")
     if value > PRODUCT_QUANTITY_MAX:
         raise serializers.ValidationError(
             f"Quantity cannot exceed {PRODUCT_QUANTITY_MAX}."
         )
-
     return value
+
+
+def _normalise_delivery_towns(value):
+    """
+    Accept a list of town names, dedupe case-insensitively
+    (preserving order), trim whitespace, and enforce limits.
+
+    Raises ValidationError on invalid input.
+    """
+    if value in (None, ""):
+        return []
+
+    if not isinstance(value, list):
+        raise serializers.ValidationError(
+            "Delivery towns must be a list of town names."
+        )
+
+    if len(value) > DELIVERY_TOWNS_MAX_COUNT:
+        raise serializers.ValidationError(
+            f"Delivery towns cannot exceed {DELIVERY_TOWNS_MAX_COUNT} entries."
+        )
+
+    clean = []
+    seen = set()
+    for item in value:
+        if not isinstance(item, str):
+            raise serializers.ValidationError(
+                "Every delivery town must be a string."
+            )
+        town = item.strip()
+        if not town:
+            continue
+        if len(town) > DELIVERY_TOWN_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f"Each town name cannot exceed {DELIVERY_TOWN_MAX_LENGTH} characters."
+            )
+        key = town.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        clean.append(town)
+
+    return clean
+
+
+def _check_delivery_scope(scope, towns):
+    """
+    Validate the (scope, towns) pair — the two fields are
+    coupled: 'specific' requires a non-empty list, everything
+    else must accept an empty list.
+
+    Returns (clean_scope, clean_towns) or raises.
+    """
+    valid_scopes = {choice[0] for choice in Products.DELIVERY_CHOICES}
+
+    if scope is None:
+        scope = Products.DELIVERY_EVERYWHERE
+
+    if scope not in valid_scopes:
+        raise serializers.ValidationError(
+            {
+                "delivery_scope": [
+                    f"Must be one of: {', '.join(sorted(valid_scopes))}."
+                ]
+            }
+        )
+
+    towns = _normalise_delivery_towns(towns)
+
+    if scope == Products.DELIVERY_SPECIFIC and not towns:
+        raise serializers.ValidationError(
+            {
+                "delivery_towns": [
+                    "At least one town is required when delivery_scope "
+                    "is 'specific'."
+                ]
+            }
+        )
+
+    return scope, towns
 
 
 # ============================================================
@@ -160,7 +220,8 @@ class ProductPropertySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """
-    Read serializer — returns the full product shape.
+    Read serializer — full product shape, now including
+    delivery_scope / delivery_towns.
     """
 
     business_name = serializers.CharField(
@@ -179,9 +240,7 @@ class ProductSerializer(serializers.ModelSerializer):
     )
 
     owner = serializers.SerializerMethodField()
-
     images = ProductImageSerializer(many=True, read_only=True)
-
     primary_image = serializers.SerializerMethodField()
 
     properties = ProductPropertySerializer(
@@ -191,6 +250,18 @@ class ProductSerializer(serializers.ModelSerializer):
     )
 
     in_stock = serializers.BooleanField(read_only=True)
+
+    # Convenience flags the frontend can render without
+    # re-deriving them:
+    #
+    #   can_be_delivered → boolean (true for everywhere/specific)
+    #   delivery_scope_display → human label ("Everywhere", …)
+    #
+    can_be_delivered = serializers.BooleanField(read_only=True)
+    delivery_scope_display = serializers.CharField(
+        source="get_delivery_scope_display",
+        read_only=True,
+    )
 
     class Meta:
         model = Products
@@ -206,6 +277,13 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "quantity",
             "in_stock",
+
+            # Delivery
+            "delivery_scope",
+            "delivery_scope_display",
+            "delivery_towns",
+            "can_be_delivered",
+
             "images",
             "primary_image",
             "has_images",
@@ -244,15 +322,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     """
-    Validate text fields + optional properties + optional stock.
+    Validate text fields + optional properties + optional stock
+    + delivery policy.
 
-    Rules:
-        - name:        required, 3–80 chars, no URLs
-        - description: required, 10–400 chars, no URLs
-        - properties:  each name/value ≤ limit, no URLs
-        - price:       optional, ≥ 0
-        - quantity:    optional, ≥ 0, ≤ 1 000 000
-        - images:      handled in the view (uploaded to Cloudinary)
+    Delivery fields are validated as a pair — scope and towns
+    must agree — even though each is independently optional in
+    the payload (a create with neither set falls back to
+    'everywhere' with an empty towns list).
     """
 
     properties = ProductPropertySerializer(many=True, required=False)
@@ -264,13 +340,17 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "quantity",
+            "delivery_scope",
+            "delivery_towns",
             "properties",
         )
         extra_kwargs = {
-            "name":        {"required": True,  "allow_blank": False},
-            "description": {"required": True,  "allow_blank": False},
-            "price":       {"required": False, "allow_null": True},
-            "quantity":    {"required": False},
+            "name":           {"required": True,  "allow_blank": False},
+            "description":    {"required": True,  "allow_blank": False},
+            "price":          {"required": False, "allow_null": True},
+            "quantity":       {"required": False},
+            "delivery_scope": {"required": False},
+            "delivery_towns": {"required": False},
         }
 
     def validate_name(self, value):
@@ -306,6 +386,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                     "Each property must have a name and a value."
                 )
         return value
+
+    def validate(self, attrs):
+        scope = attrs.get("delivery_scope", Products.DELIVERY_EVERYWHERE)
+        towns = attrs.get("delivery_towns", [])
+        clean_scope, clean_towns = _check_delivery_scope(scope, towns)
+        attrs["delivery_scope"] = clean_scope
+        attrs["delivery_towns"] = clean_towns
+        return attrs
 
     def create(self, validated_data):
         properties_data = validated_data.pop("properties", [])
@@ -327,9 +415,13 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 class ProductUpdateSerializer(serializers.ModelSerializer):
     """
     Same validation as create, but every field is optional.
-    Any field that IS sent must still pass the same rules
-    (including the "no URLs" rule).
-    Properties, if provided, replace the existing set entirely.
+    Any field that IS sent must still pass the same rules.
+
+    The delivery pair has partial-update semantics: sending only
+    `delivery_scope` keeps the existing `delivery_towns` on the
+    row and re-validates the pair against them; sending only
+    `delivery_towns` keeps the existing scope. Sending both
+    replaces both.
     """
 
     properties = ProductPropertySerializer(many=True, required=False)
@@ -341,13 +433,17 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "quantity",
+            "delivery_scope",
+            "delivery_towns",
             "properties",
         )
         extra_kwargs = {
-            "name":        {"required": False, "allow_blank": False},
-            "description": {"required": False, "allow_blank": False},
-            "price":       {"required": False, "allow_null": True},
-            "quantity":    {"required": False},
+            "name":           {"required": False, "allow_blank": False},
+            "description":    {"required": False, "allow_blank": False},
+            "price":          {"required": False, "allow_null": True},
+            "quantity":       {"required": False},
+            "delivery_scope": {"required": False},
+            "delivery_towns": {"required": False},
         }
 
     def validate_name(self, value):
@@ -389,6 +485,35 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
                     "Each property must have a name and a value."
                 )
         return value
+
+    def validate(self, attrs):
+        # Partial update semantics — merge incoming with the
+        # instance's current values before validating the pair.
+        has_scope = "delivery_scope" in attrs
+        has_towns = "delivery_towns" in attrs
+
+        if not has_scope and not has_towns:
+            # Neither field touched → nothing to validate.
+            return attrs
+
+        instance = self.instance
+
+        scope = (
+            attrs["delivery_scope"]
+            if has_scope
+            else (instance.delivery_scope if instance else Products.DELIVERY_EVERYWHERE)
+        )
+        towns = (
+            attrs["delivery_towns"]
+            if has_towns
+            else (instance.delivery_towns if instance else [])
+        )
+
+        clean_scope, clean_towns = _check_delivery_scope(scope, towns)
+        attrs["delivery_scope"] = clean_scope
+        attrs["delivery_towns"] = clean_towns
+
+        return attrs
 
     def update(self, instance, validated_data):
         properties_data = validated_data.pop("properties", None)
