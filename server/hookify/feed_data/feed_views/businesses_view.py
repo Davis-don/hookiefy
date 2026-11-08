@@ -35,6 +35,23 @@ MAX_PAGE_SIZE = 50
 
 
 # ============================================================
+# DELIVERY POLICY — canonical values
+# ============================================================
+#
+# Keep these in sync with:
+#   - Products.DELIVERY_CHOICES (backend model)
+#   - DeliveryScope              (frontend feedApi.ts)
+#
+# 'everywhere' → ships to any town the buyer enters
+# 'specific'   → ships only to the towns in delivery_towns
+# 'none'       → pickup-only, digital, or unavailable
+# ============================================================
+
+DELIVERY_SCOPES = ("everywhere", "specific", "none")
+DEFAULT_DELIVERY_SCOPE = "none"
+
+
+# ============================================================
 # MINIMAL BUSINESS + OWNER SHAPE
 # ============================================================
 
@@ -61,7 +78,6 @@ class FeedItemSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField()
     views = serializers.IntegerField()
 
-    # Youpata-managed flag — applies to BOTH posts and products
     is_youpata_managed = serializers.BooleanField(default=False)
 
     # Post-only
@@ -89,15 +105,30 @@ class FeedItemSerializer(serializers.Serializer):
         required=False, default=list,
     )
 
+    # ── Product-only — delivery policy ───────────────────
+    # Must stay in sync with:
+    #   - Products.DELIVERY_CHOICES on the model
+    #   - DeliveryScope on the frontend (feedApi.ts)
+    delivery_scope = serializers.ChoiceField(
+        choices=DELIVERY_SCOPES,
+        required=False,
+        allow_null=True,
+    )
+    delivery_towns = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=list,
+    )
+    can_be_delivered = serializers.BooleanField(
+        required=False,
+        default=True,
+    )
+
     # Shared
     image_url = serializers.URLField(allow_null=True)
     business = BusinessMiniSerializer()
     owner = OwnerMiniSerializer(allow_null=True)
 
-    # Seller contact — the business owner's phone number.
-    # Populated for BOTH posts and products. The frontend
-    # normalises it before building tel: / wa.me links and
-    # hides the row entirely when it's missing.
     phone_number = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -179,6 +210,78 @@ def _phone_payload(business):
     return str(raw).strip() or None
 
 
+# ── Delivery payload extraction ──────────────────────────
+
+def _normalise_scope(raw):
+    """
+    Coerce anything the DB might hold into one of
+    DELIVERY_SCOPES. Unknown / NULL → 'none'.
+    """
+    if not raw:
+        return DEFAULT_DELIVERY_SCOPE
+    s = str(raw).strip().lower()
+    return s if s in DELIVERY_SCOPES else DEFAULT_DELIVERY_SCOPE
+
+
+def _delivery_towns_payload(product, scope):
+    """
+    Return `list[str]` of town names for a product.
+
+    Handles the shapes the column might take:
+
+      1. JSONField / ArrayField of strings:
+             product.delivery_towns → ["Nairobi", ...]
+      2. Comma-separated CharField / TextField:
+             product.delivery_towns → "Nairobi, Mombasa"
+      3. M2M / reverse-FK manager (future-proofing):
+             product.delivery_towns.all() → [Town, ...]
+      4. None / empty
+
+    Only returns towns when scope is 'specific' — the
+    contract says the list is empty otherwise.
+    """
+    if scope != "specific":
+        return []
+
+    raw = getattr(product, "delivery_towns", None)
+    if raw is None:
+        return []
+
+    # Case 1: already a list of strings
+    if isinstance(raw, (list, tuple)):
+        return [str(t).strip() for t in raw if str(t).strip()]
+
+    # Case 2: comma-separated string
+    if isinstance(raw, str):
+        return [t.strip() for t in raw.split(",") if t.strip()]
+
+    # Case 3: related manager (M2M / reverse FK)
+    if hasattr(raw, "all"):
+        names = []
+        for row in raw.all():
+            name = getattr(row, "name", None)
+            if not name and hasattr(row, "town"):
+                name = getattr(row.town, "name", None)
+            if name:
+                names.append(str(name).strip())
+        return [n for n in names if n]
+
+    return []
+
+
+def _delivery_payload(product):
+    """
+    Build the three delivery keys for a product payload.
+    """
+    scope = _normalise_scope(getattr(product, "delivery_scope", None))
+    towns = _delivery_towns_payload(product, scope)
+    return {
+        "delivery_scope": scope,
+        "delivery_towns": towns,
+        "can_be_delivered": scope != "none",
+    }
+
+
 def _post_item(post):
     business = post.business
     return {
@@ -195,6 +298,8 @@ def _post_item(post):
         "business": _business_payload(business),
         "owner": _owner_payload(business),
         "phone_number": _phone_payload(business),
+        # No delivery_* keys — the frontend type marks them
+        # optional, and DeliveryBadge only renders on products.
     }
 
 
@@ -214,6 +319,8 @@ def _product_item(product):
         if p.name and p.value
     ]
 
+    delivery = _delivery_payload(product)
+
     return {
         "kind": "product",
         "id": product.id,
@@ -232,6 +339,10 @@ def _product_item(product):
         "business": _business_payload(business),
         "owner": _owner_payload(business),
         "phone_number": _phone_payload(business),
+        # ── Delivery policy ─────────────────────────────
+        "delivery_scope": delivery["delivery_scope"],
+        "delivery_towns": delivery["delivery_towns"],
+        "can_be_delivered": delivery["can_be_delivered"],
     }
 
 
@@ -248,7 +359,6 @@ def _paginate(items, limit, kind):
     has_more = len(items) > limit
     page = items[:limit]
 
-    # Cursor = oldest created_at in the page (guarantees no gaps).
     next_cursor = None
     if has_more and page:
         oldest = min(row["created_at"] for row in page)
@@ -266,6 +376,28 @@ def _paginate(items, limit, kind):
         "has_more": has_more,
         "results": FeedItemSerializer(payload, many=True).data,
     }
+
+
+# ============================================================
+# PREFETCH HELPER
+# ============================================================
+#
+# Only *relational* fields can be prefetched. `delivery_scope`
+# and `delivery_towns` are scalar columns on Products, so they
+# are excluded on purpose — there's no N+1 to avoid, and
+# prefetch_related() raises ValueError on them.
+# ============================================================
+
+def _prefetch_products(qs):
+    """
+    Eagerly load every *relational* field `_product_item`
+    reads. Scalar columns (delivery_scope, delivery_towns,
+    name, price, ...) need no prefetch.
+    """
+    return qs.prefetch_related(
+        "images",
+        "property_items",
+    )
 
 
 # ============================================================
@@ -287,11 +419,10 @@ def build_feed_page(base_q, kind, limit, before, youpata_only=False):
         .filter(base_q)
         .select_related("business", "business__owner")
     )
-    products_qs = (
+    products_qs = _prefetch_products(
         Products.objects
         .filter(base_q)
         .select_related("business", "business__owner")
-        .prefetch_related("images", "property_items")
     )
 
     if youpata_only:
@@ -302,7 +433,6 @@ def build_feed_page(base_q, kind, limit, before, youpata_only=False):
         posts_qs = posts_qs.filter(created_at__lt=before_dt)
         products_qs = products_qs.filter(created_at__lt=before_dt)
 
-    # Fetch one extra per stream so has_more is accurate.
     per_stream = limit + 1
 
     posts = (
@@ -461,11 +591,6 @@ def build_personalised_feed_page(
 ):
     """
     Personalised variant of build_feed_page.
-
-    `youpata_only=True` restricts to rows where
-    `is_youpata_managed=True` — the /feed/businesses/mine/
-    endpoint passes `False`, but the parameter exists so a
-    future `/mine/youpata/` route can use it.
     """
     limit = _parse_limit(limit)
     before_dt = _parse_before(before)
@@ -479,11 +604,10 @@ def build_personalised_feed_page(
         .filter(base_q)
         .select_related("business", "business__owner")
     )
-    products_qs = (
+    products_qs = _prefetch_products(
         Products.objects
         .filter(base_q)
         .select_related("business", "business__owner")
-        .prefetch_related("images", "property_items")
     )
 
     if youpata_only:

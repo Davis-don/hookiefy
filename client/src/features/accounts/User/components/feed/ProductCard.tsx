@@ -22,17 +22,10 @@ type ProductCardProps = {
 
 const CLAMP_LINES = 2;
 
-/**
- * Format a raw price string into display form.
- *
- * Returns null when the price is missing so the caller
- * can skip rendering the price chip entirely.
- *
- * When `withPrefix` is true, returns `"KES 1,500"` — for
- * single-line contexts. When false, returns `"1,500"` with
- * no prefix — for the price chip where the currency lives
- * in its own span.
- */
+/* ============================================================
+   FORMATTERS
+   ============================================================ */
+
 function formatPrice(
   price: string | null | undefined,
   { withPrefix = true }: { withPrefix?: boolean } = {},
@@ -44,11 +37,6 @@ function formatPrice(
   return withPrefix ? `KES ${formatted}` : formatted;
 }
 
-/**
- * Normalise a Kenyan number to the E.164 form wa.me expects.
- * Returns null if the value doesn't look like a valid
- * Kenyan mobile number.
- */
 function normaliseKenyanPhone(raw: string | null | undefined): string | null {
   if (!raw) return null;
 
@@ -70,7 +58,6 @@ function normaliseKenyanPhone(raw: string | null | undefined): string | null {
   return `254${local}`;
 }
 
-/** Display form for the aria-label / title. */
 function displayPhone(e164: string): string {
   if (e164.length !== 12) return e164;
   return `+${e164.slice(0, 3)} ${e164.slice(3, 6)} ${e164.slice(6, 9)} ${e164.slice(9)}`;
@@ -93,54 +80,40 @@ function buildWhatsAppUrl(
 /* ============================================================
    DELIVERY BADGE
    ============================================================
-   Renders a compact pill describing the product's delivery
-   policy. Visual states:
+   High-visibility pill rendered directly under the price.
 
-     everywhere → blue globe + "Delivers everywhere"
-     specific   → blue pin  + "Ships to A, B +N" (or "Only A")
-     none       → amber bag + "Pickup only"
+   Visual states:
+     everywhere → blue globe  + "Delivers everywhere"   (highlighted)
+     specific   → blue pin    + "Ships to A, B +N"
+     none       → amber bag   + "Pickup only"           (warns buyer)
 
-   The chip is skipped entirely when the payload doesn't
-   carry `delivery_scope` (older cached items, posts, or a
-   backend that hasn't been updated yet) — so the card
-   degrades gracefully on mixed-version feeds.
+   Skips rendering entirely when `delivery_scope` is missing
+   (posts, or backend not yet wired).
    ============================================================ */
 
 function DeliveryBadge({ item }: { item: FeedItem }) {
   const scope = item.delivery_scope;
-
-  // No delivery info on the item — hide the badge rather
-  // than rendering a wrong one.
   if (!scope) return null;
 
   if (scope === 'everywhere') {
     return (
-      <span className="product-card__delivery" aria-label="Delivers everywhere">
-        <svg
-          className="product-card__delivery-icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          focusable="false"
+      <div className="product-card__delivery-row">
+        <span
+          className="product-card__delivery is-everywhere"
+          aria-label="Delivers everywhere"
         >
-          <circle
-            cx="12" cy="12" r="9"
-            fill="none" stroke="currentColor" strokeWidth="2"
-          />
-          <path
-            d="M3 12h18"
-            fill="none" stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"
-            fill="none" stroke="currentColor" strokeWidth="2"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span className="product-card__delivery-label">
-          Delivers everywhere
+          <span className="product-card__delivery-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18" />
+              <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z" />
+            </svg>
+          </span>
+          <span className="product-card__delivery-label">
+            Delivers everywhere
+          </span>
         </span>
-      </span>
+      </div>
     );
   }
 
@@ -151,74 +124,56 @@ function DeliveryBadge({ item }: { item: FeedItem }) {
 
     const text =
       towns.length === 0
-        ? 'Specific towns'
+        ? 'Ships to specific towns'
         : towns.length === 1
           ? `Only ${towns[0]}`
           : `Ships to ${shown.join(', ')}${extra > 0 ? ` +${extra}` : ''}`;
 
     return (
-      <span
-        className="product-card__delivery"
-        aria-label={
-          towns.length
-            ? `Ships only to ${towns.join(', ')}`
-            : 'Ships to specific towns'
-        }
-        title={towns.length ? towns.join(', ') : undefined}
-      >
-        <svg
-          className="product-card__delivery-icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          focusable="false"
+      <div className="product-card__delivery-row">
+        <span
+          className="product-card__delivery is-specific"
+          aria-label={
+            towns.length
+              ? `Ships only to ${towns.join(', ')}`
+              : 'Ships to specific towns'
+          }
+          title={towns.length ? towns.join(', ') : undefined}
         >
-          <path
-            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-            fill="none" stroke="currentColor" strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <circle
-            cx="12" cy="10" r="3"
-            fill="none" stroke="currentColor" strokeWidth="2"
-          />
-        </svg>
-        <span className="product-card__delivery-label">{text}</span>
-      </span>
+          <span className="product-card__delivery-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </span>
+          <span className="product-card__delivery-label">{text}</span>
+        </span>
+      </div>
     );
   }
 
-  // scope === 'none'
   return (
-    <span
-      className="product-card__delivery is-none"
-      aria-label="Pickup only, no delivery"
-    >
-      <svg
-        className="product-card__delivery-icon"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        focusable="false"
+    <div className="product-card__delivery-row">
+      <span
+        className="product-card__delivery is-none"
+        aria-label="Pickup only, no delivery"
       >
-        <path
-          d="M3 9l1.5-5h15L21 9"
-          fill="none" stroke="currentColor" strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4 9v11h16V9"
-          fill="none" stroke="currentColor" strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9 20v-6h6v6"
-          fill="none" stroke="currentColor" strokeWidth="2"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="product-card__delivery-label">Pickup only</span>
-    </span>
+        <span className="product-card__delivery-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M3 9l1.5-5h15L21 9" />
+            <path d="M4 9v11h16V9" />
+            <path d="M9 20v-6h6v6" />
+          </svg>
+        </span>
+        <span className="product-card__delivery-label">Pickup only</span>
+      </span>
+    </div>
   );
 }
+
+/* ============================================================
+   CARD
+   ============================================================ */
 
 function ProductCard({
   item,
@@ -228,17 +183,10 @@ function ProductCard({
 }: ProductCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  /* ── Image loading state ────────────────────────── */
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Full "KES 1,500" form used for the aria-label and
-  // screen-reader announcement.
   const priceLabel = formatPrice(item.price);
-
-  // Split form for the visual price chip: the currency
-  // lives in its own span so it can be styled smaller
-  // and lighter than the number.
   const priceNumber = formatPrice(item.price, { withPrefix: false });
 
   const description = item.description ?? '';
@@ -276,7 +224,6 @@ function ProductCard({
   const hasImage = !!item.image_url;
   const showSkeleton = hasImage && !imageLoaded && !imageError;
 
-  /* ── Seller contact ──────────────────────────────────── */
   const sellerPhone = normaliseKenyanPhone(item.phone_number);
   const hasPhone = !!sellerPhone;
   const phoneDisplay = sellerPhone ? displayPhone(sellerPhone) : '';
@@ -287,13 +234,10 @@ function ProductCard({
   const callUrl = sellerPhone ? `tel:+${sellerPhone}` : '';
 
   return (
-    <article
-      className={
-        'product-card' + (soldOut ? ' is-sold-out' : '')
-      }
-    >
+    <article className={'product-card' + (soldOut ? ' is-sold-out' : '')}>
       <HeartBurst ref={burstRef} />
 
+      {/* ── Header ──────────────────────────────────── */}
       <header className="product-card__header">
         <button
           type="button"
@@ -318,16 +262,37 @@ function ProductCard({
           )}
         </button>
 
-        <button
-          type="button"
-          className="product-card__business"
-          onClick={(e) => {
-            e.stopPropagation();
-            openBusiness();
-          }}
-        >
-          {item.business.business_name}
-        </button>
+        <div className="product-card__identity">
+          <button
+            type="button"
+            className="product-card__business"
+            onClick={(e) => {
+              e.stopPropagation();
+              openBusiness();
+            }}
+          >
+            {item.business.business_name}
+          </button>
+          <span className="product-card__meta">
+            <svg
+              className="product-card__meta-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle
+                cx="12" cy="12" r="9"
+                fill="none" stroke="currentColor" strokeWidth="2"
+              />
+              <path
+                d="M8.5 12.5l2.5 2.5 4.5-5"
+                fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+            Verified seller
+          </span>
+        </div>
 
         {badge}
 
@@ -338,6 +303,7 @@ function ProductCard({
         />
       </header>
 
+      {/* ── Cover ───────────────────────────────────── */}
       {hasImage && (
         <div
           className={
@@ -358,10 +324,7 @@ function ProductCard({
           }}
         >
           {showSkeleton && (
-            <div
-              className="product-card__cover-skeleton"
-              aria-hidden="true"
-            >
+            <div className="product-card__cover-skeleton" aria-hidden="true">
               <div className="product-card__cover-shimmer" />
             </div>
           )}
@@ -372,8 +335,7 @@ function ProductCard({
               alt={item.name ?? 'Product'}
               loading="lazy"
               className={
-                'product-card__cover-img' +
-                (imageLoaded ? ' is-loaded' : '')
+                'product-card__cover-img' + (imageLoaded ? ' is-loaded' : '')
               }
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
@@ -402,23 +364,15 @@ function ProductCard({
           )}
 
           {soldOut && (
-            <span
-              className="product-card__sold-out"
-              aria-label="Sold out"
-            >
+            <span className="product-card__sold-out" aria-label="Sold out">
               Sold out
             </span>
           )}
         </div>
       )}
 
+      {/* ── Body ────────────────────────────────────── */}
       <div className="product-card__body" {...gesture}>
-        {/* Price chip — the currency code (KES) is a small
-            uppercase label on the left; the number is the
-            big bold figure. Together they read as a price
-            tag, not a line of text. The chip appears above
-            the title so it's the first thing the eye lands
-            on when scanning the card. */}
         {priceNumber && (
           <span
             className={
@@ -429,25 +383,17 @@ function ProductCard({
             <span className="product-card__price-currency">
               {item.price ? 'KES' : ''}
             </span>
-            <span className="product-card__price-amount">
-              {priceNumber}
-            </span>
+            <span className="product-card__price-amount">{priceNumber}</span>
           </span>
         )}
 
-        {/* Delivery badge — rendered only when the payload
-            carries delivery info. Sits directly under the
-            price chip so the buyer sees the shipping terms
-            before reading the title or description. */}
         <DeliveryBadge item={item} />
 
         {item.name && <h3 className="product-card__name">{item.name}</h3>}
 
         {description && (
           <>
-            <p className={`product-card__desc${clampClass}`}>
-              {description}
-            </p>
+            <p className={`product-card__desc${clampClass}`}>{description}</p>
 
             {isLong && (
               <button
@@ -477,6 +423,7 @@ function ProductCard({
         )}
       </div>
 
+      {/* ── Contact ─────────────────────────────────── */}
       {hasPhone && (
         <div className="product-card__contact">
           <a
@@ -499,7 +446,7 @@ function ProductCard({
                 fill="currentColor"
               />
             </svg>
-            Call
+            <span>Call</span>
           </a>
 
           <a
@@ -524,20 +471,18 @@ function ProductCard({
                 fill="currentColor"
               />
             </svg>
-            WhatsApp
+            <span>WhatsApp</span>
           </a>
         </div>
       )}
 
+      {/* ── Footer ──────────────────────────────────── */}
       <footer className="product-card__footer">
         <LikeCount
           targetKind="product"
           targetId={item.id}
           className="product-card__like-count"
         />
-        <span className="product-card__footer-dot" aria-hidden="true">
-          ·
-        </span>
         <FollowCount
           businessId={item.business.id}
           className="product-card__follow-count"
