@@ -1,26 +1,16 @@
 /* ─────────────────────────────────────────────────────────
-   ProductCard — full styles (visual overhaul)
+   ProductCard — full styles
    ─────────────────────────────────────────────────────────
    Design intent:
      • MOBILE (≤ 640px):  full-bleed edge-to-edge. ZERO
                           horizontal padding or margin on
-                          the card or any child. Image
-                          touches both screen edges.
+                          the card or any child.
      • TABLET / DESKTOP:  framed card with rounded corners
                           and a soft hover lift.
-     • Every card in a grid row is the SAME HEIGHT.
 
    Reading order:
      header → cover → price → delivery → title → desc →
      properties → Call/WhatsApp → footer
-
-   Hierarchy moves:
-     • Header gains a "Verified seller" subtitle.
-     • Price chip is bigger, warmer, unmistakable.
-     • Delivery badge is a bold, saturated pill — the
-       strongest secondary element on the card.
-     • Contact buttons are thicker, more tactile.
-     • Footer stats are clean pills.
    ───────────────────────────────────────────────────────── */
 
 .product-card {
@@ -46,7 +36,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   HEADER — avatar, business name, verified caption
+   HEADER — avatar + business name only (no subtitle)
    ═══════════════════════════════════════════════════════ */
 
 .product-card__header {
@@ -95,14 +85,6 @@
   font-size: 1.2rem;
 }
 
-.product-card__identity {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
 .product-card__business {
   font-size: 1.02rem;
   font-weight: 800;
@@ -111,6 +93,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
   background: transparent;
   border: none;
   padding: 0;
@@ -123,22 +107,6 @@
 
 .product-card__business:hover {
   color: #2563EB;
-}
-
-.product-card__meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #059669;
-  letter-spacing: 0.01em;
-}
-
-.product-card__meta-icon {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -264,7 +232,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   BODY — price, delivery, title, description, props
+   BODY — price (bare), delivery, title, description, props
    ═══════════════════════════════════════════════════════ */
 
 .product-card__body {
@@ -278,44 +246,41 @@
   margin: 0;
 }
 
-/* ── Price chip — bigger, warmer, "tag"-like ─────────── */
+/* ── Price — bare, no chip, no background, bold green ──
+   Just text: small "KES" caption + big bold amount.
+   No pill, no border, no shadow. */
 
 .product-card__price {
   align-self: flex-start;
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-  border: 1.5px solid #6EE7B7;
-  color: #065F46;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
   line-height: 1;
-  box-shadow:
-    0 4px 14px -10px rgba(4, 120, 87, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .product-card__price-currency {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.85;
+  color: #059669;
 }
 
 .product-card__price-amount {
-  font-size: 1.42rem;
+  font-size: 1.55rem;
   font-weight: 900;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
+  color: #059669;
 }
 
-.product-card__price.is-sold-out {
-  background: #F8FAFC;
-  border-color: #E2E8F0;
+.product-card__price.is-sold-out .product-card__price-currency,
+.product-card__price.is-sold-out .product-card__price-amount {
   color: #94A3B8;
-  box-shadow: none;
 }
 
 .product-card__price.is-sold-out .product-card__price-amount {
@@ -325,18 +290,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────
-   DELIVERY BADGE — STANDOUT
-   ─────────────────────────────────────────────────────────
-   Bold saturated pill that's impossible to miss:
-
-     • Slightly larger than the price chip's small text
-       so it reads as a primary attribute, not a footnote.
-     • Strong 2px icon, solid colour, soft glow shadow.
-     • `is-everywhere` gets a subtle "shimmer" background
-       to draw the eye (sellers who ship nationwide are
-       a buying signal).
-     • `is-none` gets a warm amber treatment that reads
-       as a caution, not a warning.
+   DELIVERY BADGE — STANDOUT (kept prominent)
    ───────────────────────────────────────────────────────── */
 
 .product-card__delivery-row {
@@ -401,8 +355,6 @@
   white-space: nowrap;
 }
 
-/* ── Variant: EVERYWHERE — vibrant blue ──────────────── */
-
 .product-card__delivery.is-everywhere {
   color: #FFFFFF;
   background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
@@ -417,16 +369,12 @@
   letter-spacing: 0.01em;
 }
 
-/* ── Variant: SPECIFIC — soft blue, structural ───────── */
-
 .product-card__delivery.is-specific {
   color: #1D4ED8;
   background: #EFF6FF;
   border: 1.5px solid #93C5FD;
   box-shadow: 0 2px 10px -6px rgba(37, 99, 235, 0.35);
 }
-
-/* ── Variant: NONE — warm amber caution ──────────────── */
 
 .product-card__delivery.is-none {
   color: #92400E;
@@ -437,7 +385,7 @@
     0 1px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
-/* ── Title — dominant ────────────────────────────────── */
+/* ── Title ───────────────────────────────────────────── */
 
 .product-card__name {
   margin: 2px 0 0;
@@ -549,14 +497,14 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   CONTACT — thicker, more tactile buttons
+   CONTACT — compact, mobile-friendly buttons
    ═══════════════════════════════════════════════════════ */
 
 .product-card__contact {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 4px 0 12px;
+  gap: 8px;
+  padding: 4px 0 10px;
   flex: 0 0 auto;
   margin: 0;
 }
@@ -565,13 +513,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 14px;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 10px;
   border-radius: 999px;
   font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1;
   text-decoration: none;
@@ -584,7 +532,7 @@
 }
 
 .product-card__contact-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.06);
 }
 
 .product-card__contact-btn:active {
@@ -597,35 +545,27 @@
 }
 
 .product-card__contact-btn.is-call {
-  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
-  box-shadow:
-    0 4px 16px -8px rgba(22, 163, 74, 0.95),
-    0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  background: #16A34A;
+  box-shadow: 0 2px 10px -6px rgba(22, 163, 74, 0.85);
 }
 
 .product-card__contact-btn.is-call:hover {
-  box-shadow:
-    0 8px 22px -8px rgba(22, 163, 74, 0.95),
-    0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  box-shadow: 0 4px 14px -6px rgba(22, 163, 74, 0.85);
 }
 
 .product-card__contact-btn.is-whatsapp {
-  background: linear-gradient(135deg, #25D366 0%, #1EBE57 100%);
+  background: #25D366;
   color: #0B141A;
-  box-shadow:
-    0 4px 16px -8px rgba(37, 211, 102, 0.95),
-    0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  box-shadow: 0 2px 10px -6px rgba(37, 211, 102, 0.85);
 }
 
 .product-card__contact-btn.is-whatsapp:hover {
-  box-shadow:
-    0 8px 22px -8px rgba(37, 211, 102, 0.95),
-    0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  box-shadow: 0 4px 14px -6px rgba(37, 211, 102, 0.85);
 }
 
 .product-card__contact-icon {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 
@@ -637,7 +577,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 0 14px;
+  padding: 8px 0 12px;
   border-top: 1px solid #F1F5F9;
   margin-top: auto;
   flex: 0 0 auto;
@@ -650,28 +590,26 @@
   align-items: center;
   gap: 6px;
 
-  padding: 7px 13px;
+  padding: 6px 12px;
   border-radius: 999px;
 
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
 
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 800;
   color: #0F172A;
   letter-spacing: -0.15px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 
-  transition: background 0.15s ease, border-color 0.15s ease,
-    transform 0.1s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .product-card__like-count:hover,
 .product-card__follow-count:hover {
   background: #F1F5F9;
   border-color: #CBD5E1;
-  transform: translateY(-1px);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -694,12 +632,12 @@
   }
 
   .product-card__contact {
-    padding: 4px 16px 16px;
-    gap: 10px;
+    padding: 4px 16px 12px;
+    gap: 8px;
   }
 
   .product-card__footer {
-    padding: 12px 16px 18px;
+    padding: 10px 16px 14px;
   }
 
   .product-card__cover {
@@ -717,7 +655,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   MOBILE — extra polish, still ZERO horizontal margin
+   MOBILE — tighter contact buttons, still edge-to-edge
    ═══════════════════════════════════════════════════════ */
 
 @media (max-width: 640px) {
@@ -729,17 +667,26 @@
     width: 14px;
     height: 14px;
   }
+
+  .product-card__contact-btn {
+    min-height: 36px;
+    padding: 0 8px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+  .product-card__contact-icon {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 @media (max-width: 380px) {
   .product-card__avatar { width: 40px; height: 40px; }
   .product-card__business { font-size: 0.94rem; }
-  .product-card__meta { font-size: 0.68rem; }
   .product-card__name { font-size: 1.2rem; }
 
-  .product-card__price { padding: 8px 13px; }
-  .product-card__price-amount { font-size: 1.24rem; }
-  .product-card__price-currency { font-size: 0.62rem; }
+  .product-card__price-amount { font-size: 1.35rem; }
+  .product-card__price-currency { font-size: 0.66rem; }
 
   .product-card__delivery {
     padding: 5px 10px;
@@ -757,14 +704,20 @@
   .product-card__prop { font-size: 0.7rem; padding: 3px 8px; }
 
   .product-card__contact-btn {
-    font-size: 0.86rem;
-    min-height: 46px;
+    font-size: 0.74rem;
+    min-height: 34px;
+    padding: 0 6px;
+    gap: 4px;
+  }
+  .product-card__contact-icon {
+    width: 13px;
+    height: 13px;
   }
 
   .product-card__like-count,
   .product-card__follow-count {
-    font-size: 0.84rem;
-    padding: 6px 11px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
   }
 }
 

@@ -81,14 +81,7 @@ function buildWhatsAppUrl(
    DELIVERY BADGE
    ============================================================
    High-visibility pill rendered directly under the price.
-
-   Visual states:
-     everywhere → blue globe  + "Delivers everywhere"   (highlighted)
-     specific   → blue pin    + "Ships to A, B +N"
-     none       → amber bag   + "Pickup only"           (warns buyer)
-
-   Skips rendering entirely when `delivery_scope` is missing
-   (posts, or backend not yet wired).
+   Skips rendering entirely when `delivery_scope` is missing.
    ============================================================ */
 
 function DeliveryBadge({ item }: { item: FeedItem }) {
@@ -262,37 +255,16 @@ function ProductCard({
           )}
         </button>
 
-        <div className="product-card__identity">
-          <button
-            type="button"
-            className="product-card__business"
-            onClick={(e) => {
-              e.stopPropagation();
-              openBusiness();
-            }}
-          >
-            {item.business.business_name}
-          </button>
-          <span className="product-card__meta">
-            <svg
-              className="product-card__meta-icon"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle
-                cx="12" cy="12" r="9"
-                fill="none" stroke="currentColor" strokeWidth="2"
-              />
-              <path
-                d="M8.5 12.5l2.5 2.5 4.5-5"
-                fill="none" stroke="currentColor" strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round"
-              />
-            </svg>
-            Verified seller
-          </span>
-        </div>
+        <button
+          type="button"
+          className="product-card__business"
+          onClick={(e) => {
+            e.stopPropagation();
+            openBusiness();
+          }}
+        >
+          {item.business.business_name}
+        </button>
 
         {badge}
 
