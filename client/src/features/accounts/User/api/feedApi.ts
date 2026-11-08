@@ -22,6 +22,16 @@ export type FeedProperty = {
 };
 
 /**
+ * Product delivery policy — must stay in sync with the
+ * backend `Products.DELIVERY_CHOICES`:
+ *
+ *   everywhere  → ships to any town the buyer enters
+ *   specific    → ships only to the towns in delivery_towns
+ *   none        → pickup-only, digital, or unavailable
+ */
+export type DeliveryScope = 'everywhere' | 'specific' | 'none';
+
+/**
  * A single feed item — either a post or a product.
  * The `kind` field tells you which optional fields are populated.
  */
@@ -66,7 +76,56 @@ export type FeedItem = {
   in_stock?: boolean;
   extra_images?: string[];
   properties?: FeedProperty[];
+
+  // ── Product-only — delivery policy ───────────────────
+  //
+  // `delivery_scope` is one of 'everywhere' | 'specific' | 'none'.
+  // Only present on product items; `undefined` on posts.
+  //
+  // `delivery_towns` is only meaningful when the scope is
+  // 'specific' — an empty list otherwise.
+  //
+  // `can_be_delivered` is a convenience boolean the frontend
+  // can gate its "Buy now" button on without re-deriving the
+  // rule from `delivery_scope`. False only when scope is 'none'.
+  delivery_scope?: DeliveryScope;
+  delivery_towns?: string[];
+  can_be_delivered?: boolean;
 };
+
+/**
+ * Type guard — narrows a `FeedItem` to a product item.
+ *
+ * Usage:
+ *
+ *   if (isProductItem(item)) {
+ *     // item.name, item.delivery_scope, etc. are non-optional
+ *   }
+ */
+export function isProductItem(
+  item: FeedItem,
+): item is FeedItem & {
+  kind: 'product';
+  name?: string;
+  delivery_scope?: DeliveryScope;
+  delivery_towns?: string[];
+  can_be_delivered?: boolean;
+} {
+  return item.kind === 'product';
+}
+
+/**
+ * Type guard — narrows a `FeedItem` to a post item.
+ */
+export function isPostItem(
+  item: FeedItem,
+): item is FeedItem & {
+  kind: 'post';
+  title?: string;
+  body?: string;
+} {
+  return item.kind === 'post';
+}
 
 export type FeedResponse = {
   count: number;

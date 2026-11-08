@@ -127,6 +127,35 @@ PRODUCT_PROPERTY_POOL = [
 
 
 # ============================================================
+# DELIVERY SEEDING
+# ============================================================
+#
+# Distribution used when creating each product:
+#
+#   everywhere  → 65% of products ship anywhere
+#   specific    → 25% ship only to a subset of towns
+#   none        → 10% are pickup-only / digital / unavailable
+#
+# For 'specific', the town list is drawn from the product's
+# own city (always included) plus 1–4 random cities from the
+# master CITIES list. This makes the data feel real — a
+# Nairobi-based business ships to Nairobi plus a couple of
+# neighbouring towns, not to a random scattering of all ten.
+#
+# Kept as module-level constants so they're easy to tune.
+# ============================================================
+
+DELIVERY_DISTRIBUTION = (
+    (Products.DELIVERY_EVERYWHERE, 0.65),
+    (Products.DELIVERY_SPECIFIC,   0.25),
+    (Products.DELIVERY_NONE,       0.10),
+)
+
+DELIVERY_SPECIFIC_EXTRA_TOWNS_MIN = 1
+DELIVERY_SPECIFIC_EXTRA_TOWNS_MAX = 4
+
+
+# ============================================================
 # STORY GENERATION — long-form prose blocks
 # ============================================================
 #
@@ -135,14 +164,7 @@ PRODUCT_PROPERTY_POOL = [
 #
 # Middles and lessons are drawn WITHOUT replacement, so no two
 # blocks in the same story repeat. That gives 6 paragraphs and
-# roughly 2,500–4,000 characters per story — long enough to
-# read like a real founder essay, short enough to fit the
-# "Continue reading" expand/collapse UI in the app.
-#
-# Business-specific placeholders ({business_name}, {city},
-# {county}, {business_type}, {business_type_lower}) are
-# interpolated, so every story reads as if it were written
-# about that user's own business, not a generic template.
+# roughly 2,500–4,000 characters per story.
 # ============================================================
 
 
@@ -571,6 +593,12 @@ class Command(BaseCommand):
             self.stdout.write(f"  Total image references: {total_images_ref}")
             self.stdout.write(f"  Sleep between users:    {sleep_seconds}s")
             self.stdout.write("")
+            self.stdout.write("  Delivery distribution for products:")
+            for scope, weight in DELIVERY_DISTRIBUTION:
+                self.stdout.write(
+                    f"    {scope:12s} → {int(weight * 100):>2d}%"
+                )
+            self.stdout.write("")
             self.stdout.write("To actually run:")
             self.stdout.write(
                 f"  DJANGO_DB_CONN_MAX_AGE=0 "
@@ -664,6 +692,14 @@ class Command(BaseCommand):
             "errors":         0,
         }
 
+        # Delivery counters — reported in the summary so you can
+        # see the distribution was applied.
+        delivery_counts = {
+            Products.DELIVERY_EVERYWHERE: 0,
+            Products.DELIVERY_SPECIFIC:   0,
+            Products.DELIVERY_NONE:       0,
+        }
+
         started = time.time()
 
         for offset in range(users_to_create):
@@ -704,9 +740,10 @@ class Command(BaseCommand):
 
                             for pr_idx in range(PRODUCTS_PER_BUSINESS):
                                 img = random.choice(uploaded_ok)
-                                self._create_product(biz, pr_idx, img)
+                                scope = self._create_product(biz, pr_idx, img)
                                 counts["products"] += 1
                                 counts["product_images"] += 1
+                                delivery_counts[scope] += 1
                     except Exception as biz_err:
                         self.stderr.write(self.style.WARNING(
                             f"  business {b_idx} for {email} failed: {biz_err}"
@@ -755,6 +792,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("=" * 60))
         for k, v in counts.items():
             self.stdout.write(f"  {k:20s} {v}")
+        self.stdout.write("")
+        self.stdout.write("  Delivery distribution (products):")
+        for scope, n in delivery_counts.items():
+            self.stdout.write(f"    {scope:12s} {n}")
+        self.stdout.write("")
         self.stdout.write(f"  {'elapsed':20s} {elapsed:.1f}s")
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(
@@ -822,11 +864,83 @@ class Command(BaseCommand):
             image_public_id=image["public_id"],
         )
 
-    def _create_product(self, biz: Businesses, index: int, image: dict):
+    # --------------------------------------------------------
+    # DELIVERY SCOPE PICKER
+    # --------------------------------------------------------
+    #
+    # Draws a scope from DELIVERY_DISTRIBUTION (weighted random)
+    # and returns (scope, towns). Towns are only populated for
+    # 'specific' — the model's `clean()` enforces the invariant,
+    # but keeping the towns list empty for the other two scopes
+    # keeps the DB rows tidy.
+    #
+    # Towns are drawn from the product's own city (always
+    # included) plus a handful of random cities from the master
+    # list, so the row reads like a Nairobi business shipping to
+    # Nairobi + a few nearby towns — not a random scatter.
+    # --------------------------------------------------------
+
+    def _pick_delivery(self, business: Businesses) -> tuple[str, list]:
+        scopes   = [s for s, _ in DELIVERY_DISTRIBUTION]
+        weights  = [w for _, w in DELIVERY_DISTRIBUTION]
+        scope    = random.choices(scopes, weights=weights, k=1)[0]
+
+        if scope != Products.DELIVERY_SPECIFIC:
+            return scope, []
+
+        base_town = (business.city_town or "").strip()
+        base_county = (business.county or "").strip()
+
+        towns = []
+
+        # Always include the business's own city.
+        if base_town:
+            towns.append(base_town)
+
+        # Add a random handful of additional cities.
+        extra_pool = [c for c in CITIES if c.lower() != base_town.lower()]
+        extra_count = random.randint(
+            DELIVERY_SPECIFIC_EXTRA_TOWNS_MIN,
+            DELIVERY_SPECIFIC_EXTRA_TOWNS_MAX,
+        )
+        towns.extend(random.sample(extra_pool, k=extra_count))
+
+        # Occasionally include the county name too (e.g. a
+        # product that delivers "to Nairobi" as a whole rather
+        # than to a specific town inside it).
+        if base_county and random.random() < 0.4:
+            if base_county.lower() not in {t.lower() for t in towns}:
+                towns.append(base_county)
+
+        # Dedupe case-insensitively, preserve order.
+        seen = set()
+        deduped = []
+        for t in towns:
+            key = t.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(t)
+
+        return scope, deduped
+
+    def _create_product(
+        self,
+        biz: Businesses,
+        index: int,
+        image: dict,
+    ) -> str:
+        """
+        Create one product, assign its delivery scope, and
+        return that scope so the caller can tally distribution.
+        """
         name = (
             f"{random.choice(PRODUCT_ADJECTIVES)} "
             f"{random.choice(PRODUCT_NOUNS)} {index + 1}"
         )
+
+        scope, towns = self._pick_delivery(biz)
+
         product = Products.objects.create(
             business=biz,
             name=name,
@@ -835,6 +949,8 @@ class Command(BaseCommand):
                 f"and colours. Perfect for everyday use."
             ),
             price=Decimal(random.randint(200, 15_000)),
+            delivery_scope=scope,
+            delivery_towns=towns,
         )
 
         ProductImage.objects.create(
@@ -856,18 +972,10 @@ class Command(BaseCommand):
                 sort_order=order,
             )
 
+        return scope
+
     # --------------------------------------------------------
     # STORY TEXT BUILDER — 6-paragraph long-form story
-    # --------------------------------------------------------
-    #
-    # Assembles a story from six distinct beats:
-    #
-    #     opening → middle-A → middle-B → lesson-A → lesson-B → closing
-    #
-    # Middles and lessons are drawn WITHOUT replacement (via
-    # random.sample) so no two middles or two lessons repeat
-    # inside the same story. Result: 6 paragraphs, ~2,500–4,000
-    # characters, always focused on that user's business.
     # --------------------------------------------------------
 
     def _build_story_text(self, business: Businesses) -> str:
@@ -883,14 +991,8 @@ class Command(BaseCommand):
         }
 
         opening = random.choice(STORY_OPENINGS).format(**ctx)
-
-        # Two DISTINCT middles — random.sample without replacement.
         middles = random.sample(STORY_MIDDLES, k=2)
-
-        # Two DISTINCT lessons — same idea, but on a different
-        # pool so no cross-pool collision can reduce variety.
         lessons = random.sample(STORY_LESSONS, k=2)
-
         closing = random.choice(STORY_CLOSINGS).format(**ctx)
 
         paragraphs = [

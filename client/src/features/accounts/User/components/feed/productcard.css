@@ -632,3 +632,87 @@
     transition: none !important;
   }
 }
+/* ─────────────────────────────────────────────────────────
+   DELIVERY BADGE
+   ─────────────────────────────────────────────────────────
+   Compact pill rendered below the price chip. Three visual
+   states: everywhere (blue), specific (blue, with towns
+   list), none (amber — warns the buyer it's pickup-only).
+
+   Sized to sit alongside the price chip without dominating:
+   same pill height, smaller text, single-line. If the label
+   is long ("Ships to Nairobi CBD, Westlands +3") it wraps —
+   see the `word-break` rule below.
+   ───────────────────────────────────────────────────────── */
+
+.product-card__delivery {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  align-self: flex-start;
+  max-width: 100%;
+
+  padding: 5px 11px;
+  border-radius: 999px;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+
+  word-break: break-word;
+}
+
+.product-card__delivery-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.product-card__delivery-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pickup-only variant — amber, warmer, calls attention. */
+.product-card__delivery.is-none {
+  color: #92400E;
+  background: #FEF3C7;
+  border-color: #FDE68A;
+}
+
+/* Sold-out products already carry the muted treatment from
+   the price chip — the delivery badge stays its normal
+   colour because it's still a valid delivery policy even
+   when out of stock. If you'd rather mute it too, add:
+
+   .product-card.is-sold-out .product-card__delivery {
+     opacity: 0.7;
+   }
+*/
+
+/* Mobile — a hair tighter to avoid crowding the price. */
+@media (max-width: 640px) {
+  .product-card__delivery {
+    padding: 4px 9px;
+    font-size: 0.72rem;
+  }
+  .product-card__delivery-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .product-card__delivery {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+  }
+}

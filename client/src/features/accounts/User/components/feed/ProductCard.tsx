@@ -90,6 +90,136 @@ function buildWhatsAppUrl(
   return `https://wa.me/${e164}?text=${text}`;
 }
 
+/* ============================================================
+   DELIVERY BADGE
+   ============================================================
+   Renders a compact pill describing the product's delivery
+   policy. Visual states:
+
+     everywhere → blue globe + "Delivers everywhere"
+     specific   → blue pin  + "Ships to A, B +N" (or "Only A")
+     none       → amber bag + "Pickup only"
+
+   The chip is skipped entirely when the payload doesn't
+   carry `delivery_scope` (older cached items, posts, or a
+   backend that hasn't been updated yet) — so the card
+   degrades gracefully on mixed-version feeds.
+   ============================================================ */
+
+function DeliveryBadge({ item }: { item: FeedItem }) {
+  const scope = item.delivery_scope;
+
+  // No delivery info on the item — hide the badge rather
+  // than rendering a wrong one.
+  if (!scope) return null;
+
+  if (scope === 'everywhere') {
+    return (
+      <span className="product-card__delivery" aria-label="Delivers everywhere">
+        <svg
+          className="product-card__delivery-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <circle
+            cx="12" cy="12" r="9"
+            fill="none" stroke="currentColor" strokeWidth="2"
+          />
+          <path
+            d="M3 12h18"
+            fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"
+            fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="product-card__delivery-label">
+          Delivers everywhere
+        </span>
+      </span>
+    );
+  }
+
+  if (scope === 'specific') {
+    const towns = item.delivery_towns ?? [];
+    const shown = towns.slice(0, 2);
+    const extra = Math.max(0, towns.length - shown.length);
+
+    const text =
+      towns.length === 0
+        ? 'Specific towns'
+        : towns.length === 1
+          ? `Only ${towns[0]}`
+          : `Ships to ${shown.join(', ')}${extra > 0 ? ` +${extra}` : ''}`;
+
+    return (
+      <span
+        className="product-card__delivery"
+        aria-label={
+          towns.length
+            ? `Ships only to ${towns.join(', ')}`
+            : 'Ships to specific towns'
+        }
+        title={towns.length ? towns.join(', ') : undefined}
+      >
+        <svg
+          className="product-card__delivery-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+            fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <circle
+            cx="12" cy="10" r="3"
+            fill="none" stroke="currentColor" strokeWidth="2"
+          />
+        </svg>
+        <span className="product-card__delivery-label">{text}</span>
+      </span>
+    );
+  }
+
+  // scope === 'none'
+  return (
+    <span
+      className="product-card__delivery is-none"
+      aria-label="Pickup only, no delivery"
+    >
+      <svg
+        className="product-card__delivery-icon"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          d="M3 9l1.5-5h15L21 9"
+          fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M4 9v11h16V9"
+          fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M9 20v-6h6v6"
+          fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className="product-card__delivery-label">Pickup only</span>
+    </span>
+  );
+}
+
 function ProductCard({
   item,
   onOpenBusiness,
@@ -304,6 +434,12 @@ function ProductCard({
             </span>
           </span>
         )}
+
+        {/* Delivery badge — rendered only when the payload
+            carries delivery info. Sits directly under the
+            price chip so the buyer sees the shipping terms
+            before reading the title or description. */}
+        <DeliveryBadge item={item} />
 
         {item.name && <h3 className="product-card__name">{item.name}</h3>}
 
