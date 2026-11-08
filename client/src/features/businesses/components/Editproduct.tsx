@@ -12,6 +12,7 @@ import {
   type ProductPayload,
   type ProductProperty,
 } from '../api/productsApi';
+import type { DeliveryScope } from '../../accounts/User/api/feedApi';
 import './editproduct.css';
 
 // ============================================================
@@ -29,6 +30,17 @@ const QUANTITY_MIN = 0;
 const QUANTITY_MAX = 1_000_000;
 
 // ============================================================
+// DELIVERY SCOPES — keep in sync with backend
+//   Products.DELIVERY_CHOICES + FeedItem.DeliveryScope
+// ============================================================
+
+const DELIVERY_SCOPES: { value: DeliveryScope; label: string }[] = [
+  { value: 'everywhere', label: 'Delivers everywhere' },
+  { value: 'specific',   label: 'Delivers to specific towns' },
+  { value: 'none',       label: 'Pickup only' },
+];
+
+// ============================================================
 // TYPES
 // ============================================================
 
@@ -43,6 +55,8 @@ type FormState = {
   description: string;
   price: string;
   quantity: string;
+  deliveryScope: DeliveryScope;
+  deliveryTowns: string; // comma-separated string in the input
 };
 
 type EditableProperty = {
@@ -87,6 +101,8 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
     description: '',
     price: '',
     quantity: '1',
+    deliveryScope: 'none',
+    deliveryTowns: '',
   });
 
   // New images the user has picked but not yet uploaded
@@ -128,6 +144,8 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
           product.quantity !== null && product.quantity !== undefined
             ? String(product.quantity)
             : '1',
+        deliveryScope: product.delivery_scope ?? 'none',
+        deliveryTowns: (product.delivery_towns ?? []).join(', '),
       });
 
       const loaded = (product.properties ?? []).map((p) => ({
@@ -263,14 +281,34 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
       .map((p) => ({ name: p.name.trim(), value: p.value.trim() }))
       .filter((p) => p.name && p.value);
 
+    // ── Delivery ──────────────────────────────────────
+    // Only carry towns when scope is 'specific'; otherwise
+    // send an empty list so the backend/feed can rely on
+    // the canonical shape.
+    const parsedTowns =
+      form.deliveryScope === 'specific'
+        ? form.deliveryTowns
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+
+    if (form.deliveryScope === 'specific' && parsedTowns.length === 0) {
+      return setError(
+        'Please add at least one town for "Delivers to specific towns".'
+      );
+    }
+
     mutation.mutate({
       name: form.name.trim(),
       description: form.description.trim(),
       price: parsedPrice,
-      quantity: parsedQuantity,   // ← added — fixes TS(2345)
+      quantity: parsedQuantity,
       properties: cleanedProperties,
       imageFiles: newImages,
       replaceImages,
+      delivery_scope: form.deliveryScope,
+      delivery_towns: parsedTowns,
     });
   };
 
@@ -486,7 +524,62 @@ function Editproduct({ productId, onCancel, onSaved }: EditproductProps) {
         </span>
       </div>
 
-      {/* ── 7. Properties — unlimited ────────────────── */}
+      {/* ── 7. Delivery policy ───────────────────────── */}
+      <div className="epr-editor-field">
+        <label className="epr-editor-label">Delivery</label>
+        <p className="epr-editor-help">
+          How will buyers receive this product?
+        </p>
+
+        <div className="epr-delivery">
+          {DELIVERY_SCOPES.map((opt) => (
+            <label
+              key={opt.value}
+              className={
+                'epr-delivery-option' +
+                (form.deliveryScope === opt.value ? ' is-selected' : '')
+              }
+            >
+              <input
+                type="radio"
+                name="epr-delivery-scope"
+                value={opt.value}
+                checked={form.deliveryScope === opt.value}
+                onChange={() => update('deliveryScope', opt.value)}
+                disabled={busy}
+                className="epr-delivery-radio"
+              />
+              <span className="epr-delivery-dot" aria-hidden="true" />
+              <span className="epr-delivery-label">{opt.label}</span>
+            </label>
+          ))}
+        </div>
+
+        {form.deliveryScope === 'specific' && (
+          <div className="epr-delivery-towns">
+            <label
+              className="epr-editor-label"
+              htmlFor="epr-delivery-towns"
+            >
+              Towns you deliver to
+            </label>
+            <input
+              id="epr-delivery-towns"
+              type="text"
+              className="epr-editor-input"
+              placeholder="e.g. Nairobi, Mombasa, Kisumu"
+              value={form.deliveryTowns}
+              onChange={(e) => update('deliveryTowns', e.target.value)}
+              disabled={busy}
+            />
+            <span className="epr-editor-help">
+              Separate towns with commas.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ── 8. Properties — unlimited ────────────────── */}
       <div className="epr-editor-field">
         <label className="epr-editor-label">Properties</label>
         <p className="epr-editor-help">
